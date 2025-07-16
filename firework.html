@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>폭죽</title>
+    <style>
+        body {
+            margin: 0;
+            background: #000;
+            overflow: hidden;
+        }
+        button {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 30px;
+            font-size: 20px;
+            background: #ff4081;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+<button onclick="startCrazyFireworks()">🎉 폭죽!! 🎉</button>
+
+<!-- 폭죽 소리 효과 오디오 요소
+<audio id="firework-sound" src="https://cdn.pixabay.com/audio/2021/09/01/audio_a9a8df11b7.mp3" preload="auto"></audio>-->
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+<script>
+    function startCrazyFireworks() {
+        const duration = 1000; // 10초간 폭죽 터지게
+        const animationEnd = Date.now() + duration;
+        const sound = document.getElementById('firework-sound');
+
+        const colors = ['#bb0000', '#ffffff', '#00bbff', '#ffee00', '#00ff88'];
+
+        const interval = setInterval(function () {
+            const timeLeft = animationEnd - Date.now();
+
+            if (timeLeft <= 0) {
+                clearInterval(interval);
+                return;
+            }
+
+            // 폭죽 이펙트
+            confetti({
+                particleCount: 50,
+                startVelocity: 30,
+                spread: 360,
+                ticks: 60,
+                origin: {
+                    x: Math.random(),
+                    y: Math.random() * 0.8
+                },
+                colors: colors,
+                scalar: Math.random() * 1.2 + 0.8,
+            });
+
+            // 폭죽 소리 재생 (clone하여 반복 가능하게)
+            // const soundClone = sound.cloneNode();
+            // soundClone.play();
+        }, 100); // 0.1초마다 터짐
+    }
+</script>
+
+</body>
+</html>
