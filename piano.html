@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>바닐라 JS 피아노</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 20px;
+        font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic",
+          sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 100vh;
+        background: #222;
+        color: #fff;
+      }
+      h1 {
+        margin-bottom: 8px;
+      }
+      .info {
+        font-size: 14px;
+        margin-bottom: 20px;
+        opacity: 0.8;
+      }
+
+      .piano {
+        position: relative;
+        display: flex;
+        user-select: none;
+      }
+      .key {
+        width: 60px;
+        height: 200px;
+        border: 1px solid #333;
+        background: #fdfdfd;
+        border-radius: 0 0 6px 6px;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        padding-bottom: 8px;
+        cursor: pointer;
+        transition: transform 0.03s, box-shadow 0.03s, background 0.03s;
+      }
+      .key.active {
+        transform: translateY(2px);
+        box-shadow: 0 2px 3px rgba(0, 0, 0, 0.6) inset;
+        background: #e5e5e5;
+      }
+      .key-label {
+        font-size: 12px;
+        color: #333;
+      }
+
+      .key.black {
+        width: 40px;
+        height: 120px;
+        background: #111;
+        border-color: #000;
+        border-radius: 0 0 4px 4px;
+        position: absolute;
+        top: 0;
+        z-index: 2;
+        color: #ccc;
+      }
+      .key.black.active {
+        background: #333;
+      }
+
+      /* 4옥타브 검은 건반 위치 (C#4, D#4, F#4, G#4, A#4) */
+      .black-cs {
+        left: 45px;
+      }
+      .black-ds {
+        left: 105px;
+      }
+      .black-fs {
+        left: 225px;
+      }
+      .black-gs {
+        left: 285px;
+      }
+      .black-as {
+        left: 345px;
+      }
+
+      /* 5옥타브 C5, D5 위에 오는 C#5, D#5 */
+      .black-cs-high {
+        left: 465px;
+      } /* C5(420) 근처 +45 */
+      .black-ds-high {
+        left: 525px;
+      } /* D5(480) 근처 +45 */
+
+      .kbd-hint {
+        margin-top: 30px;
+        font-size: 13px;
+        opacity: 0.8;
+      }
+
+      @media (max-width: 600px) {
+        .key {
+          width: 40px;
+          height: 150px;
+        }
+        .key.black {
+          width: 28px;
+          height: 90px;
+        }
+        .black-cs {
+          left: 28px;
+        }
+        .black-ds {
+          left: 68px;
+        }
+        .black-fs {
+          left: 148px;
+        }
+        .black-gs {
+          left: 188px;
+        }
+        .black-as {
+          left: 228px;
+        }
+
+        .black-cs-high {
+          left: 308px;
+        }
+        .black-ds-high {
+          left: 348px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>피아노</h1>
+    <div class="info"></div>
+
+    <div class="piano" id="piano">
+      <!-- 흰 건반 (C D E F G A B C5 D5 E5 F5) -->
+      <div class="key white" data-note="C4" data-key="A">
+        <span class="key-label">도 (A)</span>
+      </div>
+      <div
+        class="key white"
+        data-note="D4"
+        data-key="S"
+        style="margin-left: -1px"
+      >
+        <span class="key-label">레 (S)</span>
+      </div>
+      <div
+        class="key white"
+        data-note="E4"
+        data-key="D"
+        style="margin-left: -1px"
+      >
+        <span class="key-label">미 (D)</span>
+      </div>
+      <div
+        class="key white"
+        data-note="F4"
+        data-key="F"
+        style="margin-left: -1px"
+      >
+        <span class="key-label">파 (F)</span>
+      </div>
+      <div
+        class="key white"
+        data-note="G4"
+        data-key="G"
+        style="margin-left: -1px"
+      >
+        <span class="key-label">솔 (G)</span>
+      </div>
+      <div
+        class="key white"
+        data-note="A4"
+        data-key="H"
+        style="margin-left: -1px"
+      >
+        <span class="key-label">라 (H)</span>
+      </div>
+      <div
+        class="key white"
+        data-note="B4"
+        data-key="J"
+        style="margin-left: -1px"
+      >
+        <span class="key-label">시 (J)</span>
+      </div>
+      <div
+        class="key white"
+        data-note="C5"
+        data-key="K"
+        style="margin-left: -1px"
+      >
+        <span class="key-label">도 (K)</span>
+      </div>
+      <div
+        class="key white"
+        data-note="D5"
+        data-key="L"
+        style="margin-left: -1px"
+      >
+        <span class="key-label">레 (L)</span>
+      </div>
+      <div
+        class="key white"
+        data-note="E5"
+        data-key=";"
+        style="margin-left: -1px"
+      >
+        <span class="key-label">미 (;)</span>
+      </div>
+      <div
+        class="key white"
+        data-note="F5"
+        data-key="'"
+        style="margin-left: -1px"
+      >
+        <span class="key-label">파 (')</span>
+      </div>
+
+      <!-- 4옥타브 검은 건반 (C#, D#, F#, G#, A#) -->
+      <div class="key black black-cs" data-note="C#4" data-key="W">
+        <span class="key-label">도# (W)</span>
+      </div>
+      <div class="key black black-ds" data-note="D#4" data-key="E">
+        <span class="key-label">레# (E)</span>
+      </div>
+      <div class="key black black-fs" data-note="F#4" data-key="T">
+        <span class="key-label">파# (T)</span>
+      </div>
+      <div class="key black black-gs" data-note="G#4" data-key="Y">
+        <span class="key-label">솔# (Y)</span>
+      </div>
+      <div class="key black black-as" data-note="A#4" data-key="U">
+        <span class="key-label">라# (U)</span>
+      </div>
+
+      <!-- 5옥타브 검은 건반 (C#5, D#5) -->
+      <div class="key black black-cs-high" data-note="C#5" data-key="O">
+        <span class="key-label">도# (O)</span>
+      </div>
+      <div class="key black black-ds-high" data-note="D#5" data-key="P">
+        <span class="key-label">레# (P)</span>
+      </div>
+    </div>
+
+    <div class="kbd-hint">
+      ⌨️ 흰 건반: A S D F G H J K L ; '<br />
+      ⌨️ 검은 건반: W E T Y U O P<br />
+      🎧 각 건반은 Web Audio API로 간단한 사인파 톤을 냅니다.
+    </div>
+
+    <script>
+      // ===== 간단한 Web Audio 피아노 =====
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+      // 음계 주파수 (C4 ~ F5)
+      const noteFreq = {
+        C4: 261.63,
+        "C#4": 277.18,
+        D4: 293.66,
+        "D#4": 311.13,
+        E4: 329.63,
+        F4: 349.23,
+        "F#4": 369.99,
+        G4: 392.0,
+        "G#4": 415.3,
+        A4: 440.0,
+        "A#4": 466.16,
+        B4: 493.88,
+        C5: 523.25,
+        "C#5": 554.37,
+        D5: 587.33,
+        "D#5": 622.25,
+        E5: 659.25,
+        F5: 698.46,
+      };
+
+      // 키보드 매핑
+      const keyMap = {
+        a: "C4",
+        w: "C#4",
+        s: "D4",
+        e: "D#4",
+        d: "E4",
+        f: "F4",
+        t: "F#4",
+        g: "G4",
+        y: "G#4",
+        h: "A4",
+        u: "A#4",
+        j: "B4",
+        k: "C5",
+        o: "C#5",
+        l: "D5",
+        p: "D#5",
+        ";": "E5",
+        "'": "F5",
+      };
+
+      function playNote(note, keyElement) {
+        const freq = noteFreq[note];
+        if (!freq) return;
+
+        // 시각 효과
+        if (keyElement) {
+          keyElement.classList.add("active");
+          setTimeout(() => keyElement.classList.remove("active"), 100);
+        }
+
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+
+        osc.type = "sine";
+        osc.frequency.value = freq;
+
+        gainNode.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(
+          0.3,
+          audioCtx.currentTime + 0.01
+        );
+        gainNode.gain.exponentialRampToValueAtTime(
+          0.0001,
+          audioCtx.currentTime + 0.4
+        );
+
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.45);
+      }
+
+      // 마우스 / 터치 이벤트
+      document.querySelectorAll(".key").forEach((key) => {
+        key.addEventListener("mousedown", () => {
+          const note = key.getAttribute("data-note");
+          playNote(note, key);
+        });
+        key.addEventListener(
+          "touchstart",
+          (e) => {
+            e.preventDefault();
+            const note = key.getAttribute("data-note");
+            playNote(note, key);
+          },
+          { passive: false }
+        );
+      });
+
+      // 키보드 이벤트
+      window.addEventListener("keydown", (e) => {
+        const key = e.key.toLowerCase();
+        const note = keyMap[key];
+        if (!note) return;
+
+        // 중복 입력 막기
+        if (e.repeat) return;
+
+        // 흰+검은 건반 모두에서 data-key 매칭
+        const keyEl = [...document.querySelectorAll(".key")].find(
+          (el) => (el.getAttribute("data-key") || "").toLowerCase() === key
+        );
+
+        playNote(note, keyEl);
+      });
+    </script>
+  </body>
+</html>
