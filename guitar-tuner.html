@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>Simple Guitar Tuner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 24px 10px 40px;
+            font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR",
+            "Malgun Gothic", system-ui, sans-serif;
+            background: #f4f4f5;
+            color: #111827;
+        }
+
+        .page {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .intro-box {
+            background: #f9fafb;
+            padding: 16px 18px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            line-height: 1.6;
+            font-size: 14px;
+            color: #374151;
+            margin-bottom: 18px;
+        }
+
+        h4 {
+            margin: 0 0 10px;
+            font-size: 22px;
+        }
+
+        .card {
+            background: #ffffff;
+            padding: 22px 20px 26px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+
+        #waveformCanvas {
+            width: 100%;
+            max-width: 800px;
+            height: 160px;
+            display: block;
+            margin: 14px auto 0;
+            background: #0f172a;
+            border-radius: 10px;
+            border: 1px solid #1f2937;
+        }
+
+        .control-group {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        #volume-slider {
+            width: 70%;
+            max-width: 400px;
+            margin-top: 6px;
+        }
+
+        .tuner-wrapper {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .guitar-string-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .guitar-string-buttons button {
+            min-width: 120px;
+            padding: 9px 14px;
+            border-radius: 9999px;
+            border: 1px solid #d1d5db;
+            background: #f3f4f6;
+            color: #111827;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.15s ease, transform 0.1s ease,
+            box-shadow 0.15s ease;
+        }
+
+        .guitar-string-buttons button span {
+            font-weight: 600;
+        }
+
+        .guitar-string-buttons button:hover {
+            background: #e5e7eb;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.07);
+        }
+
+        #stopButton {
+            background: #ef4444;
+            border-color: #ef4444;
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        #stopButton:hover {
+            background: #dc2626;
+        }
+
+        .pitch-area {
+            margin-top: 24px;
+            font-size: 14px;
+        }
+
+        #detected-note {
+            margin-top: 12px;
+            font-weight: bold;
+            font-size: 15px;
+            color: #4b5563;
+            background: #ffffff;
+            border: 3px inset #c0c0c0;
+            padding: 12px 14px;
+            font-family: monospace;
+            border-radius: 8px;
+        }
+
+        .pitch-buttons {
+            margin-top: 10px;
+        }
+
+        .pitch-buttons input[type="button"] {
+            margin-right: 6px;
+            margin-bottom: 6px;
+            padding: 7px 14px;
+            border-radius: 9999px;
+            border: 1px solid #d1d5db;
+            background: #f3f4f6;
+            color: #111827;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.15s ease, transform 0.1s ease,
+            box-shadow 0.15s ease;
+        }
+
+        .pitch-buttons input[type="button"]:hover {
+            background: #e5e7eb;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.07);
+        }
+
+        @media (max-width: 480px) {
+            .card {
+                padding: 18px 14px 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="intro-box">
+        <strong>심플 기타 조율기(Simple Guitar Tuner)</strong>는 6줄 기타의 표준
+        개방현(EADGBE)을 기준으로 참조 음을 재생하고, 마이크를 사용해 현재
+        연주중인 음의 주파수를 감지해 가장 가까운 줄 정보를 보여주는 도구입니다.
+        볼륨을 조절하고 각 줄 버튼을 눌러 기준음을 들으며 손쉽게 기타를
+        튜닝해 보세요.
+    </div>
+
+    <div class="card">
+        <h4><b>심플 기타 조율기 (Simple Guitar Tuner)</b></h4>
+
+        <canvas id="waveformCanvas" width="800" height="160"></canvas>
+
+        <div class="control-group">
+            <label for="volume-slider"><b>볼륨 조절 :</b></label><br />
+            <input
+                    type="range"
+                    id="volume-slider"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value="0.8"
+            />
+        </div>
+
+        <div class="tuner-wrapper">
+            <div class="guitar-string-buttons">
+                <button data-freq="329.63"><span>1번줄 (E)</span></button>
+                <button data-freq="246.94"><span>2번줄 (B)</span></button>
+                <button data-freq="196.00"><span>3번줄 (G)</span></button>
+                <button data-freq="146.83"><span>4번줄 (D)</span></button>
+                <button data-freq="110.00"><span>5번줄 (A)</span></button>
+                <button data-freq="82.41"><span>6번줄 (E)</span></button>
+                <button id="stopButton">재생 중지</button>
+            </div>
+        </div>
+
+        <div class="pitch-area">
+            <p><b>Pitch Detector :</b></p>
+            <div id="detected-note">
+                [Detected Note] : OFF
+            </div>
+
+            <div class="pitch-buttons">
+                <input
+                        type="button"
+                        value="실시간 소리 감지 시작"
+                        onclick="startAutoTuning()"
+                        title="마이크로 소리를 감지하여 기타 음이 제대로 조율되었는지 실시간으로 판별합니다."
+                />
+                <input
+                        type="button"
+                        value="실시간 소리 감지 중단"
+                        onclick="stopAutoTuning()"
+                />
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let audioContext;
+    let currentOscillator = null;
+    let currentGainNode = null;
+
+    const volumeSlider = document.getElementById("volume-slider");
+    const canvas = document.getElementById("waveformCanvas");
+    const ctx = canvas.getContext("2d");
+    const stopButton = document.getElementById("stopButton");
+
+    let animationFrameId;
+
+    // --- 공통: 재생 / 파형 중지 ---
+    function stopAllPlayback() {
+        if (currentOscillator) {
+            currentOscillator.stop();
+            currentOscillator.disconnect();
+            currentOscillator = null;
+        }
+        if (currentGainNode) {
+            currentGainNode.disconnect();
+            currentGainNode = null;
+        }
+        if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
+        }
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // 기준음 재생
+    function playNote(frequency) {
+        stopAllPlayback();
+
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.type = "triangle";
+        oscillator.frequency.value = frequency;
+
+        const initialVolume = parseFloat(volumeSlider.value);
+        gainNode.gain.setValueAtTime(initialVolume, audioContext.currentTime);
+
+        oscillator.start(audioContext.currentTime);
+
+        currentOscillator = oscillator;
+        currentGainNode = gainNode;
+
+        startWaveformAnimation();
+    }
+
+    // --- 파형 시각화 (가상 파형) ---
+
+    function drawFakeWaveform() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.beginPath();
+        ctx.moveTo(0, canvas.height / 2);
+
+        const numPoints = 200;
+        const amplitude = canvas.height * 0.4;
+        const baseFrequencyFactor = 0.05;
+        const timeOffset = Date.now() * 0.005;
+
+        for (let i = 0; i < numPoints; i++) {
+            const x = (i / numPoints) * canvas.width;
+            const y =
+                      canvas.height / 2 +
+                      Math.sin(i * baseFrequencyFactor + timeOffset) *
+                      amplitude *
+                      (0.6 + Math.random() * 0.4);
+
+            ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = "#61dafb";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        animationFrameId = requestAnimationFrame(drawFakeWaveform);
+    }
+
+    function startWaveformAnimation() {
+        if (!animationFrameId) {
+            drawFakeWaveform();
+        }
+    }
+
+    // 줄 버튼 클릭 시 해당 음 재생
+    document.querySelectorAll("button[data-freq]").forEach((button) => {
+        button.addEventListener("click", () => {
+            const freq = parseFloat(button.dataset.freq);
+            playNote(freq);
+        });
+    });
+
+    // 재생 중지 버튼
+    stopButton.addEventListener("click", () => {
+        stopAllPlayback();
+    });
+
+    // 볼륨 변경
+    volumeSlider.addEventListener("input", () => {
+        if (currentGainNode && audioContext) {
+            const newVolume = parseFloat(volumeSlider.value);
+            currentGainNode.gain.setValueAtTime(newVolume, audioContext.currentTime);
+        }
+    });
+
+    // --- Pitch detection (마이크) ---
+
+    let micAnalyser = null;
+    let micStream = null;
+    let autoTuningActive = false;
+
+    async function startAutoTuning() {
+        if (autoTuningActive) return;
+        autoTuningActive = true;
+
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        try {
+            micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        } catch (err) {
+            alert("마이크 접근 권한이 필요합니다.");
+            autoTuningActive = false;
+            return;
+        }
+
+        const source = audioContext.createMediaStreamSource(micStream);
+
+        micAnalyser = audioContext.createAnalyser();
+        micAnalyser.fftSize = 2048;
+
+        source.connect(micAnalyser);
+        document.getElementById("detected-note").textContent =
+            "[Detected Note] : Detecting...";
+        detectPitch();
+    }
+
+    function detectPitch() {
+        const bufferLength = micAnalyser.fftSize;
+        const buffer = new Float32Array(bufferLength);
+        micAnalyser.getFloatTimeDomainData(buffer);
+
+        const pitch = autoCorrelate(buffer, audioContext.sampleRate);
+        if (pitch !== -1) {
+            updateDetectedNote(pitch);
+        }
+
+        if (autoTuningActive) {
+            requestAnimationFrame(detectPitch);
+        }
+    }
+
+    function stopAutoTuning() {
+        autoTuningActive = false;
+        if (micStream) {
+            micStream.getTracks().forEach((track) => track.stop());
+            micStream = null;
+        }
+        document.getElementById("detected-note").textContent =
+            "[Detected Note] : OFF";
+    }
+
+    // 기본 오토코릴레이션 알고리즘
+    function autoCorrelate(buffer, sampleRate) {
+        let SIZE = buffer.length;
+        let rms = 0;
+        for (let i = 0; i < SIZE; i++) {
+            const val = buffer[i];
+            rms += val * val;
+        }
+        rms = Math.sqrt(rms / SIZE);
+        if (rms < 0.01) return -1; // 노이즈 제거
+
+        let r1 = 0,
+            r2 = SIZE - 1,
+            threshold = 0.2;
+        for (let i = 0; i < SIZE / 2; i++) {
+            if (Math.abs(buffer[i]) < threshold) {
+                r1 = i;
+                break;
+            }
+        }
+        for (let i = 1; i < SIZE / 2; i++) {
+            if (Math.abs(buffer[SIZE - i]) < threshold) {
+                r2 = SIZE - i;
+                break;
+            }
+        }
+
+        buffer = buffer.slice(r1, r2);
+        SIZE = buffer.length;
+
+        const c = new Array(SIZE).fill(0);
+        for (let i = 0; i < SIZE; i++) {
+            for (let j = 0; j < SIZE - i; j++) {
+                c[i] += buffer[j] * buffer[j + i];
+            }
+        }
+
+        let d = 0;
+        while (c[d] > c[d + 1]) d++;
+        let maxval = -1,
+            maxpos = -1;
+        for (let i = d; i < SIZE; i++) {
+            if (c[i] > maxval) {
+                maxval = c[i];
+                maxpos = i;
+            }
+        }
+
+        const T0 = maxpos;
+        return sampleRate / T0;
+    }
+
+    function updateDetectedNote(pitch) {
+        const standardNotes = [
+            { name: "E2 (6번줄)", freq: 82.41 },
+            { name: "A2 (5번줄)", freq: 110.0 },
+            { name: "D3 (4번줄)", freq: 146.83 },
+            { name: "G3 (3번줄)", freq: 196.0 },
+            { name: "B3 (2번줄)", freq: 246.94 },
+            { name: "E4 (1번줄)", freq: 329.63 },
+        ];
+
+        const closest = standardNotes.reduce((prev, curr) =>
+            Math.abs(curr.freq - pitch) < Math.abs(prev.freq - pitch) ? curr : prev
+        );
+
+        const diff = pitch - closest.freq;
+        const status =
+                  Math.abs(diff) < 1.0
+                      ? "정확함 (In Tune)"
+                      : diff > 0
+                          ? "높음 (Sharp)"
+                          : "낮음 (Flat)";
+
+        document.getElementById("detected-note").textContent =
+            `[Detected Note] : ${closest.name} | ${pitch.toFixed(2)} Hz | ${status}`;
+    }
+</script>
+</body>
+</html>

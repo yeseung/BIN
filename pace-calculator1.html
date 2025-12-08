@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>마라톤 페이스 계산기</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    *{box-sizing:border-box;}
+    body{
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,"Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+      background:#f4f5f7;
+      color:#111827;
+    }
+    .page-wrap{
+      max-width:960px;
+      margin:32px auto 40px;
+      padding:0 16px;
+    }
+
+    /* 상단 안내 박스 */
+    .info-box{
+      background-color:#EAF6FD;
+      padding:16px 20px;
+      border-left:4px solid #0091D7;
+      margin-top:5px;
+      margin-bottom:24px;
+      word-break:break-all;
+      border-radius:8px;
+      font-size:14px;
+      color:#0f172a;
+    }
+
+    .pace-wrap{max-width:760px;margin:0 auto;padding:0 0 24px;}
+    .pace-card{
+      background:#fff;
+      border:1px solid #e5e7eb;
+      border-radius:14px;
+      box-shadow:0 4px 12px rgba(0,0,0,.05);
+      padding:20px 18px 22px;
+    }
+
+    .pace-header{
+      margin-bottom:8px;
+    }
+    .pace-header h2{
+      margin:0;
+      font-size:20px;
+      font-weight:700;
+      letter-spacing:.02em;
+      color:#111827;
+    }
+    .pace-header p{
+      margin:4px 0 0;
+      font-size:13px;
+      color:#6b7280;
+    }
+
+    .pace-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-top:10px;
+    }
+    .pace-card label{
+      font-size:14px;
+      color:#374151;
+      margin-bottom:6px;
+      display:block;
+      font-weight:500;
+    }
+    .pace-card input,
+    .pace-card select,
+    .pace-card button{
+      width:100%;
+      padding:9px 11px;
+      border:1px solid #d1d5db;
+      border-radius:10px;
+      font-size:15px;
+      transition:all .15s;
+      font-family:inherit;
+    }
+    .pace-card input:focus,
+    .pace-card select:focus{
+      border-color:#2563eb;
+      box-shadow:0 0 0 2px rgba(37,99,235,0.15);
+      outline:none;
+      background:#ffffff;
+    }
+    .pace-card button{
+      background:#2563eb;
+      color:#fff;
+      border:none;
+      font-weight:600;
+      cursor:pointer;
+      box-shadow:0 8px 18px rgba(37,99,235,0.35);
+    }
+    .pace-card button:hover{
+      background:#1d4ed8;
+      transform:translateY(-1px);
+      box-shadow:0 12px 22px rgba(37,99,235,0.45);
+    }
+    .pace-card button:active{
+      transform:translateY(0);
+      box-shadow:0 6px 14px rgba(37,99,235,0.35);
+    }
+
+    .pace-card input[type=number],
+    #pace-custom,
+    #pace-weight{
+      background:#fffdf9;
+    }
+    #pace-custom,#pace-weight{
+      border:2px solid #cbd5e1;
+      background:#fff;
+    }
+
+    .pace-hint{
+      font-size:12px;
+      color:#9ca3af;
+      margin-top:4px;
+    }
+
+    .pace-result{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:10px;
+      margin-top:16px;
+    }
+    .pace-kv{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:10px 12px;
+      background:#f3f4f6;
+      border-radius:10px;
+      font-size:14px;
+    }
+    .pace-kv span{color:#6b7280;}
+    .pace-kv strong{font-size:15px;color:#111827;}
+
+    .pace-split-box{
+      margin-top:16px;
+      border-radius:12px;
+      border:1px solid #e5e7eb;
+      overflow:hidden;
+      background:#f9fafb;
+    }
+    .pace-table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:14px;
+    }
+    .pace-table thead{
+      background:#e5e7eb;
+    }
+    .pace-table th,
+    .pace-table td{
+      border-bottom:1px dashed #ddd;
+      padding:8px 8px;
+      text-align:right;
+    }
+    .pace-table th:first-child,
+    .pace-table td:first-child{text-align:left;}
+    .pace-table tbody tr:last-child td{border-bottom:none;}
+
+    @media(max-width:640px){
+      .pace-grid{grid-template-columns:1fr;}
+      .pace-card{padding:18px 14px 20px;}
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <div class="info-box">
+    🔍 마라톤 페이스 계산기! 러닝 런닝 달리기 마라톤 페이스 계산기로 평균 페이스·예상 완주 시간 및 칼로리 소모 지금 바로 확인해보세요!
+  </div>
+
+  <div class="pace-wrap">
+    <div class="pace-card">
+      <div class="pace-header">
+        <h2>마라톤 페이스 계산기</h2>
+        <p>목표 기록 또는 페이스를 기준으로 평균 페이스, 예상 완주시간, 칼로리를 계산합니다.</p>
+      </div>
+
+      <div class="pace-grid">
+        <div>
+          <label>모드 선택</label>
+          <select id="pace-mode">
+            <option value="time">목표시간 → 페이스</option>
+            <option value="pace">페이스 → 예상완주시간</option>
+          </select>
+        </div>
+        <div>
+          <label>거리</label>
+          <select id="pace-distance">
+            <option value="42.195">마라톤 (42.195 km)</option>
+            <option value="21.0975">하프 (21.0975 km)</option>
+            <option value="10">10K (10 km)</option>
+            <option value="5">5K (5 km)</option>
+            <option value="custom">직접 입력</option>
+          </select>
+          <div id="pace-custom-box" style="display:none;margin-top:8px;">
+            <input id="pace-custom" type="number" step="0.001" placeholder="예: 7.3 (km)">
+          </div>
+        </div>
+      </div>
+
+      <div id="mode-time" class="pace-mode-box">
+        <div class="pace-grid">
+          <div>
+            <label>목표 시간 (HH:MM:SS)</label>
+            <input id="pace-time" placeholder="03:45:00" inputmode="numeric">
+            <div class="pace-hint">예: 3시간45분 → 03:45:00</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="mode-pace" class="pace-mode-box" style="display:none;">
+        <div class="pace-grid">
+          <div>
+            <label>1 km당 페이스 (MM:SS)</label>
+            <input id="pace-perkm" placeholder="05:30" inputmode="numeric">
+            <div class="pace-hint">예: 5분30초 → 05:30</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pace-grid">
+        <div>
+          <label>체중 (kg)</label>
+          <input id="pace-weight" type="number" step="0.1" placeholder="예: 70">
+        </div>
+        <div>
+          <label>&nbsp;</label>
+          <button id="pace-btn">계산하기</button>
+        </div>
+      </div>
+
+      <div id="pace-result" class="pace-result" style="display:none">
+        <div class="pace-kv"><span>1 km 페이스</span><strong id="pace-km">&#8211;</strong></div>
+        <div class="pace-kv"><span>평균 시속</span><strong id="pace-speed">&#8211;</strong></div>
+        <div class="pace-kv"><span>예상 완주시간</span><strong id="pace-total">&#8211;</strong></div>
+        <div class="pace-kv"><span>예상 칼로리 소모</span><strong id="pace-cal">&#8211;</strong></div>
+      </div>
+
+      <div id="pace-split-box" class="pace-split-box" style="display:none">
+        <table class="pace-table">
+          <thead>
+          <tr><th>구간</th><th>누적시간</th></tr>
+          </thead>
+          <tbody id="pace-splits"></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  (function(){
+    const modeSel = document.getElementById('pace-mode');
+    const modeTime = document.getElementById('mode-time');
+    const modePace = document.getElementById('mode-pace');
+    const distEl = document.getElementById('pace-distance');
+    const customBox = document.getElementById('pace-custom-box');
+    const customEl = document.getElementById('pace-custom');
+    const btn = document.getElementById('pace-btn');
+    const res = document.getElementById('pace-result');
+    const kmEl = document.getElementById('pace-km');
+    const totalEl = document.getElementById('pace-total');
+    const speedEl = document.getElementById('pace-speed');
+    const calEl = document.getElementById('pace-cal');
+    const splitBox = document.getElementById('pace-split-box');
+    const splitBody = document.getElementById('pace-splits');
+    const timeEl = document.getElementById('pace-time');
+    const perKmEl = document.getElementById('pace-perkm');
+    const weightEl = document.getElementById('pace-weight');
+
+    modeSel.addEventListener('change', () => {
+      modeTime.style.display = modeSel.value === 'time' ? 'block' : 'none';
+      modePace.style.display = modeSel.value === 'pace' ? 'block' : 'none';
+    });
+
+    distEl.addEventListener('change', () => {
+      customBox.style.display = distEl.value === 'custom' ? 'block' : 'none';
+    });
+
+    // HH:MM:SS 또는 MM:SS 형식 파싱
+    function parseHMS(str){
+      const m = String(str || '').trim().match(/^(\d{1,2}):([0-5]?\d):?([0-5]?\d)?$/);
+      if (!m) return null;
+      const h = m[3] !== undefined ? (+m[1] || 0) : 0;
+      const mm = m[3] !== undefined ? (+m[2] || 0) : (+m[1] || 0);
+      const ss = m[3] !== undefined ? (+m[3] || 0) : (+m[2] || 0);
+      return h * 3600 + mm * 60 + ss;
+    }
+
+    function fmt(sec){
+      sec = Math.round(sec);
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = sec % 60;
+      return (h > 0 ? String(h).padStart(2,'0') + ':' : '') +
+              String(m).padStart(2,'0') + ':' +
+              String(s).padStart(2,'0');
+    }
+
+    function round(n,d=2){return Math.round(n * 10**d) / 10**d;}
+
+    btn.addEventListener('click', () => {
+      const mode = modeSel.value;
+      let km = distEl.value === 'custom'
+              ? parseFloat(customEl.value)
+              : parseFloat(distEl.value);
+
+      if (!km || km <= 0) {
+        alert('거리를 올바르게 입력하세요.');
+        return;
+      }
+
+      let total = 0;
+      let pacePerKm = 0;
+
+      if (mode === 'time') {            // 목표시간 → 페이스
+        total = parseHMS(timeEl.value);
+        if (total == null || total <= 0) {
+          alert('목표 시간을 HH:MM:SS 형식으로 입력하세요.');
+          return;
+        }
+        pacePerKm = total / km;
+      } else {                          // 페이스 → 완주시간
+        const pace = parseHMS(perKmEl.value);
+        if (pace == null || pace <= 0) {
+          alert('1km당 페이스를 MM:SS 형식으로 입력하세요.');
+          return;
+        }
+        pacePerKm = pace;
+        total = pace * km;
+      }
+
+      const hours = total / 3600;
+      const avgSpeed = km / hours;
+      const weight = parseFloat(weightEl.value) || 70;
+      const calories = km * weight * 1; // 대략적인 추정값
+
+      res.style.display = 'grid';
+      kmEl.textContent = fmt(pacePerKm);
+      totalEl.textContent = fmt(total);
+      speedEl.textContent = round(avgSpeed,2) + ' km/h';
+      calEl.textContent = round(calories,0) + ' kcal';
+
+      // 랩 타임 테이블
+      splitBody.innerHTML = '';
+      let steps = Math.floor(km);
+      let acc = 0;
+      for (let i = 1; i <= steps; i++) {
+        acc += pacePerKm;
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + i + 'km</td><td>' + fmt(acc) + '</td>';
+        splitBody.appendChild(tr);
+      }
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td>Finish (' + round(km,2) + ' km)</td><td>' + fmt(total) + '</td>';
+      splitBody.appendChild(tr);
+      splitBox.style.display = 'block';
+    });
+  })();
+</script>
+</body>
+</html>

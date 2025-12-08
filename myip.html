@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>My IP Checker - 내 IP 주소 확인</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+            background: #f4f5f7;
+            color: #111827;
+        }
+
+        .page-wrap {
+            max-width: 960px;
+            margin: 32px auto 40px;
+            padding: 0 16px;
+        }
+
+        .top-info {
+            background-color: #EAF6FD;
+            padding: 16px 20px;
+            border-left: 4px solid #0091D7;
+            margin-top: 5px;
+            margin-bottom: 24px;
+            word-break: break-all;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #0f172a;
+        }
+
+        .container {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 24px 20px 30px;
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #d1d5db;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+
+        h4 {
+            margin: 0 0 16px;
+            font-size: 20px;
+        }
+
+        h5 {
+            margin: 0 0 8px;
+            font-size: 16px;
+        }
+
+        #loading,
+        #error {
+            font-size: 14px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        #loading {
+            background: #eef2ff;
+            color: #1d4ed8;
+        }
+
+        #error {
+            background: #fef2f2;
+            color: #b91c1c;
+            display: none;
+        }
+
+        #ipInfo {
+            margin-top: 8px;
+        }
+
+        .info-group {
+            width: 100%;
+            background-color: #fff;
+            border-radius: 10px;
+            border: 3px inset #c0c0c0;
+            padding: 12px 14px;
+            margin-top: 16px;
+        }
+
+        .info-group p {
+            margin: 6px 0 0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .info-group span {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+
+        .info-group.location span.note {
+            font-size: 13px;
+            color: #6b7280;
+            font-family: inherit;
+        }
+
+        .ip-actions {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .btn {
+            color: #111827;
+            background-color: #e5e7eb;
+            border-radius: 9999px;
+            border: 1px solid #d4d4d8;
+            padding: 6px 14px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.08);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+        }
+
+        .btn:hover:not(:disabled) {
+            background-color: #d1d5db;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.14);
+        }
+
+        .btn:disabled {
+            background-color: #f3f4f6;
+            color: #9ca3af;
+            border-color: #e5e7eb;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 20px 14px 24px;
+            }
+            .info-group {
+                padding: 10px 10px;
+            }
+            .ip-actions {
+                flex-direction: column;
+            }
+            .btn {
+                justify-content: center;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="page-wrap">
+
+    <div class="top-info">
+        🔍 내 IP 주소 확인! 현재 접속 중인 IP, 위치, 브라우저·기기 정보를 한 번에 확인하세요. 새로고침 및 IP 복사 기능도 지원합니다.
+    </div>
+
+    <div class="container">
+        <h4><b>내 IP 주소 확인</b></h4>
+
+        <div id="loading">정보를 불러오는 중입니다&#8230; 잠시만 기다려 주세요.</div>
+        <div id="error">정보를 불러오는 데 실패했습니다. 다시 시도해 주세요.</div>
+
+        <div id="ipInfo" style="display:none;">
+            <!-- IP 주소 정보 -->
+            <div class="info-group">
+                <h5><b>IP 주소 정보</b></h5>
+                <p>
+                    <strong>ㆍQuery IP : </strong>
+                    <span id="queryIp">불러오는 중&#8230;</span>
+                    <span style="color:#6b7280; font-size:13px;">(현재 접속 IP)</span><br>
+                    <strong>ㆍIPv4 주소 : </strong>
+                    <span id="ipv4Address">불러오는 중&#8230;</span><br>
+                    <strong>ㆍIPv6 주소 : </strong>
+                    <span id="ipv6Address">불러오는 중&#8230;</span>
+                </p>
+                <div class="ip-actions">
+                    <button id="copyIpBtn" class="btn">
+                        📋 <b>IP 복사</b>
+                    </button>
+                    <button id="refreshIpBtn" class="btn">
+                        🔄 <b>새로고침</b>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 위치 정보 -->
+            <div class="info-group location">
+                <h5><b>위치 정보</b></h5>
+                <p>
+                    <strong>ㆍ국가 : </strong>
+                    <span id="country">불러오는 중&#8230;</span>
+                    (<span id="countryCode"></span>)<br>
+                    <strong>ㆍ지역 : </strong>
+                    <span id="region">불러오는 중&#8230;</span>
+                    (<span id="regionCode"></span>)<br>
+                    <strong>ㆍ도시 : </strong>
+                    <span id="city">불러오는 중&#8230;</span><br>
+                    <strong>ㆍ우편번호 : </strong>
+                    <span id="zip">불러오는 중&#8230;</span><br>
+                    <strong>ㆍ위도 : </strong>
+                    <span id="lat">불러오는 중&#8230;</span><br>
+                    <strong>ㆍ경도 : </strong>
+                    <span id="lon">불러오는 중&#8230;</span><br>
+                    <strong>ㆍ타임존 : </strong>
+                    <span id="timezone">불러오는 중&#8230;</span><br>
+                    <span class="note">※ 실제 물리적인 위치와 일치하지 않을 수 있습니다.</span>
+                </p>
+            </div>
+
+            <!-- 기기 및 네트워크 정보 -->
+            <div class="info-group device">
+                <h5><b>기기 및 네트워크 정보</b></h5>
+                <p>
+                    <strong>ㆍ운영체제 : </strong>
+                    <span id="os">불러오는 중&#8230;</span><br>
+                    <strong>ㆍ브라우저 : </strong>
+                    <span id="browser">불러오는 중&#8230;</span><br>
+                    <strong>ㆍ화면 해상도 : </strong>
+                    <span id="screenResolution">불러오는 중&#8230;</span><br>
+                    <strong>ㆍ색상 심도 : </strong>
+                    <span id="colorDepth">불러오는 중&#8230;</span> 비트<br>
+                    <strong>ㆍ논리적 프로세서 코어 : </strong>
+                    <span id="processorCores">불러오는 중&#8230;</span> 개<br>
+                    <strong>ㆍ인터넷 제공업체 (ISP) : </strong>
+                    <span id="isp">불러오는 중&#8230;</span><br>
+                    <strong>ㆍ자율 시스템 번호 (ASN) : </strong>
+                    <span id="asn">불러오는 중&#8230;</span>
+                    (<span id="as"></span>)
+                </p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // IP 정보 및 환경 정보 가져오기
+    async function fetchIpDetails() {
+        const ipInfoDiv     = document.getElementById('ipInfo');
+        const loadingElement = document.getElementById('loading');
+        const errorElement   = document.getElementById('error');
+        const refreshBtn     = document.getElementById('refreshIpBtn');
+        const copyBtn        = document.getElementById('copyIpBtn');
+
+        // 초기 상태
+        loadingElement.style.display = 'block';
+        errorElement.style.display   = 'none';
+        ipInfoDiv.style.display      = 'none';
+        refreshBtn.disabled = true;
+        copyBtn.disabled    = true;
+
+        // 텍스트 초기화
+        document.getElementById('queryIp').textContent   = '불러오는 중...';
+        document.getElementById('ipv4Address').textContent = '불러오는 중...';
+        document.getElementById('ipv6Address').textContent = '불러오는 중...';
+        document.getElementById('country').textContent   = '불러오는 중...';
+        document.getElementById('countryCode').textContent = '';
+        document.getElementById('region').textContent    = '불러오는 중...';
+        document.getElementById('regionCode').textContent = '';
+        document.getElementById('city').textContent      = '불러오는 중...';
+        document.getElementById('zip').textContent       = '불러오는 중...';
+        document.getElementById('lat').textContent       = '불러오는 중...';
+        document.getElementById('lon').textContent       = '불러오는 중...';
+        document.getElementById('timezone').textContent  = '불러오는 중...';
+        document.getElementById('isp').textContent       = '불러오는 중...';
+        document.getElementById('asn').textContent       = '불러오는 중...';
+        document.getElementById('as').textContent        = '';
+
+        try {
+            // OS / 브라우저 정보
+            const userAgent = navigator.userAgent;
+            let os = '알 수 없음';
+            let browser = '알 수 없음';
+
+            if (userAgent.includes('Win'))     os = 'Windows';
+            else if (userAgent.includes('Mac'))   os = 'macOS';
+            else if (userAgent.includes('Linux')) os = 'Linux';
+            else if (userAgent.includes('Android')) os = 'Android';
+            else if (userAgent.includes('iOS'))    os = 'iOS';
+            else if (userAgent.includes('CrOS'))   os = 'Chrome OS';
+
+            if (userAgent.includes('Edg'))          browser = 'Microsoft Edge';
+            else if (userAgent.includes('Chrome'))  browser = 'Chrome';
+            else if (userAgent.includes('Firefox')) browser = 'Firefox';
+            else if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) browser = 'Safari';
+            else if (userAgent.includes('MSIE') || userAgent.includes('Trident'))    browser = 'Internet Explorer';
+
+            document.getElementById('os').textContent      = os;
+            document.getElementById('browser').textContent = browser;
+
+            // 해상도 / 색상 심도 / CPU 코어
+            document.getElementById('screenResolution').textContent =
+                `${screen.width}x${screen.height}`;
+            document.getElementById('colorDepth').textContent =
+                screen.colorDepth;
+            document.getElementById('processorCores').textContent =
+                navigator.hardwareConcurrency || '확인 불가';
+
+            // IPv4
+            const ipv4Response = await fetch('https://api.ipify.org?format=json');
+            if (!ipv4Response.ok) throw new Error(`IPv4 오류: ${ipv4Response.status}`);
+            const ipv4Data = await ipv4Response.json();
+            document.getElementById('ipv4Address').textContent = ipv4Data.ip || '정보 없음';
+
+            // IPv6
+            try {
+                const ipv6Response = await fetch('https://ipv6.icanhazip.com');
+                if (ipv6Response.ok) {
+                    const ipv6Text = await ipv6Response.text();
+                    document.getElementById('ipv6Address').textContent =
+                        ipv6Text.trim() || 'IPv6 주소 감지 안됨';
+                } else {
+                    document.getElementById('ipv6Address').textContent = 'IPv6 주소 감지 안됨';
+                }
+            } catch (ipv6Error) {
+                document.getElementById('ipv6Address').textContent = 'IPv6 주소 감지 안됨';
+                console.warn('IPv6 주소를 가져오는 중 오류 발생:', ipv6Error);
+            }
+
+            // ipinfo.io 상세 정보
+            const detailResponse = await fetch('https://ipinfo.io/json');
+            if (!detailResponse.ok) {
+                throw new Error(`상세 정보 오류! 상태: ${detailResponse.status}`);
+            }
+            const detailData = await detailResponse.json();
+
+            document.getElementById('queryIp').textContent  = detailData.ip || '정보 없음';
+            document.getElementById('country').textContent  = detailData.country || '정보 없음';
+            document.getElementById('countryCode').textContent = detailData.country || '정보 없음';
+            document.getElementById('region').textContent   = detailData.region || '정보 없음';
+            document.getElementById('regionCode').textContent = detailData.region || '정보 없음';
+            document.getElementById('city').textContent     = detailData.city || '정보 없음';
+            document.getElementById('zip').textContent      = detailData.postal || '정보 없음';
+            document.getElementById('lat').textContent      = detailData.loc ? detailData.loc.split(',')[0] : '정보 없음';
+            document.getElementById('lon').textContent      = detailData.loc ? detailData.loc.split(',')[1] : '정보 없음';
+            document.getElementById('timezone').textContent = detailData.timezone || '정보 없음';
+            document.getElementById('isp').textContent      = detailData.org || '정보 없음';
+            document.getElementById('asn').textContent      = detailData.org || '정보 없음';
+            document.getElementById('as').textContent       = detailData.org || '정보 없음';
+
+            loadingElement.style.display = 'none';
+            ipInfoDiv.style.display      = 'block';
+
+        } catch (error) {
+            console.error('IP 정보를 가져오는 중 오류 발생:', error);
+            loadingElement.style.display = 'none';
+            errorElement.style.display   = 'block';
+            errorElement.textContent =
+                `정보를 불러오는 데 실패했습니다: ${error.message}`;
+        } finally {
+            refreshBtn.disabled = false;
+            copyBtn.disabled    = false;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        fetchIpDetails();
+
+        document.getElementById('refreshIpBtn')
+        .addEventListener('click', fetchIpDetails);
+
+        document.getElementById('copyIpBtn')
+        .addEventListener('click', function () {
+            const queryIp = document.getElementById('queryIp').textContent;
+            if (queryIp && queryIp !== '불러오는 중...' && queryIp !== '정보 없음') {
+                navigator.clipboard.writeText(queryIp).then(() => {
+                    alert('IP 주소가 클립보드에 복사되었습니다: ' + queryIp);
+                }).catch(err => {
+                    console.error('클립보드 복사 실패:', err);
+                    alert('IP 주소 복사에 실패했습니다. (브라우저 보안 제약 가능)');
+                });
+            } else {
+                alert('복사할 IP 주소가 없습니다.');
+            }
+        });
+    });
+</script>
+</body>
+</html>

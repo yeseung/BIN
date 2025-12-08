@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>Roman Numeral Converter</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 24px 10px 40px;
+            font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR",
+            "Malgun Gothic", system-ui, sans-serif;
+            background: #f4f4f5;
+            color: #111827;
+        }
+
+        .page {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .intro-box {
+            background: #f9fafb;
+            padding: 16px 18px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            line-height: 1.6;
+            font-size: 14px;
+            color: #374151;
+            margin-bottom: 18px;
+        }
+
+        .card {
+            background: #ffffff;
+            padding: 22px 20px 24px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+
+        .card h2 {
+            margin: 0 0 18px;
+            font-size: 20px;
+        }
+
+        .converter-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .converter-col {
+            flex: 1 1 260px;
+        }
+
+        .arrow-col {
+            flex: 0 0 auto;
+            font-size: 32px;
+            text-align: center;
+            padding: 6px 4px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        input[type="number"],
+        input[type="text"] {
+            width: 100%;
+            padding: 9px 11px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+            background: #ffffff;
+        }
+
+        input[type="number"]:focus,
+        input[type="text"]:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.2);
+        }
+
+        .is-invalid {
+            border-color: #dc2626 !important;
+            box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.15);
+        }
+
+        .invalid-feedback {
+            margin-top: 4px;
+            font-size: 12px;
+            color: #b91c1c;
+        }
+
+        @media (max-width: 640px) {
+            .card {
+                padding: 18px 14px 20px;
+            }
+            .arrow-col {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="intro-box">
+        <p>이 도구는 로마 숫자와 아라비아 숫자 간의 양방향 변환을 실시간으로 수행합니다.</p>
+        <p>표준 로마 숫자 표기법(I, V, X, L, C, D, M)을 지원하며, 감산 표기법(IV, IX, XL, XC, CD, CM)을 사용합니다. 범위는 1–3999입니다.</p>
+        <p>숫자를 입력하면 다른 쪽이 자동으로 갱신되며, 잘못된 입력 시 명확한 오류 메시지를 제공하고 로마 숫자는 자동으로 표준 대문자 형식으로 변환됩니다.</p>
+    </div>
+
+    <div class="card">
+        <h2>Roman Numeral ⇄ Arabic Number Converter</h2>
+
+        <div class="converter-row">
+            <!-- Left: Arabic -->
+            <div class="converter-col">
+                <label for="arabic-input">아라비아 숫자 (1–3999)</label>
+                <div class="input-group">
+                    <input
+                            id="arabic-input"
+                            type="number"
+                            min="1"
+                            max="3999"
+                            step="1"
+                            placeholder="1–3999"
+                    />
+                    <div id="arabic-error" class="invalid-feedback" style="display:none;"></div>
+                </div>
+            </div>
+
+            <div class="arrow-col">⇄</div>
+
+            <!-- Right: Roman -->
+            <div class="converter-col">
+                <label for="roman-input">로마 숫자</label>
+                <div class="input-group">
+                    <input
+                            id="roman-input"
+                            type="text"
+                            placeholder="Ex: XIV, MCMXC, MMXXV"
+                    />
+                    <div id="roman-error" class="invalid-feedback" style="display:none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const arabicInput = document.getElementById("arabic-input");
+    const romanInput = document.getElementById("roman-input");
+    const arabicErrorEl = document.getElementById("arabic-error");
+    const romanErrorEl = document.getElementById("roman-error");
+
+    // to avoid infinite loop when we programmatically update the other input
+    let isSyncing = false;
+
+    // Regex to validate standard Roman numerals (1–3999)
+    const romanValidRegex =
+              /^M{0,3}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$/i;
+
+    // int (1–3999) -> Roman
+    function intToRoman(num) {
+        if (!Number.isInteger(num) || num < 1 || num > 3999) return "";
+        const map = [
+            { v: 1000, s: "M" },
+            { v: 900, s: "CM" },
+            { v: 500, s: "D" },
+            { v: 400, s: "CD" },
+            { v: 100, s: "C" },
+            { v: 90, s: "XC" },
+            { v: 50, s: "L" },
+            { v: 40, s: "XL" },
+            { v: 10, s: "X" },
+            { v: 9, s: "IX" },
+            { v: 5, s: "V" },
+            { v: 4, s: "IV" },
+            { v: 1, s: "I" },
+        ];
+        let res = "";
+        let n = num;
+        for (const { v, s } of map) {
+            while (n >= v) {
+                res += s;
+                n -= v;
+            }
+        }
+        return res;
+    }
+
+    // Roman -> int
+    function romanToInt(str) {
+        if (!str || !romanValidRegex.test(str)) return NaN;
+        const s = str.toUpperCase();
+        const val = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 };
+        let sum = 0;
+        for (let i = 0; i < s.length; i++) {
+            const cur = val[s[i]];
+            const next = val[s[i + 1]] || 0;
+            if (cur < next) sum -= cur;
+            else sum += cur;
+        }
+        return sum;
+    }
+
+    function setError(inputEl, errorEl, message) {
+        if (message) {
+            inputEl.classList.add("is-invalid");
+            errorEl.textContent = message;
+            errorEl.style.display = "block";
+        } else {
+            inputEl.classList.remove("is-invalid");
+            errorEl.textContent = "";
+            errorEl.style.display = "none";
+        }
+    }
+
+    function updateFromArabic() {
+        if (isSyncing) return;
+        isSyncing = true;
+
+        setError(arabicInput, arabicErrorEl, "");
+        setError(romanInput, romanErrorEl, "");
+
+        const raw = arabicInput.value;
+        if (raw === "") {
+            romanInput.value = "";
+            isSyncing = false;
+            return;
+        }
+
+        const n = Number(raw);
+
+        if (!Number.isInteger(n)) {
+            setError(arabicInput, arabicErrorEl, "Please enter an integer.");
+            romanInput.value = "";
+            isSyncing = false;
+            return;
+        }
+
+        if (n < 1 || n > 3999) {
+            setError(
+                arabicInput,
+                arabicErrorEl,
+                "Only values from 1 to 3999 are supported."
+            );
+            romanInput.value = "";
+            isSyncing = false;
+            return;
+        }
+
+        const roman = intToRoman(n);
+        romanInput.value = roman;
+        isSyncing = false;
+    }
+
+    function updateFromRoman() {
+        if (isSyncing) return;
+        isSyncing = true;
+
+        setError(arabicInput, arabicErrorEl, "");
+        setError(romanInput, romanErrorEl, "");
+
+        const raw = romanInput.value.trim();
+        if (raw === "") {
+            arabicInput.value = "";
+            isSyncing = false;
+            return;
+        }
+
+        const n = romanToInt(raw);
+        if (Number.isNaN(n)) {
+            setError(romanInput, romanErrorEl, "Invalid Roman numeral format.");
+            arabicInput.value = "";
+            isSyncing = false;
+            return;
+        }
+
+        arabicInput.value = n;
+        // normalize to canonical uppercase form
+        romanInput.value = intToRoman(n);
+        isSyncing = false;
+    }
+
+    arabicInput.addEventListener("input", updateFromArabic);
+    romanInput.addEventListener("input", updateFromRoman);
+
+    // initialize default value
+    arabicInput.value = "1";
+    updateFromArabic();
+</script>
+</body>
+</html>

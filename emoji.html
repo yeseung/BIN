@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>이모지 모음 - 원클릭 자동 복사</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        *{box-sizing:border-box;}
+
+        body{
+            margin:0;
+            font-family:-apple-system,BlinkMacSystemFont,"Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+            background:#f4f5f7;
+            color:#111827;
+        }
+
+        .page-wrap{
+            max-width:960px;
+            margin:32px auto 40px;
+            padding:0 16px;
+        }
+
+        /* 상단 안내 박스 */
+        .top-info{
+            background-color:#EAF6FD;
+            padding:16px 20px;
+            border-left:4px solid #0091D7;
+            margin-top:5px;
+            margin-bottom:24px;
+            word-break:break-all;
+            border-radius:8px;
+            font-size:14px;
+            color:#0f172a;
+        }
+
+        /* ✅ 기존 :root 제거하고 이걸로 교체 */
+        #emoji-page {
+            --accent: #0073e6;
+            --bg-light: #fafbfc;
+            --border: #e3e8ef;
+            --hover-bg: #f0f6ff;
+            --copied-bg: #e0f7e9;
+            --text-color: #333;
+        }
+
+        #emoji-page {
+            max-width: 880px;
+            margin: 0 auto;
+            padding: 30px 20px 40px;
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-family: 'Pretendard','Noto Sans KR',sans-serif;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.03);
+        }
+
+        #emoji-page h2 {
+            font-size: 23px;
+            font-weight: 600;
+            color: var(--text-color);
+            margin:15px 0 8px;
+            text-align: center;
+        }
+
+        #emoji-page p {
+            font-size: 15px;
+            color: #666;
+            text-align: center;
+            margin:0 0 18px;
+        }
+
+        /* 탭 버튼 */
+        .emoji-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 25px;
+        }
+
+        .emoji-tabs button {
+            padding: 7px 15px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: #fff;
+            color: var(--text-color);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .emoji-tabs button:hover {
+            background: var(--hover-bg);
+        }
+
+        .emoji-tabs button.active {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+
+        /* 이모지 그리드 */
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+            gap: 8px;
+            justify-items: center;
+            margin-top: 18px;
+        }
+
+        .emoji-grid span {
+            font-size: 26px;
+            line-height: 1;
+            cursor: pointer;
+            border-radius: 10px;
+            padding: 8px;
+            transition: background 0.15s ease, transform 0.1s ease;
+            user-select: none;
+        }
+
+        .emoji-grid span:hover {
+            background: var(--hover-bg);
+            transform: scale(1.1);
+        }
+
+        .emoji-grid span.copied {
+            background: var(--copied-bg);
+        }
+
+        .hidden { display: none; }
+
+        @media (max-width: 600px) {
+            #emoji-page {
+                padding: 24px 12px;
+            }
+            .emoji-grid {
+                gap: 6px;
+                grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+            }
+            .emoji-tabs button {
+                font-size: 13px;
+                padding: 6px 12px;
+            }
+        }
+    </style>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // 복사 기능
+            document.querySelectorAll(".emoji-grid").forEach(grid => {
+                const raw = grid.innerHTML.trim().split(/\s+/);
+                grid.innerHTML = "";
+                raw.forEach(ch => {
+                    if (!ch) return;
+                    const span = document.createElement("span");
+                    span.textContent = ch;
+                    span.addEventListener("click", () => {
+                        navigator.clipboard.writeText(ch).then(() => {
+                            span.classList.add("copied");
+                            const original = span.textContent;
+                            span.textContent = "✅";
+                            setTimeout(() => {
+                                span.classList.remove("copied");
+                                span.textContent = original;
+                            }, 700);
+                        });
+                    });
+                    grid.appendChild(span);
+                });
+            });
+
+            // 탭 전환
+            const tabs = document.querySelectorAll(".emoji-tabs button");
+            const contents = document.querySelectorAll(".emoji-grid");
+            tabs.forEach(tab => {
+                tab.addEventListener("click", () => {
+                    tabs.forEach(t => t.classList.remove("active"));
+                    tab.classList.add("active");
+                    const target = tab.dataset.tab;
+                    contents.forEach(c => {
+                        c.classList.add("hidden");
+                        if (c.dataset.content === target) c.classList.remove("hidden");
+                    });
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+<div class="page-wrap">
+
+    <div class="top-info">
+        🔍 이모지 모음 사이트! 얼굴·사람·동물·음식·사물·감정·하늘·깃발 등 다양한 카테고리 원클릭 바로 복사! 지금 바로 이모지 모음으로 쉽게 찾아보세요!
+    </div>
+
+    <div id="emoji-page">
+        <h2>✅ 원클릭 자동 복사</h2>
+        <p>
+            💡 환경(기기·브라우저)에 따라 일부 이모지가<br>
+            다르게 보이거나 표시되지 않을 수 있습니다.
+        </p>
+
+        <div class="emoji-tabs">
+            <button data-tab="face" class="active">😊 얼굴·표정</button>
+            <button data-tab="people">🙋 사람·손동작</button>
+            <button data-tab="animal">🐶 동물·자연</button>
+            <button data-tab="food">🍔 음식·음료</button>
+            <button data-tab="activity">⚽ 활동·스포츠</button>
+            <button data-tab="travel">🌍 여행·장소</button>
+            <button data-tab="object">💻 사물·물건</button>
+            <button data-tab="symbol">🔺 기호·심볼</button>
+            <button data-tab="love">❤️ 감정·하트</button>
+            <button data-tab="sparkle">✨ 반짝임·효과</button>
+            <button data-tab="sky">🌈 하늘·날씨</button>
+            <button data-tab="energy">⚡ 에너지·빛</button>
+            <button data-tab="flag">🏳️ 깃발</button>
+        </div>
+
+        <div class="emoji-grid" data-content="face">
+            😀 😃 😄 😁 😆 😅 😂 🤣 😇 😉 😊 🙂 🙃 😋 😌 😍 🥰 😘 😗 😙 😚 😜 🤪 🤨 🧐 🤓 😎 🤩 🥳 😏 😒 😞 😔 😟 😕 🙁 ☹️ 😣 😖 😫 😩 🥺 😢 😭 😤 😠 😡 🤬 😳 🥵 🥶 😱 😨 😰 😥 😓 🤗 🤔 🤭 🤫 🤥 😶 😐 😑 😬 🙄 😯 😦 😧 😮 😲 🥱 😴 😪 😵 😵‍💫 🤐 🤢 🤮 🤧 😷 🤒 🤕 🫠 🫢 🫣 🫡 🤠 😺 😸 😹 😻 😼 🙀 😿 😾 👻 💀 ☠️ 👽 🤖 🎃 😈 👿
+        </div>
+
+        <div class="emoji-grid hidden" data-content="people">
+            👶 👧 🧒 👦 👩 🧑 👨 👩‍🦱 👩‍🦰 👨‍🦰 👨‍🦱 👩‍🦳 👨‍🦳 👩‍🦲 👨‍🦲 🧔 👵 🧓 👴 🧑‍⚕️ 👩‍⚕️ 👨‍⚕️ 🧑‍🏫 👩‍🏫 👨‍🏫 🧑‍💻 👩‍💻 👨‍💻 🧑‍🔧 👩‍🔧 👨‍🔧 🧑‍🍳 👩‍🍳 👨‍🍳 🧑‍🎓 👩‍🎓 👨‍🎓 🧑‍🚀 👩‍🚀 👨‍🚀 🧑‍✈️ 👩‍✈️ 👨‍✈️ 🧑‍🚒 👩‍🚒 👨‍🚒 🧑‍⚖️ 👩‍⚖️ 👨‍⚖️ 🤵 👰 🤰 🤱 🫄 🫃 🙆 🙅 🙋 🙎 🙍 💁 🙇 🤦 🤷 🧏 🙌 👏 🤝 👍 👎 👊 ✊ 🤛 🤜 👌 ✌️ 🤞 🤟 🤘 🤙 👈 👉 👆 👇 ☝️ ✋ 🖐 🖖 👋 🤚 🖕 ✍️ 🙏 💅 🤳 🦵 🦶 👂 👃 👀 👁 👅 👄 🫦 🦷 🦴 🧠 🫀 🫁 🩸
+        </div>
+
+        <div class="emoji-grid hidden" data-content="animal">
+            🐶 🐱 🐭 🐹 🐰 🦊 🐻 🐼 🐨 🐯 🦁 🐮 🐷 🐸 🐵 🐔 🦄 🐝 🐛 🦋 🐌 🐞 🐢 🦕 🦖 🐍 🐙 🦑 🦐 🦞 🦀 🐡 🐠 🐟 🐬 🐳 🐋 🦈 🐊 🐅 🐆 🦓 🦍 🦧 🦣 🐘 🦛 🦏 🐪 🐫 🦒 🐄 🐖 🐏 🐑 🐐 🦙 🦘 🐕 🦮 🐩 🐈 🐓 🦃 🕊 🐇 🐁 🐀 🐿 🦫 🦦 🦥 🦨 🦡 🦢 🦩 🦜 🦉 🦚 🦤 🪼 🌸 🌼 🌻 🌺 🌹 🌷 🌱 🌲 🌳 🌴 🌵 🍀 🍁 🍃 🍄 🌾 🌿 🌰
+        </div>
+
+        <div class="emoji-grid hidden" data-content="food">
+            🍏 🍎 🍐 🍊 🍋 🍌 🍉 🍇 🍓 🍈 🍒 🍑 🥭 🍍 🥥 🥝 🍅 🥑 🍆 🥔 🥕 🌽 🥒 🥬 🧄 🧅 🍄 🥜 🌰 🍞 🥐 🥖 🥨 🧀 🍖 🍗 🥩 🥓 🍔 🍟 🍕 🌭 🌮 🌯 🥙 🧆 🥗 🍝 🍜 🍲 🍛 🍣 🍤 🍱 🍚 🍙 🍘 🍥 🍡 🍢 🍧 🍨 🍦 🥧 🍰 🎂 🧁 🍮 🍭 🍬 🍫 🍿 🍩 🍪 ☕ 🍵 🍺 🍻 🍷 🍸 🍹 🥂 🥃 🥤 🧃 🧋 🧉 🧊 🍶 🫖 🫕 🍯
+        </div>
+
+        <div class="emoji-grid hidden" data-content="activity">
+            ⚽ 🏀 🏈 ⚾ 🎾 🏐 🏉 🎱 🏓 🏸 🥅 🥊 🥋 🎯 🏹 🛷 ⛸ 🛼 🛹 🥌 🎳 🥍 ⛳ 🏒 🏑 🏏 🪃 🪁 🪀 🎮 🎲 ♟ 🎭 🎨 🎬 🎤 🎧 🎷 🎸 🎹 🥁 🎻 🎺 🎼 🩰 🪩 🎪 🎡 🎢 🎠 🎟 🎫 🧩 🧸 🪅 🪆 🎍 🎋 🎏 🎐 🎇 🎆 🌠 ⚡ 🔯 🔱 🌟 💣 🔮 🪩 ✴️ 🌀 🔆 🔅 💡 🔔 🪄 🧨 🔥 ☄️ 🌌 🌈
+        </div>
+
+        <div class="emoji-grid hidden" data-content="travel">
+            🌍 🌎 🌏 🌐 🗺 🧭 🏔 🏕 🏖 🏜 🏝 🏞 🏟 🏛 🏗 🏘 🏠 🏡 🏢 🏣 🏤 🏥 🏦 🏨 🏩 🏪 🏫 🏬 🏭 🏯 🏰 ⛩ 🕋 🕌 🛕 ⛪ 🕍 🗽 🗼 🗿 🚗 🚕 🚙 🚌 🚎 🚓 🚑 🚒 🚐 🚚 🚜 🏍 🛵 🚲 🛺 🚝 🚄 🚅 🚆 🚇 🚈 🚉 ✈️ 🛫 🛬 🚀 🛸 ⛵ 🛳 🚢 ⚓ 🪂 ⛽ 🚧 🚦 🚥 🏁 🚩 🎌 🌅 🌄 🌃 🌆 🌇 🛤 🛣
+        </div>
+
+        <div class="emoji-grid hidden" data-content="object">
+            📱 💻 🖥 🖨 🖱 ⌨️ 💾 💽 💿 📷 📸 📹 🎥 📞 ☎️ 📺 📻 🕰 ⏰ ⏱ ⏲ ⏳ ⌛ 💡 🔦 🔋 🔌 🧯 🧲 ⚙️ 🧰 🧱 🪚 🪛 🔨 🔧 ⚒ 🪓 🪣 🧺 🧹 🧽 🧴 🚪 🪞 🪟 🛏 🛋 🚿 🚽 🛁 🪠 🧻 🔑 🗝 💰 💴 💵 💶 💷 💸 💳 🧾 💎 🎁 📦 📫 📬 📪 📭 ✉️ 📧 📩 📤 📥 🗳 🖊 ✏️ 🖋 🖌 🖍 📖 📚 📓 📒 📔 📕 📗 📘 📙 📑 🔖 📎 🧷 📏 📐 🗂 📁 📂 🗃 🗄 🗑 🧮 🧫 🧪 🧬 ⚗️ 🔬 🔭 📡
+        </div>
+
+        <div class="emoji-grid hidden" data-content="symbol">
+            ♻️ ✅ ❌ ☑️ ✔️ ✖️ ➕ ➖ ➗ ➰ ➿ ✳️ ✴️ ❇️ ‼️ ⁉️ ❓ ❔ ❕ ❗ 🔺 🔻 🔸 🔹 🔶 🔷 🔘 ⚪ ⚫ 🔴 🔵 🟠 🟡 🟢 🟣 🟤 ⬛ ⬜ ♦️ ♣️ ♥️ ♠️ ⚜️ 🔱 🔰 ☮️ ☯️ ✝️ ☪️ ☸️ ✡️ 🔯 ⚠️ 🚫 ⛔ 🔞 ☢️ ☣️ ♀️ ♂️ ⚧️ 🔀 🔁 🔂 🔃 🔄 🔙 🔚 🔛 🔜 🔝 🔼 🔽 ⏫ ⏬ ⏮ ⏭ ⏸ ⏹ ⏺ ▶️ ⏏️ 🕉
+        </div>
+
+        <div class="emoji-grid hidden" data-content="love">
+            ❤️ 🧡 💛 💚 💙 💜 🤎 🖤 🤍 ❤️‍🔥 ❤️‍🩹 💔 💕 💞 💓 💗 💖 💘 💝 💟 ❣️ 💌 💋 💏 🫶 🥰 😍 😘 😗 😙 😚 😻 😽 🥹 🤗 🤭 😳 💐 🌹 🌷 💍 💎
+        </div>
+
+        <div class="emoji-grid hidden" data-content="sparkle">
+            ✨ 💫 💥 💢 💨 💦 💧 💯 💭 💬 🗨 🗯 🎇 🎆 🌠 ⚡ 🔯 🔱 🌟 💣 🔮 🪩 ✴️ 🌀 🔆 🔅 💡 🔔 🪄 🧨 🔥 ☄️ 🌌 🌈
+        </div>
+
+        <div class="emoji-grid hidden" data-content="sky">
+            ☀️ 🌤 ⛅ 🌥 🌦 🌧 🌩 🌪 🌫 🌈 🌙 🌑 🌒 🌓 🌔 🌕 🌖 🌗 🌘 🌚 🌛 🌜 🌞 🌟 ⭐ 🪐 🌌 🌅 🌄 🌇 🌆 🌃 🌉 🌁 🕯 🪔 🌠 ☄️ 🌬 🌝 🌡️ ☁️
+        </div>
+
+        <div class="emoji-grid hidden" data-content="energy">
+            ⚡ 💡 🔦 🔋 🔌 🔆 🔅 🔥 💥 💣 🧨 💫 🌋 🌠 🔮 🪄 🪩 🧲 🧪 🧬 🧫 🧠 🔔 🔕 🔈 🔉 🔊 🔇 📢 📣 📯 🔱 🔯 ✴️ ✳️ 💯 📶 📡 🛰 ☄️ 💨 💦 💧 🌊 🌫 🌪 🌬 🌩 🧯 🪫 🧰 🔧 ⚙️ 🛠 🪛 💭 💬 🗯 🗨 💎 ✨
+        </div>
+
+        <div class="emoji-grid hidden" data-content="flag">
+            🏳️ 🏴 🏁 🚩 🏳️‍🌈 🏳️‍⚧️ 🏴‍☠️ 🇦🇫 🇦🇱 🇩🇿 🇦🇩 🇦🇴 🇦🇮 🇦🇬 🇦🇷 🇦🇲 🇦🇺 🇦🇹 🇦🇿 🇧🇸 🇧🇭 🇧🇩 🇧🇧 🇧🇾 🇧🇪 🇧🇿 🇧🇯 🇧🇴 🇧🇦 🇧🇼 🇧🇷 🇧🇳 🇧🇬 🇧🇫 🇧🇮 🇨🇻 🇰🇭 🇨🇲 🇨🇦 🇨🇫 🇹🇩 🇨🇱 🇨🇳 🇨🇴 🇰🇲 🇨🇬 🇨🇩 🇨🇷 🇨🇮 🇭🇷 🇨🇺 🇨🇾 🇨🇿 🇩🇰 🇩🇯 🇩🇲 🇩🇴 🇪🇨 🇪🇬 🇸🇻 🇬🇶 🇪🇷 🇪🇪 🇸🇿 🇪🇹 🇪🇺 🇫🇯 🇫🇮 🇫🇷 🇬🇦 🇬🇲 🇬🇪 🇩🇪 🇬🇭 🇬🇷 🇬🇩 🇬🇹 🇬🇳 🇬🇼 🇬🇾 🇭🇹 🇭🇳 🇭🇰 🇭🇺 🇮🇸 🇮🇳 🇮🇩 🇮🇷 🇮🇶 🇮🇪 🇮🇱 🇮🇹 🇯🇲 🇯🇵 🇯🇴 🇰🇿 🇰🇪 🇰🇮 🇰🇼 🇰🇬 🇱🇦 🇱🇻 🇱🇧 🇱🇸 🇱🇷 🇱🇹 🇱🇺 🇱🇾 🇱🇮 🇱🇨 🇱🇰 🇲🇴 🇲🇬 🇲🇼 🇲🇾 🇲🇻 🇲🇱 🇲🇹 🇲🇷 🇲🇺 🇲🇽 🇲🇩 🇲🇨 🇲🇳 🇲🇪 🇲🇦 🇲🇿 🇲🇲 🇳🇦 🇳🇵 🇳🇱 🇳🇨 🇳🇿 🇳🇮 🇳🇪 🇳🇬 🇰🇵 🇲🇰 🇳🇴 🇴🇲 🇵🇰 🇵🇼 🇵🇸 🇵🇦 🇵🇬 🇵🇾 🇵🇪 🇵🇭 🇵🇱 🇵🇹 🇵🇷 🇶🇦 🇷🇴 🇷🇺 🇷🇼 🇰🇳 🇱🇨 🇻🇨 🇼🇸 🇸🇲 🇸🇹 🇸🇦 🇸🇳 🇷🇸 🇸🇨 🇸🇱 🇸🇬 🇸🇰 🇸🇮 🇸🇧 🇸🇴 🇿🇦 🇰🇷 🇸🇸 🇪🇸 🇱🇰 🇸🇩 🇸🇷 🇸🇪 🇨🇭 🇸🇾 🇹🇼 🇹🇯 🇹🇿 🇹🇭 🇹🇱 🇹🇬 🇹🇴 🇹🇹 🇹🇳 🇹🇷 🇹🇲 🇺🇬 🇺🇦 🇦🇪 🇬🇧 🇺🇸 🇺🇾 🇺🇿 🇻🇺 🇻🇦 🇻🇪 🇻🇳 🇾🇪 🇿🇲 🇿🇼
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

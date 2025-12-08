@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>책등값(세나카) 계산기</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top, #1f3848 0, #12202a 50%, #0b1418 100%);
+      font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR", "Malgun Gothic", sans-serif;
+      color: #111827;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 420px;
+      padding: 20px;
+    }
+
+    .card {
+      position: relative;
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 22px 20px 20px;
+      box-shadow: 0 18px 40px rgba(15,23,42,0.5);
+      border: 1px solid rgba(148,163,184,0.4);
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background:
+              radial-gradient(circle at top left, rgba(56,189,248,0.16), transparent 55%),
+              radial-gradient(circle at bottom right, rgba(59,130,246,0.18), transparent 55%);
+      opacity: 0.95;
+      pointer-events: none;
+    }
+
+    .card-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .title-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      gap: 8px;
+    }
+
+    .title-icon {
+      font-size: 26px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: #0f172a;
+    }
+
+    .subtitle {
+      font-size: 12px;
+      color: #6b7280;
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field-label {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #1f2933;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .field-label .required {
+      color: #ef4444;
+    }
+
+    .field-label small {
+      font-weight: 400;
+      color: #9ca3af;
+    }
+
+    .select-input,
+    .text-input {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 9px;
+      border: 1px solid #d1d5db;
+      font-size: 14px;
+      background: rgba(255,255,255,0.95);
+    }
+
+    .select-input:focus,
+    .text-input:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 1px rgba(37,99,235,0.25);
+      background: #ffffff;
+    }
+
+    .field-hint {
+      margin-top: 4px;
+      font-size: 11px;
+      color: #9ca3af;
+    }
+
+    .result-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 10px;
+      padding: 10px 10px;
+      border-radius: 12px;
+      background: rgba(15,23,42,0.03);
+      border: 1px solid rgba(148,163,184,0.4);
+    }
+
+    .result-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    #seneca_result {
+      font-size: 20px;
+      width: 110px;
+      height: 38px;
+      border-radius: 10px;
+      border: 2px solid #0ea5e9;
+      text-align: right;
+      padding: 4px 10px;
+      font-weight: 700;
+      color: #dc2626;
+      background: #f9fafb;
+    }
+
+    .result-unit {
+      font-size: 15px;
+      color: #374151;
+      font-weight: 600;
+    }
+
+    /* 키패드 */
+    .keypad {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .key-btn {
+      border-radius: 12px;
+      padding: 10px 0;
+      font-size: 18px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      color: #ffffff;
+      background: linear-gradient(135deg,#0ea5e9,#2563eb);
+      box-shadow: 0 8px 18px rgba(37,99,235,0.45);
+      transition: background .15s ease, transform .06s ease,
+      box-shadow .15s ease, filter .1s ease;
+    }
+
+    .key-btn:hover {
+      filter: brightness(1.05);
+      transform: translateY(-1px);
+      box-shadow: 0 12px 26px rgba(37,99,235,0.55);
+    }
+
+    .key-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 6px 14px rgba(37,99,235,0.45);
+    }
+
+    .key-btn.secondary {
+      background: #e5e7eb;
+      color: #111827;
+      box-shadow: 0 6px 14px rgba(148,163,184,0.45);
+    }
+
+    .key-btn.secondary:hover {
+      background: #d1d5db;
+    }
+
+    .key-btn.danger {
+      background: #f97316;
+      box-shadow: 0 8px 18px rgba(248,113,113,0.5);
+    }
+
+    .key-btn.danger:hover {
+      background: #ea580c;
+    }
+
+    .footer-note {
+      margin-top: 12px;
+      font-size: 11px;
+      color: #9ca3af;
+      text-align: center;
+    }
+
+    @media (max-width: 480px) {
+      .card {
+        padding: 18px 16px 18px;
+      }
+      h1 {
+        font-size: 18px;
+      }
+      #seneca_result {
+        width: 100px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="card">
+    <div class="card-inner">
+      <div class="title-row">
+        <div class="title-icon">📚</div>
+        <h1>책등값(세나카) 계산기</h1>
+      </div>
+      <p class="subtitle">
+        종이 재질과 페이지 수를 입력하면 예상 책등 두께(mm)를 계산합니다.
+      </p>
+
+      <!-- 종이 재질 -->
+      <div class="field">
+        <label class="field-label">
+          <span class="required">*</span> 종이 재질
+        </label>
+        <select id="seneca_p_selector" class="select-input">
+          <option value="7.53676470588235E-02">그린라이트 100g</option>
+          <option value="5.08967391304348E-02">뉴플러스 미색 100g</option>
+          <option value="0.039625">뉴플러스 미색 80g</option>
+          <option value="0.05065">뉴플러스 백색 100g</option>
+          <option value="4.04137931034483E-02">뉴플러스 백색 80g</option>
+          <option value="7.07575757575758E-02">랑데뷰 내츄럴 105g</option>
+          <option value="0.088">랑데뷰 내츄럴 130g</option>
+          <option value="0.110882352941176">랑데뷰 내츄럴 160g</option>
+          <option value="0.130555555555556">랑데뷰 내츄럴 190g</option>
+          <option value="7.07575757575758E-02">랑데뷰 울트라 105g</option>
+          <option value="0.088">랑데뷰 울트라 130g</option>
+          <option value="5.64356435643564E-02">모조 미색 100g</option>
+          <option value="0.0425">모조 미색 70g</option>
+          <option value="0.0453125">모조 미색 80g</option>
+          <option value="0.059">모조 백색 100g</option>
+          <option value="0.0675">모조 백색 120g</option>
+          <option value="0.085">모조 백색 150g</option>
+          <option value="0.103404255319149">모조 백색 180g</option>
+          <option value="0.0425">모조 백색 70g</option>
+          <option value="4.61084905660377E-02">모조 백색 80g</option>
+          <option value="6.53846153846154E-02">몽블랑 100g</option>
+          <option value="0.0875">몽블랑 130g</option>
+          <option value="0.103333333333333">몽블랑 160g </option>
+          <option value="0.06046875">몽블랑 90g</option>
+          <option value="0.06484375">몽블랑 엑스트라 100g</option>
+          <option value="4.39024390243902E-02">스노우 100g</option>
+          <option value="5.81325301204819E-02">스노우 120g</option>
+          <option value="7.22916666666667E-02">스노우 150g</option>
+          <option value="8.94736842105263E-02">스노우 180g</option>
+          <option value="0.1">스노우 200g</option>
+          <option value="7.23214285714286E-02">아르떼 내츄럴 105g</option>
+          <option value="0.0925">아르떼 내츄럴 130g</option>
+          <option value="0.1125">아르떼 내츄럴 160g</option>
+          <option value="7.23214285714286E-02">아르떼 울트라 105g</option>
+          <option value="0.0925">아르떼 울트라 130g</option>
+          <option value="0.1125">아르떼 울트라 160g</option>
+          <option value="0.0415">아트 100g (평량100)</option>
+          <option value="3.78787878787879E-02">아트 100g (합판종이)</option>
+          <option value="0.04975">아트 120g</option>
+          <option value="0.06125">아트 150g</option>
+          <option value="0.075">아트 180g</option>
+          <option value="9.61538461538462E-02">아트 200g</option>
+          <option value="0.075">앙상블 E 내츄럴 100g</option>
+          <option value="0.0925">앙상블 E 내츄럴 130g</option>
+          <option value="0.10703125">앙상블 E 내츄럴 160g</option>
+          <option value="6.66517857142857E-02">이라이트미무 80g</option>
+          <option value="3.66666666666667E-02">코트 80g</option>
+          <option value="5.58479532163743E-02">클라우드 80g</option>
+          <option value="8.41666666666667E-02">키아라 135g</option>
+          <option value="5.51470588235294E-02">하이플러스 100g</option>
+          <option value="0.04728125">하이플러스 90g</option>
+        </select>
+      </div>
+
+      <!-- 페이지 수 -->
+      <div class="field">
+        <label class="field-label">
+          <span class="required">*</span> 페이지 수
+          <small>(표지 제외)</small>
+        </label>
+        <input id="total_page" name="total_page" type="text"
+               class="text-input" placeholder="숫자만 입력하세요" inputmode="numeric">
+        <div class="field-hint">표지를 제외한 내지 페이지 수만 입력해 주세요.</div>
+      </div>
+
+      <!-- 결과 -->
+      <div class="result-row">
+        <div class="result-label">책등값(세나카)</div>
+        <input type="text" id="seneca_result" readonly>
+        <span class="result-unit">mm</span>
+      </div>
+
+      <!-- 키패드 -->
+      <div class="keypad">
+        <button type="button" class="key-btn">1</button>
+        <button type="button" class="key-btn">2</button>
+        <button type="button" class="key-btn">3</button>
+
+        <button type="button" class="key-btn">4</button>
+        <button type="button" class="key-btn">5</button>
+        <button type="button" class="key-btn">6</button>
+
+        <button type="button" class="key-btn">7</button>
+        <button type="button" class="key-btn">8</button>
+        <button type="button" class="key-btn">9</button>
+
+        <button type="button" class="key-btn danger">C</button>
+        <button type="button" class="key-btn">0</button>
+        <button type="button" class="key-btn secondary">←</button>
+      </div>
+
+      <div class="footer-note">
+        계산값은 제작 환경에 따라 다소 차이가 있을 수 있습니다.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 숫자만 남기기
+  function sanitizeNumberString(str) {
+    return String(str || "").replace(/[^\d]/g, "");
+  }
+
+  function calcSeneca() {
+    var pStr = document.getElementById("seneca_p_selector").value;
+    var totalStr = sanitizeNumberString(
+            document.getElementById("total_page").value
+    );
+
+    var perPage = parseFloat(pStr || "0");
+    var totalPage = parseInt(totalStr || "0", 10);
+
+    if (!perPage || !totalPage) {
+      document.getElementById("seneca_result").value = "";
+      return;
+    }
+
+    var result = perPage * totalPage;
+    document.getElementById("seneca_result").value = result.toFixed(1);
+  }
+
+  function handleKeypadClick(value) {
+    var input = document.getElementById("total_page");
+    var current = sanitizeNumberString(input.value);
+
+    if (value === "C") {
+      current = "";
+    } else if (value === "←") {
+      current = current.slice(0, -1);
+    } else {
+      current = current + value;
+    }
+
+    // 앞자리 0 제거
+    current = current.replace(/^0+/, "");
+    input.value = current;
+    calcSeneca();
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    var totalInput = document.getElementById("total_page");
+    var selector = document.getElementById("seneca_p_selector");
+
+    totalInput.addEventListener("input", function () {
+      var cleaned = sanitizeNumberString(totalInput.value);
+      if (totalInput.value !== cleaned) {
+        totalInput.value = cleaned;
+      }
+      calcSeneca();
+    });
+
+    selector.addEventListener("change", calcSeneca);
+
+    document.querySelectorAll(".key-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        handleKeypadClick(btn.textContent.trim());
+      });
+    });
+  });
+</script>
+</body>
+</html>

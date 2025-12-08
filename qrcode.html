@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>QR코드 만들기 - 무료 생성기</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+            background: #f4f5f7;
+            color: #111827;
+        }
+
+        .qr-page-wrap {
+            max-width: 960px;
+            margin: 32px auto 40px;
+            padding: 0 16px;
+        }
+
+        /* 상단 안내 박스 */
+        .qr-info-box {
+            background-color: #EAF6FD;
+            padding: 16px 20px;
+            border-left: 4px solid #0091D7;
+            margin-top: 5px;
+            margin-bottom: 24px;
+            word-break: break-all;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #0f172a;
+        }
+
+        .qr-subnote {
+            text-align: center;
+            color: #777;
+            margin: 0 0 18px;
+            font-size: 14px;
+        }
+
+        /* 카드 */
+        .qr-card {
+            max-width: 720px;
+            margin: 28px auto;
+            padding: 22px;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            background: #fff;
+            box-shadow: 0 4px 14px rgba(0,0,0,.04);
+        }
+
+        .qr-card textarea,
+        .qr-card input,
+        .qr-card select {
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .qr-textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            resize: vertical;
+        }
+
+        .qr-grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .qr-grid-2 label span {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .qr-input,
+        .qr-select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+        }
+
+        .qr-color {
+            width: 100%;
+            height: 42px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 0;
+        }
+
+        /* ✅ 버튼 hover 효과 */
+        #tnfQrMake:hover:not(:disabled),
+        #tnfQrDownloadPng:hover:not(:disabled),
+        #tnfQrDownloadJpg:hover:not(:disabled) {
+            background-color: #222;
+            transform: scale(1.03);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            transition: all 0.15s ease-in-out;
+        }
+        #tnfQrMake:disabled:hover,
+        #tnfQrDownloadPng:disabled:hover,
+        #tnfQrDownloadJpg:disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* ✅ 반응형 버튼 */
+        .tnf-btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+        .tnf-btn {
+            flex: 1;
+            height: 44px;
+            border: none;
+            border-radius: 9999px;
+            background: #111;
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .tnf-btn:disabled {
+            background: #f3f4f6;
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        /* 📱 모바일에서 세로 정렬 */
+        @media (max-width: 640px) {
+            .tnf-btn-group {
+                flex-direction: column;
+            }
+            .tnf-btn {
+                width: 100%;
+                flex: none;
+            }
+        }
+
+        /* 미리보기 박스 */
+        #tnfQrPreviewBox {
+            margin-top: 18px;
+            padding: 18px;
+            border: 1px dashed #ccc;
+            border-radius: 12px;
+            text-align: center;
+            background: #fafafa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 260px;
+        }
+
+        /* ECC 표 */
+        .ecc-wrap {
+            margin-top: 26px;
+            text-align: center;
+        }
+        .ecc-wrap h3 {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .ecc-table {
+            display: inline-table;
+            border-collapse: collapse;
+            font-size: 15px;
+            text-align: center;
+        }
+        .ecc-table td {
+            padding: 8px 14px;
+            border: 1px solid #e5e7eb;
+        }
+        .ecc-table thead td {
+            background: #f3f4f6;
+            font-weight: 600;
+        }
+    </style>
+
+    <!-- QRCode 라이브러리 (qrcodejs) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+<div class="qr-page-wrap">
+
+    <div class="qr-info-box">
+        🔍 QR코드 만들기 무료 사이트! URL, 문장만 입력하면 즉시 QR코드 생성! 색상과 크기 변경 가능! 지금 바로 QR코드 만들기로 제작해보세요!
+    </div>
+
+    <p class="qr-subnote">❗️ 너무 큰 크기는 생성이 불가능합니다.</p>
+
+    <div class="qr-card">
+    <textarea id="tnfQrText" rows="3" class="qr-textarea"
+              placeholder="예: 기술술 혹은 https://techtnf.com"></textarea>
+
+        <div class="qr-grid-2">
+            <label>
+                <span>크기(px)</span>
+                <input id="tnfQrSize" type="number" value="256" class="qr-input">
+            </label>
+            <label>
+                <span>오류정정(ECC)</span>
+                <select id="tnfQrEC" class="qr-select">
+                    <option value="L">L</option>
+                    <option value="M" selected>M</option>
+                    <option value="Q">Q</option>
+                    <option value="H">H</option>
+                </select>
+            </label>
+        </div>
+
+        <div class="qr-grid-2">
+            <label>
+                <span>QR 색상</span>
+                <input id="tnfQrFG" type="color" value="#111111" class="qr-color">
+            </label>
+            <label>
+                <span>배경색상</span>
+                <input id="tnfQrBG" type="color" value="#ffffff" class="qr-color">
+            </label>
+        </div>
+
+        <!-- ✅ 반응형 버튼 그룹 -->
+        <div class="tnf-btn-group">
+            <button id="tnfQrMake" class="tnf-btn">QR 만들기</button>
+            <button id="tnfQrDownloadPng" class="tnf-btn" disabled>PNG 다운로드</button>
+            <button id="tnfQrDownloadJpg" class="tnf-btn" disabled>JPG 다운로드</button>
+        </div>
+
+        <div id="tnfQrPreviewBox">
+            <div id="tnfQrCanvasBox"></div>
+            <p id="tnfQrPlaceholder" style="color:#888;margin:0;">아직 QR 코드가 생성되지 않았습니다.</p>
+        </div>
+
+        <!-- ECC 표 -->
+        <div class="ecc-wrap">
+            <h3>오류정정(ECC) 레벨</h3>
+            <table class="ecc-table">
+                <thead>
+                <tr>
+                    <td>레벨</td>
+                    <td>복원율</td>
+                    <td>의미</td>
+                    <td>해석</td>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>L</td>
+                    <td>약 7%</td>
+                    <td>Low</td>
+                    <td>손상 거의 없는 환경, 가장 단순</td>
+                </tr>
+                <tr>
+                    <td>M</td>
+                    <td>약 15%</td>
+                    <td>Medium</td>
+                    <td>기본값. 일상적 사용에 균형적</td>
+                </tr>
+                <tr>
+                    <td>Q</td>
+                    <td>약 25%</td>
+                    <td>Quartile</td>
+                    <td>로고 삽입/일부 가림 대비</td>
+                </tr>
+                <tr>
+                    <td>H</td>
+                    <td>약 30%</td>
+                    <td>High</td>
+                    <td>최고 복원력. 인쇄물/실외 노출</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function(){
+        function ready(fn){
+            document.readyState !== 'loading'
+                ? fn()
+                : document.addEventListener('DOMContentLoaded', fn);
+        }
+
+        ready(function(){
+            if (typeof QRCode === 'undefined') {
+                alert('⚠️ qrcode.min.js 파일이 로드되지 않았습니다.');
+                return;
+            }
+
+            const $ = id => document.getElementById(id);
+
+            const elText = $('tnfQrText');
+            const elSize = $('tnfQrSize');
+            const elEC   = $('tnfQrEC');
+            const elFG   = $('tnfQrFG');
+            const elBG   = $('tnfQrBG');
+
+            const btnMake = $('tnfQrMake');
+            const btnPng  = $('tnfQrDownloadPng');
+            const btnJpg  = $('tnfQrDownloadJpg');
+
+            const box        = $('tnfQrCanvasBox');
+            const placeholder = $('tnfQrPlaceholder');
+
+            function makeQR(){
+                const text = (elText.value || '').trim();
+                if (!text) {
+                    alert('텍스트 또는 URL을 입력해주세요.');
+                    return;
+                }
+
+                const size = parseInt(elSize.value || 256, 10);
+                if (!size || size <= 0) {
+                    alert('크기를 올바르게 입력해주세요.');
+                    return;
+                }
+
+                box.innerHTML = '';
+                placeholder.style.display = 'none';
+
+                new QRCode(box, {
+                    text: text,
+                    width: size,
+                    height: size,
+                    colorDark: elFG.value || '#111111',
+                    colorLight: elBG.value || '#FFFFFF',
+                    correctLevel: QRCode.CorrectLevel[elEC.value || 'M']  // 선택한 ECC 반영
+                });
+
+                [btnPng, btnJpg].forEach(b => {
+                    b.disabled = false;
+                    b.style.background = '#111';
+                    b.style.color = '#fff';
+                    b.style.cursor = 'pointer';
+                });
+            }
+
+            // ✅ 한글/자음·모음 포함 파일명 처리
+            function makeFilename(base, ext){
+                let name = (base || 'qrcode').trim();
+                // 제어 문자 제거
+                name = name.replace(/[\u0000-\u001F\u007F]/g, '');
+                // 한글(자모·완성형) + 영문/숫자/일부 기호만 허용
+                name = name.replace(/[^0-9A-Za-z\u1100-\u11FF\u3131-\u318E\uAC00-\uD7A3 _\-.()+]/g, '_');
+                // 공백 정리 + 길이 제한
+                name = name.replace(/\s+/g, ' ').slice(0, 120);
+                if (!name) name = 'qrcode';
+                return name + '.' + ext;
+            }
+
+            function download(format){
+                const canvas = box.querySelector('canvas');
+                if (!canvas) {
+                    alert('먼저 QR 코드를 생성해주세요.');
+                    return;
+                }
+
+                const filename = makeFilename(elText.value, format);
+
+                if (canvas.toBlob) {
+                    canvas.toBlob(function(blob){
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        URL.revokeObjectURL(url);
+                    }, (format === 'jpg') ? 'image/jpeg' : 'image/png', 0.92);
+                } else {
+                    const a = document.createElement('a');
+                    a.href = canvas.toDataURL(
+                        (format === 'jpg') ? 'image/jpeg' : 'image/png',
+                        0.92
+                    );
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                }
+            }
+
+            btnMake.addEventListener('click', makeQR);
+            btnPng.addEventListener('click',  () => download('png'));
+            btnJpg.addEventListener('click',  () => download('jpg'));
+        });
+    })();
+</script>
+</body>
+</html>

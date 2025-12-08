@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>Simple Shoe Size Converter</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 24px 10px 40px;
+            font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR",
+            "Malgun Gothic", system-ui, sans-serif;
+            background: #f4f4f5;
+            color: #111827;
+        }
+
+        .page {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .intro-box {
+            background: #f9fafb;
+            padding: 16px 18px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            line-height: 1.6;
+            font-size: 14px;
+            color: #374151;
+            margin-bottom: 18px;
+        }
+
+        .intro-box p {
+            margin: 0 0 6px;
+        }
+
+        .card {
+            background: #ffffff;
+            padding: 22px 20px 24px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+
+        .card h2 {
+            margin: 0 0 18px;
+            font-size: 20px;
+        }
+
+        .mb-3 {
+            margin-bottom: 16px;
+        }
+
+        label.form-label {
+            font-size: 14px;
+            font-weight: 600;
+            margin-right: 4px;
+        }
+
+        .select-inline {
+            display: inline-block;
+            min-width: 110px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            font-size: 14px;
+            background: #ffffff;
+            margin-right: 8px;
+        }
+
+        .converter-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .converter-col {
+            flex: 1 1 260px;
+        }
+
+        .arrow-col {
+            flex: 0 0 auto;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        .input-group {
+            display: flex;
+            width: 100%;
+        }
+
+        .input-group input[type="number"] {
+            flex: 1 1 auto;
+            padding: 9px 11px;
+            font-size: 15px;
+            border-radius: 8px 0 0 8px;
+            border: 1px solid #d1d5db;
+            outline: none;
+            min-width: 0;
+        }
+
+        .input-group select {
+            flex: 0 0 130px;
+            padding: 9px 10px;
+            font-size: 14px;
+            border-radius: 0 8px 8px 0;
+            border: 1px solid #d1d5db;
+            border-left: none;
+            background: #f9fafb;
+            min-width: 0;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus,
+        .select-inline:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.2);
+            outline: none;
+        }
+
+        @media (max-width: 640px) {
+            .card {
+                padding: 18px 14px 20px;
+            }
+            .select-inline {
+                margin-top: 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="intro-box">
+        <p>신발 사이즈 변환기는 다양한 국가의 신발 사이즈를 서로 변환할 수 있는 도구입니다.</p>
+        <p>성별과 브랜드, 출발 국가와 목표 국가를 선택하고 한 쪽에 사이즈를 입력하면 다른 쪽이 자동으로 계산됩니다.</p>
+    </div>
+
+    <div class="card">
+        <h2>Simple Shoe Size Converter</h2>
+
+        <div class="mb-3">
+            <label class="form-label" for="gender-select">성별：</label>
+            <select id="gender-select" class="select-inline">
+                <option value="male">남성</option>
+                <option value="female">여성</option>
+            </select>
+
+            <label class="form-label" for="brand-select">브랜드：</label>
+            <select id="brand-select" class="select-inline">
+                <option value="none">일반</option>
+                <option value="nike">Nike</option>
+                <option value="adidas">Adidas</option>
+                <option value="puma">Puma</option>
+                <option value="newbalance">New Balance</option>
+                <option value="converse">Converse</option>
+            </select>
+        </div>
+
+        <div class="converter-row">
+            <!-- Left side -->
+            <div class="converter-col">
+                <div class="input-group">
+                    <input type="number" id="value-left" placeholder="사이즈 입력">
+                    <select id="from-unit">
+                        <option value="JP">일본 (JP)</option>
+                        <option value="US">미국 (US)</option>
+                        <option value="UK">영국 (UK)</option>
+                        <option value="EU">유럽 (EU)</option>
+                        <option value="TW">대만 (TW)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="arrow-col">=</div>
+
+            <!-- Right side -->
+            <div class="converter-col">
+                <div class="input-group">
+                    <input type="number" id="value-right" placeholder="변환 결과">
+                    <select id="to-unit">
+                        <option value="JP">일본 (JP)</option>
+                        <option value="US">미국 (US)</option>
+                        <option value="UK">영국 (UK)</option>
+                        <option value="EU">유럽 (EU)</option>
+                        <option value="TW">대만 (TW)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const valueLeftEl = document.getElementById("value-left");
+        const valueRightEl = document.getElementById("value-right");
+        const fromUnitEl = document.getElementById("from-unit");
+        const toUnitEl = document.getElementById("to-unit");
+        const genderEl = document.getElementById("gender-select");
+        const brandEl = document.getElementById("brand-select");
+
+        const conversionChart = {
+            male: {
+                JP: 0,
+                US: -18.5,
+                UK: -19.5,
+                EU: 31.5,
+                TW: 0
+            },
+            female: {
+                JP: 0,
+                US: -19.5,
+                UK: -20.5,
+                EU: 31.5,
+                TW: 0
+            }
+        };
+
+        const brandAdjustments = {
+            nike: {
+                male: { US: -0.5 },
+                female: { US: -0.5 }
+            },
+            adidas: {
+                male: { US: -0.3 },
+                female: { US: -0.3 }
+            },
+            puma: {
+                male: { US: -0.2 },
+                female: { US: -0.3 }
+            },
+            newbalance: {
+                male: { US: -0.4 },
+                female: { US: -0.4 }
+            },
+            converse: {
+                male: { US: 0.5 },
+                female: { US: 0.5 }
+            }
+        };
+
+        function convert(value, from, to) {
+            const currentGender = genderEl.value;
+            const base = conversionChart[currentGender];
+            if (!base) return NaN;
+
+            const offsetFrom = base[from];
+            const offsetTo = base[to];
+
+            if (offsetFrom === undefined || offsetTo === undefined) return NaN;
+
+            let result = value + offsetFrom - offsetTo;
+
+            const brand = brandEl.value;
+            if (brand !== "none") {
+                const adj =
+                          (brandAdjustments[brand] &&
+                              brandAdjustments[brand][currentGender] &&
+                              brandAdjustments[brand][currentGender][to]) ||
+                          0;
+                result += adj;
+            }
+
+            return result;
+        }
+
+        function updateFromLeft() {
+            const v = parseFloat(valueLeftEl.value);
+            if (isNaN(v)) {
+                valueRightEl.value = "";
+                return;
+            }
+            const res = convert(v, fromUnitEl.value, toUnitEl.value);
+            valueRightEl.value = isNaN(res) ? "" : res.toFixed(1);
+        }
+
+        function updateFromRight() {
+            const v = parseFloat(valueRightEl.value);
+            if (isNaN(v)) {
+                valueLeftEl.value = "";
+                return;
+            }
+            const res = convert(v, toUnitEl.value, fromUnitEl.value);
+            valueLeftEl.value = isNaN(res) ? "" : res.toFixed(1);
+        }
+
+        // 이벤트 바인딩
+        valueLeftEl.addEventListener("input", updateFromLeft);
+        fromUnitEl.addEventListener("change", updateFromLeft);
+        valueRightEl.addEventListener("input", updateFromRight);
+        toUnitEl.addEventListener("change", updateFromRight);
+        genderEl.addEventListener("change", updateFromLeft);
+        brandEl.addEventListener("change", updateFromLeft);
+
+        // 초기값 설정
+        valueLeftEl.value = "25";
+        fromUnitEl.value = "JP";
+        toUnitEl.value = "US";
+        genderEl.value = "male";
+        brandEl.value = "none";
+        updateFromLeft();
+    })();
+</script>
+</body>
+</html>

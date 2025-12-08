@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>Simple Metronome</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 24px 10px 40px;
+            font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR",
+            "Malgun Gothic", system-ui, sans-serif;
+            background: #f4f4f5;
+            color: #111827;
+        }
+
+        .page {
+            max-width: 720px;
+            margin: 0 auto;
+        }
+
+        .intro-box {
+            background: #f9fafb;
+            padding: 16px 18px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            line-height: 1.6;
+            font-size: 14px;
+            color: #374151;
+            margin-bottom: 20px;
+        }
+
+        h4 {
+            margin: 0 0 10px;
+            font-size: 22px;
+        }
+
+        .card {
+            background: #ffffff;
+            padding: 22px 20px 26px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            text-align: center;
+        }
+
+        #visualBeat {
+            margin: 30px auto 0;
+            width: 200px;
+            height: 200px;
+            background-color: #87ceeb;
+            border-radius: 50%;
+            opacity: 0.2;
+            transition: opacity 0.1s, background-color 0.1s;
+        }
+
+        .slider-row {
+            margin-top: 26px;
+        }
+
+        #bpmSlider {
+            width: 80%;
+            margin-top: 8px;
+        }
+
+        .btn {
+            display: inline-block;
+            margin: 4px 4px;
+            padding: 7px 14px;
+            border-radius: 9999px;
+            border: 1px solid #d1d5db;
+            background: #f3f4f6;
+            color: #111827;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.15s ease, transform 0.1s ease,
+            box-shadow 0.15s ease;
+        }
+
+        .btn:hover {
+            background: #e5e7eb;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+        }
+
+        .btn-main {
+            padding: 18px 0;
+            width: 100%;
+            margin-top: 14px;
+            margin-bottom: 26px;
+            font-size: 20px;
+            border-radius: 10px;
+            border: 0;
+            background: teal;
+            color: #ffffff;
+            cursor: pointer;
+            box-shadow: 0 3px 0 rgba(0,0,0,0.15);
+            transition: background 0.15s ease, transform 0.1s ease,
+            box-shadow 0.15s ease;
+        }
+
+        .btn-main:hover {
+            background: #007b7b;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.18);
+        }
+
+        .btn-group {
+            margin-bottom: 10px;
+        }
+
+        select {
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            font-size: 14px;
+            margin-top: 6px;
+        }
+
+        label {
+            font-size: 15px;
+        }
+
+        @media (max-width: 480px) {
+            #visualBeat {
+                width: 160px;
+                height: 160px;
+            }
+
+            .card {
+                padding: 18px 14px 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="intro-box">
+        <strong>심플 메트로놈(Simple Metronome)</strong>은 템포(BPM)와 박자 수를
+        간단히 조절할 수 있는 웹 메트로놈입니다. 슬라이더나 프리셋 버튼으로 템포를
+        변경하고, 원하는 박자표를 선택해 시각/청각으로 박자를 확인할 수 있습니다.
+    </div>
+
+    <div class="card">
+        <h4><b>심플 메트로놈 (Simple Metronome)</b></h4>
+
+        <div id="visualBeat"></div>
+
+        <div class="slider-row">
+            <label for="bpmSlider">
+                Tempo :
+                <span id="bpmDisplay">60</span> BPM
+                (<span id="tempoName">Largo</span>)
+            </label>
+            <br />
+            <input
+                    type="range"
+                    id="bpmSlider"
+                    min="40"
+                    max="208"
+                    value="60"
+                    oninput="updateTempo()"
+            />
+        </div>
+
+        <div style="margin-top: 12px;">
+            <input type="button" class="btn" value="◁ 느리게" onclick="changeBPM(-1)" />
+            <input type="button" class="btn" value="빠르게 ▷" onclick="changeBPM(1)" />
+        </div>
+
+        <div style="margin-top: 18px;">
+            <label for="beatsPerMeasure">박자 선택 : </label><br />
+            <select id="beatsPerMeasure" onchange="resetBeat()">
+                <option value="2">[ 2 / 4 ]</option>
+                <option value="3">[ 3 / 4 ]</option>
+                <option value="4" selected>[ 4 / 4 ]</option>
+                <option value="5">[ 5 / 4 ]</option>
+                <option value="6">[ 6 / 8 ]</option>
+                <option value="7">[ 7 / 8 ]</option>
+            </select>
+        </div>
+
+        <button onclick="toggleMetronome()" id="startBtn" class="btn-main">
+            Start
+        </button>
+
+        <div class="btn-group">
+            <input type="button" class="btn" value="Largo" onclick="setTempo(40)" />
+            <input type="button" class="btn" value="Adagio" onclick="setTempo(66)" />
+            <input type="button" class="btn" value="Andante" onclick="setTempo(76)" />
+            <input type="button" class="btn" value="Moderato" onclick="setTempo(120)" />
+            <input type="button" class="btn" value="Allegro" onclick="setTempo(140)" />
+            <input type="button" class="btn" value="Presto" onclick="setTempo(168)" />
+        </div>
+
+        <div class="btn-group">
+            <input type="button" class="btn" value="50 BPM" onclick="setTempo(50)" />
+            <input type="button" class="btn" value="100 BPM" onclick="setTempo(100)" />
+            <input type="button" class="btn" value="150 BPM" onclick="setTempo(150)" />
+            <input type="button" class="btn" value="200 BPM" onclick="setTempo(200)" />
+        </div>
+    </div>
+</div>
+
+<script>
+    let bpm = 60;
+    let isRunning = false;
+    let intervalId = null;
+    let currentBeat = 0;
+    let beatsPerMeasure = 4;
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    const bpmSlider = document.getElementById("bpmSlider");
+    const bpmValue = document.getElementById("bpmDisplay");
+
+    bpmSlider.addEventListener("input", function () {
+        bpm = parseInt(bpmSlider.value);
+        bpmValue.innerText = bpm;
+        document.getElementById("tempoName").innerText = getTempoName(bpm);
+    });
+
+    // 업/다운 버튼 클릭 시 BPM 조정
+    function changeBPM(direction) {
+        let currentBPM = parseInt(bpmSlider.value);
+        currentBPM += direction;
+
+        if (currentBPM >= 40 && currentBPM <= 208) {
+            bpmSlider.value = currentBPM;
+            bpm = currentBPM;
+            bpmValue.innerText = currentBPM;
+            document.getElementById("tempoName").innerText = getTempoName(currentBPM);
+
+            if (isRunning) {
+                clearInterval(intervalId);
+                startMetronome();
+            }
+        }
+    }
+
+    function updateTempo() {
+        bpm = document.getElementById("bpmSlider").value;
+        document.getElementById("bpmDisplay").innerText = bpm;
+        document.getElementById("tempoName").innerText = getTempoName(bpm);
+        if (isRunning) {
+            clearInterval(intervalId);
+            startMetronome();
+        }
+    }
+
+    function getTempoName(bpm) {
+        if (bpm < 60) return "Largo";
+        if (bpm < 76) return "Adagio";
+        if (bpm < 108) return "Andante";
+        if (bpm < 120) return "Moderato";
+        if (bpm < 168) return "Allegro";
+        return "Presto";
+    }
+
+    function resetBeat() {
+        beatsPerMeasure = parseInt(
+            document.getElementById("beatsPerMeasure").value,
+            10
+        );
+        currentBeat = 0;
+    }
+
+    function toggleMetronome() {
+        if (isRunning) {
+            stopMetronome();
+        } else {
+            startMetronome();
+        }
+    }
+
+    function startMetronome() {
+        isRunning = true;
+        document.getElementById("startBtn").innerText = "Stop";
+        resetBeat();
+        tick(); // 첫 박자 즉시 재생
+        intervalId = setInterval(tick, 60000 / parseInt(bpm, 10));
+    }
+
+    function stopMetronome() {
+        isRunning = false;
+        clearInterval(intervalId);
+        document.getElementById("startBtn").innerText = "Start";
+    }
+
+    function tick() {
+        const visual = document.getElementById("visualBeat");
+
+        // 시각 효과: 깜빡임
+        visual.style.opacity = 1;
+        visual.style.backgroundColor =
+            currentBeat === 0 ? "#ff6347" : "#87ceeb"; // 첫 박자: 빨간색
+        setTimeout(() => {
+            visual.style.opacity = 0;
+        }, 150);
+
+        // 소리 재생
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.frequency.value = currentBeat === 0 ? 1200 : 800; // 첫 박자: 높은 음
+        gain.gain.value = 0.1;
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.05);
+
+        // 다음 박자
+        currentBeat = (currentBeat + 1) % beatsPerMeasure;
+    }
+
+    function setTempo(tempo) {
+        bpm = tempo;
+        bpmSlider.value = tempo;
+        bpmValue.innerText = tempo;
+        document.getElementById("tempoName").innerText = getTempoName(tempo);
+        if (isRunning) {
+            clearInterval(intervalId);
+            startMetronome();
+        }
+    }
+</script>
+</body>
+</html>

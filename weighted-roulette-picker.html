@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Weighted Roulette Picker - 가중치 룰렛 추첨기</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 20px 10px 40px;
+            font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR", "Malgun Gothic",
+            system-ui, sans-serif;
+            background: #f3f4f6;
+            color: #111827;
+        }
+
+        .page {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .intro-box {
+            background-color: #EAF6FD;
+            padding: 16px 20px;
+            border-left: 4px solid #0091D7;
+            margin-top: 5px;
+            margin-bottom: 24px;
+            word-break: break-all;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #0f172a;
+        }
+
+        .info-inline {
+            background:#f8fafc;
+            border-radius:10px;
+            padding:12px 16px;
+            font-size:14px;
+            color:#334155;
+            margin-bottom:18px;
+        }
+
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .col-left {
+            flex: 0 0 360px;
+            max-width: 100%;
+        }
+
+        .col-right {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .card {
+            background:#fff;
+            border-radius:12px;
+            border:1px solid #e5e7eb;
+            box-shadow:0 4px 12px rgba(15,23,42,0.06);
+            display:flex;
+            flex-direction:column;
+            height:100%;
+        }
+
+        .card-header {
+            padding:12px 16px;
+            border-bottom:1px solid #e5e7eb;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            background:#ffffff;
+        }
+
+        .card-header h5 {
+            margin:0;
+            font-size:18px;
+        }
+
+        .card-body {
+            padding:16px;
+            flex:1;
+        }
+
+        .card-footer {
+            padding:10px 16px;
+            border-top:1px solid #e5e7eb;
+            font-size:12px;
+            color:#6b7280;
+            background:#fafafa;
+        }
+
+        .btn {
+            border-radius:999px;
+            border:1px solid transparent;
+            padding:7px 14px;
+            font-size:14px;
+            font-weight:600;
+            cursor:pointer;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap:4px;
+            transition:background .15s ease, transform .1s ease, box-shadow .15s ease;
+        }
+
+        .btn:disabled {
+            cursor:not-allowed;
+            opacity:.6;
+            box-shadow:none;
+            transform:none;
+        }
+
+        .btn-primary {
+            background:#2563eb;
+            color:#fff;
+            border-color:#2563eb;
+            width:100%;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background:#1d4ed8;
+            transform:translateY(-1px);
+            box-shadow:0 3px 10px rgba(37,99,235,0.35);
+        }
+
+        .btn-outline {
+            background:#fff;
+            color:#4b5563;
+            border-color:#cbd5e1;
+            border-radius:999px;
+            padding:5px 10px;
+            font-size:13px;
+        }
+
+        .btn-outline:hover {
+            background:#e5e7eb;
+        }
+
+        .btn-danger {
+            background:#ef4444;
+            color:#fff;
+            border-color:#ef4444;
+            padding:5px 10px;
+            border-radius:6px;
+            font-size:12px;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background:#dc2626;
+        }
+
+        .btn-lg-main {
+            background:#f97316;
+            color:#fff;
+            border-color:#f97316;
+            font-size:18px;
+            padding:14px 40px;
+            border-radius:999px;
+        }
+
+        .btn-lg-main:hover:not(:disabled) {
+            background:#ea580c;
+            transform:translateY(-1px);
+            box-shadow:0 4px 14px rgba(248,113,22,0.45);
+        }
+
+        table {
+            width:100%;
+            border-collapse:collapse;
+            font-size:14px;
+        }
+
+        thead {
+            position:sticky;
+            top:0;
+            background:#f9fafb;
+            z-index:1;
+        }
+
+        th, td {
+            padding:8px 6px;
+            border-bottom:1px solid #e5e7eb;
+            text-align:left;
+        }
+
+        th:nth-child(2), td:nth-child(2) {
+            text-align:center;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width:100%;
+            padding:6px 8px;
+            font-size:13px;
+            border-radius:6px;
+            border:1px solid #d1d5db;
+            outline:none;
+            transition:border .15s ease, box-shadow .15s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus {
+            border-color:#2563eb;
+            box-shadow:0 0 0 2px rgba(37,99,235,0.15);
+        }
+
+        .table-wrapper {
+            max-height:450px;
+            overflow-y:auto;
+            margin-top:6px;
+        }
+
+        /* Wheel */
+        .wheel-wrapper {
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            gap:24px;
+            padding:10px;
+        }
+
+        .wheel-container {
+            position:relative;
+            width:320px;
+            height:320px;
+        }
+
+        canvas#wheelCanvas {
+            width:100%;
+            height:100%;
+            border-radius:50%;
+            box-shadow:0 4px 12px rgba(15,23,42,0.25);
+            background:#fff;
+            transition:transform 0.3s ease-out;
+        }
+
+        .pointer {
+            position:absolute;
+            top:-18px;
+            left:50%;
+            transform:translateX(-50%);
+            width:32px;
+            height:32px;
+            background:#ef4444;
+            border-radius:50% 50% 70% 70%;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            color:#fff;
+            font-size:18px;
+            box-shadow:0 3px 10px rgba(0,0,0,0.25);
+            z-index: 2000;
+        }
+
+        .pointer::after {
+            content:'';
+            position:absolute;
+            bottom:-10px;
+            left:50%;
+            transform:translateX(-50%);
+            width:5px;
+            height:16px;
+            background:#ef4444;
+            border-radius:0 0 6px 6px;
+        }
+
+        .result-badge {
+            display:inline-block;
+            padding:10px 30px;
+            border-radius:10px;
+            background:#dcfce7;
+            color:#166534;
+            font-size:20px;
+            font-weight:700;
+            min-width:200px;
+            text-align:center;
+            box-shadow:0 2px 8px rgba(22,163,74,0.25);
+        }
+
+        .result-area {
+            min-height:60px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            margin-top:18px;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position:fixed;
+            inset:0;
+            background:rgba(15,23,42,0.55);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            z-index:50;
+            opacity:0;
+            pointer-events:none;
+            transition:opacity .2s ease;
+        }
+
+        .modal-overlay.show {
+            opacity:1;
+            pointer-events:auto;
+        }
+
+        .modal {
+            background:#fff;
+            border-radius:14px;
+            padding:24px 22px 20px;
+            max-width:360px;
+            width:90%;
+            text-align:center;
+            box-shadow:0 12px 30px rgba(0,0,0,0.25);
+            transform:translateY(10px);
+            animation:modal-pop .25s ease-out forwards;
+        }
+
+        @keyframes modal-pop {
+            from { transform:translateY(16px) scale(.96); opacity:0; }
+            to { transform:translateY(0) scale(1); opacity:1; }
+        }
+
+        .modal-icon {
+            width:72px;
+            height:72px;
+            border-radius:999px;
+            background:#22c55e1a;
+            color:#16a34a;
+            font-size:40px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            margin:0 auto 14px;
+        }
+
+        .modal-title {
+            margin:0 0 6px;
+            font-size:16px;
+            color:#6b7280;
+        }
+
+        .modal-result {
+            margin:0 0 18px;
+            font-size:26px;
+            font-weight:700;
+            color:#111827;
+        }
+
+        .modal-btn {
+            padding:8px 26px;
+            border-radius:999px;
+            background:#4b5563;
+            color:#fff;
+            border:none;
+            font-size:14px;
+            font-weight:600;
+            cursor:pointer;
+        }
+
+        .modal-btn:hover {
+            background:#374151;
+        }
+
+        @media (max-width: 900px) {
+            .row {
+                flex-direction:column;
+            }
+            .col-left, .col-right {
+                flex:1 1 auto;
+            }
+            .wheel-container {
+                width:260px;
+                height:260px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body { padding:12px 6px 30px; }
+            .card { border-radius:10px; }
+            canvas#wheelCanvas { box-shadow:0 2px 8px rgba(15,23,42,0.18); }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <div class="intro-box">
+        🎯 가중치 룰렛 추첨기! 각 항목의 이름과 가중치를 자유롭게 설정하여 공정하게 랜덤 추첨해 보세요.
+        설정은 자동 저장되며, 페이지를 새로 고쳐도 그대로 복원됩니다.
+    </div>
+
+    <div class="info-inline">
+        <ul style="margin:0 0 0 18px;padding:0;">
+            <li>옵션 이름 및 가중치(당첨 비율) 지정 가능</li>
+            <li>설정값은 브라우저 <code>localStorage</code>에 자동 저장</li>
+            <li>최소 2개 이상의 항목이 항상 유지됩니다.</li>
+        </ul>
+    </div>
+
+    <div class="row">
+        <!-- 왼쪽 : 설정 카드 -->
+        <div class="col-left">
+            <div class="card">
+                <div class="card-header">
+                    <h5>설정</h5>
+                    <button id="btnReset" class="btn btn-outline" title="재설정">↺ 재설정</button>
+                </div>
+                <div class="card-body">
+                    <button id="btnAdd" class="btn btn-primary">＋ 항목 추가</button>
+
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th style="width:60%;">옵션</th>
+                                <th style="width:25%;">가중치</th>
+                                <th style="width:15%; text-align:right;">삭제</th>
+                            </tr>
+                            </thead>
+                            <tbody id="itemTableBody">
+                            <!-- JS에서 렌더링 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    ⓘ Auto Saved
+                </div>
+            </div>
+        </div>
+
+        <!-- 오른쪽 : 룰렛 카드 -->
+        <div class="col-right">
+            <div class="card">
+                <div class="card-body">
+                    <div class="wheel-wrapper">
+                        <div class="wheel-container">
+                            <div class="pointer">⬇</div>
+                            <canvas id="wheelCanvas" width="500" height="500"></canvas>
+                        </div>
+
+                        <button id="btnSpin" class="btn btn-lg-main">
+                            ▶ Start
+                        </button>
+
+                        <div class="result-area">
+                            <div id="resultBadge" class="result-badge" style="display:none;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 결과 모달 -->
+    <div id="resultModalOverlay" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-icon">✔</div>
+            <p class="modal-title">결과</p>
+            <p id="modalResultText" class="modal-result">옵션</p>
+            <button id="modalCloseBtn" class="modal-btn">닫기</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    (function () {
+        const STORAGE_KEY = 'simpleWheelItems';
+
+        const colors = [
+            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+            '#FF9F40', '#E7E9ED', '#71B37C', '#EC932F', '#e06377'
+        ];
+
+        const defaultItems = [
+            { id: 1, name: '옵션 1', weight: 1 },
+            { id: 2, name: '옵션 2', weight: 1 },
+            { id: 3, name: '옵션 3', weight: 1 },
+            { id: 4, name: '옵션 4', weight: 1 },
+            { id: 5, name: '옵션 5', weight: 1 }
+        ];
+
+        let items = [];
+        let isSpinning = false;
+        let currentRotation = 0;      // degree
+        let spinAnimationId = null;
+
+        const tbody = document.getElementById('itemTableBody');
+        const btnAdd = document.getElementById('btnAdd');
+        const btnReset = document.getElementById('btnReset');
+        const btnSpin = document.getElementById('btnSpin');
+        const resultBadge = document.getElementById('resultBadge');
+
+        const modalOverlay = document.getElementById('resultModalOverlay');
+        const modalResultText = document.getElementById('modalResultText');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // ---- 초기화 ----
+        function loadItems() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed) && parsed.length >= 2) {
+                        items = parsed;
+                        return;
+                    }
+                } catch (e) { /* ignore */ }
+            }
+            items = JSON.parse(JSON.stringify(defaultItems));
+        }
+
+        function saveItems() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+        }
+
+        function renderTable() {
+            tbody.innerHTML = '';
+            items.forEach((item, index) => {
+                const tr = document.createElement('tr');
+
+                const tdName = document.createElement('td');
+                const inputName = document.createElement('input');
+                inputName.type = 'text';
+                inputName.value = item.name;
+                inputName.placeholder = '항목 이름...';
+                inputName.dataset.index = index;
+                inputName.className = 'item-name';
+                tdName.appendChild(inputName);
+
+                const tdWeight = document.createElement('td');
+                const inputWeight = document.createElement('input');
+                inputWeight.type = 'number';
+                inputWeight.min = '1';
+                inputWeight.value = item.weight;
+                inputWeight.dataset.index = index;
+                inputWeight.className = 'item-weight';
+                tdWeight.appendChild(inputWeight);
+
+                const tdDelete = document.createElement('td');
+                tdDelete.style.textAlign = 'right';
+                const btnDel = document.createElement('button');
+                btnDel.type = 'button';
+                btnDel.textContent = '삭제';
+                btnDel.className = 'btn btn-danger';
+                btnDel.dataset.index = index;
+                btnDel.disabled = items.length <= 2;
+                tdDelete.appendChild(btnDel);
+
+                tr.appendChild(tdName);
+                tr.appendChild(tdWeight);
+                tr.appendChild(tdDelete);
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        // ---- 룰렛 그리기 ----
+        function drawWheel() {
+            const width = canvas.width;
+            const height = canvas.height;
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const radius = width / 2 - 10;
+
+            ctx.clearRect(0, 0, width, height);
+
+            const totalWeight = items.reduce((sum, it) => sum + Number(it.weight || 0), 0);
+            if (totalWeight <= 0) return;
+
+            let startAngle = 0;
+
+            items.forEach((item, index) => {
+                const weight = Math.max(1, Number(item.weight || 1));
+                const sliceAngle = (weight / totalWeight) * Math.PI * 2;
+                const endAngle = startAngle + sliceAngle;
+
+                // sector
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.fillStyle = colors[index % colors.length];
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#fff';
+                ctx.stroke();
+
+                // text
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(startAngle + sliceAngle / 2);
+                ctx.textAlign = 'right';
+                ctx.fillStyle = '#fff';
+                ctx.font = "bold 20px 'Segoe UI', 'Noto Sans KR', sans-serif";
+                ctx.shadowColor = 'rgba(0,0,0,0.35)';
+                ctx.shadowBlur = 2;
+                ctx.fillText(item.name, radius - 25, 8);
+                ctx.restore();
+
+                startAngle = endAngle;
+            });
+
+            canvas.style.transform = 'rotate(' + currentRotation + 'deg)';
+        }
+
+        // ---- 이벤트 처리 ----
+        btnAdd.addEventListener('click', () => {
+            const id = Date.now();
+            items.push({
+                id,
+                name: '옵션 ' + (items.length + 1),
+                weight: 1
+            });
+            saveItems();
+            renderTable();
+            drawWheel();
+        });
+
+        btnReset.addEventListener('click', () => {
+            if (!confirm('정말 기본 값으로 초기화하시겠습니까?')) return;
+            items = JSON.parse(JSON.stringify(defaultItems));
+            currentRotation = 0;
+            resultBadge.style.display = 'none';
+            saveItems();
+            renderTable();
+            drawWheel();
+        });
+
+        tbody.addEventListener('input', (e) => {
+            const index = e.target.dataset.index;
+            if (index === undefined) return;
+            const idx = Number(index);
+
+            if (e.target.classList.contains('item-name')) {
+                items[idx].name = e.target.value || ('옵션 ' + (idx + 1));
+            } else if (e.target.classList.contains('item-weight')) {
+                const value = Number(e.target.value || 1);
+                items[idx].weight = value > 0 ? value : 1;
+                e.target.value = items[idx].weight;
+            }
+            saveItems();
+            drawWheel();
+        });
+
+        tbody.addEventListener('click', (e) => {
+            if (!e.target.classList.contains('btn-danger')) return;
+            const idx = Number(e.target.dataset.index);
+            if (items.length <= 2) return;
+            items.splice(idx, 1);
+            saveItems();
+            renderTable();
+            drawWheel();
+        });
+
+        // ---- 추첨 로직 ----
+        function spinWheel() {
+            if (isSpinning) return;
+            if (!items || items.length < 2) {
+                alert('최소 2개 이상의 항목이 필요합니다.');
+                return;
+            }
+            const totalWeight = items.reduce((sum, it) => sum + Number(it.weight || 0), 0);
+            if (totalWeight <= 0) {
+                alert('가중치를 1 이상으로 설정해 주세요.');
+                return;
+            }
+
+            isSpinning = true;
+            btnSpin.disabled = true;
+            btnSpin.textContent = 'Spinning...';
+            resultBadge.style.display = 'none';
+
+            // 가중치 기반 랜덤 선택
+            let rnd = Math.random() * totalWeight;
+            let cumulative = 0;
+            let chosenIndex = 0;
+            let accAngle = 0;
+            let targetLandAngle = 0;
+
+            for (let i = 0; i < items.length; i++) {
+                const w = Number(items[i].weight || 1);
+                cumulative += w;
+                const sliceDeg = (w / totalWeight) * 360;
+
+                if (rnd <= cumulative) {
+                    chosenIndex = i;
+                    // 섹터 안쪽에서 조금 랜덤한 위치
+                    const offset = sliceDeg * 0.1 + Math.random() * sliceDeg * 0.8;
+                    targetLandAngle = accAngle + offset;
+                    break;
+                }
+                accAngle += sliceDeg;
+            }
+
+            // 현재 각도 기준으로 여러 바퀴 돌고, 270도(위쪽 포인터)에 맞추기
+            const base = currentRotation % 360;
+            const spins = 5 * 360; // 정수 바퀴
+            let angleDiff = 270 - targetLandAngle; // 포인터(위쪽) 기준
+            while (angleDiff < 0) angleDiff += 360;
+
+            const finalRotation = currentRotation + spins + angleDiff - base;
+
+            // requestAnimationFrame으로 부드럽게 회전
+            const duration = 4000;
+            const start = performance.now();
+            const startRotation = currentRotation;
+
+            function easeOutCubic(t) {
+                return 1 - Math.pow(1 - t, 3);
+            }
+
+            function animate(now) {
+                const elapsed = now - start;
+                const t = Math.min(1, elapsed / duration);
+                const eased = easeOutCubic(t);
+                currentRotation = startRotation + (finalRotation - startRotation) * eased;
+                canvas.style.transform = 'rotate(' + currentRotation + 'deg)';
+
+                if (t < 1) {
+                    spinAnimationId = requestAnimationFrame(animate);
+                } else {
+                    cancelAnimationFrame(spinAnimationId);
+                    finishSpin(items[chosenIndex]);
+                }
+            }
+
+            spinAnimationId = requestAnimationFrame(animate);
+        }
+
+        function finishSpin(item) {
+            isSpinning = false;
+            btnSpin.disabled = false;
+            btnSpin.textContent = '▶ Start';
+
+            resultBadge.textContent = item.name;
+            resultBadge.style.display = 'inline-block';
+
+            modalResultText.textContent = item.name;
+            modalOverlay.classList.add('show');
+        }
+
+        btnSpin.addEventListener('click', spinWheel);
+
+        // 모달 닫기
+        modalCloseBtn.addEventListener('click', () => {
+            modalOverlay.classList.remove('show');
+        });
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                modalOverlay.classList.remove('show');
+            }
+        });
+
+        // ---- 시작 시 실행 ----
+        loadItems();
+        renderTable();
+        drawWheel();
+    })();
+</script>
+</body>
+</html>

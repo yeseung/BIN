@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>Unix Timestamp Converter</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 24px 10px 40px;
+            font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR",
+            "Malgun Gothic", system-ui, sans-serif;
+            background: #f4f4f5;
+            color: #111827;
+        }
+
+        .page {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .intro-box {
+            background: #f9fafb;
+            padding: 16px 18px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            line-height: 1.6;
+            font-size: 14px;
+            color: #374151;
+            margin-bottom: 18px;
+        }
+
+        .card {
+            background: #ffffff;
+            padding: 22px 20px 24px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+
+        .card h2 {
+            margin: 0 0 18px;
+            font-size: 20px;
+        }
+
+        .converter-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .converter-col {
+            flex: 1 1 260px;
+        }
+
+        .arrow-col {
+            flex: 0 0 auto;
+            font-size: 32px;
+            text-align: center;
+            padding: 6px 4px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        input[type="number"],
+        input[type="text"],
+        input[type="datetime-local"] {
+            width: 100%;
+            padding: 9px 11px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+            background: #ffffff;
+        }
+
+        input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.2);
+        }
+
+        .is-invalid {
+            border-color: #dc2626 !important;
+            box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.15);
+        }
+
+        .invalid-feedback {
+            margin-top: 4px;
+            font-size: 12px;
+            color: #b91c1c;
+            display: none;
+        }
+
+        @media (max-width: 640px) {
+            .card {
+                padding: 18px 14px 20px;
+            }
+            .arrow-col {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="intro-box">
+        <p>이 도구는 사람이 읽을 수 있는 날짜/시간과 Unix 타임스탬프(초 단위) 간의 양방향 변환을 실시간으로 수행합니다.</p>
+        <p>왼쪽 입력창에 날짜/시간을 선택하면 오른쪽에 해당 Unix 타임스탬프가 자동으로 표시되고, 타임스탬프를 수정하면 다시 날짜/시간이 갱신됩니다.</p>
+    </div>
+
+    <div class="card">
+        <h2>Readable Time ⇄ Unix Timestamp</h2>
+
+        <div class="converter-row">
+            <!-- Left: readable time -->
+            <div class="converter-col">
+                <label for="readable-input">날짜 / 시간 (Local, yyyy-MM-dd HH:mm)</label>
+                <div class="input-group">
+                    <input
+                            id="readable-input"
+                            type="datetime-local"
+                    />
+                    <div id="readable-error" class="invalid-feedback"></div>
+                </div>
+            </div>
+
+            <div class="arrow-col">⇄</div>
+
+            <!-- Right: timestamp -->
+            <div class="converter-col">
+                <label for="timestamp-input">Unix Timestamp (seconds)</label>
+                <div class="input-group">
+                    <input
+                            id="timestamp-input"
+                            type="number"
+                            step="1"
+                            placeholder="e.g. 1733644800"
+                    />
+                    <div id="timestamp-error" class="invalid-feedback"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const readableInput = document.getElementById("readable-input");
+    const timestampInput = document.getElementById("timestamp-input");
+    const readableErrorEl = document.getElementById("readable-error");
+    const timestampErrorEl = document.getElementById("timestamp-error");
+
+    let isSyncing = false;
+
+    function setError(inputEl, errorEl, message) {
+        if (message) {
+            inputEl.classList.add("is-invalid");
+            errorEl.textContent = message;
+            errorEl.style.display = "block";
+        } else {
+            inputEl.classList.remove("is-invalid");
+            errorEl.textContent = "";
+            errorEl.style.display = "none";
+        }
+    }
+
+    function pad2(n) {
+        return n.toString().padStart(2, "0");
+    }
+
+    function formatForDatetimeLocal(date) {
+        const y = date.getFullYear();
+        const m = pad2(date.getMonth() + 1);
+        const d = pad2(date.getDate());
+        const hh = pad2(date.getHours());
+        const mm = pad2(date.getMinutes());
+        return `${y}-${m}-${d}T${hh}:${mm}`;
+    }
+
+    function updateFromReadable() {
+        if (isSyncing) return;
+        isSyncing = true;
+
+        setError(readableInput, readableErrorEl, "");
+        setError(timestampInput, timestampErrorEl, "");
+
+        const value = readableInput.value;
+        if (!value) {
+            timestampInput.value = "";
+            isSyncing = false;
+            return;
+        }
+
+        const dt = new Date(value);
+        if (isNaN(dt.getTime())) {
+            setError(readableInput, readableErrorEl, "유효한 날짜/시간이 아닙니다.");
+            timestampInput.value = "";
+            isSyncing = false;
+            return;
+        }
+
+        const ts = Math.floor(dt.getTime() / 1000);
+        timestampInput.value = ts;
+        isSyncing = false;
+    }
+
+    function updateFromTimestamp() {
+        if (isSyncing) return;
+        isSyncing = true;
+
+        setError(readableInput, readableErrorEl, "");
+        setError(timestampInput, timestampErrorEl, "");
+
+        const raw = timestampInput.value.trim();
+        if (!raw) {
+            readableInput.value = "";
+            isSyncing = false;
+            return;
+        }
+
+        const ts = Number(raw);
+        if (!Number.isFinite(ts)) {
+            setError(timestampInput, timestampErrorEl, "숫자 형식의 타임스탬프를 입력해 주세요.");
+            readableInput.value = "";
+            isSyncing = false;
+            return;
+        }
+
+        const dt = new Date(ts * 1000);
+        if (isNaN(dt.getTime())) {
+            setError(timestampInput, timestampErrorEl, "유효하지 않은 타임스탬프입니다.");
+            readableInput.value = "";
+            isSyncing = false;
+            return;
+        }
+
+        readableInput.value = formatForDatetimeLocal(dt);
+        isSyncing = false;
+    }
+
+    readableInput.addEventListener("input", updateFromReadable);
+    timestampInput.addEventListener("input", updateFromTimestamp);
+
+    // 초기값: 현재 시각
+    (function initNow() {
+        const now = new Date();
+        readableInput.value = formatForDatetimeLocal(now);
+        updateFromReadable();
+    })();
+</script>
+</body>
+</html>

@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>Lunar-Solar Date Converter</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 24px 10px 40px;
+            font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR",
+            "Malgun Gothic", system-ui, sans-serif;
+            background: #f4f4f5;
+            color: #111827;
+        }
+
+        .page {
+            max-width: 720px;
+            margin: 0 auto;
+        }
+
+        .intro-box {
+            background: #f9fafb;
+            padding: 16px 18px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            line-height: 1.6;
+            font-size: 14px;
+            color: #374151;
+            margin-bottom: 20px;
+        }
+
+        h4 {
+            margin: 0 0 6px;
+            font-size: 20px;
+        }
+
+        .card {
+            background: #ffffff;
+            padding: 22px 20px 24px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+
+        .field-row {
+            margin: 8px 0 14px;
+            font-size: 15px;
+        }
+
+        input[type="text"] {
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            font-size: 14px;
+            outline: none;
+            width: 140px;
+            margin-left: 4px;
+        }
+
+        input[type="text"]:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 1px rgba(37,99,235,0.1);
+        }
+
+        .btn {
+            display: inline-block;
+            margin: 4px 4px 0 0;
+            padding: 7px 14px;
+            border-radius: 9999px;
+            border: 1px solid #d1d5db;
+            background: #f3f4f6;
+            color: #111827;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.15s ease, transform 0.1s ease,
+            box-shadow 0.15s ease;
+        }
+
+        .btn:hover {
+            background: #e5e7eb;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+        }
+
+        .btn-primary {
+            border-color: #2563eb;
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            border-radius: 10px;
+            border: 1px solid #d1d5db;
+            padding: 10px 12px;
+            font-size: 14px;
+            resize: vertical;
+            line-height: 1.5;
+        }
+
+        textarea:focus {
+            border-color: #2563eb;
+            outline: none;
+            box-shadow: 0 0 0 1px rgba(37,99,235,0.1);
+        }
+
+        .note {
+            font-size: 13px;
+            color: #6b7280;
+            margin-top: 8px;
+        }
+
+        @media (max-width: 480px) {
+            .card {
+                padding: 18px 14px 20px;
+            }
+
+            input[type="text"] {
+                width: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="intro-box">
+        양력과 음력을 서로 변환해 주는 간단한 도구입니다. 날짜를
+        <strong>YYYYMMDD</strong> 형식으로 입력한 뒤, <b>음력으로 변환</b> 또는
+        <b>양력으로 변환</b> 버튼을 눌러 결과를 확인할 수 있습니다. 오늘 날짜는
+        버튼 한 번으로 자동 입력됩니다.
+    </div>
+
+    <div class="card">
+        <h4><b>양력 / 음력 날짜 변환기</b></h4>
+
+        <div class="field-row">
+            <b>날짜 :</b>
+            <input type="text" id="dateInput" placeholder="YYYYMMDD" />
+            <input type="button" class="btn btn-primary" value="오늘 날짜" onclick="setTodayDate()" />
+        </div>
+
+        <div class="field-row">
+            <input type="button" class="btn btn-primary" value="음력으로 변환" onclick="convertToLunar()" />
+            <input type="button" class="btn btn-primary" value="양력으로 변환" onclick="convertToSolar()" />
+            <input type="button" class="btn" value="초기화" onclick="clearResult()" />
+        </div>
+
+        <textarea id="result" placeholder="변환 결과가 여기 표시됩니다."></textarea>
+
+        <p class="note">
+            ※ 한국천문연구원 음양력 정보 API 이용
+        </p>
+    </div>
+</div>
+
+<script>
+    const serviceKey = "ZRC%2BaAn41SZspYVduzB4PgFdsP5OZunmq03l8nleVLOFNBXZAiVpwZDPUtuqQGKVrtgAAHdqWzz4WFNlueqaqw%3D%3D";
+    const apiUrl = "https://apis.data.go.kr/B090041/openapi/service/LrsrCldInfoService";
+
+    function isValidDateFormat(dateStr) {
+        return /^\d{8}$/.test(dateStr);
+    }
+
+    async function convertToLunar() {
+        const inputDate = document.getElementById("dateInput").value.trim();
+        const resultEl = document.getElementById("result");
+
+        if (!isValidDateFormat(inputDate)) {
+            resultEl.value = "날짜 형식이 맞지 않습니다. YYYYMMDD 형식으로 입력해주세요.";
+            return;
+        }
+
+        const year = inputDate.substring(0, 4);
+        const month = inputDate.substring(4, 6);
+        const day = inputDate.substring(6, 8);
+        const url = `${apiUrl}/getLunCalInfo?solYear=${year}&solMonth=${month}&solDay=${day}&ServiceKey=${serviceKey}`;
+
+        try {
+            const response = await fetch(url);
+            const text = await response.text();
+            const parser = new DOMParser();
+            const xml = parser.parseFromString(text, "text/xml");
+
+            const lunarYear  = xml.getElementsByTagName("lunYear")[0]?.textContent;
+            const lunarMonth = xml.getElementsByTagName("lunMonth")[0]?.textContent;
+            const lunarDay   = xml.getElementsByTagName("lunDay")[0]?.textContent;
+            const lunLeap    = xml.getElementsByTagName("lunLeapmonth")[0]?.textContent === "윤" ? "(윤달)" : "(평달)";
+            const solWeek    = xml.getElementsByTagName("solWeek")[0]?.textContent;
+            const lunSecha   = xml.getElementsByTagName("lunSecha")[0]?.textContent;
+            const lunWolgeon = xml.getElementsByTagName("lunWolgeon")[0]?.textContent;
+            const lunIljin   = xml.getElementsByTagName("lunIljin")[0]?.textContent;
+
+            if (lunarYear && lunarMonth && lunarDay) {
+                resultEl.value =
+                    `[양력] ${year}년 ${month}월 ${day}일 (${solWeek})\n` +
+                    `→ [음력] ${lunarYear}년 ${lunarMonth}월 ${lunarDay}일 ${lunLeap}\n\n` +
+                    `※ 음력간지 : ${lunSecha}년 ${lunWolgeon}월 ${lunIljin}일`;
+            } else {
+                resultEl.value = "변환할 수 없는 날짜입니다.";
+            }
+        } catch (error) {
+            console.error(error);
+            resultEl.value = "변환 중 오류가 발생했습니다.";
+        }
+    }
+
+    async function convertToSolar() {
+        const inputDate = document.getElementById("dateInput").value.trim();
+        const resultEl = document.getElementById("result");
+
+        if (!isValidDateFormat(inputDate)) {
+            resultEl.value = "날짜 형식이 맞지 않습니다. YYYYMMDD 형식으로 입력해주세요.";
+            return;
+        }
+
+        const year = inputDate.substring(0, 4);
+        const month = inputDate.substring(4, 6);
+        const day = inputDate.substring(6, 8);
+        const url = `${apiUrl}/getSolCalInfo?lunYear=${year}&lunMonth=${month}&lunDay=${day}&ServiceKey=${serviceKey}`;
+
+        try {
+            const response = await fetch(url);
+            const text = await response.text();
+            const parser = new DOMParser();
+            const xml = parser.parseFromString(text, "text/xml");
+
+            const solarYear  = xml.getElementsByTagName("solYear")[0]?.textContent;
+            const solarMonth = xml.getElementsByTagName("solMonth")[0]?.textContent;
+            const solarDay   = xml.getElementsByTagName("solDay")[0]?.textContent;
+            const solWeek    = xml.getElementsByTagName("solWeek")[0]?.textContent;
+            const lunLeap    = xml.getElementsByTagName("lunLeapmonth")[0]?.textContent === "윤" ? "(윤달)" : "(평달)";
+            const lunSecha   = xml.getElementsByTagName("lunSecha")[0]?.textContent;
+            const lunWolgeon = xml.getElementsByTagName("lunWolgeon")[0]?.textContent;
+            const lunIljin   = xml.getElementsByTagName("lunIljin")[0]?.textContent;
+
+            if (solarYear && solarMonth && solarDay) {
+                resultEl.value =
+                    `[음력] ${year}년 ${month}월 ${day}일 ${lunLeap}\n` +
+                    `→ [양력] ${solarYear}년 ${solarMonth}월 ${solarDay}일 (${solWeek})\n\n` +
+                    `※ 음력간지 : ${lunSecha}년 ${lunWolgeon}월 ${lunIljin}일`;
+            } else {
+                resultEl.value = "변환할 수 없는 날짜입니다.";
+            }
+        } catch (error) {
+            console.error(error);
+            resultEl.value = "변환 중 오류가 발생했습니다.";
+        }
+    }
+
+    function clearResult() {
+        document.getElementById("dateInput").value = "";
+        document.getElementById("result").value = "";
+    }
+
+    function setTodayDate() {
+        const today = new Date();
+        const year  = today.getFullYear();
+        const month = ("0" + (today.getMonth() + 1)).slice(-2);
+        const day   = ("0" + today.getDate()).slice(-2);
+        document.getElementById("dateInput").value = `${year}${month}${day}`;
+    }
+</script>
+</body>
+</html>
