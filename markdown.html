@@ -1,0 +1,914 @@
+<!-- File name: markdown-editor.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>무료 온라인 마크다운 에디터 | Markdown.kr 스타일</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- 기본 폰트 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- 아이콘 (선택) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Markdown 파서 (marked.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-main: #f5f5f7;
+            --bg-header: #1e293b;
+            --bg-toolbar: #ffffff;
+            --bg-editor: #0f172a;
+            --bg-preview: #ffffff;
+            --border-subtle: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #6b7280;
+            --accent: #3b82f6;
+            --accent-soft: rgba(59,130,246,0.12);
+            --radius-lg: 14px;
+            --radius-md: 10px;
+            --shadow-soft: 0 18px 35px rgba(15, 23, 42, 0.08);
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Pretendard", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: radial-gradient(circle at top left, #e0f2fe 0, #f5f5f7 45%, #eef2ff 100%);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 헤더 */
+        .site-header {
+            background: linear-gradient(135deg, #0f172a, #1d4ed8);
+            color: #fff;
+            padding: 14px 18px;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.45);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .header-inner {
+            max-width: 1120px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .header-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 11px;
+            background: radial-gradient(circle at 30% 20%, #fbbf24 0, #ef4444 40%, #3b82f6 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 0 3px rgba(15,23,42,0.35);
+            color: #fff;
+            font-size: 1.2rem;
+        }
+
+        .header-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: .02em;
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        .header-sub {
+            font-size: 0.8rem;
+            color: rgba(226, 232, 240, 0.85);
+            margin: 0;
+        }
+
+        .header-right {
+            font-size: 0.8rem;
+            color: rgba(226, 232, 240, 0.8);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .header-pill {
+            padding: 3px 8px;
+            border-radius: 999px;
+            border: 1px solid rgba(148,163,184,0.7);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(15,23,42,0.6);
+        }
+
+        /* 메인 */
+        .site-main {
+            flex: 1;
+            padding: 18px;
+        }
+
+        .page-wrapper {
+            max-width: 1120px;
+            margin: 0 auto 24px;
+        }
+
+        /* 안내 박스 */
+        .info-card {
+            background: rgba(255,255,255,0.9);
+            border-radius: var(--radius-lg);
+            padding: 16px 18px;
+            box-shadow: 0 14px 30px rgba(15, 23, 42, 0.05);
+            border: 1px solid rgba(148,163,184,0.35);
+            backdrop-filter: blur(12px);
+            margin-bottom: 14px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .info-badge {
+            width: 30px;
+            height: 30px;
+            border-radius: 999px;
+            background: var(--accent-soft);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            flex-shrink: 0;
+        }
+
+        .info-text-main {
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+
+        .info-text-sub {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* 툴바 카드 */
+        .toolbar-card {
+            background: rgba(15,23,42,0.96);
+            border-radius: var(--radius-lg);
+            padding: 12px 14px;
+            box-shadow: 0 18px 35px rgba(15,23,42,0.55);
+            border: 1px solid rgba(148,163,184,0.55);
+            margin-bottom: 16px;
+            color: #e5e7eb;
+        }
+
+        .toolbar-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .toolbar-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .btn-ghost {
+            border-radius: 999px;
+            border: 1px solid rgba(148,163,184,0.5);
+            background: rgba(15,23,42,0.95);
+            color: #e5e7eb;
+            font-size: 0.78rem;
+            padding: 4px 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.12s ease-out;
+        }
+
+        .btn-ghost:hover {
+            border-color: rgba(248,250,252,0.9);
+            background: rgba(30,64,175,0.9);
+            box-shadow: 0 0 0 1px rgba(248,250,252,0.3);
+            transform: translateY(-0.5px);
+        }
+
+        .btn-ghost:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+
+        .btn-primary-soft {
+            border-radius: 999px;
+            border: 1px solid rgba(59,130,246,0.8);
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            color: #f9fafb;
+            font-size: 0.8rem;
+            padding: 4px 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            outline: none;
+            box-shadow: 0 10px 22px rgba(37,99,235,0.45);
+            transition: all 0.13s ease-out;
+        }
+
+        .btn-primary-soft:hover {
+            filter: brightness(1.07);
+            transform: translateY(-1px);
+            box-shadow: 0 14px 26px rgba(37,99,235,0.55);
+        }
+
+        .btn-primary-soft:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 12px rgba(37,99,235,0.5);
+        }
+
+        .toolbar-divider {
+            width: 1px;
+            height: 22px;
+            background: rgba(51,65,85,0.9);
+            margin: 0 6px;
+        }
+
+        .toolbar-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            color: #cbd5f5;
+        }
+
+        .pill-counter {
+            border-radius: 999px;
+            padding: 2px 8px;
+            background: rgba(15,23,42,0.9);
+            border: 1px solid rgba(148,163,184,0.7);
+        }
+
+        .live-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .live-toggle input {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* 에디터/프리뷰 영역 */
+        .editor-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 14px;
+            align-items: stretch;
+        }
+
+        .panel {
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-soft);
+            border: 1px solid rgba(148,163,184,0.4);
+            display: flex;
+            flex-direction: column;
+            min-height: 420px;
+        }
+
+        .panel-header {
+            padding: 8px 12px;
+            background: linear-gradient(to right, rgba(15,23,42,0.96), rgba(15,23,42,0.93));
+            color: #e5e7eb;
+            font-size: 0.78rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(31,41,55,0.9);
+        }
+
+        .panel-header span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .panel-badges {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            font-size: 0.7rem;
+            color: #9ca3af;
+        }
+
+        .badge-small {
+            border-radius: 999px;
+            border: 1px solid rgba(55,65,81,0.9);
+            padding: 1px 6px;
+            background: rgba(15,23,42,0.96);
+        }
+
+        .editor-area {
+            flex: 1;
+            background: var(--bg-editor);
+            padding: 12px;
+        }
+
+        .editor-textarea {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            border: 1px solid rgba(51,65,85,0.9);
+            background: radial-gradient(circle at top, #020617 0, #020617 40%, #020617 100%);
+            color: #e5e7eb;
+            padding: 10px 11px;
+            font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 0.82rem;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+            box-shadow: inset 0 0 0 1px rgba(15,23,42,0.9);
+        }
+
+        .editor-textarea::placeholder {
+            color: rgba(148,163,184,0.6);
+        }
+
+        .preview-area {
+            flex: 1;
+            background: var(--bg-preview);
+            padding: 14px 16px;
+            overflow: auto;
+            font-size: 0.9rem;
+            color: var(--text-main);
+        }
+
+        .preview-placeholder {
+            font-size: 0.86rem;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 48px 12px;
+        }
+
+        /* 마크다운 스타일 */
+        .preview-area h1,
+        .preview-area h2,
+        .preview-area h3,
+        .preview-area h4,
+        .preview-area h5 {
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-top: 1.3em;
+            margin-bottom: 0.6em;
+            color: #0f172a;
+        }
+
+        .preview-area h1 { font-size: 1.6rem; border-bottom: 1px solid #e5e7eb; padding-bottom: .3rem;}
+        .preview-area h2 { font-size: 1.35rem; border-bottom: 1px solid #e5e7eb; padding-bottom: .2rem;}
+        .preview-area h3 { font-size: 1.18rem;}
+        .preview-area h4 { font-size: 1.05rem;}
+        .preview-area p {
+            margin: 0 0 .8em;
+            line-height: 1.7;
+        }
+
+        .preview-area a {
+            color: #2563eb;
+            text-decoration: underline;
+            text-decoration-thickness: 1px;
+            text-underline-offset: 3px;
+        }
+
+        .preview-area code {
+            font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 0.8em;
+            background: #0f172a;
+            color: #e5e7eb;
+            padding: 0.12em 0.35em;
+            border-radius: 6px;
+        }
+
+        .preview-area pre code {
+            background: transparent;
+            padding: 0;
+        }
+
+        .preview-area pre {
+            background: #0f172a;
+            border-radius: 10px;
+            padding: 10px 12px;
+            overflow: auto;
+            border: 1px solid #111827;
+            margin: 0 0 1em;
+            color: #e5e7eb;
+        }
+
+        .preview-area ul,
+        .preview-area ol {
+            margin: 0 0 .8em 1.2em;
+            padding-left: 1.2em;
+        }
+
+        .preview-area blockquote {
+            border-left: 3px solid #e5e7eb;
+            margin: 0 0 .9em;
+            padding-left: .75em;
+            color: #6b7280;
+            font-style: italic;
+        }
+
+        /* 푸터 */
+        .site-footer {
+            border-top: 1px solid rgba(148,163,184,0.4);
+            padding: 10px 16px 14px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            background: rgba(248,250,252,0.95);
+        }
+
+        .footer-inner {
+            max-width: 1120px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .footer-link {
+            color: #0f172a;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer-link:hover {
+            text-decoration: underline;
+        }
+
+        /* 반응형 */
+        @media (max-width: 900px) {
+            .editor-layout {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .site-main {
+                padding: 12px;
+            }
+            .toolbar-card {
+                padding: 10px;
+            }
+            .toolbar-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .editor-textarea {
+                min-height: 260px;
+            }
+            .panel {
+                min-height: 320px;
+            }
+            .header-title {
+                font-size: 1rem;
+            }
+            .header-sub {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+<header class="site-header">
+    <div class="header-inner">
+        <div class="header-left">
+            <div class="header-icon">
+                <i class="bi bi-markdown-fill"></i>
+            </div>
+            <div>
+                <h1 class="header-title">무료 온라인 마크다운 에디터</h1>
+                <p class="header-sub">실시간 미리보기 · MD / HTML 내보내기 지원</p>
+            </div>
+        </div>
+        <div class="header-right">
+      <span class="header-pill">
+        <i class="bi bi-lightning-charge-fill"></i>
+        실시간 미리보기
+      </span>
+            <span>0 글자 · 0 줄</span>
+        </div>
+    </div>
+</header>
+
+<main class="site-main">
+    <div class="page-wrapper">
+        <!-- 안내 카드 -->
+        <section class="info-card">
+            <div class="info-badge">
+                <i class="bi bi-info-lg"></i>
+            </div>
+            <div>
+                <div class="info-text-main">
+                    이 도구는 웹 브라우저에서 바로 사용할 수 있는 <b>온라인 마크다운 에디터</b>입니다.
+                </div>
+                <div class="info-text-sub">
+                    좌측 에디터에 마크다운을 입력하면 우측에서 <b>실시간 HTML 미리보기</b>를 확인할 수 있습니다.
+                    상단 메뉴를 통해 새 파일, MD 저장, HTML 내보내기, 헤딩(H1/H2/H3) 삽입, 초기화 등 기본 기능을 빠르게 사용할 수 있습니다.
+                </div>
+            </div>
+        </section>
+
+        <!-- 툴바 -->
+        <section class="toolbar-card">
+            <div class="toolbar-row">
+                <div class="toolbar-group">
+                    <button class="btn-ghost" id="btnNew">
+                        <i class="bi bi-file-earmark-plus"></i> 새 파일
+                    </button>
+
+                    <label class="btn-ghost" for="fileInput">
+                        <i class="bi bi-folder2-open"></i> 컴퓨터에서 열기
+                    </label>
+                    <input type="file" id="fileInput" accept=".md,.markdown,.txt" style="display:none">
+
+                    <button class="btn-ghost" id="btnOpenUrl">
+                        <i class="bi bi-link-45deg"></i> URL에서 불러오기
+                    </button>
+
+                    <span class="toolbar-divider"></span>
+
+                    <button class="btn-primary-soft" id="btnSaveMd">
+                        <i class="bi bi-save"></i> MD 저장
+                    </button>
+                    <button class="btn-primary-soft" id="btnExportHtml">
+                        <i class="bi bi-code-square"></i> HTML 내보내기
+                    </button>
+                </div>
+
+                <div class="toolbar-group">
+                    <button class="btn-ghost" id="btnH1">
+                        <strong>H1</strong>
+                    </button>
+                    <button class="btn-ghost" id="btnH2">
+                        <strong>H2</strong>
+                    </button>
+                    <button class="btn-ghost" id="btnH3">
+                        <strong>H3</strong>
+                    </button>
+                    <button class="btn-ghost" id="btnReset">
+                        <i class="bi bi-arrow-counterclockwise"></i> 초기화
+                    </button>
+                </div>
+            </div>
+
+            <div style="height: 6px;"></div>
+
+            <div class="toolbar-meta">
+                <span class="pill-counter" id="statusCounter">마크다운 에디터 0 글자 · 0 줄</span>
+                <span>·</span>
+                <label class="live-toggle">
+                    <input type="checkbox" id="livePreviewToggle" checked>
+                    <span>미리보기 실시간 업데이트</span>
+                </label>
+                <button class="btn-ghost" id="btnManualPreview">
+                    <i class="bi bi-arrow-repeat"></i> 미리보기 새로고침
+                </button>
+            </div>
+        </section>
+
+        <!-- 에디터 + 프리뷰 -->
+        <section class="editor-layout">
+            <!-- 에디터 패널 -->
+            <article class="panel">
+                <div class="panel-header">
+          <span>
+            <i class="bi bi-pencil-square"></i>
+            <span>마크다운 에디터</span>
+          </span>
+                    <div class="panel-badges">
+                        <span class="badge-small">좌측 입력</span>
+                        <span class="badge-small">Markdown</span>
+                    </div>
+                </div>
+                <div class="editor-area">
+          <textarea id="editor" class="editor-textarea"
+                    placeholder="# 여기에 마크다운을 입력하세요.&#10;&#10;- 실시간 미리보기 지원&#10;- MD 파일 저장 및 HTML 내보내기&#10;- H1 / H2 / H3 헤딩 단축 버튼">
+          </textarea>
+                </div>
+            </article>
+
+            <!-- 프리뷰 패널 -->
+            <article class="panel">
+                <div class="panel-header">
+          <span>
+            <i class="bi bi-eye"></i>
+            <span>미리보기</span>
+          </span>
+                    <div class="panel-badges">
+                        <span class="badge-small">우측 출력</span>
+                        <span class="badge-small">HTML Preview</span>
+                    </div>
+                </div>
+                <div id="preview" class="preview-area">
+                    <div class="preview-placeholder">
+                        왼쪽 에디터에 마크다운을 입력하면<br>
+                        이 영역에 바로 미리보기가 표시됩니다.
+                    </div>
+                </div>
+            </article>
+        </section>
+    </div>
+</main>
+
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div>
+            © 2025 무료 온라인 마크다운 에디터. All rights reserved.
+        </div>
+        <div>
+            Developed by <a href="#" target="_blank" class="footer-link">#</a>
+        </div>
+    </div>
+</footer>
+
+<script>
+    // DOM 요소
+    const editor = document.getElementById('editor');
+    const preview = document.getElementById('preview');
+    const statusCounter = document.getElementById('statusCounter');
+    const headerRight = document.querySelector('.header-right');
+    const livePreviewToggle = document.getElementById('livePreviewToggle');
+    const btnManualPreview = document.getElementById('btnManualPreview');
+
+    const btnNew = document.getElementById('btnNew');
+    const fileInput = document.getElementById('fileInput');
+    const btnOpenUrl = document.getElementById('btnOpenUrl');
+    const btnSaveMd = document.getElementById('btnSaveMd');
+    const btnExportHtml = document.getElementById('btnExportHtml');
+    const btnH1 = document.getElementById('btnH1');
+    const btnH2 = document.getElementById('btnH2');
+    const btnH3 = document.getElementById('btnH3');
+    const btnReset = document.getElementById('btnReset');
+
+    // marked 설정
+    if (window.marked) {
+        marked.setOptions({
+            breaks: true,
+            gfm: true
+        });
+    }
+
+    // 글자/줄 수 업데이트
+    function updateCounters() {
+        const text = editor.value;
+        const length = text.length;
+        const lines = text === '' ? 0 : text.split(/\r\n|\r|\n/).length;
+
+        const label = `마크다운 에디터 ${length} 글자 · ${lines} 줄`;
+        statusCounter.textContent = label;
+
+        if (headerRight) {
+            const spans = headerRight.querySelectorAll('span');
+            if (spans.length > 0) {
+                spans[spans.length - 1].textContent = `${length} 글자 · ${lines} 줄`;
+            }
+        }
+    }
+
+    // 미리보기 렌더링
+    function renderPreview() {
+        const markdownText = editor.value.trim();
+        if (!markdownText) {
+            preview.innerHTML = '<div class="preview-placeholder">왼쪽 에디터에 마크다운을 입력하면<br>이 영역에 바로 미리보기가 표시됩니다.</div>';
+            return;
+        }
+
+        if (window.marked) {
+            preview.innerHTML = marked.parse(markdownText);
+        } else {
+            // 안전장치: marked 로드 실패 시 단순 escape
+            preview.textContent = markdownText;
+        }
+    }
+
+    // 에디터 입력 시
+    editor.addEventListener('input', function () {
+        updateCounters();
+        if (livePreviewToggle.checked) {
+            renderPreview();
+        }
+    });
+
+    // 실시간 토글
+    livePreviewToggle.addEventListener('change', function () {
+        if (this.checked) {
+            renderPreview();
+        }
+    });
+
+    // 수동 새로고침
+    btnManualPreview.addEventListener('click', function () {
+        renderPreview();
+    });
+
+    // 새 파일
+    btnNew.addEventListener('click', function () {
+        const ok = confirm('현재 내용을 지우고 새 파일을 시작할까요?');
+        if (!ok) return;
+        editor.value = '';
+        updateCounters();
+        renderPreview();
+    });
+
+    // 파일 열기
+    fileInput.addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function (evt) {
+            editor.value = evt.target.result;
+            updateCounters();
+            if (livePreviewToggle.checked) {
+                renderPreview();
+            } else {
+                preview.innerHTML =
+                    '<div class="preview-placeholder">파일이 로드되었습니다. "미리보기 새로고침"을 눌러 주세요.</div>';
+            }
+        };
+        reader.readAsText(file, 'utf-8');
+        // 같은 파일 다시 선택 가능하게 초기화
+        fileInput.value = '';
+    });
+
+    // URL에서 불러오기
+    btnOpenUrl.addEventListener('click', async function () {
+        const url = prompt('불러올 마크다운 파일의 URL을 입력하세요:');
+        if (!url) return;
+
+        try {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const txt = await res.text();
+            editor.value = txt;
+            updateCounters();
+            if (livePreviewToggle.checked) {
+                renderPreview();
+            } else {
+                preview.innerHTML =
+                    '<div class="preview-placeholder">URL에서 내용을 불러왔습니다. "미리보기 새로고침"을 눌러 주세요.</div>';
+            }
+        } catch (err) {
+            alert('URL에서 파일을 불러오지 못했습니다.\n(' + err.message + ')');
+        }
+    });
+
+    // MD 저장
+    btnSaveMd.addEventListener('click', function () {
+        const blob = new Blob([editor.value], {type: 'text/markdown;charset=utf-8'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const now = new Date();
+        const name = `markdown-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.md`;
+        a.href = url;
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    });
+
+    // HTML 내보내기
+    btnExportHtml.addEventListener('click', function () {
+        const md = editor.value.trim();
+        const htmlBody = window.marked ? marked.parse(md || '# (빈 문서)\n') : (md || '(빈 문서)');
+        const fullHtml =
+                  '<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8">' +
+                  '<title>Exported from Markdown.kr 에디터</title>' +
+                  '<meta name="viewport" content="width=device-width, initial-scale=1.0">' +
+                  '<style>body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;max-width:800px;margin:32px auto;padding:0 16px;line-height:1.7;color:#111827;}pre{background:#0f172a;color:#e5e7eb;padding:12px 14px;border-radius:8px;overflow:auto;}code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;background:#f3f4f6;padding:0.1em 0.3em;border-radius:4px;}</style>' +
+                  '</head><body>' +
+                  htmlBody +
+                  '</body></html>';
+
+        const blob = new Blob([fullHtml], {type: 'text/html;charset=utf-8'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const now = new Date();
+        const name = `markdown-export-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.html`;
+        a.href = url;
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    });
+
+    // 현재 커서가 있는 줄 앞에 텍스트 삽입
+    function insertHeadingPrefix(prefix) {
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        const value = editor.value;
+
+        const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+        const lineEnd = value.indexOf('\n', start);
+        const currentLineEnd = lineEnd === -1 ? value.length : lineEnd;
+
+        const before = value.slice(0, lineStart);
+        const line = value.slice(lineStart, currentLineEnd);
+        const after = value.slice(currentLineEnd);
+
+        let newLine = line;
+
+        // 기존에 # 헤딩이 있으면 제거하고 다시 붙이기
+        newLine = newLine.replace(/^\s*#{1,6}\s*/, '');
+
+        newLine = prefix + ' ' + newLine;
+
+        const newValue = before + newLine + after;
+        editor.value = newValue;
+
+        const newCursor = lineStart + prefix.length + 1;
+        editor.setSelectionRange(newCursor, newCursor);
+
+        updateCounters();
+        if (livePreviewToggle.checked) {
+            renderPreview();
+        }
+    }
+
+    btnH1.addEventListener('click', function () {
+        insertHeadingPrefix('#');
+    });
+    btnH2.addEventListener('click', function () {
+        insertHeadingPrefix('##');
+    });
+    btnH3.addEventListener('click', function () {
+        insertHeadingPrefix('###');
+    });
+
+    // 초기화 (샘플 텍스트)
+    btnReset.addEventListener('click', function () {
+        const sample = [
+            '# 마크다운 에디터에 오신 것을 환영합니다 👋',
+            '',
+            '왼쪽에 마크다운을 입력하면 **오른쪽에서 실시간으로 HTML 미리보기**를 볼 수 있습니다.',
+            '',
+            '## 예시',
+            '',
+            '- `# 제목` : H1',
+            '- `## 제목` : H2',
+            '- `**굵게**`, `*기울임*`',
+            '- `[링크](https://markdown.kr)`',
+            '',
+            '```js',
+            '// 코드 블록 예시',
+            "console.log('Hello, Markdown!');",
+            '```',
+            '',
+            '> 인용문도 이렇게 작성할 수 있습니다.',
+            ''
+        ].join('\n');
+
+        editor.value = sample;
+        updateCounters();
+        renderPreview();
+    });
+
+    // 페이지 로드 시 초기 세팅
+    (function init() {
+        updateCounters();
+        renderPreview();
+    })();
+</script>
+</body>
+</html>

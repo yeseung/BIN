@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>TYPING CODE | 코딩 타이핑 연습</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Malgun Gothic", sans-serif;
+            color: #222;
+            background-color: #f5f7fb;
+        }
+
+        body {
+            margin: 0;
+            padding: 24px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .app {
+            width: 100%;
+            max-width: 960px;
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 24px 20px 28px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .logo-title {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .logo {
+            font-weight: 800;
+            letter-spacing: 0.2em;
+            font-size: 14px;
+            color: #4f46e5;
+            text-transform: uppercase;
+        }
+
+        .headline {
+            font-size: 24px;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .headline span {
+            display: block;
+        }
+
+        .headline span.highlight {
+            color: #4f46e5;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: #6b7280;
+            margin-top: 6px;
+        }
+
+        .contact {
+            font-size: 12px;
+            color: #9ca3af;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .contact a {
+            color: #4f46e5;
+            text-decoration: none;
+        }
+
+        .contact a:hover {
+            text-decoration: underline;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid #e5e7eb;
+            margin: 16px 0 18px;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .file-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid #e5e7eb;
+            background: #f9fafb;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .file-label:hover {
+            background: #eef2ff;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.1);
+        }
+
+        .file-label span.icon {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #4f46e5;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #fff;
+        }
+
+        .file-name {
+            font-size: 13px;
+            color: #6b7280;
+            max-width: 260px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        .btn {
+            border-radius: 999px;
+            border: 1px solid transparent;
+            padding: 8px 14px;
+            font-size: 13px;
+            cursor: pointer;
+            background: #f3f4ff;
+            color: #4338ca;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.15s, transform 0.05s, box-shadow 0.15s, border-color 0.15s;
+        }
+
+        .btn:hover {
+            background: #e0e7ff;
+            box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.1);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+            box-shadow: none;
+        }
+
+        .btn.secondary {
+            background: #f9fafb;
+            color: #374151;
+            border-color: #e5e7eb;
+        }
+
+        .btn.secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .btn.disabled,
+        .btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        /* Metrics */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .stat-card {
+            padding: 10px 10px 9px;
+            border-radius: 12px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            min-height: 64px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #6b7280;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+        }
+
+        .stat-unit {
+            font-size: 11px;
+            color: #9ca3af;
+            font-weight: 500;
+        }
+
+        .progress-bar-wrapper {
+            margin-top: 4px;
+            height: 4px;
+            border-radius: 999px;
+            background: #e5e7eb;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #4f46e5, #22c55e);
+            transition: width 0.15s;
+        }
+
+        .stat-em {
+            color: #22c55e;
+        }
+
+        .stat-warn {
+            color: #f97316;
+        }
+
+        .stat-bad {
+            color: #ef4444;
+        }
+
+        /* Typing area */
+        .typing-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .panel {
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            background: #f9fafb;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            height: 260px;
+            min-height: 220px;
+        }
+
+        .panel-header {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #9ca3af;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-header span.title {
+            font-weight: 600;
+        }
+
+        .panel-header span.badge {
+            font-size: 10px;
+            padding: 3px 6px;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4f46e5;
+        }
+
+        .target-text,
+        .typing-input {
+            flex: 1;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            background: #ffffff;
+            padding: 10px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+            "Courier New", monospace;
+            font-size: 13px;
+            line-height: 1.4;
+            resize: none;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .target-text {
+            padding-right: 6px;
+        }
+
+        .typing-input {
+            outline: none;
+        }
+
+        .typing-input:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.15);
+        }
+
+        .placeholder {
+            color: #9ca3af;
+        }
+
+        .char {
+            white-space: pre-wrap;
+        }
+
+        .char.correct {
+            color: #111827;
+        }
+
+        .char.current {
+            position: relative;
+            background: rgba(79, 70, 229, 0.08);
+            border-radius: 2px;
+        }
+
+        .char.error {
+            background: rgba(239, 68, 68, 0.16);
+            border-radius: 2px;
+            color: #b91c1c;
+            text-decoration: underline;
+            text-decoration-style: wavy;
+        }
+
+        .helper-text {
+            margin-top: 4px;
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        /* Shadowing section */
+        .shadowing {
+            border-radius: 12px;
+            border: 1px dashed #e5e7eb;
+            padding: 12px 10px;
+            background: #f9fafb;
+            font-size: 12px;
+            color: #4b5563;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .shadowing-title {
+            font-weight: 600;
+            color: #374151;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .shadowing-title span.tag {
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4f46e5;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .shadowing-desc {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 16px;
+            }
+
+            .app {
+                padding: 18px 16px 22px;
+            }
+
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .typing-area {
+                grid-template-columns: 1fr;
+            }
+
+            .panel {
+                height: 210px;
+            }
+
+            .buttons {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+<main class="app">
+    <header>
+        <div class="logo-title">
+            <div class="logo">TYPING CODE</div>
+            <div class="headline">
+                <span>타이핑 공부를</span>
+                <span class="highlight">더 빠르고 정확하게</span>
+            </div>
+            <p class="subtitle">
+                코테를 잘 보려면 코드 치는 속도와 정확도가 중요합니다.<br />
+                실시간으로 속도·정확도를 확인하며 연습해 보세요.
+            </p>
+        </div>
+        <div class="contact">
+            문의: <a href="mailto:hayeseung@gmail.com">hayeseung@gmail.com</a>
+        </div>
+    </header>
+
+    <hr />
+
+    <!-- Controls -->
+    <section class="controls">
+        <label for="fileInput" class="file-label">
+            <span class="icon">+</span>
+            <span>연습 파일 선택</span>
+        </label>
+        <input type="file" id="fileInput" accept=".txt,.cpp,.js,.java,.py,.cs,.ts,.md,.json,.html,.css" />
+        <span class="file-name" id="fileName">파일을 선택하세요</span>
+
+        <div class="buttons">
+            <button type="button" class="btn secondary" id="resetBtn">
+                다시 시작
+            </button>
+            <button type="button" class="btn" id="finishBtn">
+                완료
+            </button>
+        </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="stats">
+        <div class="stat-card">
+            <div class="stat-label">경과 시간</div>
+            <div class="stat-value" id="timeDisplay">
+                0:00.00
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">정확도</div>
+            <div class="stat-value">
+                <span id="accuracyValue" class="stat-em">100</span>
+                <span class="stat-unit">%</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">진행률</div>
+            <div class="stat-value">
+                <span id="progressValue">0</span>
+                <span class="stat-unit">%</span>
+            </div>
+            <div class="progress-bar-wrapper">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">타이핑 속도</div>
+            <div class="stat-value">
+                <span id="cpmValue">0</span>
+                <span class="stat-unit">CPM</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Typing Area -->
+    <section class="typing-area">
+        <div class="panel">
+            <div class="panel-header">
+                <span class="title">연습 코드</span>
+                <span class="badge">READ ONLY</span>
+            </div>
+            <div class="target-text" id="targetText">
+                <div class="placeholder">
+                    연습용 텍스트 파일을 선택하면 이곳에 내용이 표시됩니다.
+                </div>
+            </div>
+            <div class="helper-text">
+                실제 코테에서 사용했던 코드, 자주 쓰는 템플릿 등을 넣어 연습해 보세요.
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <span class="title">타이핑 입력</span>
+                <span class="badge">LIVE METRICS</span>
+            </div>
+            <textarea
+                    class="typing-input"
+                    id="typingInput"
+                    placeholder="위의 코드를 보고 그대로 따라 타이핑해 보세요."
+                    disabled
+            ></textarea>
+            <div class="helper-text">
+                입력은 자동으로 채점되며, 틀린 글자는 붉은 배경으로 표시됩니다.
+            </div>
+        </div>
+    </section>
+
+    <!-- Shadowing section -->
+    <section class="shadowing">
+        <div>
+            <div class="shadowing-title">
+                <span class="tag">쉐도잉 타이핑</span>
+                <span>눈으로 읽고, 손으로 따라 치는 연습</span>
+            </div>
+            <p class="shadowing-desc">
+                눈으로 코드를 읽으면서 동시에 손으로 따라 치면, 문법과 패턴이 몸에 더 빠르게 배입니다.
+            </p>
+        </div>
+    </section>
+</main>
+
+<script>
+    (function () {
+        const fileInput = document.getElementById("fileInput");
+        const fileNameEl = document.getElementById("fileName");
+        const targetTextEl = document.getElementById("targetText");
+        const typingInput = document.getElementById("typingInput");
+
+        const timeDisplay = document.getElementById("timeDisplay");
+        const accuracyValue = document.getElementById("accuracyValue");
+        const progressValue = document.getElementById("progressValue");
+        const progressBar = document.getElementById("progressBar");
+        const cpmValue = document.getElementById("cpmValue");
+
+        const resetBtn = document.getElementById("resetBtn");
+        const finishBtn = document.getElementById("finishBtn");
+
+        let targetText = "";
+        let startTime = null;
+        let timerId = null;
+        let isFinished = false;
+
+        function formatTime(ms) {
+            const totalSeconds = ms / 1000;
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = Math.floor(totalSeconds % 60);
+            const hundredths = Math.floor((totalSeconds - Math.floor(totalSeconds)) * 100);
+
+            const secStr = seconds.toString().padStart(2, "0");
+            const hundStr = hundredths.toString().padStart(2, "0");
+            return `${minutes}:${secStr}.${hundStr}`;
+        }
+
+        function startTimer() {
+            if (timerId !== null) return;
+            startTime = Date.now();
+            timerId = setInterval(() => {
+                if (!startTime) return;
+                const elapsed = Date.now() - startTime;
+                timeDisplay.textContent = formatTime(elapsed);
+                updateMetrics(); // CPM 등이 부드럽게 업데이트되도록
+            }, 60);
+        }
+
+        function stopTimer() {
+            if (timerId !== null) {
+                clearInterval(timerId);
+                timerId = null;
+            }
+        }
+
+        function resetTimer() {
+            stopTimer();
+            startTime = null;
+            timeDisplay.textContent = "0:00.00";
+        }
+
+        function renderTarget() {
+            targetTextEl.innerHTML = "";
+            if (!targetText) {
+                const placeholder = document.createElement("div");
+                placeholder.className = "placeholder";
+                placeholder.textContent = "연습용 텍스트 파일을 선택하면 이곳에 내용이 표시됩니다.";
+                targetTextEl.appendChild(placeholder);
+                return;
+            }
+
+            const typed = typingInput.value;
+            const fragment = document.createDocumentFragment();
+
+            for (let i = 0; i < targetText.length; i++) {
+                const span = document.createElement("span");
+                span.className = "char";
+                const ch = targetText[i];
+
+                span.textContent = ch === " " ? " " : ch;
+
+                if (i < typed.length) {
+                    if (typed[i] === ch) {
+                        span.classList.add("correct");
+                    } else {
+                        span.classList.add("error");
+                    }
+                }
+
+                if (i === typed.length && !isFinished) {
+                    span.classList.add("current");
+                }
+
+                fragment.appendChild(span);
+            }
+
+            targetTextEl.appendChild(fragment);
+        }
+
+        function updateMetrics() {
+            const typed = typingInput.value;
+            const totalTyped = typed.length;
+            const totalTarget = targetText.length || 1;
+
+            let correctCount = 0;
+            const compareLen = Math.min(totalTyped, totalTarget);
+            for (let i = 0; i < compareLen; i++) {
+                if (typed[i] === targetText[i]) {
+                    correctCount++;
+                }
+            }
+
+            let accuracy = 100;
+            if (totalTyped > 0) {
+                accuracy = (correctCount / totalTyped) * 100;
+            }
+
+            const progress = (correctCount / totalTarget) * 100;
+
+            accuracy = Math.max(0, Math.min(100, accuracy));
+            const accuracyFixed = accuracy.toFixed(1).replace(/\.0$/, "");
+            accuracyValue.textContent = accuracyFixed;
+
+            // 색상 클래스 조정
+            accuracyValue.classList.remove("stat-em", "stat-warn", "stat-bad");
+            if (accuracy >= 95) {
+                accuracyValue.classList.add("stat-em");
+            } else if (accuracy >= 80) {
+                accuracyValue.classList.add("stat-warn");
+            } else {
+                accuracyValue.classList.add("stat-bad");
+            }
+
+            const progressFixed = Math.max(0, Math.min(100, progress)).toFixed(1).replace(/\.0$/, "");
+            progressValue.textContent = progressFixed;
+            progressBar.style.width = progressFixed + "%";
+
+            let cpm = 0;
+            if (startTime) {
+                const elapsedMinutes = (Date.now() - startTime) / 1000 / 60;
+                if (elapsedMinutes > 0) {
+                    cpm = correctCount / elapsedMinutes;
+                }
+            }
+            cpmValue.textContent = Math.round(cpm);
+        }
+
+        function handleTypingInput() {
+            if (!targetText) {
+                typingInput.value = "";
+                return;
+            }
+
+            if (!startTime && typingInput.value.length > 0 && !isFinished) {
+                startTimer();
+            }
+
+            updateMetrics();
+            renderTarget();
+
+            if (typingInput.value === targetText && targetText.length > 0) {
+                handleFinish(true);
+            }
+        }
+
+        function handleFinish(auto = false) {
+            if (!targetText) return;
+            isFinished = true;
+            stopTimer();
+            renderTarget();
+            typingInput.disabled = true;
+
+            if (!auto) {
+                updateMetrics();
+                alert("연습을 완료했습니다.\n\n- 경과 시간: " + timeDisplay.textContent + "\n- 정확도: " + accuracyValue.textContent + "%\n- 속도: " + cpmValue.textContent + " CPM");
+            }
+        }
+
+        function resetAll() {
+            isFinished = false;
+            targetText = "";
+            typingInput.value = "";
+            typingInput.disabled = true;
+            fileInput.value = "";
+            fileNameEl.textContent = "파일을 선택하세요";
+
+            resetTimer();
+
+            accuracyValue.textContent = "100";
+            accuracyValue.classList.remove("stat-warn", "stat-bad");
+            accuracyValue.classList.add("stat-em");
+            progressValue.textContent = "0";
+            progressBar.style.width = "0%";
+            cpmValue.textContent = "0";
+
+            renderTarget();
+        }
+
+        function loadFile(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                targetText = String(e.target.result || "");
+                if (targetText.endsWith("\n")) {
+                    targetText = targetText.replace(/\n$/, "");
+                }
+
+                isFinished = false;
+                typingInput.value = "";
+                typingInput.disabled = false;
+                typingInput.focus();
+
+                resetTimer();
+                updateMetrics();
+                renderTarget();
+            };
+            reader.readAsText(file, "UTF-8");
+        }
+
+        fileInput.addEventListener("change", (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+
+            fileNameEl.textContent = file.name;
+            loadFile(file);
+        });
+
+        typingInput.addEventListener("input", handleTypingInput);
+
+        resetBtn.addEventListener("click", () => {
+            if (!targetText && !typingInput.value) {
+                resetAll();
+                return;
+            }
+
+            if (confirm("현재 연습을 초기화할까요?")) {
+                const savedTarget = targetText;
+                resetAll();
+                if (savedTarget) {
+                    targetText = savedTarget;
+                    typingInput.disabled = false;
+                    typingInput.value = "";
+                    renderTarget();
+                }
+            }
+        });
+
+        finishBtn.addEventListener("click", () => {
+            if (!targetText) return;
+            handleFinish(false);
+        });
+
+        // 초기 상태 렌더
+        renderTarget();
+    })();
+</script>
+</body>
+</html>

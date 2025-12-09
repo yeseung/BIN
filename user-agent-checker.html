@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>user-agent-checker.html</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR",
+            system-ui, sans-serif;
+            background: #f5f7fb;
+            color: #222;
+        }
+        a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .page-wrap {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px 16px 40px;
+        }
+
+        /* 헤더 */
+        .hero {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            align-items: center;
+            margin-bottom: 28px;
+        }
+        .hero-text {
+            flex: 1 1 260px;
+        }
+        .hero-title {
+            font-size: 2.1rem;
+            font-weight: 800;
+            margin: 0 0 10px;
+        }
+        .hero-sub {
+            margin: 0;
+            line-height: 1.6;
+            color: #4b5563;
+        }
+        .hero-image {
+            flex: 0 0 260px;
+            min-height: 150px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #2563eb, #ec4899);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            padding: 18px;
+            text-align: center;
+            font-size: 0.95rem;
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.18);
+        }
+        .hero-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(15, 23, 42, 0.2);
+            border-radius: 999px;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+        }
+
+        /* 링크 안내 */
+        .hint-box {
+            background: #fff;
+            border-radius: 12px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+        }
+        .hint-emoji {
+            font-size: 1.4rem;
+        }
+        .hint-text {
+            font-size: 0.92rem;
+            color: #4b5563;
+        }
+
+        /* UA 카드 */
+        .ua-card {
+            background: #fff;
+            border-radius: 14px;
+            padding: 0;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+            margin-bottom: 28px;
+        }
+        .ua-header {
+            padding: 14px 18px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .ua-header-title {
+            font-weight: 600;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .ua-pill {
+            font-size: 0.75rem;
+            padding: 3px 10px;
+            border-radius: 999px;
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .ua-body {
+            padding: 16px 18px 18px;
+            background: #0f172a;
+        }
+        .ua-text {
+            margin: 0;
+            padding: 12px 16px;
+            border-radius: 10px;
+            background: #020617;
+            color: #e5e7eb;
+            font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+            "Courier New", monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .ua-footer {
+            padding: 10px 18px 14px;
+            background: #0f172a;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .btn-copy {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: none;
+            border-radius: 999px;
+            background: #2563eb;
+            color: #fff;
+            font-size: 0.9rem;
+            padding: 8px 16px;
+            cursor: pointer;
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.6);
+            transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.1s ease;
+        }
+        .btn-copy:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 18px rgba(37, 99, 235, 0.7);
+            background: #1d4ed8;
+        }
+        .btn-copy:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.5);
+        }
+
+        /* 설명 카드 */
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 0 0 10px;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr);
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+        .info-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px 18px;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+        }
+        .info-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #111827;
+        }
+        .info-body {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #4b5563;
+        }
+        .info-body ul {
+            padding-left: 18px;
+            margin: 6px 0 0;
+        }
+        .info-body li {
+            margin-bottom: 3px;
+        }
+
+        .faq-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px 18px;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+            margin-bottom: 10px;
+        }
+        .faq-q {
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #111827;
+        }
+        .faq-a {
+            font-size: 0.9rem;
+            color: #4b5563;
+            line-height: 1.6;
+        }
+
+        /* 토스트 */
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 18px;
+            transform: translateX(-50%);
+            background: #111827;
+            color: #f9fafb;
+            padding: 10px 16px;
+            border-radius: 999px;
+            font-size: 0.86rem;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.7);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            z-index: 999;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translate(-50%, -4px);
+            pointer-events: auto;
+        }
+
+        @media (max-width: 768px) {
+            .hero {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .hero-image {
+                width: 100%;
+            }
+            .grid-2 {
+                grid-template-columns: minmax(0, 1fr);
+            }
+            .ua-text {
+                white-space: normal;
+                word-break: break-all;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="page-wrap">
+    <header class="hero">
+        <div class="hero-text">
+            <div class="hero-chip">
+                <span>🔍</span>
+                <span>Browser User-Agent Auto Check</span>
+            </div>
+            <h1 class="hero-title">브라우저 User-Agent 자동 확인</h1>
+            <p class="hero-sub">
+                이 페이지에 접속하는 것만으로 현재 브라우저의 User-Agent 문자열을 즉시 확인할 수 있습니다.
+                개발·테스트·디버깅에 활용하거나, 고객지원 시 환경 파악용으로 복사해서 공유할 수 있습니다.
+            </p>
+        </div>
+        <div class="hero-image">
+            <div>
+                <div style="font-size: 2.4rem; margin-bottom: 6px;">🧩</div>
+                <div style="font-weight: 600; margin-bottom: 4px;">User-Agent Inspector</div>
+                <div style="opacity: .9;">브라우저 · OS · 엔진 정보를 한눈에 확인하세요.</div>
+            </div>
+        </div>
+    </header>
+
+    <section class="hint-box">
+        <div class="hint-emoji">👉</div>
+        <div class="hint-text">
+            간편 접속 링크를 만들고 싶다면 예를 들어
+            <code style="background:#e5e7eb; padding:2px 6px; border-radius:4px;">https://example.com/agent</code>
+            처럼 북마크해 두고 사용하면 편리합니다.
+        </div>
+    </section>
+
+    <!-- UA 카드 -->
+    <section class="ua-card" aria-label="현재 User-Agent 정보">
+        <div class="ua-header">
+            <div class="ua-header-title">
+                <span>현재 브라우저 User-Agent 값</span>
+            </div>
+            <span class="ua-pill" id="uaSummary">Loading...</span>
+        </div>
+        <div class="ua-body">
+            <pre id="uaText" class="ua-text">불러오는 중...</pre>
+        </div>
+        <div class="ua-footer">
+            <button class="btn-copy" id="copyBtn" type="button">
+                <span>📋</span>
+                <span>클립보드로 복사</span>
+            </button>
+        </div>
+    </section>
+
+    <!-- 설명 섹션 -->
+    <section class="grid-2" aria-label="User-Agent 설명">
+        <article class="info-card">
+            <h2 class="info-title">User-Agent란 무엇인가요?</h2>
+            <div class="info-body">
+                <p>
+                    User-Agent 문자열은 브라우저가 웹 서버에 요청을 보낼 때 함께 전달되는 정보로,
+                    <strong>브라우저 종류·버전·운영체제·렌더링 엔진</strong> 등의 데이터를 포함합니다.
+                </p>
+                <p>
+                    예시: <code>Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ...</code>
+                </p>
+                <ul>
+                    <li><strong>통계/분석</strong> – 방문자 브라우저·OS 비율 파악</li>
+                    <li><strong>호환성 테스트</strong> – 특정 브라우저에서만 발생하는 오류 재현</li>
+                    <li><strong>맞춤 UI</strong> – 모바일/데스크탑에 따라 다른 화면 제공</li>
+                </ul>
+            </div>
+        </article>
+
+        <article class="info-card">
+            <h2 class="info-title">주의해야 할 점</h2>
+            <div class="info-body">
+                <ul>
+                    <li>User-Agent 값은 브라우저·플러그인에 따라 <strong>변조가 가능</strong>합니다.</li>
+                    <li>단순 문자열만으로 디바이스 종류를 100% 정확하게 구분하기는 어렵습니다.</li>
+                    <li>접근 제어나 보안 로직은 User-Agent <strong>하나에만 의존하지 않는 것</strong>이 좋습니다.</li>
+                </ul>
+                <p style="margin-top:6px;">
+                    이 페이지는 현재 브라우저가 서버에 어떤 값(문자열)을 보내는지
+                    <strong>그대로 보여주기 위한 디버깅 도구</strong>입니다.
+                </p>
+            </div>
+        </article>
+    </section>
+
+    <section aria-label="자주 쓰이는 상황">
+        <article class="faq-card">
+            <div class="faq-q">어떤 상황에서 User-Agent 값을 직접 확인하나요?</div>
+            <div class="faq-a">
+                <ul>
+                    <li>사이트 기능이 정상 동작하지 않을 때, 고객이 “어떤 브라우저인지 알려 달라”고 요청받았을 때</li>
+                    <li>웹/앱 개발자가 특정 브라우저에서만 재현되는 버그를 디버깅할 때</li>
+                    <li>새로운 브라우저나 확장 프로그램을 테스트할 때</li>
+                </ul>
+                <p style="margin-top:6px;">
+                    이 도구에서 보이는 문자열을 그대로 복사해 이슈 트래킹 시스템, 메신저, 이메일 등에 붙여넣으면
+                    환경 정보를 빠르게 공유할 수 있습니다.
+                </p>
+            </div>
+        </article>
+    </section>
+
+    <div id="toast" class="toast" role="status" aria-live="polite">
+        User-Agent가 클립보드에 복사되었습니다.
+    </div>
+</div>
+
+<script>
+    (function () {
+        const ua = navigator.userAgent || "지원되지 않는 환경입니다.";
+        const uaTextEl = document.getElementById("uaText");
+        const uaSummaryEl = document.getElementById("uaSummary");
+        const copyBtn = document.getElementById("copyBtn");
+        const toast = document.getElementById("toast");
+
+        uaTextEl.textContent = ua;
+
+        // 간단한 브라우저/OS 요약
+        function summarizeUA(uaStr) {
+            let browser = "Unknown Browser";
+            if (/Chrome\/\d+/i.test(uaStr) && !/Edg\//i.test(uaStr)) {
+                browser = "Chrome";
+            } else if (/Edg\//i.test(uaStr)) {
+                browser = "Microsoft Edge";
+            } else if (/Firefox\/\d+/i.test(uaStr)) {
+                browser = "Firefox";
+            } else if (/Safari\/\d+/i.test(uaStr) && /Version\//i.test(uaStr)) {
+                browser = "Safari";
+            }
+
+            let os = "Unknown OS";
+            if (/Windows NT 10\.0/i.test(uaStr)) os = "Windows 10";
+            else if (/Windows NT 11\.0/i.test(uaStr)) os = "Windows 11";
+            else if (/Mac OS X/i.test(uaStr)) os = "macOS";
+            else if (/Android/i.test(uaStr)) os = "Android";
+            else if (/iPhone|iPad|iPod/i.test(uaStr)) os = "iOS";
+
+            return browser + " · " + os;
+        }
+
+        uaSummaryEl.textContent = summarizeUA(ua);
+
+        async function copyToClipboard() {
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(ua);
+                } else {
+                    // Fallback
+                    const temp = document.createElement("textarea");
+                    temp.value = ua;
+                    temp.style.position = "fixed";
+                    temp.style.left = "-9999px";
+                    document.body.appendChild(temp);
+                    temp.focus();
+                    temp.select();
+                    document.execCommand("copy");
+                    document.body.removeChild(temp);
+                }
+                showToast();
+            } catch (err) {
+                console.error(err);
+                alert("복사 중 문제가 발생했습니다. 직접 선택해서 복사해 주세요.");
+            }
+        }
+
+        function showToast() {
+            toast.classList.add("show");
+            setTimeout(() => {
+                toast.classList.remove("show");
+            }, 2000);
+        }
+
+        copyBtn.addEventListener("click", copyToClipboard);
+    })();
+</script>
+</body>
+</html>

@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>Simple Rubik’s Cube 3D</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 24px 12px 40px;
+            font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR",
+            "Malgun Gothic", system-ui, sans-serif;
+            background: #f4f4f5;
+            color: #111827;
+        }
+
+        .page {
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .intro-box {
+            background: #f9fafb;
+            padding: 16px 18px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            line-height: 1.6;
+            font-size: 14px;
+            color: #374151;
+            margin-bottom: 18px;
+        }
+
+        .intro-box p {
+            margin: 0 0 6px;
+        }
+
+        .card {
+            background: #ffffff;
+            padding: 18px 18px 22px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+
+        .card h2 {
+            margin: 0 0 14px;
+            font-size: 20px;
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 420px;            /* 고정 높이 */
+            border-radius: 12px;
+            border: 1px solid #d1d5db;
+            background: radial-gradient(circle at top, #4b5563 0, #111827 55%, #020617 100%);
+            margin-bottom: 16px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #ui-container {
+            margin-top: 4px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+        }
+
+        .controls-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: space-between;
+        }
+
+        .control-group {
+            flex: 1 1 150px;
+            min-width: 150px;
+        }
+
+        .group-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #4b5563;
+        }
+
+        .control-group .btn {
+            margin-right: 6px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 7px 13px;
+            border-radius: 999px;
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s ease, transform 0.05s ease;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-primary:active {
+            transform: translateY(1px);
+        }
+
+        .text-muted {
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .mt-3 {
+            margin-top: 12px;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        @media (max-width: 640px) {
+            .card {
+                padding: 14px 12px 18px;
+            }
+            #canvas-container {
+                height: 340px;
+            }
+            .controls-wrapper {
+                flex-direction: column;
+            }
+        }
+    </style>
+
+    <!-- Font Awesome (optional, for shuffle icon) -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+          integrity="sha512-DTOQ9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+<div class="page">
+    <div class="intro-box">
+        <p>이것은 온라인 3D 루빅스 큐브 게임으로, 조작을 통해 큐브를 회전시키고 원래대로 복원할 수 있습니다.</p>
+    </div>
+
+    <div class="card">
+        <h2>Simple Rubik’s Cube 3D</h2>
+
+        <!-- 3D Canvas -->
+        <div id="canvas-container"></div>
+
+        <!-- UI Controls -->
+        <div id="ui-container">
+
+            <!-- Top header -->
+            <div class="section-header">
+                <button class="btn btn-primary" id="scramble-btn">
+                    <i class="fa-solid fa-shuffle" style="margin-right:4px;"></i> 무작위 섞기
+                </button>
+            </div>
+
+            <!-- Move controls -->
+            <div class="controls-wrapper">
+
+                <div class="control-group">
+                    <span class="group-label">위 / 아래</span>
+                    <div>
+                        <button class="btn btn-primary" data-move="U" data-dir="-1">U</button>
+                        <button class="btn btn-primary" data-move="D" data-dir="1">D</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <span class="group-label">왼쪽 / 오른쪽</span>
+                    <div>
+                        <button class="btn btn-primary" data-move="L" data-dir="1">L</button>
+                        <button class="btn btn-primary" data-move="R" data-dir="-1">R</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <span class="group-label">앞 / 뒤</span>
+                    <div>
+                        <button class="btn btn-primary" data-move="F" data-dir="-1">F</button>
+                        <button class="btn btn-primary" data-move="B" data-dir="1">B</button>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="text-muted mt-3 text-center">
+                힌트: 화면을 드래그하여 시점을 회전할 수 있으며, 키보드 <strong>U, D, L, R, F, B</strong> 키로도 조작할 수 있습니다.
+                <br>Shift + 키로 반대 방향 회전이 가능합니다.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Three.js & OrbitControls -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+<script>
+    let scene, camera, renderer, controls;
+    const cubes = [];
+    let isAnimating = false;
+    const pivot = new THREE.Object3D();
+
+    const colors = [
+        0xff0000, // Right
+        0xff8800, // Left
+        0xffffff, // Top
+        0xffff00, // Bottom
+        0x00ff00, // Front
+        0x0000ff  // Back
+    ];
+
+    init();
+    animate();
+
+    function init() {
+        const container = document.getElementById("canvas-container");
+        let width = container.clientWidth;
+        let height = container.clientHeight;
+
+        // fallback (레이아웃 계산 전에 0이 나올 경우)
+        if (!width) width = 600;
+        if (!height) height = 400;
+
+        scene = new THREE.Scene();
+        scene.add(pivot);
+
+        camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+        camera.position.set(5, 4, 6);
+        camera.lookAt(0, 0, 0);
+
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setClearColor(0x000000, 0); // transparent
+        renderer.setSize(width, height);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        container.appendChild(renderer.domElement);
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+        dirLight.position.set(10, 20, 10);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+        dirLight.shadow.bias = -0.0001;
+        scene.add(dirLight);
+
+        const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+        fillLight.position.set(-10, 0, -10);
+        scene.add(fillLight);
+
+        const geometry = new THREE.BoxGeometry(0.96, 0.96, 0.96);
+
+        for (let x = -1; x <= 1; x++) {
+            for (let y = -1; y <= 1; y++) {
+                for (let z = -1; z <= 1; z++) {
+                    const materials = colors.map((color, i) => {
+                        let isExternal = false;
+                        if (i === 0 && x === 1) isExternal = true;
+                        if (i === 1 && x === -1) isExternal = true;
+                        if (i === 2 && y === 1) isExternal = true;
+                        if (i === 3 && y === -1) isExternal = true;
+                        if (i === 4 && z === 1) isExternal = true;
+                        if (i === 5 && z === -1) isExternal = true;
+
+                        return new THREE.MeshStandardMaterial({
+                            color: isExternal ? color : 0x2c2c2c,
+                            roughness: 0.5,
+                            metalness: 0.1
+                        });
+                    });
+
+                    const cube = new THREE.Mesh(geometry, materials);
+                    cube.position.set(x, y, z);
+                    cube.castShadow = true;
+                    cube.receiveShadow = true;
+                    scene.add(cube);
+                    cubes.push(cube);
+                }
+            }
+        }
+
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.enablePan = false;
+
+        window.addEventListener("resize", onWindowResize, false);
+        window.addEventListener("keydown", onKeyDown);
+
+        // 버튼 핸들러
+        document.getElementById("scramble-btn").addEventListener("click", scrambleCube);
+        document.querySelectorAll(".control-group .btn").forEach(btn => {
+            const move = btn.getAttribute("data-move");
+            const dir = parseInt(btn.getAttribute("data-dir"), 10);
+            if (!move) return;
+            btn.addEventListener("click", () => rotateMove(move, dir));
+        });
+    }
+
+    function rotateMove(moveType, direction = -1) {
+        if (isAnimating) return;
+
+        let axisVector = new THREE.Vector3();
+        let cubesToRotate = [];
+
+        switch (moveType) {
+            case "R":
+                axisVector.set(1, 0, 0);
+                cubesToRotate = cubes.filter(c => Math.abs(c.position.x - 1) < 0.1);
+                break;
+            case "L":
+                axisVector.set(1, 0, 0);
+                cubesToRotate = cubes.filter(c => Math.abs(c.position.x + 1) < 0.1);
+                break;
+            case "U":
+                axisVector.set(0, 1, 0);
+                cubesToRotate = cubes.filter(c => Math.abs(c.position.y - 1) < 0.1);
+                break;
+            case "D":
+                axisVector.set(0, 1, 0);
+                cubesToRotate = cubes.filter(c => Math.abs(c.position.y + 1) < 0.1);
+                break;
+            case "F":
+                axisVector.set(0, 0, 1);
+                cubesToRotate = cubes.filter(c => Math.abs(c.position.z - 1) < 0.1);
+                break;
+            case "B":
+                axisVector.set(0, 0, 1);
+                cubesToRotate = cubes.filter(c => Math.abs(c.position.z + 1) < 0.1);
+                break;
+        }
+
+        performRotation(cubesToRotate, axisVector, direction * Math.PI / 2);
+    }
+
+    function performRotation(targetCubes, axis, angle) {
+        if (!targetCubes.length) return;
+
+        isAnimating = true;
+        pivot.rotation.set(0, 0, 0);
+        pivot.updateMatrixWorld();
+        targetCubes.forEach(cube => pivot.attach(cube));
+
+        const duration = 250;
+        const startTime = performance.now();
+
+        function animateRotation(time) {
+            const elapsed = time - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const ease = 1 - Math.pow(1 - progress, 3);
+
+            pivot.setRotationFromAxisAngle(axis, angle * ease);
+
+            if (progress < 1) {
+                requestAnimationFrame(animateRotation);
+            } else {
+                finishRotation(targetCubes);
+            }
+            renderer.render(scene, camera);
+        }
+
+        requestAnimationFrame(animateRotation);
+    }
+
+    function finishRotation(targetCubes) {
+        pivot.updateMatrixWorld();
+        targetCubes.forEach(cube => {
+            scene.attach(cube);
+            cube.position.set(
+                Math.round(cube.position.x),
+                Math.round(cube.position.y),
+                Math.round(cube.position.z)
+            );
+            cube.updateMatrix();
+        });
+        pivot.rotation.set(0, 0, 0);
+        isAnimating = false;
+    }
+
+    function scrambleCube() {
+        if (isAnimating) return;
+        const moves = ["U", "D", "L", "R", "F", "B"];
+        const count = 20;
+        let i = 0;
+
+        const interval = setInterval(() => {
+            const randomMove = moves[Math.floor(Math.random() * moves.length)];
+            const randomDir = Math.random() > 0.5 ? 1 : -1;
+            rotateMove(randomMove, randomDir);
+            i++;
+            if (i >= count) clearInterval(interval);
+        }, 300);
+    }
+
+    function onKeyDown(event) {
+        if (isAnimating) return;
+        if (event.target.tagName === "BUTTON" || event.target.tagName === "INPUT") return;
+
+        const key = event.key.toUpperCase();
+        const shift = event.shiftKey;
+        const dir = shift ? 1 : -1;
+
+        if (["U", "D", "L", "R", "F", "B"].includes(key)) {
+            switch (key) {
+                case "U":
+                    rotateMove("U", -1 * dir);
+                    break;
+                case "D":
+                    rotateMove("D", 1 * dir);
+                    break;
+                case "L":
+                    rotateMove("L", 1 * dir);
+                    break;
+                case "R":
+                    rotateMove("R", -1 * dir);
+                    break;
+                case "F":
+                    rotateMove("F", -1 * dir);
+                    break;
+                case "B":
+                    rotateMove("B", 1 * dir);
+                    break;
+            }
+        }
+    }
+
+    function onWindowResize() {
+        const container = document.getElementById("canvas-container");
+        const width = container.clientWidth || 600;
+        const height = container.clientHeight || 400;
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+    }
+</script>
+</body>
+</html>

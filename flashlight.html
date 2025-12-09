@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>Flashlight - 손전등</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 24px 16px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            background: #000;
+            color: #f5f5f5;
+            font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic",
+            "Segoe UI", sans-serif;
+            transition: background-color 0.2s ease;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+        }
+
+        #title {
+            text-align: left;
+            margin-bottom: 16px;
+        }
+
+        #title h1 {
+            margin: 0 0 8px;
+            font-size: 28px;
+        }
+
+        #title small,
+        #title p {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #cccccc;
+        }
+
+        hr {
+            border: 0;
+            border-top: 1px solid #444;
+            margin: 16px 0 24px;
+        }
+
+        .wrapper {
+            width: 100%;
+            height: 320px;
+            border-radius: 16px;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+            transition: background-color 0.2s ease;
+        }
+
+        .v-center {
+            text-align: center;
+            width: 100%;
+        }
+
+        .btn-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid #555;
+            background: #111;
+            color: #f5f5f5;
+            font-size: 32px;
+            font-weight: 700;
+            cursor: pointer;
+            outline: none;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
+            transition: background-color 0.15s ease, transform 0.05s ease,
+            box-shadow 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+        }
+
+        .btn-circle:hover {
+            background: #181818;
+        }
+
+        .btn-circle:active {
+            transform: translateY(1px);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.6);
+        }
+
+        /* ON 상태 */
+        body.on {
+            background: #ffffff;
+            color: #333;
+        }
+
+        body.on .wrapper {
+            background: #ffffff;
+            box-shadow: none;
+        }
+
+        body.on .btn-circle {
+            background: #f5f5f5;
+            border-color: #999;
+            color: #333;
+        }
+
+        .note {
+            margin-top: 14px;
+            font-size: 12px;
+            color: #aaaaaa;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div id="title">
+        <h1><b>손전등</b></h1>
+        스크린 / 카메라 LED를 이용한 플래시 라이트 사이트<br />
+        - 카메라 플래시를 켜기 위해 <b>카메라 권한</b>이 필요합니다. 다른 용도로는 사용되지 않습니다.
+    </div>
+
+    <hr />
+
+    <div class="wrapper" id="lightLayer">
+        <div class="v-center">
+            <!-- 유니코드 전원 아이콘 -->
+            <button type="button" id="lightBtn" class="btn-circle">&#x23FB;</button>
+        </div>
+    </div>
+
+    <p class="note">
+        버튼을 누르면 화면 밝기와 카메라 플래시(지원 기기만)가 함께 켜집니다. 다시 누르면 꺼집니다.
+    </p>
+</div>
+
+<!-- 전체 화면 처리를 위한 screenfull.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/screenfull.js/3.3.3/screenfull.min.js"></script>
+
+<script>
+    // 진동 API 폴리필
+    navigator.vibrate =
+        navigator.vibrate ||
+        navigator.webkitVibrate ||
+        navigator.mozVibrate ||
+        navigator.msVibrate;
+
+    const SUPPORTS_MEDIA_DEVICES = "mediaDevices" in navigator;
+
+    let track = null;   // 카메라 비디오 트랙
+    let isLight = false;
+
+    // 카메라(후면)에서 비디오 트랙 가져오기
+    async function initCameraTrack() {
+        if (!SUPPORTS_MEDIA_DEVICES || track) return;
+
+        try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const cameras = devices.filter((d) => d.kind === "videoinput");
+
+            if (!cameras.length) {
+                console.warn("이 기기에서는 카메라를 찾을 수 없습니다.");
+                return;
+            }
+
+            // 일반적으로 마지막 카메라가 후면 카메라
+            const camera = cameras[cameras.length - 1];
+
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    deviceId: camera.deviceId,
+                    facingMode: ["environment", "user"],
+                },
+            });
+
+            track = stream.getVideoTracks()[0];
+        } catch (err) {
+            console.warn("카메라에 접근할 수 없습니다:", err);
+        }
+    }
+
+    // 토치(카메라 플래시) ON/OFF
+    async function toggleTorch(on) {
+        if (!track) return;
+        try {
+            await track.applyConstraints({
+                advanced: [{ torch: on }],
+            });
+        } catch (e) {
+            // 일부 기기에서는 torch를 지원하지 않음
+            console.warn("이 기기는 torch 옵션을 지원하지 않을 수 있습니다.", e);
+        }
+    }
+
+    // 버튼 클릭 시 동작
+    function setupFlashlight() {
+        const lightBtn = document.getElementById("lightBtn");
+        const lightLayer = document.getElementById("lightLayer");
+
+        lightBtn.addEventListener("click", async () => {
+            // 최초 클릭 시 카메라 초기화 시도
+            if (!track) {
+                await initCameraTrack();
+            }
+
+            isLight = !isLight;
+
+            // 카메라 플래시 토글
+            toggleTorch(isLight);
+
+            // 전체 화면 진입 (가능한 경우)
+            if (window.screenfull && screenfull.enabled) {
+                if (!screenfull.isFullscreen) {
+                    screenfull.request(lightLayer);
+                }
+            }
+
+            // 화면/배경 색상 토글
+            if (isLight) {
+                document.body.classList.add("on");
+            } else {
+                document.body.classList.remove("on");
+            }
+
+            // 짧은 진동 (지원 기기)
+            if (navigator.vibrate) {
+                navigator.vibrate(80);
+            }
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        setupFlashlight();
+        // 필요하다면 페이지 로드시 바로 카메라 초기화 시도
+        // initCameraTrack();
+    });
+</script>
+</body>
+</html>

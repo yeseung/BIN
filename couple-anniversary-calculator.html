@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>Couple Anniversary Calculator - Fancy Cards</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        * { box-sizing: border-box; }
+
+        :root {
+            --primary: #ff6b9d;
+            --primary-deep: #ff3d7a;
+            --accent: #ffb86c;
+            --bg: #0f172a;
+            --card-bg: rgba(15, 23, 42, 0.85);
+            --text-main: #f9fafb;
+            --text-sub: #cbd5f5;
+            --border-soft: rgba(248, 250, 252, 0.18);
+            --glow: 0 18px 45px rgba(255, 107, 157, 0.45);
+        }
+
+        body {
+            margin: 0;
+            padding: 20px 14px 32px;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Malgun Gothic", sans-serif;
+            background:
+                    radial-gradient(circle at 20% 0%, rgba(248, 113, 113, 0.3), transparent 60%),
+                    radial-gradient(circle at 80% 0%, rgba(56, 189, 248, 0.36), transparent 55%),
+                    radial-gradient(circle at 20% 100%, rgba(251, 146, 60, 0.4), transparent 55%),
+                    #020617;
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        .page-wrap {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        /* HERO */
+        .hero {
+            position: relative;
+            border-radius: 24px;
+            padding: 26px 20px 22px;
+            margin-bottom: 22px;
+            overflow: hidden;
+            background: radial-gradient(circle at 0 0, rgba(248, 250, 252, 0.12), transparent 50%),
+            linear-gradient(135deg, rgba(248, 250, 252, 0.16), rgba(15, 23, 42, 0.98));
+            border: 1px solid rgba(248, 250, 252, 0.12);
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.7);
+        }
+
+        .hero::before,
+        .hero::after {
+            content: "";
+            position: absolute;
+            border-radius: 999px;
+            filter: blur(32px);
+            opacity: 0.85;
+            z-index: 0;
+        }
+
+        .hero::before {
+            width: 220px;
+            height: 220px;
+            right: -60px;
+            top: -70px;
+            background: radial-gradient(circle, rgba(244, 114, 182, 0.95), transparent 60%);
+        }
+
+        .hero::after {
+            width: 140px;
+            height: 140px;
+            left: -40px;
+            bottom: -40px;
+            background: radial-gradient(circle, rgba(96, 165, 250, 0.8), transparent 60%);
+        }
+
+        .hero-inner {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 16px 24px;
+        }
+
+        .hero-left {
+            flex: 1 1 220px;
+        }
+
+        .hero-icon-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            height: 60px;
+            border-radius: 999px;
+            background: radial-gradient(circle at 30% 20%, #ffffff, #fecaca);
+            box-shadow: 0 16px 30px rgba(248, 113, 113, 0.7);
+            font-size: 30px;
+            margin-bottom: 10px;
+            transform: translateY(0);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+
+        .hero-title {
+            margin: 0 0 6px;
+            font-size: 24px;
+            letter-spacing: 0.04em;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .hero-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.72);
+            border: 1px solid rgba(248, 250, 252, 0.16);
+            font-size: 11px;
+            color: #e5e7eb;
+            margin-top: 4px;
+        }
+
+        .hero-sub {
+            margin: 8px 0 0;
+            font-size: 13px;
+            color: var(--text-sub);
+        }
+
+        .hero-right {
+            flex: 0 0 220px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .hero-counter {
+            width: 180px;
+            padding: 12px 12px 14px;
+            border-radius: 18px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(248, 250, 252, 0.16);
+            box-shadow: var(--glow);
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .hero-counter-label {
+            color: #e5e7eb;
+            opacity: 0.85;
+            margin-bottom: 4px;
+        }
+
+        .hero-counter-days {
+            font-size: 26px;
+            font-weight: 800;
+            color: #f9739b;
+            text-shadow: 0 0 18px rgba(248, 113, 170, 0.6);
+        }
+
+        .hero-counter-sub {
+            font-size: 11px;
+            color: #cbd5f5;
+            margin-top: 4px;
+        }
+
+        /* GENERAL CARD */
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 18px 18px 20px;
+            margin-bottom: 18px;
+            border: 1px solid var(--border-soft);
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.55);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            padding: 1px;
+            background: linear-gradient(135deg,
+            rgba(248, 250, 252, 0.08),
+            rgba(248, 113, 113, 0.45),
+            rgba(56, 189, 248, 0.45));
+            -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .card-inner {
+            position: relative;
+            z-index: 1;
+        }
+
+        h2.card-title {
+            font-size: 18px;
+            margin: 0 0 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #e5e7eb;
+        }
+
+        h2.card-title span {
+            font-size: 18px;
+        }
+
+        /* FORM */
+        .form-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #e5e7eb;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.65);
+            font-size: 14px;
+            background: rgba(15, 23, 42, 0.95);
+            color: #f9fafb;
+            outline: none;
+            transition: 0.18s ease;
+        }
+
+        .form-input:focus {
+            border-color: #fb7185;
+            box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.7);
+            background: rgba(15, 23, 42, 0.98);
+        }
+
+        .btn-main {
+            margin-top: 12px;
+            width: 100%;
+            border-radius: 999px;
+            border: none;
+            padding: 11px 14px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            background: radial-gradient(circle at 0 0, #ffffff, #fecaca);
+            background-size: 200% 200%;
+            color: #991b3a;
+            box-shadow: 0 16px 30px rgba(248, 113, 113, 0.65);
+            transition: 0.18s ease;
+        }
+
+        .btn-main:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 20px 40px rgba(248, 113, 113, 0.8);
+            filter: brightness(1.03);
+        }
+
+        /* RESULT CARD */
+        .result-card {
+            margin-top: 18px;
+            padding: 14px 14px 12px;
+            border-radius: 18px;
+            background: radial-gradient(circle at 0 0, rgba(248, 250, 252, 0.06), transparent 60%),
+            rgba(15, 23, 42, 0.96);
+            border: 1px solid rgba(248, 113, 113, 0.4);
+            display: none;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #fecaca;
+            font-weight: 600;
+        }
+
+        .result-header-icon {
+            width: 26px;
+            height: 26px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle, #fecaca, #fb7185);
+            color: #7f1d1d;
+            font-size: 15px;
+        }
+
+        #results {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .anniversary-item {
+            position: relative;
+            border-radius: 16px;
+            padding: 10px 12px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.96);
+            border: 1px solid rgba(148, 163, 184, 0.5);
+            overflow: hidden;
+            transform: translateY(4px);
+            opacity: 0;
+            animation: slideUp 0.35s ease forwards;
+        }
+
+        .anniversary-item::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: linear-gradient(120deg,
+            rgba(248, 113, 113, 0.08),
+            rgba(129, 140, 248, 0.12),
+            transparent);
+            opacity: 0.9;
+            pointer-events: none;
+        }
+
+        .anniversary-item-inner {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            width: 100%;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(8px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .item-icon {
+            flex: 0 0 38px;
+            height: 38px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 10px 16px rgba(15, 23, 42, 0.85);
+        }
+
+        .item-icon-main {
+            background: radial-gradient(circle at 30% 20%, #fecaca, #fb7185);
+            color: #7f1d1d;
+        }
+
+        .item-icon-gift {
+            background: radial-gradient(circle at 30% 20%, #fee2b5, #f97316);
+            color: #7c2d12;
+        }
+
+        .item-icon-year {
+            background: radial-gradient(circle at 30% 20%, #bfdbfe, #6366f1);
+            color: #1e3a8a;
+        }
+
+        .item-text {
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            font-size: 13px;
+        }
+
+        .item-title {
+            font-weight: 600;
+            color: #e5e7eb;
+        }
+
+        .item-sub {
+            font-size: 12px;
+            color: #cbd5f5;
+        }
+
+        .tag {
+            border-radius: 999px;
+            padding: 2px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .tag-main {
+            background: rgba(248, 113, 113, 0.16);
+            color: #fecaca;
+            border: 1px solid rgba(248, 113, 113, 0.6);
+        }
+
+        .tag-upcoming {
+            background: rgba(251, 191, 36, 0.18);
+            color: #facc15;
+            border: 1px solid rgba(234, 179, 8, 0.85);
+        }
+
+        .tag-achieved {
+            background: rgba(52, 211, 153, 0.22);
+            color: #6ee7b7;
+            border: 1px solid rgba(34, 197, 94, 0.9);
+        }
+
+        .item-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 3px;
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        /* FEATURE & STEPS */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        @media (max-width: 720px) {
+            .hero-inner {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .hero-right {
+                width: 100%;
+                justify-content: flex-start;
+            }
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .feature-card {
+            border-radius: 16px;
+            padding: 12px 12px 10px;
+            background: radial-gradient(circle at 0 0, rgba(248, 250, 252, 0.05), transparent 60%),
+            rgba(15, 23, 42, 0.96);
+            border: 1px solid rgba(148, 163, 184, 0.6);
+            font-size: 13px;
+        }
+
+        .feature-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 4px;
+            color: #e5e7eb;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .step {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+        }
+
+        .step-num {
+            flex: 0 0 20px;
+            height: 20px;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(248, 113, 113, 0.16);
+            color: #fecaca;
+        }
+
+        .step-text {
+            color: #e5e7eb;
+        }
+
+        h2.section-title {
+            margin: 0 0 12px;
+            font-size: 16px;
+            color: #e5e7eb;
+        }
+    </style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+    <!-- HERO SECTION -->
+    <section class="hero">
+        <div class="hero-inner">
+            <div class="hero-left">
+                <div class="hero-icon-badge">💞</div>
+                <h1 class="hero-title">
+                    커플 기념일 계산기
+                </h1>
+                <div class="hero-pill">
+                    <span>✨ 우리의 시간을 한눈에</span>
+                </div>
+                <p class="hero-sub">
+                    처음 만난 날부터 오늘까지, 그리고 앞으로 다가올 특별한 순간들을 예쁘게 정리해 드립니다.
+                </p>
+            </div>
+            <div class="hero-right">
+                <div class="hero-counter" id="heroCounter" style="display:none;">
+                    <div class="hero-counter-label">오늘 기준 함께한 날</div>
+                    <div class="hero-counter-days" id="heroDays">0일</div>
+                    <div class="hero-counter-sub">매일매일이 기념일이에요 💗</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CALCULATOR CARD -->
+    <section class="card">
+        <div class="card-inner">
+            <h2 class="card-title">
+                <span>🧮</span>
+                <span>기념일 계산하기</span>
+            </h2>
+
+            <form id="anniversaryForm">
+                <label for="startDate" class="form-label">
+                    <span>📅 사랑이 시작된 날</span>
+                </label>
+                <input type="date" id="startDate" class="form-input" required />
+
+                <button type="submit" class="btn-main">
+                    💗 계산하기
+                </button>
+            </form>
+
+            <div id="resultArea" class="result-card">
+                <div class="result-header">
+                    <div class="result-header-icon">💝</div>
+                    <div>우리의 소중한 기념일 리스트</div>
+                </div>
+                <div id="results"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MEANING CARD -->
+    <section class="card">
+        <div class="card-inner">
+            <h2 class="section-title">커플 기념일의 의미</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-title">
+                        <span>📖</span><span>소중한 순간의 기록</span>
+                    </div>
+                    <p>처음 설레던 그날부터 오늘까지의 시간을 날짜로 남기며, 관계의 깊이를 눈으로 확인할 수 있어요.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-title">
+                        <span>🎉</span><span>특별한 날의 축하</span>
+                    </div>
+                    <p>100일, 200일, 1주년처럼 의미 있는 날들을 미리 확인하고, 특별한 이벤트를 준비해 보세요.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-title">
+                        <span>💌</span><span>추억이 되는 기록</span>
+                    </div>
+                    <p>매년 찾아오는 기념일들에 메시지, 사진, 편지를 더하면 시간이 지날수록 더 값진 추억이 됩니다.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HOW TO USE CARD -->
+    <section class="card">
+        <div class="card-inner">
+            <h2 class="section-title">사용 방법</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div class="step-text">처음 만난 날 또는 사귀기 시작한 날짜를 선택해 주세요.</div>
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div class="step-text">‘계산하기’ 버튼을 누르면, 오늘까지의 일수와 함께 주요 기념일들이 한 번에 정리됩니다.</div>
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div class="step-text">다가오는 100일, 1주년 등을 참고해 이벤트, 여행, 선물 계획을 세워 보세요!</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<script>
+    const form = document.getElementById("anniversaryForm");
+    const resultArea = document.getElementById("resultArea");
+    const resultsDiv = document.getElementById("results");
+    const heroCounter = document.getElementById("heroCounter");
+    const heroDays = document.getElementById("heroDays");
+
+    form.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const startValue = document.getElementById("startDate").value;
+        if (!startValue) return;
+
+        const startDate = new Date(startValue);
+        const today = new Date();
+        const diff = today - startDate;
+        const totalDays = Math.ceil(diff / (1000 * 60 * 60 * 24));
+
+        // Hero counter 업데이트
+        heroCounter.style.display = "block";
+        heroDays.textContent = totalDays + "일";
+
+        const items = [];
+        let animationIndex = 0;
+
+        const pushItem = (html) => {
+            // 애니메이션 딜레이를 위해 래핑
+            items.push(html.replace("ANNI_DELAY_INDEX", animationIndex++));
+        };
+
+        // 1) 현재까지의 일수 카드
+        pushItem(`
+      <div class="anniversary-item" style="animation-delay: calc(ANNI_DELAY_INDEX * 0.05s);">
+        <div class="anniversary-item-inner">
+          <div class="item-icon item-icon-main">💗</div>
+          <div class="item-text">
+            <div class="item-title">오늘까지 <span class="day-count">${totalDays}일</span>째 함께하고 있어요</div>
+            <div class="item-sub">매일이 기념일이 되는 우리 둘만의 타임라인 💞</div>
+          </div>
+          <div class="item-right">
+            <span class="tag tag-main">함께한 날</span>
+          </div>
+        </div>
+      </div>
+    `);
+
+        // 2) 100일 단위 기념일
+        const milestoneDays = [100, 200, 300, 500, 1000];
+        milestoneDays.forEach((d) => {
+            const annivDate = new Date(startDate);
+            annivDate.setDate(annivDate.getDate() + d);
+
+            const daysLeft = Math.ceil((annivDate - today) / (1000 * 60 * 60 * 24));
+            const isPast = daysLeft <= 0;
+            const formatted = annivDate.toLocaleDateString("ko-KR");
+
+            const tagHTML = isPast
+                ? `<span class="tag tag-achieved">이미 함께한 날</span>`
+                : `<span class="tag tag-upcoming">D-${daysLeft}</span>`;
+
+            const subText = isPast
+                ? "이미 지나간 소중한 날이에요. 다시 떠올리며 추억을 나눠보세요."
+                : `앞으로 ${daysLeft}일 뒤에 맞이하게 될 특별한 ${d}일 기념일이에요.`;
+
+            pushItem(`
+        <div class="anniversary-item ${isPast ? "anniversary-achieved" : "anniversary-upcoming"}"
+             style="animation-delay: calc(ANNI_DELAY_INDEX * 0.05s);">
+          <div class="anniversary-item-inner">
+            <div class="item-icon item-icon-gift">🎁</div>
+            <div class="item-text">
+              <div class="item-title">${d}일 기념일</div>
+              <div class="item-sub">${formatted} | ${subText}</div>
+            </div>
+            <div class="item-right">
+              ${tagHTML}
+            </div>
+          </div>
+        </div>
+      `);
+        });
+
+        // 3) 연도별 기념일 (1~3주년)
+        for (let y = 1; y <= 3; y++) {
+            const annivDate = new Date(startDate);
+            annivDate.setFullYear(annivDate.getFullYear() + y);
+
+            const daysLeft = Math.ceil((annivDate - today) / (1000 * 60 * 60 * 24));
+            const isPast = daysLeft <= 0;
+            const formatted = annivDate.toLocaleDateString("ko-KR");
+
+            const tagHTML = isPast
+                ? `<span class="tag tag-achieved">${y}주년 달성</span>`
+                : `<span class="tag tag-upcoming">D-${daysLeft}</span>`;
+
+            const subText = isPast
+                ? `${y}년의 시간을 이미 함께 채워왔어요. 앞으로의 해도 함께 채워가요.`
+                : `앞으로 ${daysLeft}일 뒤, 우리의 ${y}주년이 찾아옵니다. 멋진 하루를 준비해볼까요?`;
+
+            pushItem(`
+        <div class="anniversary-item ${isPast ? "anniversary-achieved" : "anniversary-upcoming"}"
+             style="animation-delay: calc(ANNI_DELAY_INDEX * 0.05s);">
+          <div class="anniversary-item-inner">
+            <div class="item-icon item-icon-year">📅</div>
+            <div class="item-text">
+              <div class="item-title">${y}주년 기념일</div>
+              <div class="item-sub">${formatted} | ${subText}</div>
+            </div>
+            <div class="item-right">
+              ${tagHTML}
+            </div>
+          </div>
+        </div>
+      `);
+        }
+
+        resultsDiv.innerHTML = items.join("");
+        resultArea.style.display = "block";
+
+        resultArea.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+        });
+    });
+</script>
+
+</body>
+</html>

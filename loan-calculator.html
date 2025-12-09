@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>Loan Calculator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 24px 16px;
+            font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic",
+            "Segoe UI", sans-serif;
+            background: #f4f5f7;
+            color: #222;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 720px;
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px 20px 28px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+        }
+
+        h1 {
+            margin: 0 0 6px;
+            font-size: 24px;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 18px;
+            line-height: 1.5;
+        }
+
+        hr {
+            border: 0;
+            border-top: 1px solid #eee;
+            margin: 16px 0 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px 16px;
+            margin-bottom: 14px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 4px;
+            color: #444;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: stretch;
+            width: 100%;
+        }
+
+        .input-group span {
+            padding: 0 10px;
+            display: inline-flex;
+            align-items: center;
+            font-size: 13px;
+            background: #f1f3f5;
+            border: 1px solid #d0d4da;
+            border-right: 0;
+            border-radius: 6px 0 0 6px;
+            color: #555;
+            white-space: nowrap;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid #d0d4da;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+            -moz-appearance: textfield;
+        }
+
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .input-group input[type="number"] {
+            border-radius: 0 6px 6px 0;
+            border-left: 0;
+        }
+
+        input[type="number"]:focus {
+            border-color: #4c7cff;
+            box-shadow: 0 0 0 2px rgba(76,124,255,0.15);
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 6px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 999px;
+            padding: 8px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            transition: background-color 0.15s ease, box-shadow 0.15s ease,
+            transform 0.05s ease;
+        }
+
+        .btn-primary {
+            background: #4c7cff;
+            color: #fff;
+            box-shadow: 0 4px 10px rgba(76,124,255,0.35);
+        }
+
+        .btn-primary:hover {
+            background: #3a69e4;
+        }
+
+        .btn-primary:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 6px rgba(76,124,255,0.4);
+        }
+
+        .btn-secondary {
+            background: #f1f3f5;
+            color: #444;
+            box-shadow: none;
+        }
+
+        .btn-secondary:hover {
+            background: #e4e6ea;
+        }
+
+        .result-card {
+            margin-top: 14px;
+            padding: 14px 14px 12px;
+            border-radius: 10px;
+            background: #f8fafc;
+            border: 1px solid #e0e4ec;
+        }
+
+        .result-title {
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 6px;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 8px 16px;
+            font-size: 14px;
+        }
+
+        .result-item-label {
+            color: #777;
+            font-size: 12px;
+            margin-bottom: 2px;
+        }
+
+        .result-item-value {
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .error {
+            margin-top: 4px;
+            font-size: 12px;
+            color: #d32f2f;
+        }
+
+        .footnote {
+            margin-top: 12px;
+            font-size: 11px;
+            color: #999;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 16px 10px;
+            }
+            .container {
+                padding: 18px 14px 22px;
+            }
+            .wrapper {
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1><b>대출 계산기 (Loan Calculator)</b></h1>
+    <div class="subtitle">
+        원리금 균등 상환 기준으로 월 상환액, 총 이자, 총 상환 금액을 계산합니다.<br />
+        <span style="font-size:12px;">* 단순 참고용으로만 사용해 주세요.</span>
+    </div>
+
+    <hr />
+
+    <!-- 입력 영역 -->
+    <form id="loanForm" novalidate>
+        <div class="grid">
+            <div>
+                <label for="amount">대출 금액</label>
+                <div class="input-group">
+                    <span>₩</span>
+                    <input
+                            type="number"
+                            id="amount"
+                            min="0"
+                            step="100000"
+                            placeholder="예: 10000000"
+                            required
+                    />
+                </div>
+            </div>
+
+            <div>
+                <label for="rate">연 이자율</label>
+                <div class="input-group">
+                    <span>%</span>
+                    <input
+                            type="number"
+                            id="rate"
+                            min="0"
+                            max="50"
+                            step="0.01"
+                            placeholder="예: 4.5"
+                            required
+                    />
+
+                </div>
+            </div>
+
+            <div>
+                <label for="years">상환 기간 (년)</label>
+                <div class="input-group">
+                    <span>년</span>
+                    <input
+                            type="number"
+                            id="years"
+                            min="1"
+                            max="40"
+                            step="1"
+                            placeholder="예: 20"
+                            required
+                    />
+
+                </div>
+            </div>
+
+            <div>
+                <label for="extra">추가 상환액 (선택, 월)</label>
+                <div class="input-group">
+                    <span>₩</span>
+                    <input
+                            type="number"
+                            id="extra"
+                            min="0"
+                            step="10000"
+                            placeholder="0"
+                    />
+                </div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button type="submit" class="btn-primary">계산하기</button>
+            <button type="button" class="btn-secondary" id="clearBtn">초기화</button>
+        </div>
+        <div id="errorBox" class="error" style="display:none;"></div>
+    </form>
+
+    <!-- 결과 영역 -->
+    <div id="resultCard" class="result-card" style="display:none;">
+        <div class="result-title">계산 결과</div>
+        <div class="result-grid">
+            <div>
+                <div class="result-item-label">월 상환액 (기본)</div>
+                <div class="result-item-value" id="monthlyPayment">-</div>
+            </div>
+            <div>
+                <div class="result-item-label">월 상환액 (추가 포함)</div>
+                <div class="result-item-value" id="monthlyWithExtra">-</div>
+            </div>
+            <div>
+                <div class="result-item-label">총 이자</div>
+                <div class="result-item-value" id="totalInterest">-</div>
+            </div>
+            <div>
+                <div class="result-item-label">총 상환 금액</div>
+                <div class="result-item-value" id="totalPayment">-</div>
+            </div>
+            <div>
+                <div class="result-item-label">예상 상환 개월 수</div>
+                <div class="result-item-value" id="monthsCount">-</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footnote">
+        ※ “월 상환액(기본)”은 원리금 균등 상환 공식으로 계산한 값입니다.<br />
+        ※ “월 상환액(추가 포함)”은 사용자가 매월 추가로 상환하는 금액을 포함한 실제 납부액입니다
+        (추가 상환으로 인한 상환 기간 단축 효과는 단순 추정입니다).
+    </div>
+</div>
+
+<script>
+    const form = document.getElementById("loanForm");
+    const errorBox = document.getElementById("errorBox");
+    const clearBtn = document.getElementById("clearBtn");
+
+    const monthlyPaymentEl = document.getElementById("monthlyPayment");
+    const monthlyWithExtraEl = document.getElementById("monthlyWithExtra");
+    const totalInterestEl = document.getElementById("totalInterest");
+    const totalPaymentEl = document.getElementById("totalPayment");
+    const monthsCountEl = document.getElementById("monthsCount");
+    const resultCard = document.getElementById("resultCard");
+
+    function formatMoney(value) {
+        if (!isFinite(value)) return "-";
+        return value.toLocaleString("ko-KR", {
+            maximumFractionDigits: 0,
+        }) + " 원";
+    }
+
+    function showError(msg) {
+        errorBox.textContent = msg;
+        errorBox.style.display = "block";
+        resultCard.style.display = "none";
+    }
+
+    function clearError() {
+        errorBox.textContent = "";
+        errorBox.style.display = "none";
+    }
+
+    function calculateLoan(amount, annualRate, years, extra) {
+        const months = years * 12;
+        const monthlyRate = annualRate / 100 / 12;
+
+        let baseMonthly;
+        if (monthlyRate === 0) {
+            // 무이자
+            baseMonthly = amount / months;
+        } else {
+            baseMonthly =
+                (amount * monthlyRate) /
+                (1 - Math.pow(1 + monthlyRate, -months));
+        }
+
+        const monthlyWithExtra = baseMonthly + extra;
+
+        // 간단한 총 이자/기간 추정 (추가 상환 반영)
+        let balance = amount;
+        let paidInterest = 0;
+        let m = 0;
+
+        while (balance > 0 && m < months * 2) {
+            const interest = balance * monthlyRate;
+            let principalPay = monthlyWithExtra - interest;
+
+            if (principalPay <= 0) {
+                // 이자가 납부액보다 많으면 무한루프 방지
+                principalPay = 0;
+                break;
+            }
+
+            if (principalPay > balance) {
+                principalPay = balance;
+            }
+
+            balance -= principalPay;
+            paidInterest += interest;
+            m++;
+        }
+
+        const totalPayment = amount + paidInterest;
+
+        return {
+            baseMonthly,
+            monthlyWithExtra,
+            totalInterest: paidInterest,
+            totalPayment,
+            monthsUsed: m || months,
+        };
+    }
+
+    form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        clearError();
+
+        const amount = Number(document.getElementById("amount").value);
+        const rate = Number(document.getElementById("rate").value);
+        const years = Number(document.getElementById("years").value);
+        const extra = Number(document.getElementById("extra").value || 0);
+
+        if (!amount || amount <= 0) {
+            showError("대출 금액을 올바르게 입력해 주세요.");
+            return;
+        }
+        if (rate < 0 || rate > 50 || isNaN(rate)) {
+            showError("연 이자율은 0~50% 사이로 입력해 주세요.");
+            return;
+        }
+        if (!years || years <= 0) {
+            showError("상환 기간(년)을 올바르게 입력해 주세요.");
+            return;
+        }
+        if (extra < 0) {
+            showError("추가 상환액은 0 이상이어야 합니다.");
+            return;
+        }
+
+        const result = calculateLoan(amount, rate, years, extra);
+
+        monthlyPaymentEl.textContent = formatMoney(result.baseMonthly);
+        monthlyWithExtraEl.textContent = formatMoney(result.monthlyWithExtra);
+        totalInterestEl.textContent = formatMoney(result.totalInterest);
+        totalPaymentEl.textContent = formatMoney(result.totalPayment);
+        monthsCountEl.textContent =
+            result.monthsUsed + " 개월 (약 " +
+            (result.monthsUsed / 12).toFixed(1) +
+            " 년)";
+
+        resultCard.style.display = "block";
+    });
+
+    clearBtn.addEventListener("click", () => {
+        document.getElementById("amount").value = "";
+        document.getElementById("rate").value = "";
+        document.getElementById("years").value = "";
+        document.getElementById("extra").value = "";
+        clearError();
+        resultCard.style.display = "none";
+    });
+</script>
+</body>
+</html>

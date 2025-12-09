@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>Good Day Calendar</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+        * { box-sizing: border-box; }
+
+        :root {
+            --primary: #2563eb;
+            --primary-soft: #e0edff;
+            --bg: #f4f5f7;
+            --card-bg: #ffffff;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --danger: #dc2626;
+            --success: #16a34a;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic", "Segoe UI", sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+
+        /* 헤더 */
+        .site-header {
+            background: linear-gradient(90deg, #1d4ed8, #2563eb);
+            color: #fff;
+            padding: 10px 0;
+            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.35);
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+
+        .header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            min-height: 44px;
+            flex-wrap: wrap;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 18px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .header-title-icon {
+            width: 26px;
+            height: 26px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.15);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        /* 내비게이션 */
+        .nav {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            font-size: 13px;
+            flex-wrap: nowrap;
+        }
+
+        .nav-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            text-decoration: none;
+            border: 0;
+            background: transparent;
+            color: #e5e7eb;
+            transition: background-color 0.15s ease, color 0.15s ease, transform 0.05s ease;
+            cursor: pointer;
+            white-space: nowrap;
+            font-size: 13px;
+        }
+
+        .nav-link-icon {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .nav-link.active {
+            background: rgba(15, 23, 42, 0.22);
+            color: #ffffff;
+        }
+
+        .nav-link:hover {
+            background: rgba(15, 23, 42, 0.16);
+            transform: translateY(1px);
+        }
+
+        .nav-text {
+            display: inline-block;
+        }
+
+        /* 연도 선택 */
+        .year-select-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .year-select {
+            padding: 5px 24px 5px 8px;
+            border-radius: 999px;
+            border: 1px solid rgba(209, 213, 219, 0.8);
+            font-size: 13px;
+            outline: none;
+            background: rgba(15, 23, 42, 0.05);
+            color: #fff;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: linear-gradient(45deg, transparent 50%, #cbd5f5 50%),
+            linear-gradient(135deg, #cbd5f5 50%, transparent 50%);
+            background-position: calc(100% - 12px) 50%, calc(100% - 7px) 50%;
+            background-size: 5px 5px, 5px 5px;
+            background-repeat: no-repeat;
+        }
+
+        .year-badge {
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid rgba(191, 219, 254, 0.9);
+        }
+
+        /* 레이아웃 */
+        .site-content {
+            padding: 18px 0 28px;
+        }
+
+        .row-main {
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.7fr);
+            gap: 18px;
+        }
+
+        @media (max-width: 900px) {
+            .row-main {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 3px 10px rgba(15, 23, 42, 0.06);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            padding: 16px 14px 16px;
+        }
+
+        .card + .card {
+            margin-top: 12px;
+        }
+
+        .card-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .card-subicon {
+            width: 22px;
+            height: 22px;
+            border-radius: 999px;
+            background: #eff6ff;
+            color: #2563eb;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+        }
+
+        .btn {
+            border-radius: 999px;
+            border: 1px solid #d1d5db;
+            background: #ffffff;
+            font-size: 13px;
+            padding: 6px 12px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #374151;
+            transition: background-color 0.15s ease, border-color 0.15s ease,
+            box-shadow 0.15s ease, transform 0.05s ease;
+        }
+
+        .btn-outline-primary {
+            border-color: rgba(129, 140, 248, 0.7);
+            color: #2563eb;
+            background: #fff;
+        }
+
+        .btn-outline-primary:hover {
+            background: #eff6ff;
+            border-color: #2563eb;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.18);
+            transform: translateY(1px);
+        }
+
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        .btn-group {
+            display: inline-flex;
+            gap: 6px;
+        }
+
+        .toggle-btn {
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.9);
+            background: #f9fafb;
+            font-size: 12px;
+            padding: 5px 10px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            color: #4b5563;
+            transition: background-color 0.15s ease, border-color 0.15s ease,
+            box-shadow 0.15s ease;
+        }
+
+        .toggle-btn.active {
+            background: #eff6ff;
+            border-color: #2563eb;
+            color: #1d4ed8;
+            box-shadow: 0 1px 6px rgba(37, 99, 235, 0.25);
+        }
+
+        /* 달력 헤더 */
+        .calendar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .calendar-month-label {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        /* 달력 그리드 */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            font-size: 12px;
+            user-select: none;
+        }
+
+        .calendar-weekday {
+            text-align: center;
+            font-weight: 600;
+            color: #6b7280;
+            padding-bottom: 3px;
+            font-size: 12px;
+        }
+
+        .calendar-weekday.sun {
+            color: var(--danger);
+        }
+
+        .calendar-weekday.sat {
+            color: #2563eb;
+        }
+
+        .calendar-day {
+            min-height: 60px;
+            border-radius: 8px;
+            border: 1px solid rgba(209, 213, 219, 0.7);
+            background: #f9fafb;
+            padding: 4px 5px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+            font-size: 11px;
+        }
+
+        .calendar-day.empty {
+            border: 0;
+            background: transparent;
+        }
+
+        .day-number {
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .lunar-date {
+            margin-top: 2px;
+            font-size: 10px;
+            color: #6b7280;
+        }
+
+        .today-indicator {
+            margin-top: 4px;
+            font-size: 10px;
+            padding: 2px 5px;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4f46e5;
+            border: 1px solid rgba(129, 140, 248, 0.7);
+        }
+
+        .calendar-day.auspicious {
+            border-color: #22c55e;
+            background: #ecfdf3;
+            box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.15);
+        }
+
+        .calendar-day.today {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
+            background: #eff6ff;
+        }
+
+        /* 광고 박스 */
+        .ad-card {
+            padding: 8px;
+        }
+
+        .ad-placeholder {
+            width: 100%;
+            min-height: 80px;
+            border-radius: 10px;
+            border: 1px dashed #d1d5db;
+            background: repeating-linear-gradient(
+                    45deg,
+                    #f9fafb,
+                    #f9fafb 6px,
+                    #e5e7eb 6px,
+                    #e5e7eb 8px
+            );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+            font-size: 12px;
+        }
+
+        /* 설명 카드 */
+        .text-muted {
+            color: var(--text-muted);
+        }
+
+        .small {
+            font-size: 12px;
+        }
+
+        .info-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        .info-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 999px;
+            background: #eff6ff;
+            color: #2563eb;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        /* 상세 카드 */
+        #detailsContainer {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .detail-card {
+            border-radius: 10px;
+            border: 1px solid rgba(209, 213, 219, 0.7);
+            background: #f9fafb;
+            padding: 10px 10px 9px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .detail-card.today-card {
+            border-color: #2563eb;
+            background: #eff6ff;
+            box-shadow: 0 1px 6px rgba(37, 99, 235, 0.25);
+        }
+
+        .detail-top {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 4px;
+            flex-wrap: wrap;
+        }
+
+        .detail-date-main {
+            font-weight: 600;
+        }
+
+        .detail-badge-today {
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 999px;
+            background: #1d4ed8;
+            color: #fff;
+        }
+
+        .detail-lunar {
+            font-size: 12px;
+            color: #4b5563;
+            margin-bottom: 3px;
+        }
+
+        .detail-timing {
+            font-size: 12px;
+            color: #374151;
+        }
+
+        .detail-timing small {
+            font-size: 11px;
+            color: #6b7280;
+        }
+
+        /* 로딩 오버레이 */
+        .loading {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+
+        .loading.d-none {
+            display: none;
+        }
+
+        .spinner {
+            width: 36px;
+            height: 36px;
+            border-radius: 999px;
+            border: 3px solid rgba(239, 246, 255, 0.6);
+            border-top-color: #2563eb;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 반응형 */
+        @media (max-width: 720px) {
+            .header-row {
+                align-items: flex-start;
+            }
+
+            .header-title {
+                font-size: 16px;
+            }
+
+            .nav {
+                justify-content: flex-start;
+                margin-top: 4px;
+            }
+
+            .year-select-wrap {
+                margin-left: auto;
+            }
+
+            .card {
+                padding: 14px 12px 14px;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .header-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+
+            .year-select-wrap {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .row-main {
+                gap: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- 헤더 -->
+<header class="site-header">
+    <div class="container">
+        <div class="header-row">
+            <!-- 로고 -->
+            <div class="header-title">
+                <span class="header-title-icon">📅</span>
+                <span>손없는 날 달력</span>
+            </div>
+
+            <!-- 네비게이션 -->
+            <nav class="nav">
+                <button class="nav-link active" type="button">
+                    <span class="nav-link-icon">📆</span>
+                    <span class="nav-text">달력</span>
+                </button>
+<!--                <a class="nav-link" href="guide/moving.php">-->
+<!--                    <span class="nav-link-icon">📖</span>-->
+<!--                    <span class="nav-text">가이드</span>-->
+<!--                </a>-->
+            </nav>
+
+            <!-- 연도 선택 -->
+            <div class="year-select-wrap">
+                <select class="year-select" id="yearSelect">
+                    <option value="2025">2025년</option>
+                    <option value="2026">2026년</option>
+                    <option value="2027">2027년</option>
+                    <option value="2028">2028년</option>
+                    <option value="2029">2029년</option>
+                    <option value="2030">2030년</option>
+                    <option value="2031">2031년</option>
+                </select>
+                <span class="year-badge" id="totalDays"></span>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- 메인 컨텐츠 -->
+<main class="site-content">
+    <div class="container">
+        <div class="row-main">
+            <!-- 달력 섹션 -->
+            <div>
+                <div class="card">
+                    <div class="calendar-header">
+                        <button class="btn btn-outline-primary btn-sm" id="prevMonth">
+                            ‹
+                        </button>
+                        <div class="calendar-month-label" id="currentMonth">2025년 1월</div>
+                        <button class="btn btn-outline-primary btn-sm" id="nextMonth">
+                            ›
+                        </button>
+                    </div>
+
+                    <!-- 요일 헤더 -->
+                    <div class="calendar-grid" style="margin-bottom:6px;">
+                        <div class="calendar-weekday sun">일</div>
+                        <div class="calendar-weekday">월</div>
+                        <div class="calendar-weekday">화</div>
+                        <div class="calendar-weekday">수</div>
+                        <div class="calendar-weekday">목</div>
+                        <div class="calendar-weekday">금</div>
+                        <div class="calendar-weekday sat">토</div>
+                    </div>
+
+                    <!-- 날짜 그리드 -->
+                    <div id="calendarGrid" class="calendar-grid"></div>
+                </div>
+
+                <!-- 광고 섹션 -->
+                <div class="card ad-card">
+
+                    <div class="ad-placeholder">
+                        Google AdSense 영역
+                    </div>
+                </div>
+
+                <!-- 손없는 날 설명 -->
+                <div class="card">
+                    <div class="info-row">
+                        <span class="info-icon">ℹ️</span>
+                        <span>손없는 날이란?</span>
+                    </div>
+                    <p class="text-muted small" style="margin:0;">
+                        손없는 날은 한국 전통 역법에서 악귀나 손(損)이 없어 이사, 개업, 혼례 등 중요한 일을 하기에 좋다고 여겨지는 날입니다.
+                        일반적으로 음력 날짜의 끝자리가 9 또는 0인 날, 즉 음력 9일, 10일, 19일, 20일, 29일, 30일이 손없는 날에 해당합니다.
+                    </p>
+                </div>
+            </div>
+
+            <!-- 상세 정보 섹션 -->
+            <div>
+                <div class="card">
+                    <div class="card-title-row">
+                        <div class="card-title">
+                            <span class="card-subicon">📌</span>
+                            <span>상세 정보</span>
+                        </div>
+                        <div class="btn-group">
+                            <button class="toggle-btn active" id="btnThisMonth">
+                                <span>📅 이번 달</span>
+                            </button>
+                            <button class="toggle-btn" id="btnAllMonths">
+                                <span>📆 전체보기</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="detailsContainer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- 로딩 오버레이 -->
+<div id="loading" class="loading d-none">
+    <div class="spinner"></div>
+</div>
+
+<script>
+    // ===== 상태 =====
+    let yearData = null;
+    let currentYear = 2025;
+    let currentMonth = new Date().getMonth() + 1;
+    let showAllMonths = false;
+
+    // 오늘 날짜 (방문 시점 기준)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // D-day 계산
+    function calculateDday(dateString) {
+        const targetDate = new Date(dateString);
+        targetDate.setHours(0, 0, 0, 0);
+
+        const diffTime = targetDate - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 0) {
+            return "오늘";
+        } else if (diffDays > 0) {
+            return diffDays + "일 후";
+        } else {
+            return Math.abs(diffDays) + "일 전";
+        }
+    }
+
+    // 월 단위 정보 (몇 개월 후/전)
+    function calculateMonthInfo(dateString) {
+        const targetDate = new Date(dateString);
+        targetDate.setHours(0, 0, 0, 0);
+
+        const diffTime = targetDate - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        // 7일 이내는 월 정보 생략
+        if (Math.abs(diffDays) < 8) {
+            return null;
+        }
+
+        const todayYear = today.getFullYear();
+        const todayMonth = today.getMonth();
+        const todayDay = today.getDate();
+
+        const targetYear = targetDate.getFullYear();
+        const targetMonth = targetDate.getMonth();
+        const targetDay = targetDate.getDate();
+
+        let yearDiff = targetYear - todayYear;
+        let monthDiff = targetMonth - todayMonth;
+        let dayDiff = targetDay - todayDay;
+
+        if (dayDiff < 0) {
+            monthDiff--;
+            const lastDayOfPrevMonth = new Date(targetYear, targetMonth, 0).getDate();
+            dayDiff += lastDayOfPrevMonth;
+        }
+
+        if (monthDiff < 0) {
+            yearDiff--;
+            monthDiff += 12;
+        }
+
+        const totalMonths = yearDiff * 12 + monthDiff;
+
+        if (totalMonths === 0 && Math.abs(dayDiff) < 7) {
+            return null;
+        }
+
+        let result = "";
+
+        if (totalMonths > 0) {
+            result = totalMonths + "개월";
+            if (dayDiff > 0) {
+                result += " " + dayDiff + "일";
+            }
+            result += " 후";
+        } else if (totalMonths < 0) {
+            result = Math.abs(totalMonths) + "개월";
+            if (dayDiff > 0) {
+                result += " " + dayDiff + "일";
+            }
+            result += " 전";
+        }
+
+        return result || null;
+    }
+
+    function isToday(year, month, day) {
+        return (
+            year === today.getFullYear() &&
+            month === today.getMonth() + 1 &&
+            day === today.getDate()
+        );
+    }
+
+    // ===== 데이터 로딩 =====
+    async function loadYearData(year) {
+        showLoading();
+        try {
+            const response = await fetch("assets/data/" + year + ".json");
+            if (!response.ok) {
+                throw new Error("HTTP error! status: " + response.status);
+            }
+            const data = await response.json();
+            hideLoading();
+            return data;
+        } catch (error) {
+            console.error("Error loading data:", error);
+            hideLoading();
+            alert("데이터를 불러오는데 실패했습니다.");
+            return null;
+        }
+    }
+
+    function showLoading() {
+        document.getElementById("loading").classList.remove("d-none");
+    }
+
+    function hideLoading() {
+        document.getElementById("loading").classList.add("d-none");
+    }
+
+    // ===== 렌더링 - 달력 =====
+    function renderCalendar() {
+        const firstDay = new Date(currentYear, currentMonth - 1, 1);
+        const lastDay = new Date(currentYear, currentMonth, 0);
+        const grid = document.getElementById("calendarGrid");
+
+        document.getElementById("currentMonth").textContent =
+            currentYear + "년 " + currentMonth + "월";
+        grid.innerHTML = "";
+
+        // 앞쪽 빈 칸
+        for (let i = 0; i < firstDay.getDay(); i++) {
+            grid.appendChild(createDayCell("", null, false, true));
+        }
+
+        // 날짜
+        for (let day = 1; day <= lastDay.getDate(); day++) {
+            const dateStr =
+                      currentYear +
+                      "-" +
+                      String(currentMonth).padStart(2, "0") +
+                      "-" +
+                      String(day).padStart(2, "0");
+            const monthData = (yearData && yearData.months[currentMonth]) || [];
+            const auspiciousDate = monthData.find(function (d) {
+                return d.date === dateStr;
+            });
+            const isTodayDate = isToday(currentYear, currentMonth, day);
+
+            grid.appendChild(createDayCell(day, auspiciousDate, isTodayDate, false));
+        }
+    }
+
+    function createDayCell(day, auspiciousDate, isTodayDate, isEmpty) {
+        const cell = document.createElement("div");
+
+        if (isEmpty) {
+            cell.className = "calendar-day empty";
+            return cell;
+        }
+
+        let className = "calendar-day";
+        if (auspiciousDate) className += " auspicious";
+        if (isTodayDate) className += " today";
+
+        cell.className = className;
+
+        if (day) {
+            var inner = '<span class="day-number">' + day + "</span>";
+            if (auspiciousDate && auspiciousDate.lunar) {
+                var lunarDay = auspiciousDate.lunar.split("-")[2];
+                inner += '<span class="lunar-date">' + lunarDay + "일</span>";
+            }
+            if (isTodayDate) {
+                inner += '<span class="today-indicator">오늘</span>';
+            }
+            cell.innerHTML = inner;
+        }
+
+        return cell;
+    }
+
+    // ===== 렌더링 - 상세 리스트 =====
+    function renderDetails() {
+        const container = document.getElementById("detailsContainer");
+        let dates = [];
+
+        if (showAllMonths) {
+            const months = (yearData && yearData.months) || {};
+            Object.keys(months).forEach(function (key) {
+                dates = dates.concat(months[key]);
+            });
+        } else {
+            dates = (yearData && yearData.months[currentMonth]) || [];
+        }
+
+        dates.sort(function (a, b) {
+            return new Date(a.date) - new Date(b.date);
+        });
+
+        const todayTime = today.getTime();
+
+        const html = dates
+        .map(function (date) {
+            const dday = calculateDday(date.date);
+            const monthInfo = calculateMonthInfo(date.date);
+            const target = new Date(date.date);
+            target.setHours(0, 0, 0, 0);
+            const isDateToday = target.getTime() === todayTime;
+
+            return (
+                '<div class="detail-card ' +
+                (isDateToday ? "today-card" : "") +
+                '">' +
+                '<div class="detail-top">' +
+                '<span class="detail-date-main">' +
+                "📅 " +
+                formatDate(date.date) +
+                "</span>" +
+                (isDateToday
+                    ? '<span class="detail-badge-today">오늘</span>'
+                    : "") +
+                "</div>" +
+                '<div class="detail-lunar">' +
+                "🌙 음력: " +
+                formatDate(date.lunar) +
+                " (평달)" +
+                "</div>" +
+                '<div class="detail-timing">' +
+                "⏱ " +
+                dday +
+                (monthInfo
+                    ? '<br><small>' + monthInfo + "</small>"
+                    : "") +
+                "</div>" +
+                "</div>"
+            );
+        })
+        .join("");
+
+        container.innerHTML = html;
+
+        // 총 일수 배지
+        var total = (yearData && yearData.total_days) || 0;
+        document.getElementById("totalDays").textContent =
+            "총 " + total + "일의 손없는 날";
+    }
+
+    function formatDate(dateStr) {
+        const date = new Date(dateStr);
+        const days = ["일", "월", "화", "수", "목", "금", "토"];
+        const dayName = days[date.getDay()];
+        return dateStr.replace(/-/g, ".") + " (" + dayName + "요일)";
+    }
+
+    // ===== 연도 변경 =====
+    async function handleYearChange(event) {
+        const newYear = parseInt(event.target.value, 10);
+        const data = await loadYearData(newYear);
+        if (data) {
+            yearData = data;
+            currentYear = newYear;
+
+            if (currentMonth > 12) {
+                currentMonth = 1;
+            } else if (currentMonth < 1) {
+                currentMonth = 12;
+            }
+            renderCalendar();
+            renderDetails();
+        }
+    }
+
+    // ===== 월 변경 =====
+    function handleMonthChange(delta) {
+        let newMonth = currentMonth + delta;
+        let newYear = currentYear;
+
+        if (newMonth < 1) {
+            newMonth = 12;
+            newYear = currentYear - 1;
+        } else if (newMonth > 12) {
+            newMonth = 1;
+            newYear = currentYear + 1;
+        }
+
+        if (newYear !== currentYear) {
+            const yearSelect = document.getElementById("yearSelect");
+            if (yearSelect.querySelector('option[value="' + newYear + '"]')) {
+                yearSelect.value = String(newYear);
+                currentYear = newYear;
+
+                loadYearData(newYear).then(function (data) {
+                    if (data) {
+                        yearData = data;
+                        currentMonth = newMonth;
+                        renderCalendar();
+                        renderDetails();
+                    }
+                });
+            } else {
+                alert(newYear + "년 데이터는 지원되지 않습니다.");
+                return;
+            }
+        } else {
+            currentMonth = newMonth;
+            renderCalendar();
+            renderDetails();
+        }
+    }
+
+    // ===== 이벤트 바인딩 =====
+    document.getElementById("yearSelect").addEventListener("change", handleYearChange);
+    document.getElementById("prevMonth").addEventListener("click", function () {
+        handleMonthChange(-1);
+    });
+    document.getElementById("nextMonth").addEventListener("click", function () {
+        handleMonthChange(1);
+    });
+
+    document.getElementById("btnThisMonth").addEventListener("click", function () {
+        showAllMonths = false;
+        document.getElementById("btnThisMonth").classList.add("active");
+        document.getElementById("btnAllMonths").classList.remove("active");
+        renderDetails();
+    });
+
+    document.getElementById("btnAllMonths").addEventListener("click", function () {
+        showAllMonths = true;
+        document.getElementById("btnAllMonths").classList.add("active");
+        document.getElementById("btnThisMonth").classList.remove("active");
+        renderDetails();
+    });
+
+    // ===== 초기 로드 =====
+    (async function init() {
+        yearData = await loadYearData(currentYear);
+        if (yearData) {
+            renderCalendar();
+            renderDetails();
+        }
+    })();
+</script>
+</body>
+</html>

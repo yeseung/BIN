@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>2048 퍼즐 게임</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 40px 16px;
+      font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic",
+      "Helvetica Neue", Arial, sans-serif;
+      background: #faf8ef;
+      color: #776e65;
+      display: flex;
+      justify-content: center;
+    }
+
+    .wrapper {
+      width: 100%;
+      max-width: 450px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 32px;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      margin-bottom: 20px;
+      font-size: 14px;
+      color: #8f7a66;
+    }
+
+    /* 상단 SCORE + RESET 박스 */
+    .top-bar {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .score-container {
+      min-width: 110px;
+      padding: 10px 16px;
+      background: #bbada0;
+      border-radius: 8px;
+      text-align: center;
+      color: #f9f6f2;
+    }
+
+    .score-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      opacity: 0.9;
+      letter-spacing: 1px;
+    }
+
+    .score-val {
+      font-size: 26px;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
+    .new-game-btn {
+      border: none;
+      border-radius: 8px;
+      padding: 10px 18px;
+      background: #8f7a66;
+      color: #f9f6f2;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.05s ease;
+    }
+
+    .new-game-btn:hover {
+      background: #9c8570;
+    }
+
+    .new-game-btn:active {
+      transform: translateY(1px);
+    }
+
+    /* 게임 보드 */
+    .game-board {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      max-width: 450px;
+      margin: 0 auto;
+      padding: 15px;
+      background: #bbada0;
+      border-radius: 12px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-gap: 15px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .cell {
+      border-radius: 8px;
+      background: #ccc0b3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      height: 95px;
+      font-size: 32px;
+      color: #776e65;
+      transition: transform 0.15s ease, background-color 0.15s ease,
+      color 0.15s ease;
+    }
+
+    /* 타일 색상 */
+    .tile-2 { background: #eee4da; }
+    .tile-4 { background: #ede0c8; }
+    .tile-8 { background: #f2b179; color: #f9f6f2; }
+    .tile-16 { background: #f59563; color: #f9f6f2; }
+    .tile-32 { background: #f67c5f; color: #f9f6f2; }
+    .tile-64 { background: #f65e3b; color: #f9f6f2; }
+    .tile-128 { background: #edcf72; color: #f9f6f2; font-size: 28px; }
+    .tile-256 { background: #edcc61; color: #f9f6f2; font-size: 28px; }
+    .tile-512 { background: #edc850; color: #f9f6f2; font-size: 26px; }
+    .tile-1024 { background: #edc53f; color: #f9f6f2; font-size: 22px; }
+    .tile-2048 { background: #edc22e; color: #f9f6f2; font-size: 22px; }
+
+    /* 생성 / 합체 애니메이션 */
+    @keyframes pop {
+      0% { transform: scale(0.7); }
+      60% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+
+    .cell.new,
+    .cell.merged {
+      animation: pop 0.18s ease-out;
+    }
+
+    /* 게임 오버 오버레이 */
+    .game-overlay {
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      background: rgba(238, 228, 218, 0.92);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .game-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .game-overlay h2 {
+      margin: 0 0 16px;
+      font-size: 36px;
+      color: #776e65;
+      font-weight: 800;
+    }
+
+    .hint {
+      margin-top: 14px;
+      font-size: 14px;
+      color: #8f7a66;
+      text-align: center;
+    }
+
+    @media (max-width: 480px) {
+      body { padding-top: 20px; }
+      .cell { font-size: 24px; }
+      .game-overlay h2 { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+  <h1>2048 게임</h1>
+  <div class="subtitle">방향키 또는 화면 스와이프로 숫자를 이동해 2048을 만들어 보세요!</div>
+
+  <div class="top-bar">
+    <div class="score-container">
+      <div class="score-title">SCORE</div>
+      <div class="score-val" id="score">0</div>
+    </div>
+    <button class="new-game-btn" onclick="restartGame()">리셋</button>
+  </div>
+
+  <div class="game-board" id="grid">
+    <div class="game-overlay" id="gameOverOverlay">
+      <h2>게임 종료!</h2>
+      <button class="new-game-btn" onclick="restartGame()">다시 시작</button>
+    </div>
+  </div>
+
+  <div class="hint">
+    힌트: 같은 숫자를 합치면 점수가 올라갑니다!
+  </div>
+</div>
+
+<script>
+  const gridDisplay = document.getElementById("grid");
+  const scoreDisplay = document.getElementById("score");
+  const gameOverOverlay = document.getElementById("gameOverOverlay");
+  const width = 4;
+  let squares = [];
+  let score = 0;
+
+  function createBoard() {
+    gridDisplay.querySelectorAll(".cell").forEach((c) => c.remove());
+    squares = [];
+    score = 0;
+    scoreDisplay.textContent = score;
+    gameOverOverlay.classList.remove("active");
+
+    for (let i = 0; i < width * width; i++) {
+      const square = document.createElement("div");
+      square.textContent = "0";
+      square.className = "cell";
+      gridDisplay.appendChild(square);
+      squares.push(square);
+    }
+    generate();
+    generate();
+    updateColors();
+  }
+
+  function generate() {
+    let randomNumber = Math.floor(Math.random() * squares.length);
+    if (squares[randomNumber].textContent == 0) {
+      squares[randomNumber].textContent = 2;
+      squares[randomNumber].classList.add("new");
+    } else {
+      generate();
+    }
+  }
+
+  function updateColors() {
+    squares.forEach((sq) => {
+      const num = parseInt(sq.textContent) || 0;
+      sq.className = "cell";
+
+      if (num > 0) {
+        sq.textContent = num;
+        sq.classList.add(`tile-${num}`);
+      } else sq.textContent = "";
+    });
+  }
+
+  /* 이동 함수들 */
+  function moveRight() {
+    let moved = false;
+    for (let i = 0; i < 16; i++) {
+      if (i % 4 === 0) {
+        let row = [
+          parseInt(squares[i].textContent) || 0,
+          parseInt(squares[i + 1].textContent) || 0,
+          parseInt(squares[i + 2].textContent) || 0,
+          parseInt(squares[i + 3].textContent) || 0,
+        ];
+
+        let filtered = row.filter((n) => n);
+        let missing = 4 - filtered.length;
+        let zeros = Array(missing).fill(0);
+        let newRow = zeros.concat(filtered);
+
+        if (row.toString() !== newRow.toString()) moved = true;
+
+        squares[i].textContent = newRow[0];
+        squares[i + 1].textContent = newRow[1];
+        squares[i + 2].textContent = newRow[2];
+        squares[i + 3].textContent = newRow[3];
+      }
+    }
+    return moved;
+  }
+
+  function moveLeft() {
+    let moved = false;
+    for (let i = 0; i < 16; i++) {
+      if (i % 4 === 0) {
+        let row = [
+          parseInt(squares[i].textContent) || 0,
+          parseInt(squares[i + 1].textContent) || 0,
+          parseInt(squares[i + 2].textContent) || 0,
+          parseInt(squares[i + 3].textContent) || 0,
+        ];
+
+        let filtered = row.filter((n) => n);
+        let missing = 4 - filtered.length;
+        let zeros = Array(missing).fill(0);
+        let newRow = filtered.concat(zeros);
+
+        if (row.toString() !== newRow.toString()) moved = true;
+
+        squares[i].textContent = newRow[0];
+        squares[i + 1].textContent = newRow[1];
+        squares[i + 2].textContent = newRow[2];
+        squares[i + 3].textContent = newRow[3];
+      }
+    }
+    return moved;
+  }
+
+  function moveDown() {
+    let moved = false;
+    for (let i = 0; i < 4; i++) {
+      let col = [
+        parseInt(squares[i].textContent) || 0,
+        parseInt(squares[i + 4].textContent) || 0,
+        parseInt(squares[i + 8].textContent) || 0,
+        parseInt(squares[i + 12].textContent) || 0,
+      ];
+
+      let filtered = col.filter((n) => n);
+      let missing = 4 - filtered.length;
+      let zeros = Array(missing).fill(0);
+      let newCol = zeros.concat(filtered);
+
+      if (col.toString() !== newCol.toString()) moved = true;
+
+      squares[i].textContent = newCol[0];
+      squares[i + 4].textContent = newCol[1];
+      squares[i + 8].textContent = newCol[2];
+      squares[i + 12].textContent = newCol[3];
+    }
+    return moved;
+  }
+
+  function moveUp() {
+    let moved = false;
+    for (let i = 0; i < 4; i++) {
+      let col = [
+        parseInt(squares[i].textContent) || 0,
+        parseInt(squares[i + 4].textContent) || 0,
+        parseInt(squares[i + 8].textContent) || 0,
+        parseInt(squares[i + 12].textContent) || 0,
+      ];
+
+      let filtered = col.filter((n) => n);
+      let missing = 4 - filtered.length;
+      let zeros = Array(missing).fill(0);
+      let newCol = filtered.concat(zeros);
+
+      if (col.toString() !== newCol.toString()) moved = true;
+
+      squares[i].textContent = newCol[0];
+      squares[i + 4].textContent = newCol[1];
+      squares[i + 8].textContent = newCol[2];
+      squares[i + 12].textContent = newCol[3];
+    }
+    return moved;
+  }
+
+  /* 합치기 */
+  function combineRow() {
+    let combined = false;
+    for (let i = 0; i < 15; i++) {
+      if (
+              squares[i].textContent === squares[i + 1].textContent &&
+              squares[i].textContent != 0 &&
+              (i + 1) % 4 !== 0
+      ) {
+        const total =
+                      parseInt(squares[i].textContent) +
+                      parseInt(squares[i + 1].textContent);
+        squares[i].textContent = total;
+        squares[i + 1].textContent = 0;
+        squares[i].classList.add("merged");
+        score += total;
+        scoreDisplay.textContent = score;
+        combined = true;
+      }
+    }
+    return combined;
+  }
+
+  function combineColumn() {
+    let combined = false;
+    for (let i = 0; i < 12; i++) {
+      if (
+              squares[i].textContent === squares[i + 4].textContent &&
+              squares[i].textContent != 0
+      ) {
+        const total =
+                      parseInt(squares[i].textContent) +
+                      parseInt(squares[i + 4].textContent);
+        squares[i].textContent = total;
+        squares[i + 4].textContent = 0;
+        squares[i].classList.add("merged");
+        score += total;
+        scoreDisplay.textContent = score;
+        combined = true;
+      }
+    }
+    return combined;
+  }
+
+  /* 키보드 입력 */
+  function control(e) {
+    if (gameOverOverlay.classList.contains("active")) return;
+
+    let moved = false;
+    if (e.key === "ArrowRight") {
+      if (moveRight()) {
+        combineRow();
+        moveRight();
+        moved = true;
+      } else if (combineRow()) {
+        moveRight();
+        moved = true;
+      }
+    } else if (e.key === "ArrowLeft") {
+      if (moveLeft()) {
+        combineRow();
+        moveLeft();
+        moved = true;
+      } else if (combineRow()) {
+        moveLeft();
+        moved = true;
+      }
+    } else if (e.key === "ArrowUp") {
+      if (moveUp()) {
+        combineColumn();
+        moveUp();
+        moved = true;
+      } else if (combineColumn()) {
+        moveUp();
+        moved = true;
+      }
+    } else if (e.key === "ArrowDown") {
+      if (moveDown()) {
+        combineColumn();
+        moveDown();
+        moved = true;
+      } else if (combineColumn()) {
+        moveDown();
+        moved = true;
+      }
+    }
+
+    if (moved) {
+      generate();
+      updateColors();
+      checkForGameOver();
+      setTimeout(() => {
+        squares.forEach((sq) => sq.classList.remove("merged", "new"));
+      }, 300);
+    }
+  }
+  document.addEventListener("keyup", control);
+
+  /* 터치 입력 처리 */
+  let startX, startY;
+
+  gridDisplay.addEventListener(
+          "touchstart",
+          (e) => {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+          },
+          { passive: false }
+  );
+
+  gridDisplay.addEventListener(
+          "touchmove",
+          (e) => {
+            e.preventDefault();
+          },
+          { passive: false }
+  );
+
+  gridDisplay.addEventListener("touchend", (e) => {
+    if (!startX || !startY || gameOverOverlay.classList.contains("active"))
+      return;
+
+    const endX = e.changedTouches[0].clientX;
+    const endY = e.changedTouches[0].clientY;
+    const diffX = endX - startX;
+    const diffY = endY - startY;
+    let moved = false;
+
+    if (Math.abs(diffX) > Math.abs(diffY)) {
+      if (diffX > 0) {
+        if (moveRight()) {
+          combineRow();
+          moveRight();
+          moved = true;
+        } else if (combineRow()) {
+          moveRight();
+          moved = true;
+        }
+      } else {
+        if (moveLeft()) {
+          combineRow();
+          moveLeft();
+          moved = true;
+        } else if (combineRow()) {
+          moveLeft();
+          moved = true;
+        }
+      }
+    } else {
+      if (diffY > 0) {
+        if (moveDown()) {
+          combineColumn();
+          moveDown();
+          moved = true;
+        } else if (combineColumn()) {
+          moveDown();
+          moved = true;
+        }
+      } else {
+        if (moveUp()) {
+          combineColumn();
+          moveUp();
+          moved = true;
+        } else if (combineColumn()) {
+          moveUp();
+          moved = true;
+        }
+      }
+    }
+
+    if (moved) {
+      setTimeout(() => {
+        generate();
+        updateColors();
+        checkForGameOver();
+        setTimeout(() => {
+          squares.forEach((sq) => sq.classList.remove("merged", "new"));
+        }, 300);
+      }, 50);
+    }
+
+    startX = null;
+    startY = null;
+  });
+
+  /* 게임 종료 판단 */
+  function checkForGameOver() {
+    let zeros = squares.filter((s) => s.textContent == 0).length;
+    if (zeros > 0) return;
+
+    for (let i = 0; i < 15; i++) {
+      if ((i + 1) % 4 !== 0) {
+        if (squares[i].textContent === squares[i + 1].textContent) return;
+      }
+    }
+    for (let i = 0; i < 12; i++) {
+      if (squares[i].textContent === squares[i + 4].textContent) return;
+    }
+
+    gameOverOverlay.classList.add("active");
+  }
+
+  function restartGame() {
+    createBoard();
+  }
+
+  createBoard();
+</script>
+</body>
+</html>
