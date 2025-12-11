@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>Base64 인코딩·디코딩 – 문자열·파일·이미지 변환 도구</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 24px;
+            font-family: -apple-system, BlinkMacSystemFont,"Malgun Gothic",system-ui,sans-serif;
+            background: #f4f5f7;
+            color: #111827;
+        }
+        .page {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        h1 {
+            margin: 0 0 10px;
+            font-size: 28px;
+            font-weight: 800;
+        }
+        .subtitle {
+            margin: 0 0 24px;
+            font-size: 14px;
+            color: #6b7280;
+            line-height: 1.7;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 20px 20px 24px;
+            box-shadow: 0 8px 24px rgba(15,23,42,0.06);
+        }
+
+        /* 탭 영역 */
+        .tab-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 18px;
+        }
+        .tab-btn {
+            flex: 1 1 0;
+            border: none;
+            border-radius: 999px;
+            padding: 10px 14px;
+            font-size: 14px;
+            background: #e5e7eb;
+            color: #374151;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: background 0.15s, color 0.15s, box-shadow 0.15s, transform 0.05s;
+            white-space: nowrap;
+        }
+        .tab-btn span.icon {
+            font-size: 16px;
+        }
+        .tab-btn.active {
+            background: #2563eb;
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(37,99,235,0.45);
+        }
+        .tab-btn:active {
+            transform: translateY(1px);
+        }
+
+        .mode {
+            display: none;
+        }
+        .mode.active {
+            display: block;
+        }
+
+        .area-label {
+            font-size: 13px;
+            color: #4b5563;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .area-label small {
+            color: #9ca3af;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 180px;
+            resize: vertical;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid #d1d5db;
+            font-family: Menlo,Consolas,"SF Mono",monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            outline: none;
+            background: #f9fafb;
+            transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+        }
+        textarea:focus {
+            border-color: #2563eb;
+            background: #ffffff;
+            box-shadow: 0 0 0 1px #2563eb33;
+        }
+        textarea[readonly] {
+            background: #f3f4f6;
+        }
+
+        .options-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px 16px;
+            align-items: center;
+            margin: 14px 0 18px;
+            font-size: 13px;
+            color: #4b5563;
+        }
+
+        /* 체크박스 */
+        .chk {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+        .chk input {
+            width: 14px;
+            height: 14px;
+            margin: 0;
+            accent-color: #2563eb;
+        }
+
+        /* 토글 스위치 */
+        .toggle {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .toggle-input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .toggle-track {
+            width: 32px;
+            height: 18px;
+            border-radius: 999px;
+            background: #d1d5db;
+            position: relative;
+            transition: background 0.15s;
+        }
+        .toggle-thumb {
+            position: absolute;
+            top: 2px;
+            left: 3px;
+            width: 14px;
+            height: 14px;
+            border-radius: 999px;
+            background: #ffffff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+            transition: transform 0.16s cubic-bezier(0.4,0,0.2,1);
+        }
+        .toggle-input:checked + .toggle-track {
+            background: #2563eb;
+        }
+        .toggle-input:checked + .toggle-track .toggle-thumb {
+            transform: translateX(12px);
+        }
+        .toggle-text {
+            font-size: 13px;
+            color: #4b5563;
+        }
+
+        /* 셀렉트 */
+        .select-wrap {
+            position: relative;
+            display: inline-block;
+        }
+        .select {
+            padding: 6px 28px 6px 10px;
+            border-radius: 999px;
+            border: 1px solid #d1d5db;
+            background: #f9fafb;
+            font-size: 13px;
+            outline: none;
+            appearance: none;
+            min-width: 100px;
+        }
+        .select-wrap::after {
+            content: "▾";
+            position: absolute;
+            right: 9px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 11px;
+            color: #6b7280;
+            pointer-events: none;
+        }
+
+        .btn-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .btn {
+            border: none;
+            border-radius: 999px;
+            padding: 9px 18px;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            transition: background 0.15s, box-shadow 0.15s, transform 0.05s;
+        }
+        .btn-primary {
+            background: #2563eb;
+            color: #ffffff;
+            box-shadow: 0 2px 6px rgba(37,99,235,0.45);
+        }
+        .btn-primary:hover { background:#1d4ed8; }
+        .btn-primary:active {
+            transform: translateY(1px);
+            box-shadow: 0 1px 3px rgba(37,99,235,0.4);
+        }
+        .btn-ghost {
+            background: #e5e7eb;
+            color: #374151;
+        }
+        .btn-ghost:hover { background:#d1d5db; }
+
+        .result-label {
+            margin-top: 18px;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: #4b5563;
+        }
+
+        .info-text {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #9ca3af;
+            line-height: 1.6;
+        }
+
+        /* 파일 모드 */
+        .file-box {
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px dashed #cbd5f5;
+            background: #f9fafb;
+            margin-bottom: 10px;
+        }
+        .file-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            font-size: 13px;
+        }
+        .file-row input[type="file"] {
+            font-size: 13px;
+        }
+        .preview {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .preview img {
+            max-width: 260px;
+            max-height: 160px;
+            border-radius: 8px;
+            display: block;
+            margin-top: 6px;
+            border: 1px solid #e5e7eb;
+        }
+        .download-link {
+            margin-top: 8px;
+            font-size: 13px;
+        }
+        .download-link a {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        @media (max-width: 640px) {
+            body { padding: 16px; }
+            h1 { font-size: 22px; }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <h1>Base64 인코딩·디코딩 – 문자열·파일·이미지 변환 무료 도구</h1>
+    <p class="subtitle">
+        문자열과 파일을 Base64 형식으로 빠르게 인코딩하거나 디코딩할 수 있는 온라인 도구입니다.
+        텍스트는 물론 이미지 파일도 지원하며, 브라우저의 UTF-8 인코딩을 기준으로 동작합니다.
+        이메일 첨부, 데이터 URI, 이미지 변환 등 웹 개발과 데이터 처리에 활용해 보세요.
+    </p>
+
+    <div class="card">
+        <div class="tab-row" role="tablist">
+            <button class="tab-btn active" data-target="text-encode" type="button">
+                <span class="icon">🔐</span><span>Base64 인코딩</span>
+            </button>
+            <button class="tab-btn" data-target="text-decode" type="button">
+                <span class="icon">🔓</span><span>Base64 디코딩</span>
+            </button>
+            <button class="tab-btn" data-target="file-encode" type="button">
+                <span class="icon">📁</span><span>Base64 파일 인코딩</span>
+            </button>
+            <button class="tab-btn" data-target="file-decode" type="button">
+                <span class="icon">📥</span><span>Base64 파일 디코딩</span>
+            </button>
+        </div>
+
+        <!-- 문자열 인코딩 -->
+        <section class="mode active" id="mode-text-encode">
+            <div class="area-label">
+                <span>인코딩할 문자열을 붙여 넣으세요.</span>
+                <small>일반 텍스트 → Base64 문자열</small>
+            </div>
+            <textarea id="text-input-encode" placeholder="예) 안녕하세요, Base64 테스트입니다."></textarea>
+
+            <div class="options-row">
+
+
+                <label class="toggle">
+                    <input class="toggle-input" type="checkbox" id="trim-encode" checked />
+                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                    <span class="toggle-text">앞뒤 공백 제거</span>
+                </label>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn btn-primary" id="btn-encode-text" type="button">▶ Base64 인코딩 하기</button>
+                <button class="btn btn-ghost" id="btn-encode-clear" type="button">⟲ 초기화</button>
+            </div>
+
+            <div class="result-label">Base64 인코딩 결과</div>
+            <textarea id="text-output-encode" readonly placeholder="여기에 Base64 결과가 표시됩니다."></textarea>
+
+            <p class="info-text">
+                * 유니코드 문자열은 <code>encodeURIComponent()</code> 와 <code>btoa()</code>를 조합하여 안전하게 Base64로 변환합니다.<br />
+                * 선택한 문자셋 옵션은 설명용이며, 실제 변환은 브라우저의 UTF-8 인코딩을 기준으로 이루어집니다.
+            </p>
+        </section>
+
+        <!-- 문자열 디코딩 -->
+        <section class="mode" id="mode-text-decode">
+            <div class="area-label">
+                <span>디코딩할 Base64 문자열을 붙여 넣으세요.</span>
+                <small>Base64 문자열 → 일반 텍스트</small>
+            </div>
+            <textarea id="text-input-decode" placeholder="예) 7JWI64WV7ZWY7IS47JqULCBCYXNlNjQgVGVzdA=="></textarea>
+
+            <div class="options-row">
+                <label class="chk">
+                    <input type="checkbox" id="ignore-newline" checked />
+                    <span>개행·공백 자동 무시</span>
+                </label>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn btn-primary" id="btn-decode-text" type="button">▶ Base64 디코딩 하기</button>
+                <button class="btn btn-ghost" id="btn-decode-clear" type="button">⟲ 초기화</button>
+            </div>
+
+            <div class="result-label">디코딩 결과 텍스트</div>
+            <textarea id="text-output-decode" readonly placeholder="Base64 디코딩 결과가 여기에 표시됩니다."></textarea>
+
+            <p class="info-text">
+                * 잘못된 Base64 문자열을 넣으면 디코딩 중 오류 메시지가 표시됩니다.<br />
+                * 긴 문자열을 복사해 붙여 넣을 때 생기는 줄바꿈·공백은 기본적으로 무시하도록 처리합니다.
+            </p>
+        </section>
+
+        <!-- 파일 인코딩 -->
+        <section class="mode" id="mode-file-encode">
+            <div class="area-label">
+                <span>Base64로 인코딩할 파일을 선택하세요.</span>
+                <small>이미지·문서·텍스트 파일 등 최대 5MB 권장</small>
+            </div>
+
+            <div class="file-box">
+                <div class="file-row">
+                    <input type="file" id="file-input-encode" />
+                    <label class="chk">
+                        <input type="checkbox" id="dataurl-toggle" checked />
+                        <span>data:URL 형식으로 출력 (권장)</span>
+                    </label>
+                </div>
+                <div class="preview" id="file-preview-encode">
+                    선택된 파일이 이미지인 경우 아래에 미리보기가 표시됩니다.
+                </div>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn btn-primary" id="btn-encode-file" type="button">▶ 파일 Base64 인코딩</button>
+                <button class="btn btn-ghost" id="btn-encode-file-clear" type="button">⟲ 초기화</button>
+            </div>
+
+            <div class="result-label">파일 Base64 인코딩 결과</div>
+            <textarea id="file-output-encode" readonly placeholder="선택한 파일의 Base64 결과가 여기에 표시됩니다."></textarea>
+
+            <p class="info-text">
+                * 이미지인 경우 <code>data:image/png;base64,...</code> 와 같은 Data URI 형식으로 출력됩니다.<br />
+                * “data:URL 형식으로 출력”을 끄면 순수 Base64 본문만 출력합니다.
+            </p>
+        </section>
+
+        <!-- 파일 디코딩 -->
+        <section class="mode" id="mode-file-decode">
+            <div class="area-label">
+                <span>Base64 문자열 또는 data:URL 을 붙여 넣으세요.</span>
+                <small>Base64 → 파일 다운로드</small>
+            </div>
+
+            <textarea id="file-input-decode" placeholder="예) data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA... 또는 순수 Base64 문자열"></textarea>
+
+            <div class="options-row">
+                <label class="chk">
+                    <input type="checkbox" id="guess-image" checked />
+                    <span>이미지면 자동 미리보기</span>
+                </label>
+                <label class="chk">
+                    <span>파일 이름:</span>
+                    <input type="text" id="filename-input" placeholder="decoded-file" style="padding:4px 8px;border-radius:8px;border:1px solid #d1d5db;font-size:13px;min-width:120px;">
+                </label>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn btn-primary" id="btn-decode-file" type="button">▶ Base64 파일 생성</button>
+                <button class="btn btn-ghost" id="btn-decode-file-clear" type="button">⟲ 초기화</button>
+            </div>
+
+            <div class="download-link" id="download-area"></div>
+            <div class="preview" id="file-preview-decode"></div>
+
+            <p class="info-text">
+                * data:URL 형식(<code>data:image/png;base64,...</code>)을 넣으면 MIME 타입을 자동 인식합니다.<br />
+                * 순수 Base64 문자열만 있을 경우 기본 타입은 <code>application/octet-stream</code> 으로 저장됩니다.
+            </p>
+        </section>
+    </div>
+</div>
+
+<script>
+    // 탭 전환
+    (function () {
+        const tabs = document.querySelectorAll(".tab-btn");
+        const modes = {
+            "text-encode": document.getElementById("mode-text-encode"),
+            "text-decode": document.getElementById("mode-text-decode"),
+            "file-encode": document.getElementById("mode-file-encode"),
+            "file-decode": document.getElementById("mode-file-decode")
+        };
+
+        tabs.forEach(btn => {
+            btn.addEventListener("click", () => {
+                const target = btn.getAttribute("data-target");
+
+                tabs.forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+
+                Object.keys(modes).forEach(key => {
+                    modes[key].classList.toggle("active", key === target);
+                });
+            });
+        });
+    })();
+
+    // 문자열 Base64 유틸
+    function base64EncodeUnicode(str) {
+        const utf8 = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p1) =>
+            String.fromCharCode("0x" + p1)
+        );
+        return btoa(utf8);
+    }
+
+    function base64DecodeUnicode(b64) {
+        const binary = atob(b64);
+        let result = "";
+        const len = binary.length;
+        for (let i = 0; i < len; i++) {
+            const hex = binary.charCodeAt(i).toString(16).padStart(2, "0");
+            result += "%" + hex;
+        }
+        return decodeURIComponent(result);
+    }
+
+    // 문자열 인코딩 모드
+    (function () {
+        const input = document.getElementById("text-input-encode");
+        const output = document.getElementById("text-output-encode");
+        const trimCheckbox = document.getElementById("trim-encode");
+        const btnRun = document.getElementById("btn-encode-text");
+        const btnReset = document.getElementById("btn-encode-clear");
+
+        function run() {
+            let text = input.value || "";
+            if (trimCheckbox.checked) text = text.trim();
+            if (!text) {
+                output.value = "";
+                return;
+            }
+            try {
+                output.value = base64EncodeUnicode(text);
+            } catch (e) {
+                output.value =
+                    "인코딩 중 오류가 발생했습니다.\n\n" +
+                    (e && e.message ? e.message : String(e));
+            }
+        }
+
+        btnRun.addEventListener("click", run);
+        btnReset.addEventListener("click", () => {
+            input.value = "";
+            output.value = "";
+        });
+
+        // Ctrl+Enter / Cmd+Enter 실행
+        input.addEventListener("keydown", (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                e.preventDefault();
+                run();
+            }
+        });
+    })();
+
+    // 문자열 디코딩 모드
+    (function () {
+        const input = document.getElementById("text-input-decode");
+        const output = document.getElementById("text-output-decode");
+        const ignoreNewline = document.getElementById("ignore-newline");
+        const btnRun = document.getElementById("btn-decode-text");
+        const btnReset = document.getElementById("btn-decode-clear");
+
+        function run() {
+            let text = input.value || "";
+            if (ignoreNewline.checked) {
+                text = text.replace(/\s+/g, "");
+            }
+            if (!text) {
+                output.value = "";
+                return;
+            }
+            try {
+                output.value = base64DecodeUnicode(text);
+            } catch (e) {
+                output.value =
+                    "디코딩 중 오류가 발생했습니다.\n\n" +
+                    (e && e.message ? e.message : String(e));
+            }
+        }
+
+        btnRun.addEventListener("click", run);
+        btnReset.addEventListener("click", () => {
+            input.value = "";
+            output.value = "";
+        });
+
+        input.addEventListener("keydown", (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                e.preventDefault();
+                run();
+            }
+        });
+    })();
+
+    // 파일 인코딩
+    (function () {
+        const fileInput = document.getElementById("file-input-encode");
+        const output = document.getElementById("file-output-encode");
+        const previewBox = document.getElementById("file-preview-encode");
+        const btnRun = document.getElementById("btn-encode-file");
+        const btnReset = document.getElementById("btn-encode-file-clear");
+        const dataurlToggle = document.getElementById("dataurl-toggle");
+
+        fileInput.addEventListener("change", () => {
+            previewBox.innerHTML = "선택된 파일: 없음";
+            const file = fileInput.files && fileInput.files[0];
+            if (!file) {
+                previewBox.textContent = "선택된 파일이 없습니다.";
+                return;
+            }
+            previewBox.textContent = `선택된 파일: ${file.name} (${Math.round(
+                file.size / 1024
+            )} KB)`;
+            if (file.type.startsWith("image/")) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.createElement("img");
+                    img.src = e.target.result;
+                    previewBox.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function run() {
+            const file = fileInput.files && fileInput.files[0];
+            if (!file) {
+                alert("먼저 인코딩할 파일을 선택해 주세요.");
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const dataUrl = e.target.result;
+                if (dataurlToggle.checked) {
+                    output.value = dataUrl;
+                } else {
+                    const commaIndex = dataUrl.indexOf(",");
+                    output.value = commaIndex >= 0 ? dataUrl.slice(commaIndex + 1) : dataUrl;
+                }
+            };
+            reader.onerror = () => {
+                output.value = "파일을 읽는 중 오류가 발생했습니다.";
+            };
+            reader.readAsDataURL(file);
+        }
+
+        btnRun.addEventListener("click", run);
+        btnReset.addEventListener("click", () => {
+            fileInput.value = "";
+            output.value = "";
+            previewBox.textContent =
+                "선택된 파일이 이미지인 경우 아래에 미리보기가 표시됩니다.";
+            previewBox.querySelectorAll("img").forEach((img) => img.remove());
+        });
+    })();
+
+    // 파일 디코딩
+    (function () {
+        const input = document.getElementById("file-input-decode");
+        const preview = document.getElementById("file-preview-decode");
+        const downloadArea = document.getElementById("download-area");
+        const btnRun = document.getElementById("btn-decode-file");
+        const btnReset = document.getElementById("btn-decode-file-clear");
+        const guessImage = document.getElementById("guess-image");
+        const filenameInput = document.getElementById("filename-input");
+
+        let currentUrl;
+
+        function clearObjectUrl() {
+            if (currentUrl) {
+                URL.revokeObjectURL(currentUrl);
+                currentUrl = null;
+            }
+        }
+
+        function run() {
+            clearObjectUrl();
+            preview.innerHTML = "";
+            downloadArea.textContent = "";
+
+            let value = (input.value || "").trim();
+            if (!value) {
+                alert("Base64 문자열 또는 data:URL 을 입력해 주세요.");
+                return;
+            }
+
+            let mime = "application/octet-stream";
+            let base64 = value;
+
+            if (value.startsWith("data:")) {
+                const parts = value.split(",");
+                if (parts.length < 2) {
+                    alert("data:URL 형식이 올바르지 않습니다.");
+                    return;
+                }
+                const meta = parts[0];
+                base64 = parts.slice(1).join(",");
+                const match = meta.match(/^data:([^;]+);base64$/i);
+                if (match) mime = match[1];
+            } else {
+                // 공백/개행 제거
+                base64 = value.replace(/\s+/g, "");
+            }
+
+            try {
+                const binary = atob(base64);
+                const len = binary.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) {
+                    bytes[i] = binary.charCodeAt(i);
+                }
+                const blob = new Blob([bytes], { type: mime });
+                currentUrl = URL.createObjectURL(blob);
+
+                // 파일 이름 설정
+                let baseName = filenameInput.value.trim() || "decoded-file";
+                let ext = "";
+                if (mime.includes("/")) {
+                    const sub = mime.split("/")[1];
+                    if (sub && sub !== "octet-stream") {
+                        ext = "." + sub.replace(/[^a-z0-9]+/gi, "");
+                    }
+                }
+                const fileName = baseName + ext;
+
+                const link = document.createElement("a");
+                link.href = currentUrl;
+                link.download = fileName;
+                link.textContent = `📥 ${fileName} 다운로드`;
+                downloadArea.innerHTML = "";
+                downloadArea.appendChild(link);
+
+                if (guessImage.checked && mime.startsWith("image/")) {
+                    const img = document.createElement("img");
+                    img.src = currentUrl;
+                    preview.textContent = "이미지 미리보기:";
+                    preview.appendChild(img);
+                } else {
+                    preview.textContent = "디코딩된 파일을 위 링크를 통해 저장할 수 있습니다.";
+                }
+            } catch (e) {
+                clearObjectUrl();
+                preview.textContent = "";
+                downloadArea.textContent =
+                    "디코딩 중 오류가 발생했습니다: " +
+                    (e && e.message ? e.message : String(e));
+            }
+        }
+
+        btnRun.addEventListener("click", run);
+        btnReset.addEventListener("click", () => {
+            clearObjectUrl();
+            input.value = "";
+            preview.innerHTML = "";
+            downloadArea.textContent = "";
+            filenameInput.value = "";
+        });
+    })();
+</script>
+</body>
+</html>

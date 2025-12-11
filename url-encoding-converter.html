@@ -1,0 +1,490 @@
+<!-- url-encoding-converter.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>URL 인코딩·디코딩 변환기 – 무료 온라인 도구</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 24px;
+            font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic", system-ui, sans-serif;
+            background: #f4f5f7;
+            color: #111827;
+        }
+        .page {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        h1 {
+            margin: 0 0 10px;
+            font-size: 28px;
+            font-weight: 800;
+        }
+        .subtitle {
+            margin: 0 0 24px;
+            font-size: 14px;
+            color: #6b7280;
+            line-height: 1.7;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 20px 20px 24px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+        }
+
+        /* 탭 */
+        .tab-row {
+            display: inline-flex;
+            border-radius: 10px;
+            background: #eef0f4;
+            padding: 3px;
+            margin-bottom: 18px;
+        }
+        .tab-btn {
+            border: none;
+            border-radius: 8px;
+            padding: 8px 18px;
+            font-size: 14px;
+            background: transparent;
+            color: #4b5563;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+            white-space: nowrap;
+        }
+        .tab-btn.active {
+            background: #2563eb;
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.45);
+        }
+
+        .area-label {
+            font-size: 13px;
+            color: #4b5563;
+            margin-bottom: 6px;
+        }
+
+        .textarea-wrap {
+            position: relative;
+        }
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            resize: vertical;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid #d1d5db;
+            background: #f9fafb;
+            outline: none;
+            font-family: Menlo, Consolas, "SF Mono", monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+        }
+        textarea:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 1px #2563eb33;
+            background: #ffffff;
+        }
+        textarea[readonly] {
+            background: #f3f4f6;
+        }
+        .char-counter {
+            position: absolute;
+            right: 8px;
+            bottom: 6px;
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .options-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px 18px;
+            align-items: center;
+            margin: 14px 0 18px;
+            font-size: 13px;
+            color: #4b5563;
+        }
+        .chk {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+        .chk input {
+            margin: 0;
+            width: 14px;
+            height: 14px;
+            accent-color: #2563eb;
+        }
+
+        /* 토글 */
+        .toggle {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .toggle-input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .toggle-track {
+            width: 32px;
+            height: 18px;
+            border-radius: 999px;
+            background: #d1d5db;
+            position: relative;
+            transition: background 0.15s;
+        }
+        .toggle-thumb {
+            position: absolute;
+            top: 2px;
+            left: 3px;
+            width: 14px;
+            height: 14px;
+            border-radius: 999px;
+            background: #ffffff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+            transition: transform 0.16s cubic-bezier(0.4,0,0.2,1);
+        }
+        .toggle-input:checked + .toggle-track {
+            background: #2563eb;
+        }
+        .toggle-input:checked + .toggle-track .toggle-thumb {
+            transform: translateX(12px);
+        }
+        .toggle-text {
+            font-size: 13px;
+            color: #4b5563;
+        }
+
+        /* 셀렉트 */
+        .select-wrap {
+            position: relative;
+            display: inline-block;
+        }
+        select.select {
+            padding: 6px 28px 6px 10px;
+            border-radius: 999px;
+            border: 1px solid #d1d5db;
+            background: #f9fafb;
+            font-size: 13px;
+            outline: none;
+            appearance: none;
+            min-width: 120px;
+        }
+        .select-wrap::after {
+            content: "▾";
+            position: absolute;
+            right: 9px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 11px;
+            color: #6b7280;
+            pointer-events: none;
+        }
+
+        .btn-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .btn {
+            border: none;
+            border-radius: 999px;
+            padding: 9px 18px;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: background 0.15s, box-shadow 0.15s, transform 0.05s;
+            white-space: nowrap;
+        }
+        .btn-primary {
+            background: #2563eb;
+            color: #ffffff;
+            box-shadow: 0 2px 6px rgba(37,99,235,0.45);
+        }
+        .btn-primary:hover { background:#1d4ed8; }
+        .btn-primary:active {
+            transform: translateY(1px);
+            box-shadow: 0 1px 3px rgba(37,99,235,0.4);
+        }
+        .btn-ghost {
+            background: #e5e7eb;
+            color: #374151;
+        }
+        .btn-ghost:hover { background:#d1d5db; }
+
+        .result-label {
+            margin-top: 18px;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: #4b5563;
+        }
+        .info-text {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #9ca3af;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 640px) {
+            body { padding: 16px; }
+            h1 { font-size: 22px; }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <h1>URL 인코딩·디코딩 변환기 – 무료 온라인 도구</h1>
+    <p class="subtitle">
+        문자열을 URL 인코딩 또는 디코딩 형식으로 즉시 변환하세요.
+        UTF-8, EUC-KR, URI 인코딩 개념을 직관적으로 테스트할 수 있어 웹 개발과 데이터 처리에 유용합니다.
+    </p>
+
+    <div class="card">
+        <!-- 탭 -->
+        <div class="tab-row" role="tablist">
+            <button class="tab-btn active" id="tab-encode" data-mode="encode" type="button">URL 인코딩</button>
+            <button class="tab-btn" id="tab-decode" data-mode="decode" type="button">URL 디코딩</button>
+        </div>
+
+        <!-- 입력 영역 -->
+        <div class="area-label" id="input-label">
+            인코딩할 문자열을 붙여 넣으세요
+        </div>
+        <div class="textarea-wrap">
+            <textarea id="input" placeholder="예) https://example.com/search?q=안녕하세요"></textarea>
+            <div class="char-counter" id="char-counter">0 / 8192</div>
+        </div>
+
+        <!-- 옵션 -->
+        <div class="options-row" id="options-encode">
+            <label class="chk">
+                <input type="checkbox" id="only-uri-encode" />
+                <span>Only URI Encode (encodeURI 사용)</span>
+            </label>
+            <label class="chk">
+                <input type="checkbox" id="prevent-double" />
+                <span>중복 인코딩 방지</span>
+            </label>
+            <div class="select-wrap">
+                <select class="select" id="charset">
+                    <option value="UTF-8" selected>UTF-8</option>
+                    <option value="UTF-16">UTF-16</option>
+                    <option value="UTF-16BE">UTF-16 (BE)</option>
+                    <option value="UTF-16LE">UTF-16 (LE)</option>
+                    <option value="UTF-32">UTF-32</option>
+                    <option value="UTF-32BE">UTF-32 (BE)</option>
+                    <option value="UTF-32LE">UTF-32 (LE)</option>
+                    <option value="US-ASCII">ASCII</option>
+                    <option value="ISO-8859-1">ISO-8859-1</option>
+                    <option value="ISO-8859-2">ISO-8859-2</option>
+                    <option value="ISO-8859-5">ISO-8859-5</option>
+                    <option value="ISO-8859-6">ISO-8859-6</option>
+                    <option value="ISO-8859-7">ISO-8859-7</option>
+                    <option value="ISO-8859-8">ISO-8859-8</option>
+                    <option value="ISO-8859-15">ISO-8859-15</option>
+                    <option value="ISO-2022-JP">ISO-2022-JP</option>
+                    <option value="WINDOWS-1251">Windows-1251</option>
+                    <option value="WINDOWS-1252">Windows-1252</option>
+                    <option value="EUC-KR">EUC-KR</option>
+                    <option value="EUC-CN">EUC-CN</option>
+                    <option value="EUC-JP">EUC-JP</option>
+                    <option value="EUC-TW">EUC-TW</option>
+                    <option value="Shift_JIS">Shift_JIS</option>
+                    <option value="KOI8">KOI8</option>
+                    <option value="KOI8-R">KOI8-R</option>
+                    <option value="KOI8-U">KOI8-U</option>
+                    <option value="GB2312">GB2312</option>
+                    <option value="GBK">GBK</option>
+                    <option value="BIG5">Big5</option>
+                </select>
+            </div>
+            <label class="toggle">
+                <input class="toggle-input" type="checkbox" id="trim-space" checked />
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                <span class="toggle-text">앞뒤 공백 제거</span>
+            </label>
+        </div>
+
+        <!-- 디코딩 옵션 (encode 탭일 때는 숨김) -->
+        <div class="options-row" id="options-decode" style="display:none;">
+            <label class="chk">
+                <input type="checkbox" id="only-uri-decode" />
+                <span>Only URI Decode (encodeURI 기준 디코딩)</span>
+            </label>
+            <label class="chk">
+                <input type="checkbox" id="keep-plus" />
+                <span>+ 기호를 공백으로 바꾸지 않기</span>
+            </label>
+            <label class="toggle">
+                <input class="toggle-input" type="checkbox" id="trim-space-decode" checked />
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                <span class="toggle-text">앞뒤 공백 제거</span>
+            </label>
+        </div>
+
+        <!-- 버튼 -->
+        <div class="btn-row">
+            <button class="btn btn-primary" id="btn-run" type="button">▶ 인코딩 하기</button>
+            <button class="btn btn-ghost" id="btn-reset" type="button">⟲ 초기화</button>
+        </div>
+
+        <!-- 결과 -->
+        <div class="result-label" id="result-label">인코딩 결과</div>
+        <textarea id="output" readonly placeholder="변환 결과가 여기에 표시됩니다."></textarea>
+
+        <p class="info-text">
+            * “Only URI Encode”를 체크하면 <code>encodeURI()</code>를 사용해 전체 URL을 인코딩할 때 유용합니다.
+            기본값은 <code>encodeURIComponent()</code> 로, 파라미터 값 인코딩에 적합합니다.<br />
+            * “중복 인코딩 방지”는 문자열이 이미 인코딩된 것으로 추정되면 다시 인코딩하지 않고 그대로 반환합니다.<br />
+            * 실제 변환은 브라우저의 UTF-8 환경을 기준으로 수행되며, 상단 문자셋 선택은 참고용 옵션입니다.
+        </p>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const tabEncode = document.getElementById("tab-encode");
+        const tabDecode = document.getElementById("tab-decode");
+        const btnRun = document.getElementById("btn-run");
+        const btnReset = document.getElementById("btn-reset");
+        const input = document.getElementById("input");
+        const output = document.getElementById("output");
+        const inputLabel = document.getElementById("input-label");
+        const resultLabel = document.getElementById("result-label");
+        const optionsEncode = document.getElementById("options-encode");
+        const optionsDecode = document.getElementById("options-decode");
+        const charCounter = document.getElementById("char-counter");
+
+        const onlyUriEncode = document.getElementById("only-uri-encode");
+        const preventDouble = document.getElementById("prevent-double");
+        const trimSpace = document.getElementById("trim-space");
+        const onlyUriDecode = document.getElementById("only-uri-decode");
+        const keepPlus = document.getElementById("keep-plus");
+        const trimSpaceDecode = document.getElementById("trim-space-decode");
+
+        let mode = "encode"; // encode | decode
+        const MAX_LEN = 8192;
+
+        function updateCharCounter() {
+            const len = input.value.length;
+            charCounter.textContent = len + " / " + MAX_LEN;
+        }
+
+        input.addEventListener("input", updateCharCounter);
+        updateCharCounter();
+
+        function setMode(newMode) {
+            mode = newMode;
+            if (mode === "encode") {
+                tabEncode.classList.add("active");
+                tabDecode.classList.remove("active");
+                inputLabel.textContent = "인코딩할 문자열을 붙여 넣으세요";
+                resultLabel.textContent = "인코딩 결과";
+                btnRun.textContent = "▶ 인코딩 하기";
+                optionsEncode.style.display = "flex";
+                optionsDecode.style.display = "none";
+            } else {
+                tabDecode.classList.add("active");
+                tabEncode.classList.remove("active");
+                inputLabel.textContent = "디코딩할 URL 인코딩 문자열을 붙여 넣으세요";
+                resultLabel.textContent = "디코딩 결과";
+                btnRun.textContent = "▶ 디코딩 하기";
+                optionsEncode.style.display = "none";
+                optionsDecode.style.display = "flex";
+            }
+            output.value = "";
+        }
+
+        tabEncode.addEventListener("click", () => setMode("encode"));
+        tabDecode.addEventListener("click", () => setMode("decode"));
+
+        function isAlreadyEncoded(str) {
+            // 단순 추정: decode → 재인코딩 결과가 원문과 같으면 이미 인코딩된 것으로 간주
+            try {
+                const decoded = decodeURIComponent(str);
+                const reencoded = encodeURIComponent(decoded);
+                return reencoded === str;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function runTransform() {
+            let text = input.value || "";
+
+            if (mode === "encode") {
+                if (trimSpace.checked) text = text.trim();
+                if (!text) { output.value = ""; return; }
+
+                if (preventDouble.checked && isAlreadyEncoded(text)) {
+                    output.value = text + "\n\n(※ 중복 인코딩 방지에 의해 원본을 그대로 반환했습니다.)";
+                    return;
+                }
+
+                try {
+                    let result;
+                    if (onlyUriEncode.checked) {
+                        result = encodeURI(text);
+                    } else {
+                        result = encodeURIComponent(text);
+                    }
+                    output.value = result;
+                } catch (e) {
+                    output.value =
+                        "인코딩 중 오류가 발생했습니다.\n\n" +
+                        (e && e.message ? e.message : String(e));
+                }
+            } else {
+                if (trimSpaceDecode.checked) text = text.trim();
+                if (!text) { output.value = ""; return; }
+
+                let target = text;
+                if (!keepPlus.checked) {
+                    target = target.replace(/\+/g, " ");
+                }
+                try {
+                    const result = onlyUriDecode.checked
+                        ? decodeURI(target)
+                        : decodeURIComponent(target);
+                    output.value = result;
+                } catch (e) {
+                    output.value =
+                        "디코딩 중 오류가 발생했습니다.\n\n" +
+                        (e && e.message ? e.message : String(e));
+                }
+            }
+        }
+
+        btnRun.addEventListener("click", runTransform);
+        btnReset.addEventListener("click", () => {
+            input.value = "";
+            output.value = "";
+            updateCharCounter();
+        });
+
+        // Ctrl+Enter / Cmd+Enter 실행
+        input.addEventListener("keydown", (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                e.preventDefault();
+                runTransform();
+            }
+        });
+    })();
+</script>
+</body>
+</html>

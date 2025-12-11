@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>유튜브 썸네일 추출기 - 고화질 이미지 무료 다운로드</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-soft: #e0edff;
+            --bg: #f4f6fb;
+            --text-main: #111827;
+            --text-sub: #6b7280;
+            --border-soft: #e5e7eb;
+            --radius-lg: 14px;
+            --radius-xl: 18px;
+            --shadow-soft: 0 14px 40px rgba(15,23,42,0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 32px 16px 64px;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Malgun Gothic",
+            "Apple SD Gothic Neo", sans-serif;
+            background: radial-gradient(circle at top left, #e0ecff 0, #f7f9fc 40%, #f4f6fb 100%);
+            color: var(--text-main);
+        }
+
+        .page {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Hero */
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+            gap: 32px;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .hero-title {
+            font-size: clamp(26px, 3vw, 34px);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin: 0 0 16px;
+        }
+
+        .hero-title strong {
+            color: var(--primary);
+        }
+
+        .hero-text p {
+            margin: 4px 0;
+            line-height: 1.6;
+            font-size: 14px;
+            color: var(--text-sub);
+        }
+
+        .hero-text a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .hero-visual {
+            background: radial-gradient(circle at top left, #4f46e5, #111827);
+            border-radius: 22px;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-soft);
+            position: relative;
+            overflow: hidden;
+            min-height: 220px;
+        }
+
+        .hero-card {
+            background: rgba(15,23,42,0.92);
+            border-radius: 16px;
+            padding: 18px 18px 16px;
+            width: 100%;
+            max-width: 360px;
+            border: 1px solid rgba(148,163,184,0.35);
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-url {
+            height: 32px;
+            border-radius: 999px;
+            padding: 0 14px;
+            display: flex;
+            align-items: center;
+            background: rgba(15,23,42,0.95);
+            border: 1px solid rgba(148,163,184,0.4);
+            color: #e5e7eb;
+            font-size: 11px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .hero-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(37,99,235,0.15);
+            color: #e5edff;
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 10px;
+            margin-bottom: 10px;
+        }
+
+        .hero-chip span {
+            font-size: 12px;
+        }
+
+        .hero-screen {
+            background: radial-gradient(circle at top left,#1d4ed8,#020617);
+            border-radius: 14px;
+            padding: 18px;
+            border: 1px solid rgba(148,163,184,0.6);
+            box-shadow: 0 12px 35px rgba(15,23,42,0.75);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-play-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #2563eb;
+            color: #f9fafb;
+            padding: 8px 14px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+            box-shadow: 0 10px 25px rgba(37,99,235,0.6);
+        }
+
+        .hero-play-triangle {
+            width: 0;
+            height: 0;
+            border-left: 7px solid #f9fafb;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+
+        .hero-thumbnail-card {
+            position: absolute;
+            right: 10px;
+            bottom: 12px;
+            background: linear-gradient(135deg,#38bdf8,#0ea5e9);
+            border-radius: 12px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+            color: #e5f4ff;
+            font-size: 11px;
+            box-shadow: 0 12px 30px rgba(59,130,246,0.8);
+        }
+
+        .hero-thumbnail-card .badge {
+            border-radius: 999px;
+            padding: 3px 8px;
+            background: rgba(15,23,42,0.45);
+            font-size: 10px;
+        }
+
+        .hero-thumbnail-card .yt-dot {
+            width: 24px;
+            height: 16px;
+            border-radius: 6px;
+            background: #ef4444;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 16px rgba(239,68,68,0.9);
+        }
+
+        .hero-thumbnail-card .yt-dot::before {
+            content: "";
+            border-left: 5px solid #f9fafb;
+            border-top: 4px solid transparent;
+            border-bottom: 4px solid transparent;
+        }
+
+        .hero-glow {
+            position: absolute;
+            inset: -40%;
+            background: radial-gradient(circle at 0 0, rgba(56,189,248,0.25), transparent 55%),
+            radial-gradient(circle at 100% 100%, rgba(14,165,233,0.3), transparent 55%);
+            opacity: .85;
+            z-index: 0;
+        }
+
+        /* Main card */
+        .tool-shell {
+            background: #ffffff;
+            border-radius: var(--radius-xl);
+            box-shadow: 0 18px 48px rgba(15,23,42,0.08);
+            padding: 22px 20px 24px;
+        }
+
+        .tool-label {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #111827;
+        }
+
+        .tool-label span.icon {
+            width: 18px;
+            height: 18px;
+            border-radius: 6px;
+            background: var(--primary-soft);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: var(--primary);
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            resize: vertical;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid var(--border-soft);
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            transition: border-color .15s, box-shadow .15s, background-color .15s;
+            background-color: #f9fafb;
+        }
+
+        textarea:focus {
+            border-color: var(--primary);
+            background: #ffffff;
+            box-shadow: 0 0 0 1px rgba(37,99,235,0.35);
+        }
+
+        textarea::placeholder {
+            color: #9ca3af;
+        }
+
+        .tool-row {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--text-sub);
+        }
+
+        .checkbox-row input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+        .url-count {
+            margin-left: auto;
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .btn {
+            border: none;
+            outline: none;
+            cursor: pointer;
+            border-radius: 999px;
+            padding: 9px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            transition: transform .1s ease, box-shadow .1s ease, background .15s ease;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #f9fafb;
+            box-shadow: 0 10px 24px rgba(37,99,235,0.42);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 14px 30px rgba(37,99,235,0.55);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 8px 18px rgba(37,99,235,0.4);
+        }
+
+        .btn-ghost {
+            background: #e5edff;
+            color: var(--primary);
+        }
+
+        .btn-ghost:hover {
+            background: #d5e4ff;
+        }
+
+        .helper-text {
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--text-sub);
+        }
+
+        .error-text {
+            margin-top: 6px;
+            font-size: 12px;
+            color: #dc2626;
+        }
+
+        /* Result section */
+        .result-section {
+            margin-top: 32px;
+        }
+
+        .result-top-label {
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-sub);
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .result-all-btn {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .thumb-main-card {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .thumb-main-img-wrapper {
+            position: relative;
+            background: #020617;
+        }
+
+        .thumb-main-img-wrapper::before {
+            content: "";
+            display: block;
+            padding-top: 56.25%; /* 16:9 */
+        }
+
+        .thumb-main-img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .thumb-main-caption {
+            padding: 10px 16px 14px;
+            font-size: 13px;
+            color: var(--text-sub);
+            border-top: 1px solid var(--border-soft);
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .result-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .info-card {
+            max-width: 900px;
+            margin: 16px auto 0;
+            border-radius: 16px;
+            background: #ffffff;
+            padding: 16px 18px 14px;
+            box-shadow: 0 12px 32px rgba(15,23,42,0.06);
+            border: 1px solid rgba(148,163,184,0.28);
+            font-size: 13px;
+        }
+
+        .info-header {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .info-meta {
+            font-size: 12px;
+            color: var(--text-sub);
+            margin-bottom: 12px;
+        }
+
+        .info-row {
+            margin-bottom: 4px;
+            word-break: break-all;
+        }
+
+        .info-row span.label {
+            display: inline-block;
+            min-width: 70px;
+            color: #9ca3af;
+        }
+
+        .all-thumb-box {
+            max-width: 900px;
+            margin: 10px auto 0;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: #eff3ff;
+            display: none;
+            font-size: 12px;
+        }
+
+        .all-thumb-box strong {
+            display: block;
+            margin-bottom: 4px;
+            color: #1d4ed8;
+        }
+
+        .all-thumb-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 4px;
+        }
+
+        .all-thumb-links a {
+            border-radius: 999px;
+            padding: 4px 10px;
+            background: #ffffff;
+            border: 1px solid #c7d2fe;
+            text-decoration: none;
+            color: #1d4ed8;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .all-thumb-links a:hover {
+            background: #e0ebff;
+        }
+
+        .fade-in {
+            animation: fadeIn .22s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 900px) {
+            body {
+                padding-top: 20px;
+            }
+            .hero {
+                grid-template-columns: minmax(0, 1fr);
+            }
+            .hero-visual {
+                order: -1;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .tool-shell {
+                padding: 18px 14px 18px;
+            }
+            .thumb-main-card {
+                border-radius: 14px;
+            }
+            .info-card {
+                border-radius: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-text">
+            <h1 class="hero-title">
+                유튜브 썸네일 추출기 – <strong>고화질 이미지 무료 다운로드</strong>
+            </h1>
+            <p>유튜브 동영상 URL을 붙여넣으면 <strong>고화질 썸네일 이미지</strong>를 자동으로 추출해 바로 저장할 수 있습니다.</p>
+            <p>특별한 프로그램 설치 없이, 브라우저에서 바로 썸네일 이미지를 다운로드해 보세요.</p>
+            <p>생성된 썸네일은 개인·교육·프리젠테이션용으로 자유롭게 활용할 수 있습니다.</p>
+        </div>
+
+        <div class="hero-visual" aria-hidden="true">
+            <div class="hero-glow"></div>
+            <div class="hero-card">
+                <div class="hero-url">
+                    https://www.youtube.com/watch?v=abc123xyz
+                </div>
+                <div class="hero-chip">
+                    <span>HD 썸네일</span>
+                </div>
+                <div class="hero-screen">
+                    <div class="hero-play-btn">
+                        <div class="hero-play-triangle"></div>
+                        <span>Extract</span>
+                    </div>
+                    <div class="hero-thumbnail-card">
+                        <div class="badge">1280×720</div>
+                        <div class="yt-dot"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main tool card -->
+    <section class="tool-shell">
+        <form id="thumbnailForm">
+            <div class="tool-label">
+                <span class="icon">▶</span>
+                유튜브 링크를 붙여넣으세요.
+            </div>
+            <textarea id="youtubeUrl" placeholder="예) https://www.youtube.com/watch?v=dQw4w9WgXcQ&#10;또는 https://youtu.be/dQw4w9WgXcQ"></textarea>
+
+            <div class="tool-row">
+                <div class="checkbox-row">
+                    <input type="checkbox" id="showInfo" checked>
+                    <label for="showInfo">동영상 정보 카드 표시</label>
+                </div>
+                <div class="url-count" id="urlCount">0 / 1 URLs</div>
+                <button type="submit" class="btn btn-primary">
+                    확인
+                </button>
+            </div>
+
+            <div class="helper-text">
+                현재는 한 번에 <strong>1개의 URL</strong>만 지원합니다. 잘못된 링크일 경우 썸네일이 표시되지 않을 수 있습니다.
+            </div>
+            <div class="error-text" id="errorMsg" style="display:none;"></div>
+        </form>
+    </section>
+
+    <!-- Result section -->
+    <section class="result-section" id="resultSection" style="display:none;">
+        <div class="result-top-label">유튜브 동영상</div>
+        <div class="result-all-btn">
+            <button class="btn btn-ghost" id="toggleAllThumbsBtn">
+                ▶ 모든 썸네일 다운로드
+            </button>
+        </div>
+
+        <div class="thumb-main-card fade-in">
+            <div class="thumb-main-img-wrapper">
+                <img src="" alt="YouTube 썸네일 미리보기" id="mainThumb" class="thumb-main-img">
+            </div>
+            <div class="thumb-main-caption">
+                <span id="captionText">1280×720 HD 썸네일</span>
+                <span id="videoIdCaption"></span>
+            </div>
+        </div>
+
+        <div class="result-buttons">
+            <a id="downloadMainBtn" class="btn btn-primary" href="#" download>썸네일 다운로드</a>
+            <button type="button" id="toggleInfoBtn" class="btn btn-ghost">
+                동영상 정보
+            </button>
+        </div>
+
+        <div class="all-thumb-box" id="allThumbBox">
+            <strong>다른 해상도 썸네일</strong>
+            <div>필요한 해상도를 클릭하면 새 탭에서 열립니다. 저장(Ctrl+S 또는 우클릭 → 이미지 저장)하세요.</div>
+            <div class="all-thumb-links" id="allThumbLinks"></div>
+        </div>
+
+        <article class="info-card fade-in" id="infoCard" style="display:none;">
+            <div class="info-header" id="infoTitle">동영상 기본 정보</div>
+            <div class="info-meta">
+                유튜브 Data API 없이, URL에서 추출한 정보만 간단히 보여줍니다.
+            </div>
+            <div class="info-row">
+                <span class="label">Video ID</span>
+                <span id="infoVideoId"></span>
+            </div>
+            <div class="info-row">
+                <span class="label">링크</span>
+                <a href="#" id="infoVideoUrl" target="_blank" rel="noopener noreferrer"></a>
+            </div>
+            <div class="info-row">
+                <span class="label">주의</span>
+                <span>일부 Shorts / 라이브 영상은 썸네일 해상도가 제한될 수 있습니다.</span>
+            </div>
+        </article>
+    </section>
+</div>
+
+<script>
+    (function () {
+        const form = document.getElementById('thumbnailForm');
+        const textarea = document.getElementById('youtubeUrl');
+        const urlCount = document.getElementById('urlCount');
+        const errorMsg = document.getElementById('errorMsg');
+        const resultSection = document.getElementById('resultSection');
+        const mainThumb = document.getElementById('mainThumb');
+        const captionText = document.getElementById('captionText');
+        const videoIdCaption = document.getElementById('videoIdCaption');
+        const downloadMainBtn = document.getElementById('downloadMainBtn');
+        const toggleInfoBtn = document.getElementById('toggleInfoBtn');
+        const infoCard = document.getElementById('infoCard');
+        const infoTitle = document.getElementById('infoTitle');
+        const infoVideoId = document.getElementById('infoVideoId');
+        const infoVideoUrl = document.getElementById('infoVideoUrl');
+        const showInfoCheckbox = document.getElementById('showInfo');
+        const toggleAllThumbsBtn = document.getElementById('toggleAllThumbsBtn');
+        const allThumbBox = document.getElementById('allThumbBox');
+        const allThumbLinks = document.getElementById('allThumbLinks');
+
+        let lastVideoId = '';
+        let lastVideoUrl = '';
+
+        function updateUrlCount() {
+            const value = textarea.value.trim();
+            if (!value) {
+                urlCount.textContent = '0 / 1 URLs';
+                return;
+            }
+            const lines = value.split('\n').map(v => v.trim()).filter(Boolean);
+            urlCount.textContent = Math.min(lines.length, 1) + ' / 1 URLs';
+        }
+
+        textarea.addEventListener('input', updateUrlCount);
+
+        function extractVideoId(url) {
+            url = url.trim();
+
+            // If only ID is given
+            if (/^[a-zA-Z0-9_-]{11}$/.test(url)) {
+                return url;
+            }
+
+            // Typical patterns
+            const patterns = [
+                /v=([^&]+)/,                          // watch?v=
+                /youtu\.be\/([^?&]+)/,               // youtu.be/
+                /youtube\.com\/embed\/([^?&]+)/,     // /embed/
+                /youtube\.com\/shorts\/([^?&]+)/     // /shorts/
+            ];
+
+            for (const pat of patterns) {
+                const match = url.match(pat);
+                if (match && match[1]) {
+                    return match[1];
+                }
+            }
+
+            return null;
+        }
+
+        function buildThumbUrls(id) {
+            return {
+                maxres: `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
+                sd: `https://img.youtube.com/vi/${id}/sddefault.jpg`,
+                hq: `https://img.youtube.com/vi/${id}/hqdefault.jpg`,
+                mq: `https://img.youtube.com/vi/${id}/mqdefault.jpg`,
+                default: `https://img.youtube.com/vi/${id}/0.jpg`
+            };
+        }
+
+        function showError(message) {
+            errorMsg.textContent = message;
+            errorMsg.style.display = 'block';
+        }
+
+        function clearError() {
+            errorMsg.textContent = '';
+            errorMsg.style.display = 'none';
+        }
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            clearError();
+
+            const raw = textarea.value.trim();
+            if (!raw) {
+                showError('유튜브 링크를 입력해 주세요.');
+                return;
+            }
+
+            const firstLine = raw.split('\n').map(v => v.trim()).filter(Boolean)[0];
+            const videoId = extractVideoId(firstLine);
+
+            if (!videoId) {
+                showError('유효한 유튜브 URL 또는 Video ID가 아닙니다.');
+                return;
+            }
+
+            lastVideoId = videoId;
+            lastVideoUrl = firstLine.startsWith('http')
+                ? firstLine
+                : `https://www.youtube.com/watch?v=${videoId}`;
+
+            const thumbs = buildThumbUrls(videoId);
+
+            // 메인 썸네일 설정 (maxres → 실패 시 hqdefault)
+            mainThumb.dataset.fallback = '';
+            mainThumb.src = thumbs.maxres;
+            captionText.textContent = '1280×720 HD 썸네일 (maxresdefault)';
+            videoIdCaption.textContent = `Video ID: ${videoId}`;
+            downloadMainBtn.href = thumbs.maxres;
+            downloadMainBtn.download = `${videoId}_maxres.jpg`;
+
+            mainThumb.onerror = function () {
+                if (!mainThumb.dataset.fallback) {
+                    mainThumb.dataset.fallback = 'hq';
+                    mainThumb.src = thumbs.hq;
+                    captionText.textContent = '고화질 썸네일 (hqdefault, 약 480p)';
+                    downloadMainBtn.href = thumbs.hq;
+                    downloadMainBtn.download = `${videoId}_hq.jpg`;
+                }
+            };
+
+            // 모든 썸네일 링크 갱신
+            allThumbLinks.innerHTML = '';
+            [
+                ['maxres', '1280×720 (maxresdefault)'],
+                ['sd', '640×480 (sddefault)'],
+                ['hq', '고화질 (hqdefault)'],
+                ['mq', '중간 (mqdefault)'],
+                ['default', '기본 (0.jpg)']
+            ].forEach(([key, label]) => {
+                const a = document.createElement('a');
+                a.href = thumbs[key];
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+                a.textContent = label;
+                allThumbLinks.appendChild(a);
+            });
+
+            // 정보 카드 갱신
+            infoVideoId.textContent = videoId;
+            infoVideoUrl.textContent = lastVideoUrl;
+            infoVideoUrl.href = lastVideoUrl;
+            infoTitle.textContent = '동영상 기본 정보';
+
+            // 섹션 표시
+            resultSection.style.display = 'block';
+            if (showInfoCheckbox.checked) {
+                infoCard.style.display = 'block';
+            } else {
+                infoCard.style.display = 'none';
+            }
+        });
+
+        toggleInfoBtn.addEventListener('click', function () {
+            if (!lastVideoId) return;
+            const isHidden = infoCard.style.display === 'none';
+            infoCard.style.display = isHidden ? 'block' : 'none';
+        });
+
+        showInfoCheckbox.addEventListener('change', function () {
+            if (!lastVideoId) return;
+            infoCard.style.display = this.checked ? 'block' : 'none';
+        });
+
+        toggleAllThumbsBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (!lastVideoId) return;
+            const isHidden = allThumbBox.style.display === 'none' || allThumbBox.style.display === '';
+            allThumbBox.style.display = isHidden ? 'block' : 'none';
+        });
+
+        // 초기 카운트
+        updateUrlCount();
+    })();
+</script>
+</body>
+</html>

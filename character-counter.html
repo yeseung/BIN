@@ -1,0 +1,525 @@
+<!-- character-counter.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>문자 수 세기 도구 - 실시간 글자 수, 단어 수, 줄 수 카운터</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 24px;
+            font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic", system-ui, sans-serif;
+            background: #f4f5f7;
+            color: #111827;
+        }
+        .page {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        h1 {
+            margin: 0 0 10px;
+            font-size: 28px;
+            font-weight: 800;
+        }
+        .subtitle {
+            margin: 0 0 24px;
+            font-size: 14px;
+            color: #6b7280;
+            line-height: 1.7;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+            gap: 24px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .hero-illust {
+            justify-self: center;
+        }
+        .hero-illust-placeholder {
+            width: 260px;
+            height: 180px;
+            border-radius: 16px;
+            background: linear-gradient(135deg,#dbeafe,#e5e7eb);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1f2937;
+            font-size: 13px;
+            box-shadow: 0 10px 25px rgba(15,23,42,0.15);
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 18px 20px 20px;
+            box-shadow: 0 8px 24px rgba(15,23,42,0.06);
+        }
+
+        /* 메인 입력 영역 */
+        .textarea-wrap {
+            position: relative;
+        }
+        #main-text {
+            width: 100%;
+            min-height: 220px;
+            resize: vertical;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            background: #f9fafb;
+            padding: 12px 14px 22px;
+            font-family: Menlo, Consolas, "SF Mono", monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+        }
+        #main-text:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 1px #2563eb33;
+            background: #ffffff;
+        }
+        .byte-counter {
+            position: absolute;
+            right: 10px;
+            bottom: 4px;
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .btn-row {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+        .btn {
+            border: none;
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-size: 13px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            transition: background 0.15s, box-shadow 0.15s, transform 0.05s;
+        }
+        .btn-primary {
+            background: #2563eb;
+            color: #ffffff;
+            box-shadow: 0 2px 6px rgba(37,99,235,0.45);
+        }
+        .btn-primary:hover { background:#1d4ed8; }
+        .btn-primary:active {
+            transform: translateY(1px);
+            box-shadow: 0 1px 3px rgba(37,99,235,0.4);
+        }
+        .btn-ghost {
+            background: #e5e7eb;
+            color: #374151;
+        }
+        .btn-ghost:hover { background:#d1d5db; }
+
+        /* 통계 카드 */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 16px;
+        }
+        .stat-card {
+            padding: 10px 10px 8px;
+            border-radius: 12px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            text-align: center;
+        }
+        .stat-label {
+            font-size: 11px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #4c1d95;
+        }
+        .stat-sub {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-top: 2px;
+        }
+
+        /* 섹션 타이틀 */
+        .section-title {
+            margin: 26px 0 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #111827;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .section-title span.icon {
+            font-size: 16px;
+        }
+
+        /* 메타 태그 / SNS 카드 */
+        .meta-grid, .social-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+        .social-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+        .meta-card, .social-card {
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            background: #ffffff;
+            padding: 10px 12px;
+            font-size: 12px;
+        }
+        .meta-header, .social-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 6px;
+        }
+        .meta-title, .social-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #111827;
+        }
+        .meta-count, .social-count {
+            font-size: 11px;
+            color: #6b7280;
+        }
+        .meta-input, .social-input {
+            width: 100%;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            background: #f9fafb;
+            padding: 7px 9px;
+            font-family: inherit;
+            font-size: 12px;
+            outline: none;
+            resize: vertical;
+            min-height: 32px;
+            max-height: 70px;
+        }
+        .meta-input:focus, .social-input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 1px #2563eb22;
+            background: #ffffff;
+        }
+        .meta-hint {
+            margin-top: 4px;
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .progress {
+            margin-top: 6px;
+            width: 100%;
+            height: 4px;
+            border-radius: 999px;
+            background: #f3f4f6;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            border-radius: inherit;
+            background: #7c3aed;
+            transition: width 0.15s;
+        }
+
+        @media (max-width: 960px) {
+            .hero {
+                grid-template-columns: minmax(0,1fr);
+            }
+            .hero-illust { order: -1; }
+        }
+        @media (max-width: 880px) {
+            .stats-row {
+                grid-template-columns: repeat(3, minmax(0,1fr));
+            }
+            .social-grid {
+                grid-template-columns: repeat(2, minmax(0,1fr));
+            }
+        }
+        @media (max-width: 600px) {
+            body { padding: 16px; }
+            h1 { font-size: 22px; }
+            .stats-row { grid-template-columns: repeat(2, minmax(0,1fr)); }
+            .meta-grid { grid-template-columns: minmax(0,1fr); }
+            .social-grid { grid-template-columns: minmax(0,1fr); }
+        }
+
+
+        /* -------------------- FAQ 아코디언 -------------------- */
+        .faq-section {
+            margin-top: 40px;
+        }
+        .faq-item {
+            background: #ffffff;
+            margin-bottom: 10px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            overflow: hidden;
+            transition: border-color .2s;
+        }
+        .faq-item:hover {
+            border-color: #c7d2fe;
+        }
+        .faq-question {
+            padding: 16px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .faq-question span {
+            color: #2563eb;
+            font-weight: 700;
+        }
+        .faq-answer {
+            padding: 0 20px 16px;
+            font-size: 14px;
+            color: #4b5563;
+            line-height: 1.7;
+            display: none;
+        }
+        .faq-item.active .faq-answer {
+            display: block;
+        }
+        .faq-item.active .faq-question span {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="hero">
+        <div>
+            <h1>문자 수 세기 도구 - 실시간 글자 수, 단어 수, 줄 수 카운터</h1>
+            <p class="subtitle">
+                텍스트를 입력하면 실시간으로 전체 글자 수, 공백 제외 글자 수, 단어 수, 줄 수, 단락 수, 예상 읽기 시간을 한눈에 확인할 수 있습니다.
+                블로그 글, SNS 게시물, 광고 문구, 메타 태그 작성 등 다양한 상황에서 글 길이를 빠르게 점검해 보세요.
+            </p>
+        </div>
+        <div class="hero-illust">
+            <div class="hero-illust-placeholder">
+                실시간 글자 수 · 단어 수<br />미리 확인하고 글을 정리해 보세요.
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="textarea-wrap">
+            <textarea id="main-text" placeholder="텍스트를 입력하거나 붙여넣으세요."></textarea>
+            <div class="byte-counter" id="byte-counter">0 Bytes</div>
+        </div>
+
+        <div class="btn-row">
+            <button class="btn btn-ghost" id="btn-paste">붙여넣기</button>
+            <button class="btn btn-ghost" id="btn-clear">내용 지우기</button>
+            <button class="btn btn-ghost" id="btn-strip-html">HTML 제거</button>
+            <button class="btn btn-primary" id="btn-trim-lines">라인 앞뒤 공백 제거</button>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-label">글자 수</div>
+                <div class="stat-value" id="stat-chars">0</div>
+                <div class="stat-sub">공백 포함</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">글자 수 (공백 제외)</div>
+                <div class="stat-value" id="stat-chars-nospace">0</div>
+                <div class="stat-sub">모든 공백 제거 기준</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">단어 수</div>
+                <div class="stat-value" id="stat-words">0</div>
+                <div class="stat-sub">공백 기준</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">줄 수</div>
+                <div class="stat-value" id="stat-lines">0</div>
+                <div class="stat-sub">개행 문자 기준</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">단락 수</div>
+                <div class="stat-value" id="stat-paragraphs">0</div>
+                <div class="stat-sub">빈 줄 기준</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">예상 읽기 시간</div>
+                <div class="stat-value" id="stat-reading">0</div>
+                <div class="stat-sub">분 단위 (200단어/분)</div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="faq-section">
+
+        <div class="faq-item">
+            <div class="faq-question">공백은 글자 수 계산에 포함되나요? <span>▼</span></div>
+            <div class="faq-answer">
+                네. 이 문자 수 세기 도구는 공백 포함 글자 수와 공백 제외 글자 수를 모두 제공합니다.<br>
+                사용자는 필요에 따라 두 가지 기준 중 하나를 선택해 글자 수를 확인할 수 있습니다.<br>
+
+                예를 들어, 문자 메시지, SNS 게시물처럼 제한된 글자 수 안에서 최대한 많은 내용을 담으려면 공백 제외 글자 수를 기준으로 확인하는 것이 좋습니다.<br>
+                반대로, 전체 문자 수가 중요한 경우에는 공백 포함 글자 수를 참고하세요.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">트위터나 유튜브처럼 글자 수 제한이 있는 플랫폼에서도 사용할 수 있나요? <span>▼</span></div>
+            <div class="faq-answer">
+                네. 이 문자 수 세기 도구는 Twitter, YouTube, Instagram 등 주요 소셜 미디어의 글자 수 제한을 자동으로 안내합니다.<br>
+                예를 들어, 유튜브 제목(100자), 유튜브 설명(5,000자), 트위터 게시물(280자) 기준을 확인할 수 있어 콘텐츠가 잘리는 문제를 미리 방지할 수 있습니다.<br>
+
+                특히 마케팅 카피 작성, 해시태그 구성, SNS 게시물 관리에서 글자 수 초과로 인한 불이익을 피하는 데 매우 유용합니다.<br>
+                실시간 계산 기능을 통해 효율적인 글쓰기 환경을 제공합니다.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">문자 수 세기 도구는 설치가 필요한가요? <span>▼</span></div>
+            <div class="faq-answer">
+                아니요. 이 도구는 설치 없이 웹 브라우저에서 바로 사용할 수 있는 온라인 서비스입니다.<br>
+                모바일, 태블릿, 데스크톱 등 다양한 기기에서 최적화된 UI로 제공되어 언제 어디서나 편리하게 이용할 수 있습니다.<br>
+
+                텍스트를 입력하면 결과가 실시간 자동 계산되며, 복잡한 설정 없이 글자 수, 단어 수, 줄 수 등을 빠르고 정확하게 확인할 수 있습니다.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">온라인 글자 수 세기 도구는 단어 수와 줄 수도 계산할 수 있나요? <span>▼</span></div>
+            <div class="faq-answer">
+                네. 이 문자 수 세기 도구는 단순히 글자 수 계산뿐 아니라 단어 수, 줄 수, 단락 수까지 함께 제공합니다.<br>
+                입력창에 텍스트를 붙여넣으면 결과가 실시간으로 자동 계산되어 바로 확인할 수 있습니다.<br>
+
+                블로그 글, SNS 게시물, 에세이 작성, 마케팅 카피 제작처럼 글자 수와 단어 수 제한이 중요한 상황에서 매우 유용하며, 효율적인 글쓰기와 콘텐츠 제작을 지원합니다.
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    // --- 메인 텍스트 통계 계산 ---
+    (function() {
+        const textarea = document.getElementById("main-text");
+        const byteCounter = document.getElementById("byte-counter");
+
+        const statChars = document.getElementById("stat-chars");
+        const statCharsNoSpace = document.getElementById("stat-chars-nospace");
+        const statWords = document.getElementById("stat-words");
+        const statLines = document.getElementById("stat-lines");
+        const statParagraphs = document.getElementById("stat-paragraphs");
+        const statReading = document.getElementById("stat-reading");
+
+        function getByteLength(str) {
+            return new Blob([str]).size; // UTF-8 기준
+        }
+
+        function updateStats() {
+            const text = textarea.value || "";
+            const length = text.length;
+            const noSpaceLength = text.replace(/\s/g, "").length;
+
+            const trimmed = text.trim();
+            const wordCount = trimmed
+                ? trimmed.split(/\s+/).filter(Boolean).length
+                : 0;
+
+            let lineCount = 0;
+            if (text === "") {
+                lineCount = 0;
+            } else {
+                lineCount = text.split(/\r\n|\n|\r/).length;
+            }
+
+            let paragraphCount = 0;
+            if (trimmed !== "") {
+                paragraphCount = trimmed.split(/\n{2,}/).filter(Boolean).length;
+            }
+
+            const bytes = getByteLength(text);
+            const readingMinutes = wordCount === 0 ? 0 : (wordCount / 200);
+
+            statChars.textContent = length;
+            statCharsNoSpace.textContent = noSpaceLength;
+            statWords.textContent = wordCount;
+            statLines.textContent = lineCount;
+            statParagraphs.textContent = paragraphCount;
+            statReading.textContent = readingMinutes.toFixed(1);
+
+            byteCounter.textContent = bytes + " Bytes";
+        }
+
+        textarea.addEventListener("input", updateStats);
+        updateStats();
+
+        // 버튼 기능
+        document.getElementById("btn-clear").addEventListener("click", () => {
+            textarea.value = "";
+            updateStats();
+            textarea.focus();
+        });
+
+        document.getElementById("btn-strip-html").addEventListener("click", () => {
+            const text = textarea.value || "";
+            const stripped = text.replace(/<[^>]*>/g, "");
+            textarea.value = stripped;
+            updateStats();
+        });
+
+        document.getElementById("btn-trim-lines").addEventListener("click", () => {
+            const lines = (textarea.value || "").split(/\r\n|\n|\r/);
+            const trimmedLines = lines.map(l => l.trim()).filter((l, idx, arr) => {
+                // 완전히 빈 라인은 허용하지만 앞뒤 연속 빈 줄은 하나로 줄여도 된다면 여기서 조절 가능
+                return true;
+            });
+            textarea.value = trimmedLines.join("\n");
+            updateStats();
+        });
+
+        document.getElementById("btn-paste").addEventListener("click", async () => {
+            if (navigator.clipboard && navigator.clipboard.readText) {
+                try {
+                    const text = await navigator.clipboard.readText();
+                    textarea.value = text;
+                    updateStats();
+                } catch (e) {
+                    alert("클립보드에서 텍스트를 읽을 수 없습니다. 브라우저 권한을 확인해 주세요.");
+                }
+            } else {
+                alert("이 브라우저에서는 클립보드 붙여넣기 버튼을 지원하지 않습니다. 직접 붙여넣기(Ctrl+V)를 사용해 주세요.");
+            }
+        });
+    })();
+
+    document.querySelectorAll(".faq-item").forEach(item => {
+        item.querySelector(".faq-question").addEventListener("click", () => {
+            item.classList.toggle("active");
+        });
+    });
+</script>
+</body>
+</html>

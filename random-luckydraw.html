@@ -1,0 +1,501 @@
+<!-- random-luckydraw.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>랜덤 추첨기 뽑기 - LuckyDraw</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- 선택: 부트스트랩 아이콘 (아이콘 사용용) -->
+    <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+    />
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            padding: 24px;
+            font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic",
+            system-ui, sans-serif;
+            background: #f4f5f7;
+            color: #111827;
+        }
+        .page {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* ===========================
+           히어로 섹션
+           =========================== */
+        .luckydraw-hero {
+            margin-bottom: 20px;
+        }
+        .webtools-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0 0 8px;
+            font-size: 28px;
+            font-weight: 800;
+        }
+        .webtools-icon {
+            font-size: 24px;
+            color: #2563eb;
+        }
+        .webtools-subtitle {
+            margin: 0;
+            font-size: 14px;
+            color: #6b7280;
+            line-height: 1.6;
+        }
+
+        /* ===========================
+           카드 레이아웃
+           =========================== */
+        .webtools-card {
+            background: #ffffff;
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+            padding: 18px 20px 22px;
+        }
+        .webtools-card-body {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        /* 입력 영역 */
+        .luckydraw-input-area {
+            margin-bottom: 4px;
+        }
+        .webtools-input-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .webtools-input-label i {
+            color: #2563eb;
+        }
+        .luckydraw-textarea {
+            width: 100%;
+            min-height: 160px;
+            resize: vertical;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            background: #f9fafb;
+            padding: 10px 12px;
+            font-family: Menlo, Consolas, "SF Mono", monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+        }
+        .luckydraw-textarea:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 1px #2563eb33;
+            background: #ffffff;
+        }
+
+        /* 버튼 영역 */
+        .luckydraw-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+        .luckydraw-btn {
+            border: none;
+            border-radius: 999px;
+            padding: 9px 18px;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            background: #2563eb;
+            color: #ffffff;
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.45);
+            transition: background 0.15s, box-shadow 0.15s, transform 0.05s,
+            opacity 0.15s;
+        }
+        .luckydraw-btn:hover {
+            background: #1d4ed8;
+        }
+        .luckydraw-btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 1px 3px rgba(37, 99, 235, 0.4);
+        }
+        .luckydraw-btn.secondary {
+            background: #e5e7eb;
+            color: #374151;
+            box-shadow: none;
+        }
+        .luckydraw-btn.secondary:hover {
+            background: #d1d5db;
+        }
+        .luckydraw-btn:disabled {
+            opacity: 0.6;
+            cursor: default;
+            box-shadow: none;
+        }
+
+        /* 결과 영역 */
+        .luckydraw-result {
+            margin-top: 12px;
+            border-radius: 14px;
+            background: #f9fafb;
+            border: 1px dashed #d1d5db;
+            padding: 18px 16px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 15px;
+            color: #4b5563;
+        }
+
+        /* 카운트다운 스타일 */
+        .luckydraw-result.countdown {
+            background: radial-gradient(circle at top, #eff6ff, #eef2ff);
+            border-style: solid;
+            border-color: #bfdbfe;
+        }
+        .countdown-number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 56px;
+            font-weight: 800;
+            color: #1d4ed8;
+            animation: pop-scale 0.8s ease-out;
+        }
+        .countdown-text {
+            text-shadow: 0 10px 25px rgba(37, 99, 235, 0.5);
+        }
+
+        /* 추첨 중 */
+        .luckydraw-result.drawing {
+            background: #0f172a;
+            color: #e5e7eb;
+            border-style: solid;
+            border-color: #1e293b;
+        }
+        .drawing-animation {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+        }
+        .spinning {
+            font-size: 26px;
+            animation: spin 1s linear infinite;
+        }
+
+        /* 결과 공개 */
+        .luckydraw-result.reveal {
+            background: #fefce8;
+            border-style: solid;
+            border-color: #facc15;
+            animation: highlight 0.4s ease-out;
+        }
+        .winner-reveal {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .winner-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #854d0e;
+        }
+        .winner-name {
+            font-size: 24px;
+            font-weight: 800;
+            color: #b45309;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(250, 204, 21, 0.18);
+            box-shadow: 0 6px 16px rgba(180, 83, 9, 0.3);
+        }
+
+        /* 하단 유틸 버튼 */
+        .foot-actions {
+            margin-top: 18px;
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            font-size: 13px;
+        }
+        .foot-btn {
+            border-radius: 999px;
+            border: none;
+            padding: 6px 12px;
+            cursor: pointer;
+            background: #e5e7eb;
+            color: #374151;
+        }
+        .foot-btn:hover {
+            background: #d1d5db;
+        }
+
+        /* 애니메이션 */
+        @keyframes pop-scale {
+            0% {
+                transform: scale(0.4);
+                opacity: 0;
+            }
+            70% {
+                transform: scale(1.05);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes highlight {
+            from {
+                transform: scale(0.96);
+                box-shadow: 0 0 0 rgba(250, 204, 21, 0.0);
+            }
+            to {
+                transform: scale(1);
+                box-shadow: 0 10px 25px rgba(250, 204, 21, 0.35);
+            }
+        }
+
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(110vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 16px;
+            }
+            .webtools-title {
+                font-size: 22px;
+            }
+            .luckydraw-btn {
+                flex: 1 1 auto;
+                justify-content: center;
+            }
+            .winner-name {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <!-- ===================================
+         웹툴 히어로 섹션
+         =================================== -->
+    <div class="luckydraw-hero">
+        <h1 class="webtools-title">
+            <i class="bi bi-shuffle webtools-icon"></i> 랜덤 추첨기
+        </h1>
+        <p class="webtools-subtitle">
+            번호, 이름 등 항목을 입력하고 버튼 하나로 즉시 당첨자를 선정하는 무료 추첨 서비스
+        </p>
+    </div>
+
+    <!-- ===================================
+         메인 기능 카드
+         =================================== -->
+    <div class="webtools-card">
+        <div class="webtools-card-body">
+            <!-- 추첨 폼 -->
+            <form id="lotteryForm" method="POST">
+                <!-- 입력 영역 -->
+                <div class="luckydraw-input-area">
+                    <div class="webtools-input-label">
+                        <i class="bi bi-list-ul"></i>추첨 항목 입력
+                    </div>
+                    <textarea
+                            class="luckydraw-textarea"
+                            id="names"
+                            name="names"
+                            placeholder="추첨할 항목을 한 줄에 하나씩 입력하세요.&#10;예시:&#10;김철수&#10;이영희&#10;박민수"
+                    ></textarea>
+                </div>
+
+                <!-- 액션 버튼 -->
+                <div class="luckydraw-actions">
+                    <button type="submit" class="luckydraw-btn" id="drawButton">
+                        <i class="bi bi-shuffle me-2"></i>추첨하기
+                    </button>
+                    <button
+                            type="button"
+                            class="luckydraw-btn secondary"
+                            onclick="location.reload()"
+                    >
+                        <i class="bi bi-arrow-clockwise me-2"></i>새로고침
+                    </button>
+                </div>
+            </form>
+
+            <!-- 결과 표시 영역 -->
+            <div class="luckydraw-result" id="winnerDisplay">
+                결과는 여기에 표시됩니다
+            </div>
+
+            <!-- 하단 유틸 버튼 (선택) -->
+            <div class="foot-actions">
+                <button class="foot-btn" type="button" onclick="scrollToTop()">
+                    ↑ 맨 위로
+                </button>
+                <button class="foot-btn" type="button" onclick="shareApp()">
+                    공유하기
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* 추첨 기능 구현 (카운트다운 애니메이션 포함) */
+    document.getElementById("lotteryForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        // 입력값 검증
+        const names = document
+        .getElementById("names")
+        .value.split("\n")
+        .map((name) => name.trim())
+        .filter((name) => name);
+        if (names.length === 0) {
+            alert("최소 한 개 이상의 항목을 입력해주세요.");
+            return;
+        }
+
+        // UI 요소 참조
+        const display = document.getElementById("winnerDisplay");
+        const button = document.getElementById("drawButton");
+        button.disabled = true;
+
+        // 카운트다운 애니메이션
+        display.className = "luckydraw-result countdown";
+
+        // 3-2-1 카운트다운
+        for (let i = 3; i >= 1; i--) {
+            display.innerHTML = `
+      <div class="countdown-number">
+        <div class="countdown-text">${i}</div>
+      </div>
+    `;
+            await new Promise((resolve) => setTimeout(resolve, 800));
+        }
+
+        // "추첨중..." 표시
+        display.className = "luckydraw-result drawing";
+        display.innerHTML = `
+    <div class="drawing-animation">
+      <i class="bi bi-shuffle spinning mb-2"></i>
+      <div>추첨중...</div>
+    </div>
+  `;
+
+        // 무작위 선택
+        const winner = names[Math.floor(Math.random() * names.length)];
+
+        // 추첨 중 애니메이션 대기
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+
+        // 결과 표시
+        display.className = "luckydraw-result reveal";
+        display.innerHTML = `
+    <div class="winner-reveal">
+      <div class="winner-label">🎉 당첨자 🎉</div>
+      <div class="winner-name">${winner}</div>
+    </div>
+  `;
+
+        // 축하 효과
+        createConfetti();
+
+        button.disabled = false;
+    });
+
+    /* 간단한 축하 효과 함수 */
+    function createConfetti() {
+        const colors = ["#ff6b6b", "#4ecdc4", "#45b7d1", "#f9ca24", "#f0932b"];
+        const confettiCount = 50;
+
+        for (let i = 0; i < confettiCount; i++) {
+            setTimeout(() => {
+                const confetti = document.createElement("div");
+                confetti.style.cssText = `
+        position: fixed;
+        top: -10px;
+        left: ${Math.random() * 100}vw;
+        width: 8px;
+        height: 8px;
+        background: ${colors[Math.floor(Math.random() * colors.length)]};
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 9999;
+        animation: confetti-fall 3s linear forwards;
+      `;
+                document.body.appendChild(confetti);
+
+                setTimeout(() => confetti.remove(), 3000);
+            }, i * 30);
+        }
+    }
+
+    /* 페이지 최상단 스크롤 기능 */
+    function scrollToTop() {
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+        });
+    }
+
+    /* 공유 기능 */
+    function shareApp() {
+        if (navigator.share) {
+            navigator
+            .share({
+                title: "랜덤 추첨기 뽑기 - LuckyDraw",
+                text: "간단한 입력으로 즉시 당첨자를 선정하는 무료 추첨 서비스",
+                url: window.location.href,
+            })
+            .catch((error) => console.log("공유 실패:", error));
+        } else {
+            const url = window.location.href;
+            navigator.clipboard
+            .writeText(url)
+            .then(() => alert("URL이 클립보드에 복사되었습니다!"))
+            .catch(() => alert("URL 복사에 실패했습니다."));
+        }
+    }
+</script>
+</body>
+</html>
