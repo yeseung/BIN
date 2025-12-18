@@ -1,0 +1,455 @@
+<!-- aspect-ratio-calculator.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>화면 비율 계산기 (Aspect Ratio Calculator)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- 선택: 아이콘 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+
+  <style>
+    * { box-sizing: border-box; }
+    body{
+      margin:0; padding:24px;
+      font-family:-apple-system,BlinkMacSystemFont,"Malgun Gothic",system-ui,sans-serif;
+      background:#f4f5f7; color:#111827;
+    }
+    .page{ max-width:900px; margin:0 auto; }
+
+    .hero{
+      margin-bottom:18px;
+    }
+    .title{
+      margin:0 0 8px;
+      font-size:28px; font-weight:800;
+      display:flex; align-items:center; gap:10px;
+    }
+    .title i{ color:#2563eb; font-size:24px; }
+    .subtitle{
+      margin:0; font-size:14px; color:#6b7280; line-height:1.6;
+    }
+
+    .card{
+      background:#fff;
+      border-radius:18px;
+      padding:18px 20px 22px;
+      box-shadow:0 10px 30px rgba(15,23,42,0.08);
+    }
+
+    .row{
+      display:grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap:14px;
+      margin-top:14px;
+      align-items:start;
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      margin-bottom:10px;
+    }
+    .label{
+      font-size:13px;
+      font-weight:700;
+      color:#374151;
+      display:flex; align-items:center; gap:6px;
+    }
+    .label i{ color:#2563eb; }
+
+    select, input{
+      width:100%;
+      border-radius:12px;
+      border:1px solid #e5e7eb;
+      background:#f9fafb;
+      padding:10px 12px;
+      font-size:14px;
+      outline:none;
+      transition:border-color .15s, box-shadow .15s, background .15s;
+    }
+    select:focus, input:focus{
+      border-color:#2563eb;
+      box-shadow:0 0 0 1px #2563eb22;
+      background:#fff;
+    }
+    input:disabled{
+      opacity:.7;
+      cursor:not-allowed;
+    }
+
+    .ratio-pair{
+      display:grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap:8px;
+      align-items:center;
+    }
+    .ratio-colon{
+      font-weight:900;
+      color:#6b7280;
+      text-align:center;
+    }
+
+    .hint{
+      font-size:12px;
+      color:#9ca3af;
+      margin-top:2px;
+      line-height:1.5;
+    }
+
+    .error{
+      display:none;
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:12px;
+      background:#fef2f2;
+      border:1px solid #fecaca;
+      color:#991b1b;
+      font-weight:700;
+      font-size:13px;
+    }
+
+    /* 프리뷰 */
+    .preview{
+      background:#f9fafb;
+      border:1px solid #e5e7eb;
+      border-radius:14px;
+      padding:12px;
+    }
+    canvas{
+      width:100%;
+      max-width:100%;
+      height:auto;
+      border-radius:12px;
+      border:3px inset #c0c0c0;
+      background:#fff;
+      display:block;
+    }
+    .ratioInfo{
+      margin-top:8px;
+      font-size:12px;
+      color:#374151;
+      line-height:1.5;
+    }
+
+    .btnrow{
+      margin-top:12px;
+      display:flex;
+      gap:8px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+    }
+    .btn{
+      border:none;
+      border-radius:999px;
+      padding:9px 14px;
+      cursor:pointer;
+      font-size:13px;
+      background:#e5e7eb;
+      color:#374151;
+    }
+    .btn:hover{ background:#d1d5db; }
+    .btn.primary{
+      background:#2563eb;
+      color:#fff;
+      box-shadow:0 2px 6px rgba(37,99,235,.45);
+    }
+    .btn.primary:hover{ background:#1d4ed8; }
+
+    @media (max-width: 760px){
+      .row{ grid-template-columns: 1fr; }
+      body{ padding:16px; }
+      .title{ font-size:22px; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <div class="hero">
+    <h1 class="title"><i class="bi bi-aspect-ratio"></i>화면 비율 계산기</h1>
+    <p class="subtitle">
+      비율을 선택한 뒤 가로 또는 세로 중 한 곳에 값을 입력하면, 비율대로 나머지 값이 자동 계산됩니다.
+    </p>
+  </div>
+
+  <div class="card">
+
+    <div class="field">
+      <div class="label"><i class="bi bi-sliders"></i>비율 선택</div>
+      <select id="aspectRatioSelect">
+        <option value="">비율 선택</option>
+        <option value="custom">직접 입력</option>
+        <option value="1:1">1:1 (Square)</option>
+        <option value="4:3">4:3 (Classic)</option>
+        <option value="3:4">3:4 (Vertical Classic)</option>
+        <option value="3:2">3:2 (Photo)</option>
+        <option value="16:9">16:9 (HD Video)</option>
+        <option value="9:16">9:16 (Vertical Video)</option>
+        <option value="16:10">16:10 (Wide Monitor)</option>
+        <option value="21:9">21:9 (UltraWide)</option>
+        <option value="2.39:1">2.39:1 (CinemaScope)</option>
+        <option value="5:4">5:4 (Old Monitor)</option>
+        <option value="7:5">7:5 (Print Photo)</option>
+      </select>
+      <div class="hint">“직접 입력”을 선택하면 비율(가로:세로)을 수동으로 입력할 수 있습니다.</div>
+    </div>
+
+    <div class="row">
+
+      <!-- 입력/계산 패널 -->
+      <div>
+        <div class="field">
+          <div class="label"><i class="bi bi-arrows-angle-expand"></i>비율 값</div>
+          <div class="ratio-pair">
+            <input type="number" step="any" id="aspectWidth" placeholder="가로" disabled />
+            <div class="ratio-colon">:</div>
+            <input type="number" step="any" id="aspectHeight" placeholder="세로" disabled />
+          </div>
+          <div class="hint">예: 16 : 9</div>
+        </div>
+
+        <div class="field">
+          <div class="label"><i class="bi bi-input-cursor-text"></i>크기 입력</div>
+          <div class="hint" style="margin-bottom:8px;">가로 또는 세로 중 한 칸만 입력해도 자동 계산됩니다.</div>
+
+          <div class="field">
+            <label class="label" for="widthInput">가로 (Width)</label>
+            <input type="number" step="any" id="widthInput" placeholder="예: 1920" />
+          </div>
+
+          <div class="field">
+            <label class="label" for="heightInput">세로 (Height)</label>
+            <input type="number" step="any" id="heightInput" placeholder="예: 1080" />
+          </div>
+        </div>
+
+        <div class="error" id="error-message">비율이 설정되지 않았거나 오류가 발생했습니다.</div>
+
+        <div class="btnrow">
+          <button class="btn" type="button" id="btn-clear">초기화</button>
+          <button class="btn primary" type="button" id="btn-swap">가로↔세로 뒤집기</button>
+        </div>
+      </div>
+
+      <!-- 프리뷰 패널 -->
+      <div class="preview">
+        <canvas id="ratioCanvas" width="420" height="260"></canvas>
+        <div class="ratioInfo" id="ratioInfo"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const sel = document.getElementById("aspectRatioSelect");
+    const aspectW = document.getElementById("aspectWidth");
+    const aspectH = document.getElementById("aspectHeight");
+    const widthInput = document.getElementById("widthInput");
+    const heightInput = document.getElementById("heightInput");
+    const errorDiv = document.getElementById("error-message");
+
+    const canvas = document.getElementById("ratioCanvas");
+    const ctx = canvas.getContext("2d");
+    const ratioInfo = document.getElementById("ratioInfo");
+
+    function showError(message) {
+      errorDiv.textContent = message || "비율이 설정되지 않았거나 오류가 발생했습니다.";
+      errorDiv.style.display = "block";
+      setTimeout(() => (errorDiv.style.display = "none"), 3500);
+    }
+
+    function getRatio() {
+      const rw = parseFloat(aspectW.value);
+      const rh = parseFloat(aspectH.value);
+      if (!isFinite(rw) || !isFinite(rh) || rw <= 0 || rh <= 0) return null;
+      return { rw, rh };
+    }
+
+    function clearSizeInputs() {
+      widthInput.value = "";
+      heightInput.value = "";
+    }
+
+    function onSelectChange() {
+      const v = sel.value;
+
+      if (!v) {
+        aspectW.value = "";
+        aspectH.value = "";
+        aspectW.disabled = true;
+        aspectH.disabled = true;
+        clearSizeInputs();
+        drawRatioPreview();
+        return;
+      }
+
+      if (v === "custom") {
+        aspectW.value = "";
+        aspectH.value = "";
+        aspectW.disabled = false;
+        aspectH.disabled = false;
+        clearSizeInputs();
+        drawRatioPreview();
+        return;
+      }
+
+      const parts = v.split(":");
+      aspectW.value = parts[0];
+      aspectH.value = parts[1];
+      aspectW.disabled = true;
+      aspectH.disabled = true;
+      clearSizeInputs();
+      drawRatioPreview();
+    }
+
+    function updateOtherDimension(changedField) {
+      const ratio = getRatio();
+      if (!ratio) {
+        showError("비율을 먼저 선택(또는 입력)해 주세요.");
+        drawRatioPreview();
+        return;
+      }
+      const { rw, rh } = ratio;
+
+      if (changedField === "width") {
+        const w = parseFloat(widthInput.value);
+        if (isFinite(w)) {
+          const newH = (w * rh) / rw;
+          heightInput.value = isFinite(newH) ? newH.toFixed(2) : "";
+        } else {
+          heightInput.value = "";
+        }
+      } else {
+        const h = parseFloat(heightInput.value);
+        if (isFinite(h)) {
+          const newW = (h * rw) / rh;
+          widthInput.value = isFinite(newW) ? newW.toFixed(2) : "";
+        } else {
+          widthInput.value = "";
+        }
+      }
+
+      drawRatioPreview();
+    }
+
+    function drawRatioPreview() {
+      const ratio = getRatio();
+      const wVal = parseFloat(widthInput.value);
+      const hVal = parseFloat(heightInput.value);
+
+      // clear
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      if (!ratio) {
+        ctx.fillStyle = "#9ca3af";
+        ctx.font = "14px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("비율을 먼저 선택해주세요", canvas.width / 2, canvas.height / 2);
+        ratioInfo.textContent = "";
+        return;
+      }
+
+      const { rw, rh } = ratio;
+      const padding = 20;
+      const availableWidth = canvas.width - padding * 2;
+      const availableHeight = canvas.height - padding * 2;
+
+      const aspect = rw / rh;
+      let rectW, rectH;
+
+      if (aspect > (availableWidth / availableHeight)) {
+        rectW = availableWidth;
+        rectH = availableWidth / aspect;
+      } else {
+        rectH = availableHeight;
+        rectW = availableHeight * aspect;
+      }
+
+      const x = (canvas.width - rectW) / 2;
+      const y = (canvas.height - rectH) / 2;
+
+      // draw rect
+      ctx.fillStyle = "#008b8b";
+      ctx.fillRect(x, y, rectW, rectH);
+
+      // border
+      ctx.strokeStyle = "rgba(15,23,42,0.18)";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x, y, rectW, rectH);
+
+      // info
+      if (isFinite(wVal) && isFinite(hVal)) {
+        ratioInfo.textContent = `현재 크기: ${wVal} × ${hVal} (비율: ${rw}:${rh})`;
+      } else if (isFinite(wVal)) {
+        const calcH = (wVal * rh) / rw;
+        ratioInfo.textContent = `가로 ${wVal} → 세로 ${calcH.toFixed(2)} (비율: ${rw}:${rh})`;
+      } else if (isFinite(hVal)) {
+        const calcW = (hVal * rw) / rh;
+        ratioInfo.textContent = `세로 ${hVal} → 가로 ${calcW.toFixed(2)} (비율: ${rw}:${rh})`;
+      } else {
+        ratioInfo.textContent = `비율: ${rw}:${rh}`;
+      }
+    }
+
+    // 버튼
+    document.getElementById("btn-clear").addEventListener("click", () => {
+      sel.value = "";
+      aspectW.value = "";
+      aspectH.value = "";
+      aspectW.disabled = true;
+      aspectH.disabled = true;
+      clearSizeInputs();
+      drawRatioPreview();
+    });
+
+    document.getElementById("btn-swap").addEventListener("click", () => {
+      const ratio = getRatio();
+      if (!ratio) {
+        showError("비율을 먼저 선택(또는 입력)해 주세요.");
+        return;
+      }
+      // swap ratio
+      const tmp = aspectW.value;
+      aspectW.value = aspectH.value;
+      aspectH.value = tmp;
+
+      // swap size inputs (있으면)
+      const w = widthInput.value;
+      widthInput.value = heightInput.value;
+      heightInput.value = w;
+
+      drawRatioPreview();
+    });
+
+    // 이벤트 연결
+    sel.addEventListener("change", onSelectChange);
+
+    widthInput.addEventListener("input", () => updateOtherDimension("width"));
+    heightInput.addEventListener("input", () => updateOtherDimension("height"));
+
+    aspectW.addEventListener("input", () => {
+      // 직접입력 시 비율 변경되면 크기 재계산이 애매하므로, 현재 입력이 있는 쪽 기준으로만 계산
+      if (widthInput.value) updateOtherDimension("width");
+      else if (heightInput.value) updateOtherDimension("height");
+      else drawRatioPreview();
+    });
+
+    aspectH.addEventListener("input", () => {
+      if (widthInput.value) updateOtherDimension("width");
+      else if (heightInput.value) updateOtherDimension("height");
+      else drawRatioPreview();
+    });
+
+    // 초기
+    drawRatioPreview();
+  })();
+</script>
+</body>
+</html>
