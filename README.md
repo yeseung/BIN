@@ -3,3 +3,40 @@
 ![스크린샷 2025-08-01 오후 1 59 13](https://github.com/user-attachments/assets/c6783c14-58f5-4800-82bf-0042938fa725)
 
 ![스크린샷 2025-12-05 오후 2 08 23](https://github.com/user-attachments/assets/7cb6b4f0-88ad-450e-8d51-6c9340317366)
+
+
+![스크린샷 2025-12-18 오후 3 26 58](https://github.com/user-attachments/assets/4ada58d6-ec8c-4a49-9bd0-cef52450f98e)
+![스크린샷 2025-12-18 오후 3 32 31](https://github.com/user-attachments/assets/af1ecb28-396d-48e4-bcec-15be8c353a57)<img width="2459" height="2692" alt="screencapture-localhost-63342-BIN-youtube-thumbnail-extractor-html-2025-12-18-16_37_31" src="https://github.com/user-attachments/assets/f7f0c2e7-3522-4c85-8f52-c9ab805f85cb" />
+<img width="2160" height="20494" alt="screencapture-localhost-63342-BIN-symbols-html-2025-12-18-16_29_21" src="https://github.com/user-attachments/assets/3d49a97c-fcae-4aab-af76-141342e1f744" />
+<img width="2162" height="3058" alt="screencapture-localhost-63342-BIN-salary-calculator-html-2025-12-18-16_26_21" src="https://github.com/user-attachments/assets/a5d1df4a-0be3-4bc8-b736-a9dbe222eb0e" />
+<img width="1774" height="4430" alt="screencapture-localhost-63342-BIN-pace-calculator1-html-2025-12-18-16_13_33" src="https://github.com/user-attachments/assets/c93cecfc-37dc-4a24-b005-985f9d1a29a0" />
+<img width="1782" height="4074" alt="screencapture-localhost-63342-BIN-morse-code-converter-html-2025-12-18-16_10_36" src="https://github.com/user-attachments/assets/773e40b2-da8c-429c-84d0-871fd01e9b7f" />
+<img width="2690" height="4712" alt="screencapture-localhost-63342-BIN-markdown-html-2025-12-18-16_02_59" src="https://github.com/user-attachments/assets/069e6432-c89d-4b73-81ff-f10d2fa79391" />
+[타자1.txt](https://github.com/user-attachments/files/24229983/1.txt)
+![스크린샷 2025-12-18 오후 4 36 13](https://github.com/user-attachments/assets/57dbb7de-6cb0-4032-a9e4-1ea83544c4fb)
+![스크린샷 2025-12-18 오후 4 35 39](https://github.com/user-attachments/assets/69071a38-8ba3-4c18-97d0-edad2827f861)
+![스크린샷 2025-12-18 오후 4 35 13](https://github.com/user-attachments/assets/13be545e-1aca-41cf-b693-a132d1a5aad4)
+![스크린샷 2025-12-18 오후 4 34 11](https://github.com/user-attachments/assets/1aa14d6b-de37-486a-b8bb-d8dd780792c1)
+![스크린샷 2025-12-18 오후 4 33 41](https://github.com/user-attachments/assets/d9cc2dab-c5bc-4a44-b55a-557a751707ea)
+![스크린샷 2025-12-18 오후 4 32 29](https://github.com/user-attachments/assets/7cfed931-52be-48ed-ba40-c2a2cf135a20)
+![스크린샷 2025-12-18 오후 4 32 04](https://github.com/user-attachments/assets/612faf4a-88b7-4c96-a008-45a259f794fd)
+![스크린샷 2025-12-18 오후 4 28 51](https://github.com/user-attachments/assets/59a440c1-f232-4149-933b-fc42e8ea41f7)
+![스크린샷 2025-12-18 오후 4 28 15](https://github.com/user-attachments/assets/1c35aed8-844f-4800-b56d-3e7f44ae3b9c)
+![스크린샷 2025-12-18 오후 4 27 09](https://github.com/user-attachments/assets/48b174f8-33a2-4bf3-8a41-27d1caf0239f)
+![스크린샷 2025-12-18 오후 4 25 47](https://github.com/user-attachments/assets/976c36e6-9059-4fb7-a305-427417073f76)
+![스크린샷 2025-12-18 오후 4 22 40](https://github.com/user-attachments/assets/f219e1c6-85b5-45f6-86fd-797b76a28e4e)
+![스크린샷 2025-12-18 오후 4 14 52](https://github.com/user-attachments/assets/58e3693e-51ec-4cbc-9e6b-5781984d7c18)
+![스크린샷 2025-12-18 오후 4 14 17](https://github.com/user-attachments/assets/8183329b-bb37-4e54-b030-833f7b511365)
+![스크린샷 2025-12-18 오후 4 12 42](https://github.com/user-attachments/assets/49376eac-3555-44f6-859e-31589e44746e)
+![스크린샷 2025-12-18 오후 4 11 26](https://github.com/user-attachments/assets/2be7a536-02a3-4d52-9292-90f06145462d)
+![스크린샷 2025-12-18 오후 4 04 40](https://github.com/user-attachments/assets/8c464e09-b061-41c2-87e8-aa377368fbb0)
+![스크린샷 2025-12-18 오후 4 00 58](https://github.com/user-attachments/assets/ee30992c-3469-49f1-ba70-ab8b1c8d2b64)
+![스크린샷 2025-12-18 오후 3 58 32](https://github.com/user-attachments/assets/1bbd5e5f-fd84-4002-9c59-89a30bb5aebc)
+![스크린샷 2025-12-18 오후 3 50 59](https://github.com/user-attachments/assets/e748c574-2d06-4eee-a5d3-35272238611e)
+![스크린샷 2025-12-18 오후 3 50 38](https://github.com/user-attachments/assets/d0ce7105-258a-4ead-97d9-e968007c1b75)
+![스크린샷 2025-12-18 오후 3 49 46](https://github.com/user-attachments/assets/9667ae28-67a1-4f04-b236-a7fad1029f7f)
+![스크린샷 2025-12-18 오후 3 46 33](https://github.com/user-attachments/assets/bdf0c962-9eee-4773-8b9a-1b958b927022)
+![스크린샷 2025-12-18 오후 3 45 58](https://github.com/user-attachments/assets/13a75329-a5b5-4e51-8309-4e665b3efea6)
+![스크린샷 2025-12-18 오후 3 45 05](https://github.com/user-attachments/assets/09d089e7-de9b-4257-9bd2-e8e271504843)
+![스크린샷 2025-12-18 오후 3 43 45](https://github.com/user-attachments/assets/ee4fe9f9-37f0-43fb-ab39-20d4ce3de1cc)
+![스크린샷 2025-12-18 오후 3 42 13](https://github.com/user-attachments/assets/94944a7b-d980-434b-b766-b0c9f3f58500)
