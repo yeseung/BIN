@@ -1,0 +1,761 @@
+<!-- bac-calculator.html (Vanilla JS + Clean CSS) -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>혈중 알코올 농도 계산기 (BAC)</title>
+
+    <style>
+        :root{
+            --bg:#f4f5f7;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --line:#e5e7eb;
+            --primary:#2563eb;
+            --primary2:#1d4ed8;
+            --danger:#ef4444;
+            --good:#16a34a;
+            --shadow:0 10px 28px rgba(15,23,42,.08);
+        }
+        *{ box-sizing:border-box; }
+        body{
+            margin:0; padding:24px;
+            font-family:-apple-system,BlinkMacSystemFont,"Malgun Gothic",system-ui,sans-serif;
+            background:var(--bg); color:var(--text);
+        }
+        .page{ max-width:1100px; margin:0 auto; }
+        h1{
+            margin:0 0 8px;
+            font-size:26px; font-weight:900;
+            letter-spacing:-.2px;
+        }
+        .subtitle{
+            margin:0 0 18px;
+            color:var(--muted);
+            font-size:14px; line-height:1.7;
+        }
+
+        .card{
+            background:var(--card);
+            border-radius:18px;
+            box-shadow:var(--shadow);
+            padding:18px 20px 20px;
+        }
+
+        .info{
+            margin-top:14px;
+            padding:12px 14px;
+            border-radius:14px;
+            background:#f9fafb;
+            border:1px solid var(--line);
+            color:#374151;
+            font-size:13px;
+            line-height:1.7;
+        }
+        .info strong{ color:#111827; }
+        .info a{ color:var(--primary); text-decoration:none; }
+        .info a:hover{ text-decoration:underline; }
+
+        .grid{
+            display:grid;
+            grid-template-columns: repeat(12, minmax(0,1fr));
+            gap:10px;
+            margin-top:14px;
+        }
+
+        .field{
+            grid-column: span 6;
+            display:flex;
+            flex-direction:column;
+            gap:6px;
+            padding:12px;
+            border:1px solid var(--line);
+            border-radius:14px;
+            background:#ffffff;
+        }
+        .field.small{ grid-column: span 3; }
+        .field.full{ grid-column: span 12; }
+
+        .label{
+            font-size:13px;
+            font-weight:800;
+            color:#374151;
+            display:flex; align-items:center; justify-content:space-between;
+            gap:10px;
+        }
+        .hint{
+            font-size:12px;
+            color:var(--muted);
+            line-height:1.5;
+        }
+
+        input[type="number"], select{
+            width:100%;
+            border-radius:12px;
+            border:1px solid var(--line);
+            background:#f9fafb;
+            padding:10px 12px;
+            font-size:14px;
+            outline:none;
+            transition:border-color .15s, box-shadow .15s, background .15s;
+        }
+        input[type="number"]:focus, select:focus{
+            border-color:var(--primary);
+            box-shadow:0 0 0 1px rgba(37,99,235,.15);
+            background:#ffffff;
+        }
+
+        .seg{
+            display:flex; gap:0;
+            border:1px solid var(--line);
+            border-radius:999px;
+            overflow:hidden;
+            background:#f9fafb;
+        }
+        .seg button{
+            appearance:none;
+            border:0;
+            background:transparent;
+            padding:10px 14px;
+            font-size:13px;
+            cursor:pointer;
+            color:#374151;
+            flex:1;
+            transition:background .15s, color .15s;
+        }
+        .seg button + button{ border-left:1px solid var(--line); }
+        .seg button.active{
+            background:var(--primary);
+            color:#fff;
+        }
+
+        /* beverage rows */
+        .bev-row{
+            display:grid;
+            grid-template-columns: 1.2fr 1fr 1.6fr;
+            gap:10px;
+            align-items:center;
+            padding:10px 12px;
+            border:1px solid var(--line);
+            border-radius:14px;
+            background:#ffffff;
+        }
+        .bev-left{
+            display:flex;
+            gap:10px;
+            align-items:center;
+            min-width:0;
+        }
+        .bev-left label{
+            display:flex;
+            align-items:center;
+            gap:8px;
+            font-size:14px;
+            font-weight:800;
+            color:#111827;
+            white-space:nowrap;
+            cursor:pointer;
+            user-select:none;
+        }
+        .bev-left input[type="checkbox"]{
+            width:18px; height:18px;
+            accent-color:var(--primary);
+        }
+        .bev-abv{
+            display:flex;
+            gap:8px;
+            align-items:center;
+        }
+        .bev-abv span{
+            font-size:12px;
+            color:var(--muted);
+            white-space:nowrap;
+        }
+
+        .unitbar{
+            display:flex;
+            gap:0;
+            border:1px solid var(--line);
+            border-radius:12px;
+            overflow:hidden;
+            background:#f9fafb;
+        }
+        .unitbar button{
+            border:0;
+            background:transparent;
+            padding:10px 10px;
+            font-size:13px;
+            cursor:pointer;
+            color:#374151;
+            flex:1;
+            transition:background .15s, color .15s;
+            white-space:nowrap;
+        }
+        .unitbar button + button{ border-left:1px solid var(--line); }
+        .unitbar button.active{
+            background:#111827;
+            color:#fff;
+        }
+
+        .amount{
+            display:flex;
+            gap:8px;
+            align-items:center;
+        }
+        .amount .tip{
+            font-size:12px;
+            color:var(--muted);
+            white-space:nowrap;
+        }
+
+        .hidden{ display:none !important; }
+
+        .actions{
+            display:flex;
+            flex-wrap:wrap;
+            gap:8px;
+            justify-content:flex-end;
+            margin-top:12px;
+        }
+        .btn{
+            border:0;
+            border-radius:999px;
+            padding:10px 14px;
+            font-size:13px;
+            cursor:pointer;
+            background:#e5e7eb;
+            color:#374151;
+            transition:background .15s, transform .05s;
+            white-space:nowrap;
+        }
+        .btn:hover{ background:#d1d5db; }
+        .btn:active{ transform:translateY(1px); }
+        .btn.primary{ background:var(--primary); color:#fff; }
+        .btn.primary:hover{ background:var(--primary2); }
+        .btn.ghost{ background:#f3f4f6; }
+        .btn.danger{ background:var(--danger); color:#fff; }
+        .btn.danger:hover{ filter:brightness(.95); }
+
+        .result{
+            margin-top:14px;
+            border-radius:16px;
+            border:1px solid var(--line);
+            background:#ffffff;
+            padding:14px 14px 12px;
+        }
+        .result-head{
+            display:flex;
+            align-items:flex-start;
+            justify-content:space-between;
+            gap:12px;
+            margin-bottom:8px;
+        }
+        .result-title{
+            font-size:14px;
+            font-weight:900;
+            color:#111827;
+        }
+        .badge{
+            display:inline-flex;
+            align-items:center;
+            padding:6px 10px;
+            border-radius:999px;
+            font-size:12px;
+            font-weight:800;
+            border:1px solid var(--line);
+            background:#f9fafb;
+            color:#374151;
+            white-space:nowrap;
+        }
+        .badge.good{ background:#ecfdf5; border-color:#a7f3d0; color:#065f46; }
+        .badge.warn{ background:#fff7ed; border-color:#fed7aa; color:#9a3412; }
+        .badge.bad{ background:#fef2f2; border-color:#fecaca; color:#991b1b; }
+
+        .big{
+            font-size:32px;
+            font-weight:900;
+            letter-spacing:-.4px;
+            margin:6px 0 4px;
+        }
+        .muted{ color:var(--muted); font-size:13px; line-height:1.6; }
+        .mono{
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "SF Mono", monospace;
+        }
+
+        @media (max-width: 980px){
+            .field.small{ grid-column: span 6; }
+            .bev-row{ grid-template-columns: 1fr; }
+            .actions{ justify-content:stretch; }
+            .btn{ flex:1; }
+        }
+        @media (max-width: 640px){
+            body{ padding:16px; }
+            h1{ font-size:22px; }
+            .field{ grid-column: span 12; }
+            .field.small{ grid-column: span 12; }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <h1>혈중 알코올 농도 계산기</h1>
+    <p class="subtitle">
+        아래 값은 위드마크(Widmark) 방식 기반의 <b>추정치</b>입니다. 개인차(체수분, 간 기능, 음식 섭취, 컨디션 등)로 실제와 다를 수 있습니다.
+    </p>
+
+    <div class="card">
+        <div class="info">
+            <strong>안내</strong><br />
+            - 이 도구는 정보 제공 목적이며, 법적/의학적 판단을 대신하지 않습니다.<br />
+            - 음주 후 운전은 매우 위험합니다. 계산 결과와 무관하게 절대 운전하지 마세요.
+        </div>
+
+        <div class="grid">
+            <div class="field small">
+                <div class="label">성별</div>
+                <div class="seg" id="sex-seg">
+                    <button type="button" data-sex="man" class="active">남자</button>
+                    <button type="button" data-sex="woman">여자</button>
+                </div>
+                <div class="hint">체수분계수(r) 남 0.68 / 여 0.55 사용</div>
+            </div>
+
+            <div class="field small">
+                <div class="label">몸무게 (kg)</div>
+                <input type="number" id="kg" min="1" max="999" placeholder="예: 70" />
+                <div class="hint">1 ~ 999</div>
+            </div>
+
+            <div class="field small">
+                <div class="label">음주 경과 시간</div>
+                <select id="hours">
+                    <option value="">선택</option>
+                    <option value="1.5">90분 이내</option>
+                    <option value="2">2시간 이내</option>
+                    <option value="3">3시간 이내</option>
+                    <option value="4">4시간 이내</option>
+                    <option value="5">5시간 이내</option>
+                    <option value="6">6시간 이내</option>
+                    <option value="7">7시간 이내</option>
+                    <option value="8">8시간 이내</option>
+                    <option value="9">9시간 이내</option>
+                    <option value="10">10시간 이내</option>
+                    <option value="11">11시간 이내</option>
+                    <option value="12">12시간 이내</option>
+                </select>
+                <div class="hint">분해율 0.015%/시간 가정</div>
+            </div>
+
+            <div class="field full">
+                <div class="label">주류 종류 및 섭취량</div>
+                <div class="hint">도수(%)와 수량/용량을 입력하세요. (병/잔은 아래 기본 용량 적용)</div>
+
+                <div style="display:grid; gap:10px; margin-top:10px;">
+                    <!-- Soju -->
+                    <div class="bev-row" data-bev="soju">
+                        <div class="bev-left">
+                            <label><input type="checkbox" id="chk-soju" /> 소주</label>
+                            <div class="bev-abv" title="알코올 도수">
+                                <span>도수</span>
+                                <input type="number" id="abv-soju" min="0" max="100" step="0.1" value="19.0" />
+                                <span>%</span>
+                            </div>
+                        </div>
+                        <div class="unitbar" role="tablist" aria-label="소주 단위">
+                            <button type="button" class="active" data-unit="bottle">병</button>
+                            <button type="button" data-unit="glass">잔</button>
+                            <button type="button" data-unit="ml">ml</button>
+                        </div>
+                        <div class="amount">
+                            <input type="number" id="amt-soju" min="0" max="9999" step="0.1" value="1" disabled />
+                            <span class="tip" id="tip-soju">기본 1병 360ml</span>
+                        </div>
+                    </div>
+
+                    <!-- Beer -->
+                    <div class="bev-row" data-bev="beer">
+                        <div class="bev-left">
+                            <label><input type="checkbox" id="chk-beer" /> 맥주</label>
+                            <div class="bev-abv">
+                                <span>도수</span>
+                                <input type="number" id="abv-beer" min="0" max="100" step="0.1" value="4.5" />
+                                <span>%</span>
+                            </div>
+                        </div>
+                        <div class="unitbar" aria-label="맥주 단위">
+                            <button type="button" class="active" data-unit="bottle">병</button>
+                            <button type="button" data-unit="glass">잔</button>
+                            <button type="button" data-unit="ml">ml</button>
+                        </div>
+                        <div class="amount">
+                            <input type="number" id="amt-beer" min="0" max="9999" step="0.1" value="1" disabled />
+                            <span class="tip" id="tip-beer">기본 1병 500ml</span>
+                        </div>
+                    </div>
+
+                    <!-- Makgeolli -->
+                    <div class="bev-row" data-bev="makgeolli">
+                        <div class="bev-left">
+                            <label><input type="checkbox" id="chk-makgeolli" /> 막걸리</label>
+                            <div class="bev-abv">
+                                <span>도수</span>
+                                <input type="number" id="abv-makgeolli" min="0" max="100" step="0.1" value="6.0" />
+                                <span>%</span>
+                            </div>
+                        </div>
+                        <div class="unitbar" aria-label="막걸리 단위">
+                            <button type="button" class="active" data-unit="bottle">병</button>
+                            <button type="button" data-unit="glass">잔</button>
+                            <button type="button" data-unit="ml">ml</button>
+                        </div>
+                        <div class="amount">
+                            <input type="number" id="amt-makgeolli" min="0" max="9999" step="0.1" value="1" disabled />
+                            <span class="tip" id="tip-makgeolli">기본 1병 750ml</span>
+                        </div>
+                    </div>
+
+                    <!-- Liquor -->
+                    <div class="bev-row" data-bev="liquor">
+                        <div class="bev-left">
+                            <label><input type="checkbox" id="chk-liquor" /> 양주</label>
+                            <div class="bev-abv">
+                                <span>도수</span>
+                                <input type="number" id="abv-liquor" min="0" max="100" step="0.1" value="40.0" />
+                                <span>%</span>
+                            </div>
+                        </div>
+                        <div class="unitbar" aria-label="양주 단위">
+                            <button type="button" class="active" data-unit="bottle">병</button>
+                            <button type="button" data-unit="glass">잔</button>
+                            <button type="button" data-unit="ml">ml</button>
+                        </div>
+                        <div class="amount">
+                            <input type="number" id="amt-liquor" min="0" max="9999" step="0.1" value="1" disabled />
+                            <span class="tip" id="tip-liquor">기본 1병 750ml</span>
+                        </div>
+                    </div>
+
+                    <!-- Wine -->
+                    <div class="bev-row" data-bev="wine">
+                        <div class="bev-left">
+                            <label><input type="checkbox" id="chk-wine" /> 와인</label>
+                            <div class="bev-abv">
+                                <span>도수</span>
+                                <input type="number" id="abv-wine" min="0" max="100" step="0.1" value="12.5" />
+                                <span>%</span>
+                            </div>
+                        </div>
+                        <div class="unitbar" aria-label="와인 단위">
+                            <button type="button" class="active" data-unit="bottle">병</button>
+                            <button type="button" data-unit="glass">잔</button>
+                            <button type="button" data-unit="ml">ml</button>
+                        </div>
+                        <div class="amount">
+                            <input type="number" id="amt-wine" min="0" max="9999" step="0.1" value="1" disabled />
+                            <span class="tip" id="tip-wine">기본 1병 750ml</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button type="button" class="btn ghost" id="btn-clear">초기화</button>
+            <button type="button" class="btn" id="btn-copy">결과 복사</button>
+            <button type="button" class="btn primary" id="btn-calc">계산하기</button>
+        </div>
+
+        <div class="result" id="resultBox">
+            <div class="result-head">
+                <div class="result-title">계산 결과</div>
+                <div class="badge" id="badge">대기</div>
+            </div>
+            <div class="big mono" id="bacText">0.000 %</div>
+            <div class="muted" id="detailText">
+                몸무게/시간/주류를 입력하고 계산하기를 누르세요.
+            </div>
+            <div class="muted" style="margin-top:8px;" id="calcNote"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (() => {
+        // -------------------------
+        // 기본 설정 (용량/분해율)
+        // -------------------------
+        const DENSITY = 0.789; // ethanol g/ml
+        const BETA = 0.015;    // %BAC per hour (평균 추정)
+        const R = { man: 0.68, woman: 0.55 };
+
+        const defaults = {
+            soju:     { bottle: 360, glass: 48,  ml: 1, tipBottle: "기본 1병 360ml", tipGlass:"기본 1잔 48ml" },
+            beer:     { bottle: 500, glass: 200, ml: 1, tipBottle: "기본 1병 500ml", tipGlass:"기본 1잔 200ml" },
+            makgeolli:{ bottle: 750, glass: 300, ml: 1, tipBottle: "기본 1병 750ml", tipGlass:"기본 1잔 300ml" },
+            liquor:   { bottle: 750, glass: 30,  ml: 1, tipBottle: "기본 1병 750ml", tipGlass:"기본 1잔 30ml" },
+            wine:     { bottle: 750, glass: 125, ml: 1, tipBottle: "기본 1병 750ml", tipGlass:"기본 1잔 125ml" }
+        };
+
+        const state = {
+            sex: "man",
+            units: { soju:"bottle", beer:"bottle", makgeolli:"bottle", liquor:"bottle", wine:"bottle" }
+        };
+
+        // -------------------------
+        // DOM
+        // -------------------------
+        const sexSeg = document.getElementById("sex-seg");
+        const kgEl = document.getElementById("kg");
+        const hoursEl = document.getElementById("hours");
+
+        const resultBox = document.getElementById("resultBox");
+        const badgeEl = document.getElementById("badge");
+        const bacTextEl = document.getElementById("bacText");
+        const detailTextEl = document.getElementById("detailText");
+        const calcNoteEl = document.getElementById("calcNote");
+
+        const btnCalc = document.getElementById("btn-calc");
+        const btnClear = document.getElementById("btn-clear");
+        const btnCopy = document.getElementById("btn-copy");
+
+        function qs(id){ return document.getElementById(id); }
+
+        const bevs = ["soju","beer","makgeolli","liquor","wine"];
+
+        function getChecked(bev){ return qs("chk-" + bev).checked; }
+        function getAbv(bev){ return parseFloat(qs("abv-" + bev).value); }
+        function getAmt(bev){ return parseFloat(qs("amt-" + bev).value); }
+        function setAmtEnabled(bev, enabled){ qs("amt-" + bev).disabled = !enabled; }
+        function setTip(bev, text){ qs("tip-" + bev).textContent = text; }
+
+        // -------------------------
+        // 성별 세그먼트
+        // -------------------------
+        sexSeg.addEventListener("click", (e) => {
+            const btn = e.target.closest("button[data-sex]");
+            if (!btn) return;
+            sexSeg.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            state.sex = btn.dataset.sex;
+        });
+
+        // -------------------------
+        // 체크박스: 켜면 수량 입력 가능
+        // -------------------------
+        bevs.forEach(bev => {
+            const chk = qs("chk-" + bev);
+            const amt = qs("amt-" + bev);
+            chk.addEventListener("change", () => {
+                setAmtEnabled(bev, chk.checked);
+                if (chk.checked && (amt.value === "" || Number.isNaN(parseFloat(amt.value)))) {
+                    amt.value = "1";
+                }
+            });
+
+            // unit buttons
+            const row = document.querySelector(`.bev-row[data-bev="${bev}"]`);
+            const unitButtons = row.querySelectorAll(".unitbar button");
+            unitButtons.forEach(b => {
+                b.addEventListener("click", () => {
+                    unitButtons.forEach(x => x.classList.remove("active"));
+                    b.classList.add("active");
+                    state.units[bev] = b.dataset.unit;
+
+                    if (b.dataset.unit === "bottle") setTip(bev, defaults[bev].tipBottle);
+                    else if (b.dataset.unit === "glass") setTip(bev, defaults[bev].tipGlass);
+                    else setTip(bev, "ml 직접 입력");
+
+                    // ml 단위면 기본 수량을 1로 유지하되, 사용자가 원하는 ml 입력
+                    if (chk.checked && (amt.value === "" || isNaN(parseFloat(amt.value)))) amt.value = "1";
+                });
+            });
+        });
+
+        // 초기: 모두 비활성
+        bevs.forEach(bev => setAmtEnabled(bev, false));
+
+        // -------------------------
+        // 계산 로직
+        // -------------------------
+        function volumeMl(bev, unit, amount){
+            if (!amount || amount <= 0) return 0;
+            if (unit === "ml") return amount;
+            const base = defaults[bev][unit];
+            return base * amount;
+        }
+
+        function alcoholGrams(ml, abvPercent){
+            const abv = (abvPercent || 0) / 100;
+            if (ml <= 0 || abv <= 0) return 0;
+            return ml * abv * DENSITY;
+        }
+
+        function clamp(n, min, max){
+            return Math.max(min, Math.min(max, n));
+        }
+
+        function classify(bac){
+            // 참고용 구간(국가/상황에 따라 기준 다름). 여기서는 "강조용"으로만 표시.
+            // 0.03 / 0.08 같은 법적 기준을 단정하지 않음.
+            if (bac <= 0.019) return { label:"낮음", cls:"good" };
+            if (bac <= 0.049) return { label:"주의", cls:"warn" };
+            return { label:"위험", cls:"bad" };
+        }
+
+        function calcBAC(){
+            const kg = parseFloat(kgEl.value);
+            const hours = parseFloat(hoursEl.value);
+
+            if (!kg || isNaN(kg) || kg <= 0){
+                return { ok:false, msg:"몸무게(kg)를 입력해주세요." };
+            }
+            if (!hours || isNaN(hours) || hours <= 0){
+                return { ok:false, msg:"음주 경과 시간을 선택해주세요." };
+            }
+
+            // 선택된 주류 최소 1개
+            const any = bevs.some(getChecked);
+            if (!any){
+                return { ok:false, msg:"주류 종류를 1개 이상 선택해주세요." };
+            }
+
+            let totalGrams = 0;
+            let details = [];
+            for (const bev of bevs){
+                if (!getChecked(bev)) continue;
+
+                const abv = getAbv(bev);
+                const amt = getAmt(bev);
+                const unit = state.units[bev];
+
+                if (isNaN(abv) || abv <= 0){
+                    return { ok:false, msg:`${nameKo(bev)} 도수를 확인해주세요.` };
+                }
+                if (isNaN(amt) || amt <= 0){
+                    return { ok:false, msg:`${nameKo(bev)} 수량/용량을 확인해주세요.` };
+                }
+
+                const ml = volumeMl(bev, unit, amt);
+                const grams = alcoholGrams(ml, abv);
+
+                totalGrams += grams;
+                details.push(`${nameKo(bev)}: ${abv.toFixed(1)}% / ${unitLabel(unit)} ${amt} -> ${ml.toFixed(0)}ml`);
+            }
+
+            // Widmark(간단형, metric):
+            // BAC(%) ≈ (A(g) / (r * W(kg) * 1000g/kg)) * 100  - beta(%/h) * t(h)
+            const r = R[state.sex] || 0.68;
+            const bodyWaterGrams = r * kg * 1000;
+            let bac = (totalGrams / bodyWaterGrams) * 100;
+            bac = bac - (BETA * hours);
+            bac = clamp(bac, 0, 1); // 1% 이상은 표시 제한(정보용)
+
+            return {
+                ok:true,
+                bac,
+                totalGrams,
+                details
+            };
+        }
+
+        function nameKo(bev){
+            return ({ soju:"소주", beer:"맥주", makgeolli:"막걸리", liquor:"양주", wine:"와인" })[bev] || bev;
+        }
+        function unitLabel(unit){
+            return unit === "bottle" ? "병" : (unit === "glass" ? "잔" : "ml");
+        }
+
+        function renderError(msg){
+            badgeEl.className = "badge bad";
+            badgeEl.textContent = "오류";
+            bacTextEl.textContent = "0.000 %";
+            detailTextEl.textContent = msg;
+            calcNoteEl.textContent = "";
+        }
+
+        function renderResult(res){
+            const bac = res.bac;
+            const cls = classify(bac);
+            badgeEl.className = "badge " + cls.cls;
+            badgeEl.textContent = cls.label;
+
+            bacTextEl.textContent = bac.toFixed(3) + " %";
+
+            const gramsTxt = `순수 알코올 추정량: ${res.totalGrams.toFixed(1)} g`;
+            const timeTxt = `경과 시간: ${parseFloat(hoursEl.value).toFixed(1)} h`;
+            const baseTxt = `계산식(추정): (알코올g / (r*체중kg*1000))*100 - (0.015*시간)`;
+
+            detailTextEl.textContent = gramsTxt + " / " + timeTxt;
+            calcNoteEl.innerHTML =
+                `<span class="mono">${escapeHtml(baseTxt)}</span><br>` +
+                `입력 내역: ${escapeHtml(res.details.join(" | "))}`;
+        }
+
+        function escapeHtml(s){
+            return String(s).replace(/[&<>"']/g, (m) => ({
+                "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+            }[m]));
+        }
+
+        // -------------------------
+        // 버튼
+        // -------------------------
+        btnCalc.addEventListener("click", () => {
+            const r = calcBAC();
+            if (!r.ok) renderError(r.msg);
+            else renderResult(r);
+        });
+
+        btnClear.addEventListener("click", () => {
+            // sex
+            state.sex = "man";
+            sexSeg.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+            sexSeg.querySelector('button[data-sex="man"]').classList.add("active");
+
+            kgEl.value = "";
+            hoursEl.value = "";
+
+            bevs.forEach(bev => {
+                qs("chk-" + bev).checked = false;
+                qs("amt-" + bev).value = "1";
+                setAmtEnabled(bev, false);
+
+                // unit reset to bottle
+                state.units[bev] = "bottle";
+                const row = document.querySelector(`.bev-row[data-bev="${bev}"]`);
+                const unitButtons = row.querySelectorAll(".unitbar button");
+                unitButtons.forEach(x => x.classList.remove("active"));
+                row.querySelector('.unitbar button[data-unit="bottle"]').classList.add("active");
+                setTip(bev, defaults[bev].tipBottle);
+            });
+
+            badgeEl.className = "badge";
+            badgeEl.textContent = "대기";
+            bacTextEl.textContent = "0.000 %";
+            detailTextEl.textContent = "몸무게/시간/주류를 입력하고 계산하기를 누르세요.";
+            calcNoteEl.textContent = "";
+        });
+
+        btnCopy.addEventListener("click", async () => {
+            const txt =
+                      `혈중 알코올 농도(BAC): ${bacTextEl.textContent}\n` +
+                      `상태: ${badgeEl.textContent}\n` +
+                      `${detailTextEl.textContent}\n` +
+                      `${calcNoteEl.textContent || ""}`;
+
+            try{
+                await navigator.clipboard.writeText(txt);
+                btnCopy.textContent = "복사됨";
+                setTimeout(() => (btnCopy.textContent = "결과 복사"), 900);
+            }catch(e){
+                alert("복사에 실패했습니다. 브라우저 권한을 확인해주세요.");
+            }
+        });
+    })();
+</script>
+</body>
+</html>

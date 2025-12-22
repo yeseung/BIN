@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>목록 합치기 도구</title>
+
+    <style>
+        :root{
+            --bg:#f5f6fb;
+            --card:#ffffff;
+            --text:#111;
+            --muted:#666;
+            --border:#c0c0c0;
+            --btn:#dcdcdc;
+            --btn2:#ededed;
+            --shadow: 0 10px 22px rgba(0,0,0,0.08);
+        }
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, "Apple SD Gothic Neo", "Noto Sans KR", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+        .wrap{
+            max-width: 980px;
+            margin: 32px auto;
+            padding: 0 16px;
+        }
+        .hero{
+            background: linear-gradient(135deg, #3f51b5 0%, #457b9d 100%);
+            color:#fff;
+            border-radius: 14px;
+            padding: 18px;
+            box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+            margin-bottom: 14px;
+        }
+        .hero h1{
+            margin:0;
+            font-size: 20px;
+            letter-spacing: -0.3px;
+        }
+        .hero p{
+            margin:8px 0 0 0;
+            font-size: 13px;
+            line-height: 1.55;
+            opacity: 0.95;
+        }
+
+        .card{
+            background: var(--card);
+            border-radius: 14px;
+            padding: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .row{
+            display:flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        label{
+            font-weight: 800;
+            font-size: 14px;
+        }
+        select{
+            padding: 8px 10px;
+            border: 3px inset var(--border);
+            border-radius: 10px;
+            background:#fff;
+            outline:none;
+        }
+
+        .checkbox{
+            display:flex;
+            gap:8px;
+            align-items:center;
+            font-size: 14px;
+            font-weight: 700;
+            user-select:none;
+        }
+
+        .grid{
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-top: 12px;
+        }
+        @media (max-width: 860px){
+            .grid{ grid-template-columns: 1fr; }
+        }
+
+        textarea{
+            width:100%;
+            min-height: 220px;
+            padding: 12px;
+            border: 3px inset var(--border);
+            border-radius: 12px;
+            font-size: 14px;
+            outline:none;
+            resize: vertical;
+            background:#fff;
+        }
+        textarea:focus{
+            box-shadow: 0 0 0 3px rgba(63,81,181,0.18);
+            border-color: #b8c2ff;
+        }
+
+        .btn{
+            appearance:none;
+            border: 3px outset var(--border);
+            background: var(--btn);
+            color:#000;
+            padding: 10px 14px;
+            cursor:pointer;
+            font-weight: 900;
+            border-radius: 10px;
+            transition: transform .06s ease, filter .12s ease;
+            user-select: none;
+            white-space: nowrap;
+        }
+        .btn:hover{ filter: brightness(1.05); }
+        .btn:active{ border-style: inset; transform: translateY(1px); }
+
+        .btn-green{ background:#dff7e6; border-color:#b7d8c0; }
+        .btn-red{ background:#ffe3e3; border-color:#e0b1b1; }
+
+        .result{
+            margin-top: 12px;
+            min-height: 260px;
+        }
+
+        .mini{
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.55;
+            margin-top: 6px;
+        }
+
+        .kbd{
+            display:inline-block;
+            border:1px solid rgba(255,255,255,0.5);
+            border-bottom-width:2px;
+            padding:2px 6px;
+            border-radius: 6px;
+            font-weight: 900;
+            background: rgba(255,255,255,0.14);
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="hero">
+        <h1>🔀 목록 합치기 도구</h1>
+        <p>
+            각 목록의 항목들을 번갈아 합칩니다.<br>
+            예: 목록1 (A,B,C) + 목록2 (1,2,3) → 결과 (A,1,B,2,C,3)<br>
+            단축키: <span class="kbd">Ctrl</span> / <span class="kbd">⌘</span> + <span class="kbd">Enter</span> 로 합치기
+        </p>
+    </div>
+
+    <div class="card">
+        <div class="row">
+            <label for="delimiter">구분자</label>
+            <select id="delimiter">
+                <option value="newline" selected>줄바꿈으로 구분</option>
+                <option value="space">공백으로 구분</option>
+                <option value=",">콤마(,)로 구분</option>
+                <option value="tab">탭으로 구분</option>
+            </select>
+
+            <label for="remainder" style="margin-left:6px;">남는 항목 처리</label>
+            <select id="remainder">
+                <option value="append" selected>이어붙이기 (기본)</option>
+                <option value="ignore">무시</option>
+            </select>
+
+            <label class="checkbox" style="margin-left:6px;">
+                <input type="checkbox" id="trim" checked>
+                공백/빈 줄 제거
+            </label>
+        </div>
+
+        <div class="grid">
+            <div>
+                <label for="left">목록 1</label>
+                <textarea id="left" placeholder="각 항목을 구분자에 따라 나누어 입력하세요"></textarea>
+            </div>
+            <div>
+                <label for="right">목록 2</label>
+                <textarea id="right" placeholder="각 항목을 구분자에 따라 나누어 입력하세요"></textarea>
+            </div>
+        </div>
+
+        <div class="row" style="margin-top: 12px;">
+            <button class="btn" id="mergeBtn" type="button">합치기</button>
+            <button class="btn btn-green" id="copyBtn" type="button">복사</button>
+            <button class="btn" id="downloadBtn" type="button">파일로 저장 (.txt)</button>
+            <button class="btn btn-red" id="clearBtn" type="button">초기화</button>
+        </div>
+
+        <textarea id="result" class="result" readonly placeholder="여기에 결과가 표시됩니다"></textarea>
+        <div class="mini">
+            ※ 구분자는 “입력 파싱”에 사용됩니다. (줄바꿈/공백/콤마/탭) <br>
+            ※ 결과는 선택한 구분자로 합쳐 출력됩니다.
+        </div>
+    </div>
+</div>
+
+<script>
+    const leftEl = document.getElementById('left');
+    const rightEl = document.getElementById('right');
+    const resEl = document.getElementById('result');
+
+    const mergeBtn = document.getElementById('mergeBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const clearBtn = document.getElementById('clearBtn');
+
+    function normalizeDelimiter(value){
+        if (value === 'newline') return '\n';
+        if (value === 'space') return ' ';
+        if (value === 'tab') return '\t';
+        // ',' 같은 단일 문자
+        return value;
+    }
+
+    // 입력 텍스트를 "선택된 구분자" 기준으로 항목 배열로 변환
+    function parseItems(text, delimiterKey, doTrim){
+        const d = normalizeDelimiter(delimiterKey);
+        let arr;
+
+        if (delimiterKey === 'newline') {
+            arr = text.split(/\r?\n/);
+        } else if (delimiterKey === 'space') {
+            // 공백(연속 포함) 기반
+            arr = text.split(/\s+/);
+        } else if (delimiterKey === 'tab') {
+            arr = text.split('\t');
+        } else {
+            // 콤마 등 단일 문자
+            arr = text.split(d);
+        }
+
+        if (!doTrim) return arr;
+
+        return arr
+        .map(s => String(s).trim())
+        .filter(s => s.length > 0);
+    }
+
+    function interleave(a, b, joinDelim, remainderMode){
+        const out = [];
+
+        if (remainderMode === 'ignore') {
+            const min = Math.min(a.length, b.length);
+            for (let i = 0; i < min; i++) {
+                out.push(a[i], b[i]);
+            }
+            return out.join(joinDelim);
+        }
+
+        // append (기본): 남는 항목도 그대로 포함
+        const max = Math.max(a.length, b.length);
+        for (let i = 0; i < max; i++) {
+            if (i < a.length) out.push(a[i]);
+            if (i < b.length) out.push(b[i]);
+        }
+        return out.join(joinDelim);
+    }
+
+    function doMerge(){
+        const trim = document.getElementById('trim').checked;
+        const delimKey = document.getElementById('delimiter').value;
+        const remainder = document.getElementById('remainder').value;
+
+        const left = parseItems(leftEl.value, delimKey, trim);
+        const right = parseItems(rightEl.value, delimKey, trim);
+
+        if (left.length === 0 && right.length === 0) {
+            resEl.value = '';
+            return;
+        }
+
+        const joinDelim = normalizeDelimiter(delimKey);
+        resEl.value = interleave(left, right, joinDelim, remainder);
+    }
+
+    mergeBtn.addEventListener('click', doMerge);
+
+    copyBtn.addEventListener('click', async () => {
+        const text = resEl.value;
+        if (!text) return alert('복사할 결과가 없습니다.');
+
+        try{
+            await navigator.clipboard.writeText(text);
+            const prev = copyBtn.textContent;
+            copyBtn.textContent = '복사됨';
+            setTimeout(() => copyBtn.textContent = prev, 1200);
+        }catch(e){
+            // fallback
+            resEl.focus();
+            resEl.select();
+            document.execCommand('copy');
+            alert('복사되었습니다.');
+        }
+    });
+
+    downloadBtn.addEventListener('click', () => {
+        const text = resEl.value;
+        if (!text) return alert('저장할 결과가 없습니다.');
+
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'merged-list.txt';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        URL.revokeObjectURL(url);
+    });
+
+    clearBtn.addEventListener('click', () => {
+        leftEl.value = '';
+        rightEl.value = '';
+        resEl.value = '';
+        leftEl.focus();
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            doMerge();
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,343 @@
+<!-- case-converter.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>대소문자 변환기 - CapsLock 실수 복구</title>
+
+    <!-- 아이콘(선택) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
+
+    <style>
+        * { box-sizing: border-box; }
+        body{
+            margin:0; padding:24px;
+            font-family:-apple-system,BlinkMacSystemFont,"Malgun Gothic",system-ui,sans-serif;
+            background:#f4f5f7; color:#111827;
+        }
+        .page{ max-width:1100px; margin:0 auto; }
+
+        .hero{
+            text-align:center;
+            margin: 10px 0 18px;
+        }
+        .hero h1{
+            margin:0 0 8px;
+            font-size:26px;
+            font-weight:900;
+            line-height:1.35;
+        }
+        .hero p{
+            margin:0;
+            font-size:14px;
+            color:#6b7280;
+            line-height:1.6;
+        }
+
+        .card{
+            background:#fff;
+            border-radius:18px;
+            padding:18px 20px 20px;
+            box-shadow:0 10px 30px rgba(15,23,42,0.08);
+        }
+
+        .textarea-wrap{
+            position:relative;
+            margin-top:14px;
+        }
+        textarea{
+            width:100%;
+            min-height:240px;
+            resize:vertical;
+            border-radius:14px;
+            border:1px solid #e5e7eb;
+            background:#f9fafb;
+            padding:12px 14px 30px;
+            font-family: Menlo, Consolas, "SF Mono", monospace;
+            font-size:14px;
+            line-height:1.6;
+            outline:none;
+            transition: border-color .15s, box-shadow .15s, background .15s;
+        }
+        textarea:focus{
+            border-color:#2563eb;
+            box-shadow:0 0 0 1px #2563eb22;
+            background:#fff;
+        }
+
+        .meta{
+            position:absolute;
+            right:12px;
+            bottom:8px;
+            display:flex;
+            gap:10px;
+            align-items:center;
+            font-size:11px;
+            color:#9ca3af;
+            user-select:none;
+        }
+        .pill{
+            background:#eef2ff;
+            color:#3730a3;
+            border:1px solid #e0e7ff;
+            border-radius:999px;
+            padding:2px 8px;
+            font-weight:700;
+            font-size:11px;
+        }
+
+        .btn-grid{
+            margin-top:14px;
+            display:flex;
+            flex-wrap:wrap;
+            gap:8px;
+            justify-content:center;
+        }
+
+        .btn{
+            border:none;
+            border-radius:999px;
+            padding:9px 14px;
+            font-size:13px;
+            cursor:pointer;
+            display:inline-flex;
+            align-items:center;
+            gap:7px;
+            background:#e5e7eb;
+            color:#374151;
+            transition: background .15s, transform .05s, box-shadow .15s;
+            white-space:nowrap;
+        }
+        .btn:hover{ background:#d1d5db; }
+        .btn:active{ transform: translateY(1px); }
+
+        .btn.primary{
+            background:#2563eb;
+            color:#fff;
+            box-shadow:0 2px 6px rgba(37,99,235,.45);
+        }
+        .btn.primary:hover{ background:#1d4ed8; }
+
+        .btn.success{
+            background:#16a34a;
+            color:#fff;
+            box-shadow:0 2px 6px rgba(22,163,74,.35);
+        }
+        .btn.success:hover{ background:#15803d; }
+
+        .btn.danger{
+            background:#ef4444;
+            color:#fff;
+            box-shadow:0 2px 6px rgba(239,68,68,.35);
+        }
+        .btn.danger:hover{ background:#dc2626; }
+
+        .toast{
+            position: fixed;
+            left: 50%;
+            bottom: 18px;
+            transform: translateX(-50%);
+            background: rgba(17,24,39,0.92);
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 999px;
+            font-size: 13px;
+            display:none;
+            z-index: 9999;
+        }
+
+        @media (max-width: 640px){
+            body{ padding:16px; }
+            .hero h1{ font-size:20px; }
+            textarea{ min-height:200px; }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="hero">
+        <h1>대문자 잠금을 켠 채로 작성했나요? <br/>처음부터 다시 하지 말고 바로 변환하세요.</h1>
+        <p>내용을 입력하고 원하는 대소문자 형식을 선택해 한 번에 변환할 수 있습니다.</p>
+    </div>
+
+    <div class="card">
+        <div class="textarea-wrap">
+            <textarea id="textArea" aria-label="텍스트" placeholder="여기에 텍스트를 입력하거나 붙여넣으세요."></textarea>
+            <div class="meta">
+                <span class="pill" id="charCount">0 글자</span>
+                <span id="byteCount">0 Bytes</span>
+            </div>
+        </div>
+
+        <div class="btn-grid">
+            <button class="btn" data-action="sentence"><i class="bi bi-text-paragraph"></i>문장 형식</button>
+            <button class="btn" data-action="lower"><i class="bi bi-type-lowercase"></i>소문자</button>
+            <button class="btn" data-action="upper"><i class="bi bi-type-uppercase"></i>대문자</button>
+            <button class="btn" data-action="capitalized"><i class="bi bi-fonts"></i>첫 문자 대문자</button>
+            <button class="btn" data-action="alternating"><i class="bi bi-intersect"></i>대소문자 교차</button>
+            <button class="btn" data-action="title"><i class="bi bi-card-text"></i>제목 형식</button>
+            <button class="btn" data-action="inverse"><i class="bi bi-arrow-repeat"></i>역 대소문자</button>
+            <button class="btn" data-action="random"><i class="bi bi-shuffle"></i>무작위 대소문자</button>
+            <button class="btn" data-action="upside-down"><i class="bi bi-arrow-down-up"></i>거꾸로</button>
+            <button class="btn" data-action="reverse"><i class="bi bi-arrow-left-right"></i>역순 문자</button>
+
+            <button class="btn success" id="btnCopy"><i class="bi bi-clipboard-check"></i>텍스트 복사</button>
+            <button class="btn danger" id="btnClear"><i class="bi bi-trash"></i>지우기</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    (() => {
+        const textArea = document.getElementById("textArea");
+        const charCount = document.getElementById("charCount");
+        const byteCount = document.getElementById("byteCount");
+        const toast = document.getElementById("toast");
+
+        function showToast(msg) {
+            toast.textContent = msg;
+            toast.style.display = "block";
+            clearTimeout(showToast._t);
+            showToast._t = setTimeout(() => (toast.style.display = "none"), 1600);
+        }
+
+        function bytesOf(str) {
+            return new Blob([str]).size; // UTF-8 기준
+        }
+
+        function updateCounters() {
+            const t = textArea.value || "";
+            charCount.textContent = `${t.length} 글자`;
+            byteCount.textContent = `${bytesOf(t)} Bytes`;
+        }
+
+        function convert(type) {
+            let text = textArea.value || "";
+
+            switch (type) {
+                case "sentence":
+                    // 문장 시작(문장부호 뒤) 첫 글자만 대문자
+                    text = text.toLowerCase();
+                    text = text.replace(/(^|[.\!\?]\s*)([^\s])/g, (m, p1, p2) => p1 + p2.toUpperCase());
+                    break;
+
+                case "lower":
+                    text = text.toLowerCase();
+                    break;
+
+                case "upper":
+                    text = text.toUpperCase();
+                    break;
+
+                case "capitalized":
+                    // 각 단어 첫 글자 대문자
+                    text = text.toLowerCase().replace(/(^|\s+)([^\s])/g, (m, p1, p2) => p1 + p2.toUpperCase());
+                    break;
+
+                case "alternating": {
+                    // 공백 제외 글자 기준으로 교차
+                    let isLower = true;
+                    text = text.split("").map(ch => {
+                        if (/\S/.test(ch)) {
+                            const out = isLower ? ch.toLowerCase() : ch.toUpperCase();
+                            isLower = !isLower;
+                            return out;
+                        }
+                        return ch;
+                    }).join("");
+                    break;
+                }
+
+                case "title":
+                    // 제목 형식(간단 버전: 각 단어 첫 글자 대문자)
+                    text = text.toLowerCase().replace(/(^|\s)([^\s])/g, (m, p1, p2) => p1 + p2.toUpperCase());
+                    break;
+
+                case "random":
+                    text = text.split("").map(ch => (Math.random() > 0.5 ? ch.toUpperCase() : ch.toLowerCase())).join("");
+                    break;
+
+                case "upside-down": {
+                    const map = {
+                        a:"ɐ", b:"q", c:"ɔ", d:"p", e:"ǝ", f:"ɟ", g:"ƃ", h:"ɥ", i:"ᴉ", j:"ɾ", k:"ʞ", l:"l", m:"ɯ",
+                        n:"u", o:"o", p:"d", q:"b", r:"ɹ", s:"s", t:"ʇ", u:"n", v:"ʌ", w:"ʍ", x:"x", y:"ʎ", z:"z",
+                        A:"∀", B:"𐐒", C:"Ɔ", D:"ᗡ", E:"Ɛ", F:"Ⅎ", G:"⅁", H:"H", I:"I", J:"ſ", K:"⋊", L:"⅂", M:"W",
+                        N:"N", O:"O", P:"Ԁ", Q:"Q", R:"Я", S:"S", T:"⊥", U:"∩", V:"Λ", W:"M", X:"X", Y:"⅄", Z:"Z",
+                        1:"Ɩ", 2:"ᄅ", 3:"Ɛ", 4:"ㄣ", 5:"ϛ", 6:"9", 7:"ㄥ", 8:"8", 9:"6", 0:"0",
+                        ".":"˙", ",":"'", "?":"¿", "!":"¡", "'":",",
+                        "(" : ")", ")" : "(",
+                        "[" : "]", "]" : "[",
+                        "{" : "}", "}" : "{",
+                        "<" : ">", ">" : "<",
+                        "&":"⅋", "_":"‾"
+                    };
+                    text = text.split("").map(ch => map[ch] || ch).reverse().join("");
+                    break;
+                }
+
+                case "reverse":
+                    text = text.split("").reverse().join("");
+                    break;
+
+                case "inverse":
+                    text = text.split("").map(ch => (ch === ch.toUpperCase() ? ch.toLowerCase() : ch.toUpperCase())).join("");
+                    break;
+
+                default:
+                    return;
+            }
+
+            textArea.value = text;
+            updateCounters();
+        }
+
+        async function copyText() {
+            const text = textArea.value || "";
+            if (!text) {
+                showToast("복사할 텍스트가 없습니다.");
+                return;
+            }
+
+            // 최신 방식 우선
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    showToast("클립보드에 복사되었습니다!");
+                    return;
+                } catch (e) {
+                    // fallback으로 진행
+                }
+            }
+
+            // fallback (구형 브라우저)
+            textArea.select();
+            document.execCommand("copy");
+            textArea.setSelectionRange(textArea.value.length, textArea.value.length);
+            showToast("클립보드에 복사되었습니다!");
+        }
+
+        function clearText() {
+            textArea.value = "";
+            updateCounters();
+            textArea.focus();
+            showToast("내용을 지웠습니다.");
+        }
+
+        // 이벤트: 버튼들
+        document.querySelectorAll("[data-action]").forEach(btn => {
+            btn.addEventListener("click", () => convert(btn.getAttribute("data-action")));
+        });
+
+        document.getElementById("btnCopy").addEventListener("click", copyText);
+        document.getElementById("btnClear").addEventListener("click", clearText);
+
+        // 카운터
+        textArea.addEventListener("input", updateCounters);
+        updateCounters();
+    })();
+</script>
+</body>
+</html>

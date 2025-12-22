@@ -1,0 +1,555 @@
+<!-- english-flashcards.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>영어 단어 플래시 카드</title>
+
+    <!-- 아이콘(선택) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
+
+    <style>
+        :root{
+            --bg:#f4f5f7;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --line:#e5e7eb;
+            --primary:#2563eb;
+            --primary2:#1d4ed8;
+            --shadow:0 10px 30px rgba(15,23,42,0.08);
+            --mono: Menlo, Consolas, "SF Mono", monospace;
+        }
+        *{ box-sizing:border-box; }
+        body{
+            margin:0; padding:24px;
+            font-family:-apple-system,BlinkMacSystemFont,"Malgun Gothic",system-ui,sans-serif;
+            background:var(--bg);
+            color:var(--text);
+        }
+        .page{ max-width:980px; margin:0 auto; }
+
+        .hero{
+            text-align:center;
+            margin: 8px 0 18px;
+        }
+        .hero h1{
+            margin:0 0 8px;
+            font-size:26px;
+            font-weight:900;
+            display:flex;
+            gap:10px;
+            justify-content:center;
+            align-items:center;
+        }
+        .hero h1 i{ color:var(--primary); }
+        .hero p{
+            margin:0;
+            color:var(--muted);
+            font-size:14px;
+            line-height:1.6;
+        }
+
+        .card{
+            background:var(--card);
+            border-radius:18px;
+            padding:18px 20px 20px;
+            box-shadow:var(--shadow);
+        }
+
+        .grid{
+            display:grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap:12px;
+            align-items:end;
+        }
+
+        .field{
+            display:flex;
+            flex-direction:column;
+            gap:6px;
+            margin-bottom:10px;
+        }
+        .label{
+            font-size:13px;
+            font-weight:800;
+            color:#374151;
+            display:flex;
+            align-items:center;
+            gap:6px;
+        }
+        .label i{ color:var(--primary); }
+        .hint{
+            font-size:12px;
+            color:#9ca3af;
+            line-height:1.5;
+        }
+
+        select, input[type="file"]{
+            width:100%;
+            border-radius:12px;
+            border:1px solid var(--line);
+            background:#f9fafb;
+            padding:10px 12px;
+            font-size:14px;
+            outline:none;
+            transition:border-color .15s, box-shadow .15s, background .15s;
+        }
+        select:focus, input[type="file"]:focus{
+            border-color:var(--primary);
+            box-shadow:0 0 0 1px #2563eb22;
+            background:#fff;
+        }
+
+        .upload{
+            display:none;
+            margin-top:12px;
+            padding:12px;
+            border:1px dashed #c7d2fe;
+            border-radius:14px;
+            background:#fbfcff;
+        }
+        .upload p{
+            margin:0 0 8px;
+            font-size:13px;
+            line-height:1.55;
+            color:#ef4444;
+            font-weight:700;
+        }
+        .msg{
+            margin-top:8px;
+            font-size:12px;
+            color:var(--muted);
+            line-height:1.5;
+            min-height:18px;
+        }
+
+        /* 플래시 카드 */
+        .flashcard{
+            margin-top:14px;
+            min-height: 220px;
+            border-radius:16px;
+            border:3px solid #c0c0c0;
+            background:#fff;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            flex-direction:column;
+            gap:10px;
+            padding:22px 18px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+            text-align:center;
+        }
+        .word{
+            font-size:34px;
+            font-weight:900;
+            letter-spacing:0.2px;
+            word-break:break-word;
+        }
+        .meaning{
+            display:none;
+            font-size:18px;
+            font-weight:700;
+            color:#374151;
+            line-height:1.6;
+            word-break:break-word;
+        }
+
+        .btnrow{
+            margin-top:14px;
+            display:flex;
+            flex-wrap:wrap;
+            gap:8px;
+            justify-content:center;
+        }
+        .btn{
+            border:none;
+            border-radius:999px;
+            padding:10px 16px;
+            font-size:13px;
+            cursor:pointer;
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            background:#e5e7eb;
+            color:#374151;
+            transition: background .15s, transform .05s, box-shadow .15s;
+            white-space:nowrap;
+        }
+        .btn:hover{ background:#d1d5db; }
+        .btn:active{ transform: translateY(1px); }
+        .btn.primary{
+            background:var(--primary);
+            color:#fff;
+            box-shadow:0 2px 6px rgba(37,99,235,.45);
+        }
+        .btn.primary:hover{ background:var(--primary2); }
+        .btn.good{
+            background:#16a34a;
+            color:#fff;
+            box-shadow:0 2px 6px rgba(22,163,74,.25);
+        }
+        .btn.good:hover{ background:#15803d; }
+
+        .status{
+            margin-top:10px;
+            font-size:13px;
+            color:#6b7280;
+            text-align:center;
+            min-height:18px;
+        }
+
+        /* 하단 부가 옵션 */
+        .minirow{
+            margin-top:10px;
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            justify-content:center;
+            align-items:center;
+        }
+        .pill{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            padding:8px 12px;
+            border-radius:999px;
+            border:1px solid var(--line);
+            background:#f9fafb;
+            font-size:12px;
+            color:#374151;
+        }
+        .pill input{
+            width:16px;
+            height:16px;
+            accent-color: var(--primary);
+            margin:0;
+        }
+
+        @media (max-width: 760px){
+            body{ padding:16px; }
+            .hero h1{ font-size:20px; }
+            .grid{ grid-template-columns:1fr; }
+            .word{ font-size:30px; }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="hero">
+        <h1><i class="bi bi-journal-bookmark-fill"></i>영어 단어 플래시 카드</h1>
+        <p>초등·중등·고등(수능) 난이도 선택 + 개인 단어장(Excel) 업로드로 바로 학습하세요.</p>
+    </div>
+
+    <div class="card">
+
+        <div class="grid">
+            <div class="field">
+                <div class="label"><i class="bi bi-bar-chart-steps"></i>단어 난이도 선택</div>
+                <select id="difficulty-select">
+                    <option value="1">초등학교 영어 수준</option>
+                    <option value="2">중학교 영어 수준</option>
+                    <option value="3" selected>고등 수능영어 수준</option>
+                    <option value="4">개인 단어장 파일(Excel) 업로드</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <div class="label"><i class="bi bi-gear-fill"></i>문제 옵션</div>
+                <select id="display-mode-select">
+                    <option value="word">단어 표시</option>
+                    <option value="meaning">의미 표시</option>
+                </select>
+                <div class="hint">“의미 보기”를 누르면 뒷면이 표시됩니다.</div>
+            </div>
+        </div>
+
+        <div class="upload" id="file-upload-section">
+            <p>개인 단어장 (Excel) 파일을 업로드 해주세요.<br>(1열 ‘번호’, 2열 ‘단어’, 3열 ‘의미’)</p>
+            <input type="file" id="customExcel" accept=".xlsx,.xls" />
+            <div class="msg" id="file-upload-message"></div>
+            <div class="hint" style="margin-top:6px;">
+                * 헤더(첫 줄)가 있으면 ‘단어/의미’ 또는 ‘Word/Meaning’ 열 이름을 자동 인식합니다.
+            </div>
+        </div>
+
+        <div class="flashcard" id="flashcard">
+            <div class="word" id="flashcard-word">로딩 중...</div>
+            <div class="meaning" id="flashcard-meaning"></div>
+        </div>
+
+        <div class="btnrow">
+            <button class="btn good" id="show-meaning-btn" type="button">
+                <i class="bi bi-eye-fill"></i>의미 보기
+            </button>
+            <button class="btn primary" id="next-word-btn" type="button">
+                <i class="bi bi-shuffle"></i>다음 문제
+            </button>
+            <button class="btn" id="copy-btn" type="button" title="현재 카드 텍스트 복사">
+                <i class="bi bi-clipboard"></i>복사
+            </button>
+        </div>
+
+        <div class="minirow">
+            <label class="pill">
+                <input type="checkbox" id="trim-space" checked />
+                앞뒤 공백 제거
+            </label>
+            <label class="pill">
+                <input type="checkbox" id="avoid-repeat" checked />
+                같은 문제 연속 방지
+            </label>
+        </div>
+
+        <div class="status" id="game-message"></div>
+    </div>
+</div>
+
+<!-- CSV/Excel 파서 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+
+<script>
+    (() => {
+        const difficultySelect = document.getElementById("difficulty-select");
+        const customExcelInput = document.getElementById("customExcel");
+        const fileUploadSection = document.getElementById("file-upload-section");
+        const fileUploadMessage = document.getElementById("file-upload-message");
+
+        const displayModeSelect = document.getElementById("display-mode-select");
+        const flashcardWord = document.getElementById("flashcard-word");
+        const flashcardMeaning = document.getElementById("flashcard-meaning");
+
+        const showMeaningBtn = document.getElementById("show-meaning-btn");
+        const nextWordBtn = document.getElementById("next-word-btn");
+        const copyBtn = document.getElementById("copy-btn");
+
+        const trimSpaceChk = document.getElementById("trim-space");
+        const avoidRepeatChk = document.getElementById("avoid-repeat");
+
+        const gameMessage = document.getElementById("game-message");
+
+        let currentWordData = null;
+        let wordList = [];
+        let customWordList = [];
+        let lastIndex = -1;
+
+        // 레벨 CSV
+        const levelUrls = {
+            1: "assets/data/english-word-1.csv",
+            2: "assets/data/english-word-2.csv",
+            3: "assets/data/english-word-3.csv"
+            // 1: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRRdZQwiUQ12YsMq1ieE4V-V34z3hR2ewGG0UYtYAiJElOB7xxHq4iBIlIzFhGO35eGaq4W_7FwkMH_/pub?gid=0&single=true&output=csv",
+            // 2: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTL6S44zQGbc08BzO4yVfEZZfMfRUPgoMuaRpYfeDQDybbXLNeaEEEOuNlOPmA4MqXh4tb-rVWpgQFj/pub?gid=0&single=true&output=csv",
+            // 3: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRtZSUQUq5JSZIlbQ1m67rqgRAT1m938NyICeIZYx0OvY8HPTkRbA9CBINQPRJdPm6WthpCMfG99cnb/pub?gid=0&single=true&output=csv"
+        };
+
+        function setStatus(msg, color) {
+            gameMessage.textContent = msg || "";
+            gameMessage.style.color = color || "#6b7280";
+        }
+
+        function clean(str) {
+            const s = String(str ?? "");
+            return trimSpaceChk.checked ? s.trim() : s;
+        }
+
+        function resetCard() {
+            flashcardMeaning.style.display = "none";
+            showMeaningBtn.style.display = "inline-flex";
+        }
+
+        // CSV 로드
+        async function loadWordsFromCSV(url) {
+            try {
+                setStatus("단어 데이터를 불러오는 중...", "#6b7280");
+                const response = await fetch(url, { cache: "no-store" });
+                const csvText = await response.text();
+
+                await new Promise((resolve, reject) => {
+                    Papa.parse(csvText, {
+                        header: true,
+                        skipEmptyLines: true,
+                        complete: (results) => {
+                            wordList = results.data.map(row => ({
+                                단어: clean(row["단어"]),
+                                의미: clean(row["의미"])
+                            })).filter(item => item.단어 && item.의미);
+                            resolve();
+                        },
+                        error: (err) => reject(err)
+                    });
+                });
+
+                if (wordList.length) {
+                    setStatus(`단어 ${wordList.length}개 로드 완료`, "#16a34a");
+                } else {
+                    setStatus("단어 데이터를 불러오지 못했습니다.", "#ef4444");
+                }
+            } catch (e) {
+                console.error(e);
+                wordList = [];
+                setStatus("단어 데이터를 불러오는데 실패했습니다.", "#ef4444");
+            }
+        }
+
+        // 엑셀 업로드
+        customExcelInput.addEventListener("change", (ev) => {
+            const file = ev.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: "array" });
+                    const sheetName = workbook.SheetNames[0];
+                    const sheet = workbook.Sheets[sheetName];
+                    const json = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+
+                    customWordList = json.map(row => ({
+                        단어: clean(row["단어"] || row["Word"] || ""),
+                        의미: clean(row["의미"] || row["Meaning"] || "")
+                    })).filter(item => item.단어 && item.의미);
+
+                    if (customWordList.length > 0) {
+                        fileUploadMessage.textContent = `${customWordList.length}개의 단어가 로드되었습니다.`;
+                        fileUploadMessage.style.color = "#16a34a";
+                        initializeFlashcard();
+                    } else {
+                        fileUploadMessage.textContent = '엑셀에서 유효한 단어를 찾지 못했습니다. "단어/의미"(또는 Word/Meaning) 열을 확인해주세요.';
+                        fileUploadMessage.style.color = "#ef4444";
+                    }
+                } catch (err) {
+                    console.error(err);
+                    fileUploadMessage.textContent = "엑셀 파일 처리 중 오류가 발생했습니다. 파일 형식을 확인해주세요.";
+                    fileUploadMessage.style.color = "#ef4444";
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        // 랜덤 표시(연속 방지 옵션 포함)
+        function pickRandomIndex(max) {
+            if (max <= 1) return 0;
+            let idx = Math.floor(Math.random() * max);
+            if (avoidRepeatChk.checked && idx === lastIndex) {
+                idx = (idx + 1 + Math.floor(Math.random() * (max - 1))) % max;
+            }
+            return idx;
+        }
+
+        function displayRandomWord() {
+            if (wordList.length === 0) {
+                flashcardWord.textContent = "단어 없음";
+                flashcardMeaning.textContent = "";
+                setStatus("표시할 단어가 없습니다. 난이도를 선택하거나 개인 단어장을 업로드해주세요.", "#ef4444");
+                return;
+            }
+
+            const idx = pickRandomIndex(wordList.length);
+            lastIndex = idx;
+            currentWordData = wordList[idx];
+
+            const displayMode = displayModeSelect.value;
+            resetCard();
+
+            if (displayMode === "word") {
+                flashcardWord.textContent = currentWordData.단어;
+                flashcardMeaning.textContent = currentWordData.의미;
+            } else {
+                flashcardWord.textContent = currentWordData.의미;
+                flashcardMeaning.textContent = currentWordData.단어;
+            }
+        }
+
+        // 초기화
+        async function initializeFlashcard() {
+            setStatus("", "#6b7280");
+            resetCard();
+
+            const selectedDifficulty = difficultySelect.value;
+
+            if (selectedDifficulty === "4") {
+                fileUploadSection.style.display = "block";
+                if (customWordList.length === 0) {
+                    flashcardWord.textContent = "";
+                    flashcardMeaning.textContent = "";
+                    setStatus("개인 단어장 파일을 업로드해주세요.", "#ef4444");
+                    return;
+                }
+                wordList = customWordList;
+                setStatus(`개인 단어장 ${wordList.length}개 사용 중`, "#16a34a");
+            } else {
+                fileUploadSection.style.display = "none";
+                fileUploadMessage.textContent = "";
+                await loadWordsFromCSV(levelUrls[selectedDifficulty]);
+            }
+
+            displayRandomWord();
+        }
+
+        // 의미 보기
+        showMeaningBtn.addEventListener("click", () => {
+            flashcardMeaning.style.display = "block";
+            showMeaningBtn.style.display = "none";
+        });
+
+        // 다음 문제
+        nextWordBtn.addEventListener("click", initializeFlashcard);
+
+        // 옵션 변경
+        difficultySelect.addEventListener("change", initializeFlashcard);
+
+        displayModeSelect.addEventListener("change", () => {
+            if (!currentWordData) {
+                initializeFlashcard();
+                return;
+            }
+            const displayMode = displayModeSelect.value;
+            resetCard();
+            if (displayMode === "word") {
+                flashcardWord.textContent = currentWordData.단어;
+                flashcardMeaning.textContent = currentWordData.의미;
+            } else {
+                flashcardWord.textContent = currentWordData.의미;
+                flashcardMeaning.textContent = currentWordData.단어;
+            }
+        });
+
+        // 복사
+        copyBtn.addEventListener("click", async () => {
+            const front = flashcardWord.textContent || "";
+            const back = flashcardMeaning.textContent || "";
+            const text = (flashcardMeaning.style.display === "block")
+                ? `${front}\n${back}`
+                : front;
+
+            try {
+                await navigator.clipboard.writeText(text);
+                setStatus("복사되었습니다!", "#16a34a");
+                setTimeout(() => setStatus("", "#6b7280"), 1200);
+            } catch (e) {
+                // fallback
+                const ta = document.createElement("textarea");
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand("copy");
+                ta.remove();
+                setStatus("복사되었습니다!", "#16a34a");
+                setTimeout(() => setStatus("", "#6b7280"), 1200);
+            }
+        });
+
+        // trim 옵션이 바뀌면 현재 리스트 값도 재정리
+        trimSpaceChk.addEventListener("change", () => initializeFlashcard());
+        avoidRepeatChk.addEventListener("change", () => { /* 유지 */ });
+
+        // 첫 로드
+        initializeFlashcard();
+    })();
+</script>
+</body>
+</html>

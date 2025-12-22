@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Simple Math Editor (LaTeX) - MathJax</title>
+
+    <style>
+        :root{
+            --bg:#f5f6fb;
+            --card:#ffffff;
+            --text:#111;
+            --muted:#666;
+            --border:#c0c0c0;
+            --btn:#dcdcdc;
+            --btn2:#ededed;
+            --focus:#3f51b5;
+        }
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, "Apple SD Gothic Neo", "Noto Sans KR", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+        .wrap{
+            max-width: 980px;
+            margin: 32px auto;
+            padding: 0 16px;
+        }
+        .hero{
+            background: linear-gradient(135deg, #1d7874 0%, #457b9d 100%);
+            color:#fff;
+            border-radius: 14px;
+            padding: 18px 18px;
+            box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+            margin-bottom: 18px;
+        }
+        .hero h1{
+            margin:0;
+            font-size: 20px;
+            letter-spacing: -0.3px;
+            display:flex;
+            align-items:center;
+            gap:10px;
+        }
+        .hero p{
+            margin:8px 0 0 0;
+            font-size: 13px;
+            opacity: 0.95;
+            line-height: 1.5;
+        }
+        .card{
+            background: var(--card);
+            border-radius: 14px;
+            padding: 16px;
+            box-shadow: 0 10px 22px rgba(0,0,0,0.08);
+        }
+
+        .toolbar{
+            display:flex;
+            align-items:center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        .toolbar .left,
+        .toolbar .right{
+            display:flex;
+            gap:8px;
+            flex-wrap: wrap;
+            align-items:center;
+        }
+        .hint{
+            font-size: 12px;
+            color: rgba(255,255,255,0.95);
+        }
+
+        .btn, .btn-green, .btn-red{
+            appearance:none;
+            border: 3px outset var(--border);
+            background: var(--btn);
+            color:#000;
+            padding: 10px 14px;
+            cursor:pointer;
+            font-weight: 700;
+            border-radius: 8px;
+            transition: transform .06s ease, filter .12s ease;
+            user-select: none;
+            white-space: nowrap;
+        }
+        .btn:hover{ filter: brightness(1.05); }
+        .btn:active{ border-style: inset; transform: translateY(1px); }
+
+        .btn-green{
+            background: #dff7e6;
+            border-color: #b7d8c0;
+        }
+        .btn-red{
+            background: #ffe3e3;
+            border-color: #e0b1b1;
+        }
+
+        .grid{
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-top: 14px;
+        }
+        @media (max-width: 900px){
+            .grid{ grid-template-columns: 1fr; }
+        }
+
+        .panel-title{
+            font-size: 13px;
+            font-weight: 800;
+            color:#000;
+            margin: 0 0 8px 0;
+        }
+        .sub{
+            font-size: 12px;
+            color: var(--muted);
+            margin: 0 0 10px 0;
+            line-height: 1.45;
+        }
+
+        .button-group{
+            margin-top: 10px;
+        }
+        .button-grid{
+            display:grid;
+            grid-template-columns: repeat(10, minmax(0, 1fr));
+            gap: 8px;
+        }
+        @media (max-width: 900px){
+            .button-grid{ grid-template-columns: repeat(6, minmax(0, 1fr)); }
+        }
+        @media (max-width: 520px){
+            .button-grid{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        }
+        .key{
+            padding: 10px 8px;
+            background: var(--btn2);
+            border: 3px outset var(--border);
+            border-radius: 10px;
+            cursor:pointer;
+            font-weight: 800;
+            font-size: 13px;
+            line-height: 1;
+            user-select:none;
+            overflow:hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .key:hover{ filter: brightness(1.05); }
+        .key:active{ border-style: inset; transform: translateY(1px); }
+
+        textarea{
+            width:100%;
+            min-height: 120px;
+            padding: 12px;
+            border: 3px inset var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            resize: vertical;
+            background: #fff;
+        }
+        textarea:focus{
+            box-shadow: 0 0 0 3px rgba(63,81,181,0.18);
+            border-color: #b8c2ff;
+        }
+
+        .render{
+            padding: 18px;
+            border: 3px inset var(--border);
+            border-radius: 12px;
+            min-height: 320px;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            background: #fff;
+            overflow:auto;
+        }
+        .render .empty{
+            color:#888;
+            font-size: 13px;
+            text-align:center;
+            line-height: 1.6;
+        }
+
+        .footer-actions{
+            display:flex;
+            gap:8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .mono{
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+        .mini{
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+    </style>
+
+    <!-- MathJax 설정 -->
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="hero">
+        <h1>🧮 간단한 수식 입력기 (LaTeX → MathJax)</h1>
+        <p class="hint">
+            버튼으로 LaTeX 코드를 빠르게 삽입하고, 아래에서 즉시 렌더링/복사/PNG 다운로드를 할 수 있습니다.
+        </p>
+    </div>
+
+    <div class="card">
+        <div class="toolbar">
+            <div class="left">
+                <button class="btn" type="button" id="btnBig">글자크기 확대</button>
+                <button class="btn" type="button" id="btnSmall">글자크기 축소</button>
+            </div>
+            <div class="right">
+                <button class="btn-green" type="button" id="btnCopy">LaTeX 코드 복사</button>
+                <button class="btn" type="button" id="btnDownload">이미지 다운로드(PNG)</button>
+                <button class="btn-red" type="button" id="btnReset">초기화</button>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <div class="button-grid" id="keypad"></div>
+        </div>
+
+        <div class="grid">
+            <div>
+                <div class="panel-title">LaTeX 입력</div>
+                <p class="sub">커서 위치에 버튼 내용이 삽입됩니다. (예: <span class="mono">\frac{a}{b}</span>)</p>
+                <textarea id="latexInput" placeholder="여기에 LaTeX를 입력하세요. 예: \frac{1}{2} + x^2"></textarea>
+                <div class="mini">
+                    팁: 여러 줄은 <span class="mono">\\</span> 로 줄바꿈 가능합니다.
+                </div>
+            </div>
+
+            <div>
+                <div class="panel-title">렌더링된 수식</div>
+                <p class="sub">MathJax(SVG)로 렌더링합니다.</p>
+                <div class="render" id="renderedMath">
+                    <div class="empty">
+                        LaTeX를 입력하면<br>여기에 수식이 표시됩니다.
+                    </div>
+                </div>
+                <div class="mini" id="errMsg" style="display:none;color:#b00020;font-weight:700;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ====== 키패드 정의 ======
+    const KEYS = [
+        {t:"+", v:"+"}, {t:"−", v:"-"}, {t:"×", v:"\\times"}, {t:"÷", v:"\\div"}, {t:"=", v:"="},
+        {t:"<", v:"<"}, {t:">", v:">"}, {t:"≤", v:"\\le"}, {t:"≥", v:"\\ge"}, {t:"≠", v:"\\ne"},
+
+        {t:"a⁄b", v:"\\frac{a}{b}"}, {t:"c a⁄b", v:"c\\frac{a}{b}"},
+        {t:"∑", v:"\\sum_{i=1}^{n}"}, {t:"∫", v:"\\int_{a}^{b}"}, {t:"lim", v:"\\lim_{x \\to 0}"},
+
+        {t:"x²", v:"x^2"}, {t:"xⁿ", v:"x^n"}, {t:"√x", v:"\\sqrt{x}"}, {t:"ⁿ√x", v:"\\sqrt[n]{x}"},
+        {t:"logₓ y", v:"\\log_{x}{y}"}, {t:"ln x", v:"\\ln{x}"},
+
+        {t:"( )", v:"()"}, {t:"[ ]", v:"[]"}, {t:"{ }", v:"\\{\\}"},
+
+        {t:"x", v:"x"}, {t:"y", v:"y"}, {t:"z", v:"z"}, {t:"X", v:"X"}, {t:"Y", v:"Y"}, {t:"Z", v:"Z"},
+
+        {t:"π", v:"\\pi"}, {t:"θ", v:"\\theta"}, {t:"α", v:"\\alpha"}, {t:"β", v:"\\beta"},
+        {t:"Δ", v:"\\Delta"}, {t:"γ", v:"\\gamma"}, {t:"κ", v:"\\kappa"}, {t:"λ", v:"\\lambda"},
+        {t:"μ", v:"\\mu"}, {t:"ν", v:"\\nu"}, {t:"ξ", v:"\\xi"}, {t:"ρ", v:"\\rho"},
+        {t:"σ", v:"\\sigma"}, {t:"τ", v:"\\tau"}, {t:"φ", v:"\\phi"}, {t:"ψ", v:"\\psi"},
+        {t:"ω", v:"\\omega"}, {t:"∞", v:"\\infty"},
+
+        {t:"sin x", v:"\\sin{x}"}, {t:"cos y", v:"\\cos{y}"}, {t:"tan z", v:"\\tan{z}"},
+        {t:"sin²x", v:"\\sin^{2}{x}"}, {t:"cos²y", v:"\\cos^{2}{y}"}, {t:"tan⁻¹z", v:"\\tan^{-1}{z}"},
+
+        {t:"∫ f(x) dx", v:"\\int f(x) \\, dx"},
+        {t:"d/dx f(x)", v:"\\frac{d}{dx} f(x)"},
+        {t:"d²/dx² f(x)", v:"\\frac{d^2}{dx^2} f(x)"},
+        {t:"∂/∂x f(x,y)", v:"\\frac{\\partial}{\\partial x} f(x,y)"},
+
+        {t:"공백", v:"\\ "}, {t:"줄바꿈", v:"\\\\ "}
+    ];
+
+    // ====== 상태 ======
+    let currentFontSize = 1.5;
+
+    const textarea = document.getElementById("latexInput");
+    const rendered = document.getElementById("renderedMath");
+    const errMsg = document.getElementById("errMsg");
+
+    // 키패드 렌더
+    const keypad = document.getElementById("keypad");
+    KEYS.forEach(k => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "key";
+        b.textContent = k.t;
+        b.addEventListener("click", () => insertLatex(k.v));
+        keypad.appendChild(b);
+    });
+
+    function showError(text){
+        errMsg.textContent = text;
+        errMsg.style.display = "block";
+    }
+    function hideError(){
+        errMsg.textContent = "";
+        errMsg.style.display = "none";
+    }
+
+    function changeFontSize(delta){
+        currentFontSize += delta;
+        if (currentFontSize < 0.6) currentFontSize = 0.6;
+        if (currentFontSize > 4.0) currentFontSize = 4.0;
+        rendered.style.fontSize = currentFontSize + "em";
+        // SVG 렌더라 크기만 바뀌어도 대체로 OK지만, 안전하게 typeset
+        if (window.MathJax) MathJax.typesetPromise().catch(()=>{});
+    }
+
+    function insertLatex(latex){
+        const start = textarea.selectionStart ?? textarea.value.length;
+        const end   = textarea.selectionEnd ?? textarea.value.length;
+        const text  = textarea.value;
+
+        textarea.value = text.slice(0, start) + latex + text.slice(end);
+        textarea.focus();
+
+        const newPos = start + latex.length;
+        textarea.setSelectionRange(newPos, newPos);
+
+        renderLatex();
+    }
+
+    function renderLatex(){
+        hideError();
+        const input = textarea.value.trim();
+
+        if (!input){
+            rendered.innerHTML = `<div class="empty">LaTeX를 입력하면<br>여기에 수식이 표시됩니다.</div>`;
+            return;
+        }
+
+        // display 스타일로 한 덩어리 렌더 (줄바꿈도 반영)
+        // 사용자가 \\ 를 넣으면 줄바꿈이 됩니다.
+        const wrapped = `\\(\\displaystyle ${input}\\)`;
+        rendered.innerHTML = wrapped;
+
+        if (!window.MathJax){
+            showError("MathJax 로딩 중입니다. 잠시 후 다시 렌더링됩니다.");
+            return;
+        }
+
+        MathJax.typesetClear([rendered]);
+        MathJax.typesetPromise([rendered]).catch((e)=>{
+            showError("LaTeX 파싱 오류가 있을 수 있습니다. 괄호/슬래시 등을 확인해 주세요.");
+            console.error(e);
+        });
+    }
+
+    async function copyLatex(){
+        const latex = textarea.value;
+        if (!latex.trim()) return alert("복사할 LaTeX 코드가 없습니다.");
+        try{
+            await navigator.clipboard.writeText(latex);
+            alert("LaTeX 코드가 복사되었습니다!");
+        }catch(e){
+            // 구형 브라우저 fallback
+            textarea.select();
+            document.execCommand("copy");
+            alert("LaTeX 코드가 복사되었습니다!");
+        }
+    }
+
+    function resetAll(){
+        textarea.value = "";
+        rendered.innerHTML = `<div class="empty">LaTeX를 입력하면<br>여기에 수식이 표시됩니다.</div>`;
+        hideError();
+    }
+
+    async function downloadMath(){
+        // 렌더된 SVG 가져오기
+        const svg = rendered.querySelector("svg");
+        if (!svg) return alert("렌더링된 수식이 없습니다.");
+
+        // SVG를 문자열로 직렬화
+        const serializer = new XMLSerializer();
+        let svgStr = serializer.serializeToString(svg);
+
+        // SVG가 외부 리소스 없이 동작하도록 xmlns 보정
+        if (!svgStr.includes('http://www.w3.org/2000/svg')){
+            svgStr = svgStr.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+        }
+
+        // SVG Blob URL
+        const svgBlob = new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" });
+        const url = URL.createObjectURL(svgBlob);
+
+        // 이미지로 로드 후 Canvas에 그려 PNG로 저장
+        const img = new Image();
+        img.onload = () => {
+            // 배경 흰색 + 여백
+            const pad = 20;
+            const w = img.width + pad*2;
+            const h = img.height + pad*2;
+
+            const canvas = document.createElement("canvas");
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext("2d");
+
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, w, h);
+            ctx.drawImage(img, pad, pad);
+
+            URL.revokeObjectURL(url);
+
+            canvas.toBlob((blob) => {
+                if (!blob) return alert("PNG 생성에 실패했습니다.");
+                const a = document.createElement("a");
+                a.href = URL.createObjectURL(blob);
+                a.download = "math.png";
+                a.click();
+            }, "image/png");
+        };
+        img.onerror = () => {
+            URL.revokeObjectURL(url);
+            alert("이미지 변환에 실패했습니다. (SVG → PNG)");
+        };
+        img.src = url;
+    }
+
+    // ====== 이벤트 연결 ======
+    textarea.addEventListener("input", renderLatex);
+
+    document.getElementById("btnBig").addEventListener("click", () => changeFontSize(0.2));
+    document.getElementById("btnSmall").addEventListener("click", () => changeFontSize(-0.2));
+    document.getElementById("btnCopy").addEventListener("click", copyLatex);
+    document.getElementById("btnDownload").addEventListener("click", () => { renderLatex(); downloadMath(); });
+    document.getElementById("btnReset").addEventListener("click", resetAll);
+
+    // 초기 렌더
+    rendered.style.fontSize = currentFontSize + "em";
+</script>
+
+</body>
+</html>

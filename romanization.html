@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>romanization.html</title>
+
+    <style>
+        *{box-sizing:border-box}
+        body{
+            margin:0;
+            font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+            background:#f5f5f5;
+            color:#111;
+        }
+        .wrap{max-width:980px;margin:18px auto;padding:0 14px}
+        h4{margin:0 0 8px 0;font-size:18px}
+        p{margin:0 0 10px 0}
+
+        code{
+            font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
+            background:#f2f2f2;
+            padding:2px 6px;
+            border:1px solid #ddd;
+            border-radius:4px;
+        }
+        .glass-card{
+            background:#fff;
+            border:1px solid #c0c0c0;
+            padding:16px;
+            margin:14px 0;
+        }
+        .section-label{
+            display:block;
+            margin:10px 0 6px;
+            font-weight:800;
+            font-size:14px;
+        }
+        .form-input{
+            width:100%;
+            padding:10px;
+            border:1px solid #c0c0c0;
+            background:#fff;
+            font-size:14px;
+            outline:none;
+        }
+        textarea.form-input{min-height:110px;resize:vertical}
+        .form-input:focus{border-color:#666}
+
+        /* warning */
+        .warning-box{
+            border:1px solid #e0b4b4;
+            background:#fff7f7;
+            padding:12px;
+            margin:10px 0 14px;
+        }
+        .warning-header{
+            display:flex;
+            align-items:center;
+            gap:8px;
+            font-weight:900;
+            margin-bottom:8px;
+        }
+        .warning-header-icon{
+            width:18px;height:18px;
+            display:inline-flex;
+            align-items:center;justify-content:center;
+            border:1px solid #d88;
+            background:#ffdede;
+            font-size:12px;
+            font-weight:900;
+        }
+        .warning-body{
+            font-size:13px;
+            color:#333;
+            line-height:1.65;
+        }
+
+        /* mode usage */
+        .mode-usage-box{
+            border:1px solid #ddd;
+            background:#fafafa;
+            padding:12px;
+            margin:12px 0;
+        }
+        .mode-usage-title{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            font-weight:900;
+            margin-bottom:10px;
+        }
+        .mode-usage-tag{
+            font-size:12px;
+            padding:2px 8px;
+            border:1px solid #ddd;
+            background:#fff;
+            border-radius:999px;
+            color:#555;
+            font-weight:700;
+        }
+        .mode-usage-list{
+            display:grid;
+            grid-template-columns:repeat(2,minmax(0,1fr));
+            gap:10px;
+        }
+        .mode-usage-item{
+            border:1px solid #ddd;
+            background:#fff;
+            padding:10px;
+            font-size:13px;
+            line-height:1.6;
+        }
+        @media (max-width:720px){
+            .mode-usage-list{grid-template-columns:1fr}
+        }
+
+        /* segment buttons */
+        .mode-toggle{
+            display:flex;
+            gap:8px;
+            flex-wrap:wrap;
+            margin:10px 0 14px;
+        }
+        .segment-button{
+            border:3px outset #c0c0c0;
+            background:#dcdcdc;
+            padding:8px 12px;
+            cursor:pointer;
+            font-weight:900;
+            font-size:13px;
+        }
+        .segment-button:active{border:3px inset #c0c0c0}
+        .segment-button.active{background:#ececec}
+        .segment-label-mobile{display:none}
+        @media (max-width:520px){
+            .segment-label-desktop{display:none}
+            .segment-label-mobile{display:inline}
+        }
+
+        /* options */
+        .option-controls{
+            display:flex;
+            gap:14px;
+            flex-wrap:wrap;
+            margin:10px 0 0;
+            font-size:13px;
+            color:#333;
+        }
+        .option-controls label{
+            display:flex;
+            align-items:center;
+            gap:8px;
+            user-select:none;
+        }
+        .name-input-row{
+            display:flex;
+            gap:12px;
+            flex-wrap:wrap;
+        }
+
+        /* buttons */
+        .button-row{margin-top:10px}
+        .button-group{display:flex;gap:8px;flex-wrap:wrap}
+        .glass-button{
+            border:3px outset #c0c0c0;
+            background:#dcdcdc;
+            padding:10px 14px;
+            cursor:pointer;
+            font-weight:900;
+            color:#000;
+        }
+        .glass-button:active{border:3px inset #c0c0c0}
+
+        /* result */
+        .result-textarea{
+            border:1px solid #c0c0c0;
+            background:#fff;
+            padding:10px;
+            min-height:80px;
+            white-space:pre-wrap;
+            line-height:1.6;
+            font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
+            font-size:13px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+
+    <div class="glass-card">
+        <h4><b>한글 로마자 변환기 (일반명사, 표준발음, 영문이름, 영문주소, 학술용어)</b></h4>
+        <p style="font-size:14px;color:#374151;margin:8px 0 16px 0;">
+            문화체육관광부 고시 제2014-0042호에 따른 국어의 로마자 표기법을 적용하여 한글을 로마자로 변환합니다.
+        </p>
+
+        <div class="warning-box">
+            <div class="warning-header">
+                <span class="warning-header-icon">!</span>
+                <span>사용 시 유의사항</span>
+            </div>
+            <div class="warning-body">
+                이 도구는 <b>일반 명사/개별 단어</b> 변환에 최적화되어 있습니다. 문장, 약어, 고유명사, 특수문자가 포함된 문구는 제한될 수 있습니다.<br>
+                표준 발음법·로마자 표기법에는 <b>예외 규정</b>이 많아 100% 정확한 자동 변환은 불가능하므로 결과는 <b>참고용</b>으로만 활용해 주세요.<br>
+                특히 <b>조사(이/가, 을/를, 은/는 등)</b>는 붙이지 말고 기본형으로 입력하는 것이 정확도에 도움이 됩니다.
+            </div>
+        </div>
+
+        <div class="mode-usage-box">
+            <div class="mode-usage-title">
+                모드별 활용 예시 <span class="mode-usage-tag">How to use</span>
+            </div>
+            <div class="mode-usage-list">
+                <div class="mode-usage-item">
+                    <b>일반 고유명사</b><br>
+                    지명·단어·브랜드명 등 일반 표기<br>
+                    예) <code>묵호</code> → <code>Mukho</code>
+                </div>
+                <div class="mode-usage-item">
+                    <b>이름(성명)</b><br>
+                    여권·명함용 영문 성명 표기<br>
+                    예) <code>김민수</code> → <code>Kim Minsu</code>
+                </div>
+                <div class="mode-usage-item">
+                    <b>영문주소</b><br>
+                    해외 배송용 영문 주소 변환(영문주소 API)<br>
+                    예) <code>서울특별시 종로구 세종대로 209, 3층</code>
+                </div>
+                <div class="mode-usage-item">
+                    <b>학술</b><br>
+                    한글 복원을 전제로 표기할 때<br>
+                    예) <code>값</code> → <code>gabs</code>
+                </div>
+            </div>
+        </div>
+
+        <div class="mode-toggle">
+            <button type="button" id="modeGeneralBtn" class="segment-button active">
+                <span class="segment-label-desktop">일반 고유명사</span>
+                <span class="segment-label-mobile">일반</span>
+            </button>
+            <button type="button" id="modeNameBtn" class="segment-button">
+                <span class="segment-label-desktop">이름(성명)</span>
+                <span class="segment-label-mobile">이름</span>
+            </button>
+            <button type="button" id="modeAddressBtn" class="segment-button">
+                <span class="segment-label-desktop">영문주소</span>
+                <span class="segment-label-mobile">주소</span>
+            </button>
+            <button type="button" id="modeAcademicBtn" class="segment-button">
+                <span class="segment-label-desktop">학술</span>
+                <span class="segment-label-mobile">학술</span>
+            </button>
+        </div>
+
+        <!-- General -->
+        <div id="generalSection">
+            <label for="inputText" class="section-label">입력</label>
+            <textarea id="inputText" class="form-input" placeholder="여기에 한글을 입력해주세요."></textarea>
+
+            <div class="option-controls">
+                <label><input type="checkbox" id="properNounCheck" checked> 고유명사 첫 글자 대문자</label>
+                <label><input type="checkbox" id="hyphenCheck"> 붙임표(-) 사용</label>
+            </div>
+
+            <div class="button-row">
+                <button class="glass-button" id="toRomanBtn">한글 → 로마자 변환</button>
+            </div>
+        </div>
+
+        <!-- Name -->
+        <div id="nameSection" style="display:none; margin-top:8px;">
+            <label class="section-label">이름(성명) 입력</label>
+            <div class="name-input-row">
+                <div style="flex:1; min-width:160px;">
+                    <label for="surnameInput" class="section-label" style="margin-top:4px;">성</label>
+                    <input id="surnameInput" type="text" class="form-input" placeholder="예: 김">
+                </div>
+                <div style="flex:1; min-width:160px;">
+                    <label for="givenNameInput" class="section-label" style="margin-top:4px;">이름</label>
+                    <input id="givenNameInput" type="text" class="form-input" placeholder="예: 민수">
+                </div>
+            </div>
+            <div class="option-controls" style="margin-top:4px;">
+                <label><input type="checkbox" id="nameHyphenCheck"> 이름 음절 사이 붙임표(-) 사용</label>
+            </div>
+            <div class="button-row">
+                <button class="glass-button" id="toRomanNameBtn">이름 → 로마자 변환</button>
+            </div>
+            <div style="margin-top:8px;font-size:12px;color:#666;line-height:1.6;">
+                성은 대표 성씨 추천 표기를 우선 적용하고, 목록에 없는 성은 현행 표기법으로 변환합니다.
+            </div>
+        </div>
+
+        <!-- Address -->
+        <div id="addressSection" style="display:none; margin-top:8px;">
+            <label class="section-label">기본 주소 (한글)</label>
+            <textarea id="korAddressInput" class="form-input" placeholder="예: 서울특별시 종로구 세종대로 209, 501동 402호 (OO 아파트)"></textarea>
+            <div class="button-row" style="margin-top:8px;">
+                <button class="glass-button" id="fetchEngAddressBtn">영문 주소 변환</button>
+            </div>
+            <div style="margin-top:8px;font-size:12px;color:#666;line-height:1.6;">
+                ※ 브라우저 CORS 정책/승인키 상태에 따라 영문주소 API 호출이 실패할 수 있습니다. 실서비스는 서버 프록시 권장.
+            </div>
+        </div>
+
+        <!-- Academic -->
+        <div id="academicSection" style="display:none; margin-top:8px;">
+            <label class="section-label">학술용 입력 (한글)</label>
+            <textarea id="academicInput" class="form-input" placeholder="이곳에 한글을 입력해주세요."></textarea>
+            <div class="button-row" style="margin-top:8px;">
+                <button class="glass-button" id="toRomanAcademicBtn">학술 표기 → 로마자 변환</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-card" id="phoneticCard">
+        <label class="section-label">국어표준발음 (Phonetic Pronunciation)</label>
+        <div id="phoneticOutput" class="result-textarea" style="min-height:60px;background:#fffbe6;border-color:#ffe58f;"></div>
+    </div>
+
+    <div class="glass-card">
+        <label class="section-label">출력 – 현행 표기법</label>
+        <div id="output" class="result-textarea"></div>
+    </div>
+
+    <div class="glass-card">
+        <div class="button-group">
+            <button class="glass-button" id="copyOut1">변환결과 복사</button>
+            <button class="glass-button" id="resetBtn">초기화 ⟳</button>
+        </div>
+        <div style="margin-top:12px;font-size:12px;color:#666;line-height:1.6;">
+            <strong>사용법:</strong> 입력 후 “변환” 버튼 또는 Ctrl+Enter로 변환합니다.
+        </div>
+    </div>
+
+</div>
+
+<script src="assets/js/korean-romanization-converter.js"></script>
+</body>
+</html>

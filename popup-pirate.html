@@ -1,0 +1,546 @@
+<!-- popup-pirate.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>온라인 해적 룰렛 (Online Pop-up Pirate)</title>
+
+    <!-- 아이콘(선택) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
+
+    <style>
+        :root{
+            --key-color:#e63946;
+            --key-disabled:#cbd5e1;
+            --bg:#f4f5f7;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --shadow:0 10px 30px rgba(15,23,42,0.08);
+        }
+        *{ box-sizing:border-box; }
+        body{
+            margin:0; padding:24px;
+            font-family:-apple-system,BlinkMacSystemFont,"Malgun Gothic",system-ui,sans-serif;
+            background:var(--bg);
+            color:var(--text);
+        }
+        .page{ max-width:980px; margin:0 auto; }
+
+        .hero{
+            text-align:center;
+            margin: 10px 0 18px;
+        }
+        .hero h1{
+            margin:0 0 8px;
+            font-size:26px;
+            font-weight:900;
+            display:flex;
+            gap:10px;
+            align-items:center;
+            justify-content:center;
+        }
+        .hero h1 i{ color:#2563eb; }
+        .hero p{
+            margin:0;
+            font-size:14px;
+            color:var(--muted);
+            line-height:1.6;
+        }
+
+        .card{
+            background:var(--card);
+            border-radius:18px;
+            padding:18px 20px 20px;
+            box-shadow:var(--shadow);
+        }
+
+        .row{
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap:14px;
+            align-items:start;
+            margin-top:14px;
+        }
+
+        .field{
+            display:flex;
+            flex-direction:column;
+            gap:6px;
+            margin-bottom:10px;
+        }
+        .label{
+            font-size:13px;
+            font-weight:800;
+            color:#374151;
+            display:flex;
+            align-items:center;
+            gap:6px;
+        }
+        .label i{ color:#2563eb; }
+        .hint{
+            font-size:12px;
+            color:#9ca3af;
+            line-height:1.5;
+        }
+        input[type="number"]{
+            width:100%;
+            border-radius:12px;
+            border:1px solid #e5e7eb;
+            background:#f9fafb;
+            padding:10px 12px;
+            font-size:14px;
+            outline:none;
+            transition:border-color .15s, box-shadow .15s, background .15s;
+        }
+        input[type="number"]:focus{
+            border-color:#2563eb;
+            box-shadow:0 0 0 1px #2563eb22;
+            background:#fff;
+        }
+
+        .btnrow{
+            display:flex;
+            gap:8px;
+            flex-wrap:wrap;
+            margin-top:10px;
+            justify-content:center;
+        }
+        .btn{
+            border:none;
+            border-radius:999px;
+            padding:10px 16px;
+            font-size:13px;
+            cursor:pointer;
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            background:#e5e7eb;
+            color:#374151;
+            transition: background .15s, transform .05s, box-shadow .15s;
+            white-space:nowrap;
+        }
+        .btn:hover{ background:#d1d5db; }
+        .btn:active{ transform: translateY(1px); }
+        .btn.primary{
+            background:#2563eb;
+            color:#fff;
+            box-shadow:0 2px 6px rgba(37,99,235,.45);
+        }
+        .btn.primary:hover{ background:#1d4ed8; }
+        .btn.danger{
+            background:#ef4444;
+            color:#fff;
+            box-shadow:0 2px 6px rgba(239,68,68,.35);
+        }
+        .btn.danger:hover{ background:#dc2626; }
+
+        .hidden{ display:none; }
+
+        textarea{
+            width:100%;
+            min-height:170px;
+            resize:vertical;
+            border-radius:14px;
+            border:1px solid #e5e7eb;
+            background:#f9fafb;
+            padding:12px 14px;
+            font-family: Menlo, Consolas, "SF Mono", monospace;
+            font-size:13px;
+            line-height:1.6;
+            outline:none;
+        }
+
+        /* 버튼 그리드 */
+        #button-container{
+            display:grid;
+            grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+            gap:10px;
+            max-width:520px;
+            margin: 12px auto 0;
+        }
+        .try-button{
+            position:relative;
+            overflow:hidden;
+            width:56px;
+            height:56px;
+            font-size:16px;
+            font-weight:900;
+            background: var(--key-color);
+            border: 3px outset #c0c0c0;
+            border-radius: 10px;
+            color:#fff;
+            cursor:pointer;
+            transition: filter .15s, transform .05s, opacity .15s;
+            padding:0;
+        }
+        .try-button:hover:enabled{ filter: brightness(1.12); }
+        .try-button:active:enabled{ transform: translateY(1px); }
+        .try-button:disabled{
+            background:var(--key-disabled);
+            cursor:not-allowed;
+            opacity:.6;
+        }
+
+        /* 로그 플래시 */
+        .flash{ animation: flash 0.3s ease-in-out; }
+        @keyframes flash{
+            0%{ background-color:#fff59d; }
+            100%{ background-color:#f9fafb; }
+        }
+
+        /* ripple */
+        @keyframes ripple{
+            to{ transform:scale(4); opacity:0; }
+        }
+
+        /* 컬러 픽 */
+        .color-selector{
+            margin-top:14px;
+            text-align:center;
+            padding-top:10px;
+            border-top:1px dashed #e5e7eb;
+        }
+        .color-selector .title{
+            font-size:12px;
+            color:#6b7280;
+            margin-bottom:8px;
+            font-weight:800;
+        }
+        .color-box{
+            display:inline-block;
+            width:24px;
+            height:24px;
+            border-radius:7px;
+            margin:4px;
+            border:2px solid #cbd5e1;
+            cursor:pointer;
+            vertical-align:middle;
+        }
+        .color-selector input[type="radio"]{ display:none; }
+        .color-selector input[type="radio"]:checked + .color-box{
+            border:3px solid #111827;
+            transform: translateY(-1px);
+        }
+
+        /* 작은 화면 */
+        @media (max-width: 560px){
+            body{ padding:16px; }
+            .hero h1{ font-size:20px; }
+            .row{ grid-template-columns:1fr; }
+            .try-button{ width:50px; height:50px; font-size:14px; }
+            #button-container{ grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="hero">
+        <h1><i class="bi bi-emoji-smile"></i>온라인 해적 룰렛</h1>
+        <p>칼(버튼)을 눌러 폭탄을 피해보세요! 폭탄이 모두 터지면 게임 종료입니다.</p>
+    </div>
+
+    <div class="card">
+
+        <!-- SETUP -->
+        <div id="setup-screen">
+            <div class="row">
+                <div>
+                    <div class="field">
+                        <div class="label"><i class="bi bi-hash"></i>총 시도 횟수 (Total Attempts)</div>
+                        <input type="number" min="1" max="60" value="24" id="playerNum" />
+                        <div class="hint">칼 꽂는 구멍의 총 개수 (일반적인 해적 룰렛은 24개)</div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="field">
+                        <div class="label"><i class="bi bi-bomb"></i>폭탄 개수 (Bomb Count)</div>
+                        <input type="number" min="1" value="1" id="triggerNum" />
+                        <div class="hint">칼을 꽂으면 해적이 튀어나오는(폭탄) 구멍의 개수</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="btnrow">
+                <button class="btn primary" type="button" id="btnStart">
+                    <i class="bi bi-play-fill"></i>GAME START
+                </button>
+            </div>
+        </div>
+
+        <!-- GAME -->
+        <div id="game-screen" class="hidden">
+            <div class="field" style="margin-top:6px;">
+                <div class="label"><i class="bi bi-journal-text"></i>결과 로그</div>
+                <textarea id="resultTurn" readonly></textarea>
+            </div>
+
+            <div id="button-container"></div>
+
+            <div class="btnrow" style="margin-top:14px;">
+                <button class="btn danger" type="button" id="btnReset">
+                    <i class="bi bi-arrow-clockwise"></i>RESET
+                </button>
+            </div>
+
+            <div class="color-selector" id="color-selector">
+                <div class="title">버튼 색상 선택</div>
+                <label><input type="radio" name="keyColor" value="#e63946" checked><span class="color-box" style="background:#e63946"></span></label>
+                <label><input type="radio" name="keyColor" value="#1d7874"><span class="color-box" style="background:#1d7874"></span></label>
+                <label><input type="radio" name="keyColor" value="#3f51b5"><span class="color-box" style="background:#3f51b5"></span></label>
+                <label><input type="radio" name="keyColor" value="#f4a261"><span class="color-box" style="background:#f4a261"></span></label>
+                <label><input type="radio" name="keyColor" value="#6a4c93"><span class="color-box" style="background:#6a4c93"></span></label>
+                <label><input type="radio" name="keyColor" value="#2a9d8f"><span class="color-box" style="background:#2a9d8f"></span></label>
+                <label><input type="radio" name="keyColor" value="#ff6f61"><span class="color-box" style="background:#ff6f61"></span></label>
+                <label><input type="radio" name="keyColor" value="#4a4e69"><span class="color-box" style="background:#4a4e69"></span></label>
+                <label><input type="radio" name="keyColor" value="#ffb703"><span class="color-box" style="background:#ffb703"></span></label>
+                <label><input type="radio" name="keyColor" value="#457b9d"><span class="color-box" style="background:#457b9d"></span></label>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    (() => {
+        let totalPlayers = 0;
+        let totalTriggers = 0;
+        let triggerIndices = [];
+        let triggeredCount = 0;
+
+        const setupScreen = document.getElementById("setup-screen");
+        const gameScreen = document.getElementById("game-screen");
+        const logArea = document.getElementById("resultTurn");
+        const buttonContainer = document.getElementById("button-container");
+
+        const btnStart = document.getElementById("btnStart");
+        const btnReset = document.getElementById("btnReset");
+
+        // 오디오(사용자 인터랙션 이후 안전하게)
+        let audioCtx = null;
+        function ensureAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        function logText(text) {
+            logArea.value += text + "\n";
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        function flashLog() {
+            logArea.classList.add("flash");
+            setTimeout(() => logArea.classList.remove("flash"), 280);
+        }
+
+        function setKeypadColor(hex) {
+            document.documentElement.style.setProperty("--key-color", hex);
+        }
+
+        function playDing() {
+            ensureAudio();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.type = "sine";
+            oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.45);
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.45);
+        }
+
+        function playBoom() {
+            ensureAudio();
+            const bufferSize = audioCtx.sampleRate;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 2);
+            }
+
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = buffer;
+
+            const gainNode = audioCtx.createGain();
+            gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.7);
+
+            noise.connect(gainNode).connect(audioCtx.destination);
+            noise.start();
+            noise.stop(audioCtx.currentTime + 0.7);
+        }
+
+        function addRippleEffect(event) {
+            const button = event.currentTarget;
+            const circle = document.createElement("span");
+            const diameter = Math.max(button.clientWidth, button.clientHeight);
+            const radius = diameter / 2;
+
+            circle.style.width = circle.style.height = `${diameter}px`;
+            circle.style.left = `${event.offsetX - radius}px`;
+            circle.style.top = `${event.offsetY - radius}px`;
+            circle.style.position = "absolute";
+            circle.style.borderRadius = "50%";
+            circle.style.backgroundColor = "rgba(255,255,255,0.55)";
+            circle.style.transform = "scale(0)";
+            circle.style.animation = "ripple 0.6s linear";
+            circle.style.pointerEvents = "none";
+            button.appendChild(circle);
+
+            circle.addEventListener("animationend", () => circle.remove());
+        }
+
+        function createExplosionEffect(button) {
+            const particlesCount = 60;
+            const rect = button.getBoundingClientRect();
+
+            for (let i = 0; i < particlesCount; i++) {
+                const particle = document.createElement("span");
+                particle.style.position = "fixed";
+
+                const r = 200 + Math.floor(Math.random() * 55);
+                const g = Math.floor(Math.random() * 50);
+                const b = Math.floor(Math.random() * 50);
+                particle.style.backgroundColor = `rgba(${r},${g},${b},1)`;
+
+                const size = 10 + Math.random() * 10;
+                particle.style.width = size + "px";
+                particle.style.height = size + "px";
+                particle.style.borderRadius = "50%";
+
+                particle.style.left = `${rect.left + rect.width / 2}px`;
+                particle.style.top = `${rect.top + rect.height / 2}px`;
+
+                particle.style.pointerEvents = "none";
+                particle.style.opacity = 1;
+                particle.style.zIndex = 9999;
+
+                const duration = 500 + Math.random() * 300;
+                particle.style.transition = `transform ${duration}ms ease-out, opacity ${duration}ms ease-out`;
+
+                document.body.appendChild(particle);
+
+                const angle = Math.random() * 360;
+                const distance = 120 + Math.random() * 60;
+
+                setTimeout(() => {
+                    particle.style.transform = `translate(${distance * Math.cos(angle * Math.PI / 180)}px, ${distance * Math.sin(angle * Math.PI / 180)}px)`;
+                    particle.style.opacity = 0;
+                }, 10 + Math.random() * 100);
+
+                setTimeout(() => particle.remove(), duration + 140);
+            }
+        }
+
+        function disableAllButtons() {
+            document.querySelectorAll(".try-button").forEach(btn => {
+                btn.disabled = true;
+            });
+        }
+
+        function handlePlay(e) {
+            ensureAudio();
+            const button = e.currentTarget;
+            const index = parseInt(button.dataset.index, 10);
+            if (button.disabled) return;
+
+            flashLog();
+            addRippleEffect(e);
+
+            button.disabled = true;
+
+            if (triggerIndices.includes(index)) {
+                logText(`버튼 #${index} : 폭탄이 터졌습니다!!!!`);
+                playBoom();
+                createExplosionEffect(button);
+                triggeredCount++;
+            } else {
+                logText(`버튼 #${index} : 폭탄이 아닙니다.`);
+                playDing();
+            }
+
+            if (triggeredCount >= totalTriggers) {
+                logText("[게임 종료] 폭탄이 모두 터졌습니다.");
+                disableAllButtons();
+            }
+        }
+
+        function startGame() {
+            totalPlayers = parseInt(document.getElementById("playerNum").value, 10);
+            totalTriggers = parseInt(document.getElementById("triggerNum").value, 10);
+
+            if (!Number.isFinite(totalPlayers) || !Number.isFinite(totalTriggers) || totalPlayers <= 0 || totalTriggers <= 0) {
+                alert("총 시도 횟수와 폭탄 개수를 정확하게 입력해주세요.");
+                return;
+            }
+            if (totalPlayers > 60) {
+                alert("총 시도 횟수는 60 이내로 입력해주세요.");
+                return;
+            }
+            if (totalTriggers > totalPlayers) {
+                alert("폭탄 개수는 총 시도 횟수 보다 많을 수 없습니다.");
+                return;
+            }
+
+            // 초기화
+            triggerIndices = [];
+            triggeredCount = 0;
+            logArea.value = "";
+
+            // 폭탄 인덱스 무작위 선택
+            const indices = Array.from({ length: totalPlayers }, (_, i) => i + 1);
+            for (let i = 0; i < totalTriggers; i++) {
+                const rand = Math.floor(Math.random() * indices.length);
+                triggerIndices.push(indices.splice(rand, 1)[0]);
+            }
+
+            // 화면 전환
+            setupScreen.classList.add("hidden");
+            gameScreen.classList.remove("hidden");
+
+            // 버튼 생성
+            buttonContainer.innerHTML = "";
+            for (let i = 1; i <= totalPlayers; i++) {
+                const btn = document.createElement("button");
+                btn.textContent = i;
+                btn.className = "try-button";
+                btn.dataset.index = i;
+                btn.addEventListener("click", handlePlay);
+                buttonContainer.appendChild(btn);
+            }
+
+            logText("하단 버튼을 눌러주세요.");
+        }
+
+        function resetGame() {
+            setupScreen.classList.remove("hidden");
+            gameScreen.classList.add("hidden");
+            logArea.value = "";
+            buttonContainer.innerHTML = "";
+
+            totalPlayers = 0;
+            totalTriggers = 0;
+            triggerIndices = [];
+            triggeredCount = 0;
+        }
+
+        // 이벤트
+        btnStart.addEventListener("click", startGame);
+        btnReset.addEventListener("click", resetGame);
+
+        document.querySelectorAll('input[name="keyColor"]').forEach(input => {
+            input.addEventListener("change", function () {
+                setKeypadColor(this.value);
+            });
+        });
+
+        // 초기 색
+        setKeypadColor("#e63946");
+    })();
+</script>
+</body>
+</html>

@@ -1,0 +1,620 @@
+<!-- wifi-qr.html (Vanilla JS + Clean CSS) -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wi-Fi QR 코드 생성기</title>
+    <style>
+        :root{
+            --bg:#f4f5f7;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --line:#e5e7eb;
+            --primary:#2563eb;
+            --primary2:#1d4ed8;
+            --chip:#f9fafb;
+            --shadow:0 10px 28px rgba(15,23,42,.08);
+        }
+        *{ box-sizing:border-box; }
+        body{
+            margin:0; padding:24px;
+            font-family:-apple-system,BlinkMacSystemFont,"Malgun Gothic",system-ui,sans-serif;
+            background:var(--bg); color:var(--text);
+        }
+        .page{ max-width:1100px; margin:0 auto; }
+        h1{ margin:0 0 8px; font-size:26px; font-weight:900; letter-spacing:-.2px; }
+        .subtitle{ margin:0 0 18px; color:var(--muted); font-size:14px; line-height:1.7; }
+
+        .grid{
+            display:grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr);
+            gap:16px;
+            align-items:start;
+        }
+        .card{
+            background:var(--card);
+            border-radius:18px;
+            box-shadow:var(--shadow);
+            padding:18px 20px 20px;
+        }
+        .section-title{
+            margin:0 0 12px;
+            font-weight:900;
+            font-size:16px;
+            letter-spacing:-.2px;
+        }
+
+        .form-row{
+            display:grid;
+            grid-template-columns: 160px 1fr;
+            gap:10px;
+            align-items:center;
+            margin-bottom:10px;
+        }
+        .form-row label{ font-weight:800; font-size:13px; }
+        input[type="text"], input[type="password"], select{
+            width:100%;
+            padding:10px 12px;
+            border:1px solid var(--line);
+            border-radius:12px;
+            background:#f9fafb;
+            outline:none;
+            transition:border-color .15s, box-shadow .15s, background .15s;
+            font-size:14px;
+        }
+        input[type="text"]:focus, input[type="password"]:focus, select:focus{
+            border-color:var(--primary);
+            box-shadow:0 0 0 1px rgba(37,99,235,.15);
+            background:#fff;
+        }
+
+        .hint{
+            margin:8px 0 14px;
+            color:var(--muted);
+            font-size:13px;
+            line-height:1.6;
+        }
+        .hint strong{ color:#111827; }
+
+        .actions{
+            display:flex;
+            flex-wrap:wrap;
+            gap:8px;
+            justify-content:flex-start;
+            margin-top:6px;
+        }
+        .btn{
+            border:0;
+            border-radius:999px;
+            padding:10px 14px;
+            font-size:13px;
+            cursor:pointer;
+            background:#e5e7eb;
+            color:#374151;
+            transition:background .15s, transform .05s;
+            white-space:nowrap;
+        }
+        .btn:hover{ background:#d1d5db; }
+        .btn:active{ transform:translateY(1px); }
+        .btn.primary{ background:var(--primary); color:#fff; }
+        .btn.primary:hover{ background:var(--primary2); }
+        .btn.danger{ background:#ef4444; color:#fff; }
+        .btn.danger:hover{ background:#dc2626; }
+        .btn.ghost{ background:#f3f4f6; }
+
+        .advanced{
+            margin-top:14px;
+            border:1px solid var(--line);
+            background:#eef2ff;
+            border-radius:14px;
+            padding:12px 12px 10px;
+            display:none;
+        }
+        .adv-head{
+            font-weight:900;
+            color:#1e3a8a;
+            margin:0 0 10px;
+            font-size:14px;
+        }
+        .adv-grid{
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap:10px;
+        }
+        .adv-item{
+            border:1px solid var(--line);
+            background:#fff;
+            border-radius:12px;
+            padding:10px;
+        }
+        .adv-item .label{
+            font-size:12px;
+            font-weight:800;
+            margin-bottom:6px;
+            color:#111827;
+        }
+        .color-row{
+            display:flex;
+            gap:8px;
+            align-items:center;
+        }
+        input[type="color"]{
+            width:42px; height:34px;
+            padding:0; border:1px solid var(--line);
+            border-radius:10px;
+            background:#fff;
+            cursor:pointer;
+        }
+        .color-text{
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "SF Mono", monospace;
+            font-size:13px;
+        }
+        .preview{
+            width:22px; height:22px;
+            border-radius:6px;
+            border:1px solid #cbd5e1;
+            background:#000;
+        }
+        .adv-actions{
+            margin-top:10px;
+            display:flex;
+            gap:8px;
+            justify-content:flex-end;
+        }
+
+        .qr-box{
+            border:1px solid var(--line);
+            background:#fff;
+            border-radius:18px;
+            padding:16px;
+            box-shadow:var(--shadow);
+            text-align:center;
+        }
+        #qrCodeContainer{
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            min-height:280px;
+            border-radius:14px;
+            background:#ffffff;
+            border:2px dashed #e5e7eb;
+        }
+        .qr-meta{
+            margin-top:10px;
+            font-size:12px;
+            color:var(--muted);
+            line-height:1.6;
+            text-align:left;
+        }
+        .toast{
+            margin-top:10px;
+            font-size:13px;
+            color:#065f46;
+            background:#ecfdf5;
+            border:1px solid #a7f3d0;
+            padding:10px 12px;
+            border-radius:12px;
+            display:none;
+        }
+        .error{
+            color:#991b1b;
+            background:#fef2f2;
+            border-color:#fecaca;
+        }
+
+        @media (max-width: 900px){
+            .grid{ grid-template-columns: 1fr; }
+            .form-row{ grid-template-columns: 1fr; }
+            .actions .btn{ flex:1; }
+            #qrCodeContainer{ min-height:240px; }
+            .adv-grid{ grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <h1>Wi-Fi QR 코드 생성기</h1>
+    <p class="subtitle">
+        SSID/비밀번호를 입력하고 QR 코드를 생성하세요. 스캔하면 기기에서 Wi-Fi 연결 화면이 자동으로 열립니다.
+    </p>
+
+    <div class="grid">
+        <!-- Left: Form -->
+        <div class="card">
+            <div class="section-title">설정</div>
+
+            <div class="form-row">
+                <label for="ssid">네트워크 이름 (SSID)</label>
+                <input type="text" id="ssid" placeholder="예: CafeWiFi" />
+            </div>
+
+            <div class="form-row">
+                <label for="password">비밀번호</label>
+                <input type="password" id="password" placeholder="최소 8자 이상 (WPA/WEP 선택 시)" />
+            </div>
+
+            <div class="form-row">
+                <label for="encryption">암호화 방식</label>
+                <select id="encryption">
+                    <option value="WPA" selected>WPA/WPA2</option>
+                    <option value="WEP">WEP</option>
+                    <option value="nopass">없음 (공개 Wi-Fi)</option>
+                </select>
+            </div>
+
+            <div class="form-row">
+                <label for="sizeSelect">QR 코드 크기</label>
+                <select id="sizeSelect">
+                    <option value="128">Small (128 × 128)</option>
+                    <option value="256" selected>Medium (256 × 256)</option>
+                    <option value="512">Large (512 × 512)</option>
+                </select>
+            </div>
+
+            <p class="hint">
+                ※ SSID/비밀번호는 <strong>대소문자를 구분</strong>합니다.<br />
+                ※ 공개 Wi-Fi라면 암호화 방식에서 <strong>없음</strong>을 선택하세요.
+            </p>
+
+            <div class="actions">
+                <button type="button" class="btn primary" id="btnGenerate">Wi-Fi QR 코드 생성</button>
+                <button type="button" class="btn ghost" id="btnAdvanced">고급 기능</button>
+                <button type="button" class="btn danger" id="btnClear">초기화</button>
+            </div>
+
+            <!-- Advanced -->
+            <div class="advanced" id="advancedOptions">
+                <div class="adv-head">고급 기능</div>
+
+                <div class="adv-grid">
+                    <div class="adv-item">
+                        <div class="label">점 색깔 (Data module)</div>
+                        <div class="color-row">
+                            <input type="color" id="dotColor" value="#000000" />
+                            <input type="text" id="dotColorText" class="color-text" value="#000000" />
+                            <span id="dotColorPreview" class="preview" style="background:#000000;"></span>
+                        </div>
+                    </div>
+
+                    <div class="adv-item">
+                        <div class="label">프레임 색깔 (Outer eye)</div>
+                        <div class="color-row">
+                            <input type="color" id="frameColor" value="#000000" />
+                            <input type="text" id="frameColorText" class="color-text" value="#000000" />
+                            <span id="frameColorPreview" class="preview" style="background:#000000;"></span>
+                        </div>
+                    </div>
+
+                    <div class="adv-item">
+                        <div class="label">센터 색깔 (Inner eye)</div>
+                        <div class="color-row">
+                            <input type="color" id="centerColor" value="#000000" />
+                            <input type="text" id="centerColorText" class="color-text" value="#000000" />
+                            <span id="centerColorPreview" class="preview" style="background:#000000;"></span>
+                        </div>
+                    </div>
+
+                    <div class="adv-item">
+                        <div class="label">배경 색깔 (Background)</div>
+                        <div class="color-row">
+                            <input type="color" id="bgColor" value="#ffffff" />
+                            <input type="text" id="bgColorText" class="color-text" value="#ffffff" />
+                            <span id="bgColorPreview" class="preview" style="background:#ffffff;"></span>
+                        </div>
+                    </div>
+
+                    <div class="adv-item">
+                        <div class="label">점 모양 (Data module)</div>
+                        <select id="dotStyle">
+                            <option value="square" selected>Square</option>
+                            <option value="dots">Dots</option>
+                            <option value="rounded">Rounded</option>
+                            <option value="extra-rounded">Extra-rounded</option>
+                        </select>
+                    </div>
+
+                    <div class="adv-item">
+                        <div class="label">프레임 모양 (Outer eye)</div>
+                        <select id="frameStyle">
+                            <option value="square" selected>Square</option>
+                            <option value="extra-rounded">Extra-rounded</option>
+                            <option value="circle">Circle</option>
+                        </select>
+                    </div>
+
+                    <div class="adv-item">
+                        <div class="label">센터 모양 (Inner eye)</div>
+                        <select id="centerStyle">
+                            <option value="square" selected>Square</option>
+                            <option value="extra-rounded">Extra-rounded</option>
+                            <option value="circle">Circle</option>
+                        </select>
+                    </div>
+
+                    <div class="adv-item">
+                        <div class="label">설정</div>
+                        <div class="adv-actions">
+                            <button type="button" class="btn" id="btnResetAdvanced">설정 초기화</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="toast" id="toast"></div>
+
+            <p class="hint" style="margin-top:16px;">
+                ※ 생성한 Wi-Fi QR 코드를 출력해 카페/학원/도서관 등에 붙여두면,
+                고객이 스캔만으로 빠르게 연결할 수 있습니다.
+            </p>
+        </div>
+
+        <!-- Right: QR Preview -->
+        <div class="qr-box">
+            <div class="section-title">QR 코드</div>
+            <div id="qrCodeContainer" aria-label="QR 코드 미리보기"></div>
+
+            <div class="actions" style="justify-content:center; margin-top:12px;">
+                <button type="button" class="btn primary" id="btnDownload">QR 코드 다운로드 (PNG)</button>
+            </div>
+
+            <div class="qr-meta" id="qrMeta">
+                - SSID를 입력하고 생성하면 이곳에 표시됩니다.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+<script>
+    // ---------- Utils ----------
+    function toast(msg, isError=false){
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = 'toast' + (isError ? ' error' : '');
+        t.style.display = 'block';
+        clearTimeout(window.__toastTimer);
+        window.__toastTimer = setTimeout(()=>{ t.style.display='none'; }, 2400);
+    }
+
+    // WiFi QR 포맷에서 특수문자(\ ; , :)는 escape 필요
+    function escapeWifiField(s){
+        return String(s ?? '').replace(/([\\;,:"])/g, "\\$1");
+    }
+
+    function isHex6(v){
+        return /^#([0-9A-Fa-f]{6})$/.test(v);
+    }
+
+    // ---------- QR Instance ----------
+    const qrCode = new QRCodeStyling({
+        width: 256,
+        height: 256,
+        data: "WIFI:T:nopass;S:;P:;;",
+        dotsOptions: { color:"#000000", type:"square" },
+        cornersSquareOptions: { color:"#000000", type:"square" },
+        cornersDotOptions: { color:"#000000", type:"square" },
+        backgroundOptions: { color:"#ffffff" }
+    });
+
+    const el = {
+        ssid: document.getElementById('ssid'),
+        password: document.getElementById('password'),
+        encryption: document.getElementById('encryption'),
+        sizeSelect: document.getElementById('sizeSelect'),
+
+        advanced: document.getElementById('advancedOptions'),
+        btnAdvanced: document.getElementById('btnAdvanced'),
+        btnGenerate: document.getElementById('btnGenerate'),
+        btnClear: document.getElementById('btnClear'),
+        btnDownload: document.getElementById('btnDownload'),
+
+        dotColor: document.getElementById('dotColor'),
+        frameColor: document.getElementById('frameColor'),
+        centerColor: document.getElementById('centerColor'),
+        bgColor: document.getElementById('bgColor'),
+
+        dotColorText: document.getElementById('dotColorText'),
+        frameColorText: document.getElementById('frameColorText'),
+        centerColorText: document.getElementById('centerColorText'),
+        bgColorText: document.getElementById('bgColorText'),
+
+        dotColorPreview: document.getElementById('dotColorPreview'),
+        frameColorPreview: document.getElementById('frameColorPreview'),
+        centerColorPreview: document.getElementById('centerColorPreview'),
+        bgColorPreview: document.getElementById('bgColorPreview'),
+
+        dotStyle: document.getElementById('dotStyle'),
+        frameStyle: document.getElementById('frameStyle'),
+        centerStyle: document.getElementById('centerStyle'),
+
+        btnResetAdvanced: document.getElementById('btnResetAdvanced'),
+
+        container: document.getElementById('qrCodeContainer'),
+        meta: document.getElementById('qrMeta'),
+    };
+
+    function applyPreview(id){
+        const colorInput = el[id];
+        const textInput = el[id + 'Text'];
+        const preview = el[id + 'Preview'];
+        textInput.value = colorInput.value;
+        preview.style.backgroundColor = colorInput.value;
+    }
+
+    function syncColorFromPicker(id){
+        applyPreview(id);
+        generateQRCode(false);
+    }
+
+    function syncColorFromText(id){
+        const text = el[id + 'Text'].value.trim();
+        if(!isHex6(text)) return; // 유효할 때만 반영
+        el[id].value = text;
+        el[id + 'Preview'].style.backgroundColor = text;
+        generateQRCode(false);
+    }
+
+    function buildWifiData(){
+        const ssid = el.ssid.value.trim();
+        const password = el.password.value; // 공백도 비번일 수 있어 trim X
+        const enc = el.encryption.value;
+
+        if(!ssid){
+            toast("SSID를 입력해주세요.", true);
+            return null;
+        }
+
+        if(enc !== 'nopass'){
+            if(password.length < 8){
+                toast("비밀번호는 최소 8자 이상이어야 합니다.", true);
+                return null;
+            }
+        }
+
+        // escape 적용
+        const S = escapeWifiField(ssid);
+        const P = enc === 'nopass' ? "" : escapeWifiField(password);
+
+        return `WIFI:T:${enc};S:${S};P:${P};;`;
+    }
+
+    function generateQRCode(showToast=true){
+        const wifiData = buildWifiData();
+        if(!wifiData) return;
+
+        const size = parseInt(el.sizeSelect.value, 10) || 256;
+
+        qrCode.update({
+            width: size,
+            height: size,
+            data: wifiData,
+            dotsOptions: {
+                color: el.dotColor.value,
+                type: el.dotStyle.value
+            },
+            cornersSquareOptions: {
+                color: el.frameColor.value,
+                type: el.frameStyle.value
+            },
+            cornersDotOptions: {
+                color: el.centerColor.value,
+                type: el.centerStyle.value
+            },
+            backgroundOptions: {
+                color: el.bgColor.value
+            }
+        });
+
+        el.container.innerHTML = "";
+        qrCode.append(el.container);
+
+        el.meta.textContent =
+            `- SSID: ${el.ssid.value.trim()} / 암호화: ${el.encryption.value} / 크기: ${size}px`;
+
+        if(showToast) toast("QR 코드가 생성되었습니다.");
+    }
+
+    function resetAdvancedOptions(){
+        const black = "#000000";
+        el.dotColor.value = black;
+        el.frameColor.value = black;
+        el.centerColor.value = black;
+        el.bgColor.value = "#ffffff";
+
+        el.dotStyle.value = "square";
+        el.frameStyle.value = "square";
+        el.centerStyle.value = "square";
+
+        applyPreview('dotColor');
+        applyPreview('frameColor');
+        applyPreview('centerColor');
+        applyPreview('bgColor');
+
+        // SSID가 있으면 재생성
+        if(el.ssid.value.trim()) generateQRCode(false);
+        toast("고급 설정을 초기화했습니다.");
+    }
+
+    function clearAll(){
+        el.ssid.value = "";
+        el.password.value = "";
+        el.encryption.value = "WPA";
+        el.sizeSelect.value = "256";
+
+        resetAdvancedOptions();
+        el.advanced.style.display = "none";
+
+        // QR 영역 초기 상태
+        qrCode.update({ width:256, height:256, data:"WIFI:T:nopass;S:;P:;;" });
+        el.container.innerHTML = "";
+        qrCode.append(el.container);
+        el.meta.textContent = "- SSID를 입력하고 생성하면 이곳에 표시됩니다.";
+
+        toast("초기화되었습니다.");
+    }
+
+    function downloadQRCode(){
+        // 다운로드 전에 최신 상태 반영
+        if(el.ssid.value.trim()){
+            generateQRCode(false);
+        }else{
+            toast("SSID를 입력한 뒤 생성하세요.", true);
+            return;
+        }
+        qrCode.download({ name: "wifi-qr", extension: "png" });
+    }
+
+    // ---------- Events ----------
+    el.btnAdvanced.addEventListener('click', ()=>{
+        el.advanced.style.display = (el.advanced.style.display === 'none' || !el.advanced.style.display) ? 'block' : 'none';
+    });
+
+    el.btnGenerate.addEventListener('click', ()=> generateQRCode(true));
+    el.sizeSelect.addEventListener('change', ()=> { if(el.ssid.value.trim()) generateQRCode(false); });
+
+    el.encryption.addEventListener('change', ()=>{
+        // 공개 Wi-Fi면 비밀번호 입력 막기
+        const isNoPass = el.encryption.value === 'nopass';
+        el.password.disabled = isNoPass;
+        if(isNoPass) el.password.value = "";
+        if(el.ssid.value.trim()) generateQRCode(false);
+    });
+
+    el.btnResetAdvanced.addEventListener('click', resetAdvancedOptions);
+    el.btnClear.addEventListener('click', clearAll);
+    el.btnDownload.addEventListener('click', downloadQRCode);
+
+    // color sync
+    ['dotColor','frameColor','centerColor','bgColor'].forEach(id=>{
+        el[id].addEventListener('input', ()=> syncColorFromPicker(id));
+        el[id+'Text'].addEventListener('input', ()=> syncColorFromText(id));
+    });
+
+    // style changes
+    [el.dotStyle, el.frameStyle, el.centerStyle].forEach(sel=>{
+        sel.addEventListener('change', ()=> { if(el.ssid.value.trim()) generateQRCode(false); });
+    });
+
+    // quick generate on enter (SSID)
+    el.ssid.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ e.preventDefault(); generateQRCode(true); } });
+
+    // ---------- Init ----------
+    document.addEventListener('DOMContentLoaded', ()=>{
+        // initial preview sync
+        applyPreview('dotColor');
+        applyPreview('frameColor');
+        applyPreview('centerColor');
+        applyPreview('bgColor');
+
+        // initial QR
+        el.container.innerHTML = "";
+        qrCode.append(el.container);
+
+        // nopass disables password
+        el.password.disabled = false;
+    });
+</script>
+</body>
+</html>

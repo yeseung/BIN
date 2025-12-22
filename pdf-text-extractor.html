@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>pdf-text-extractor.html</title>
+
+    <style>
+        *{ box-sizing:border-box; }
+
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+            background:#f5f5f5;
+            color:#000;
+        }
+
+        .wrap{
+            max-width:900px;
+            margin:20px auto;
+            padding:0 15px 40px;
+        }
+
+        h4{
+            margin:0 0 10px;
+            font-size:20px;
+        }
+
+        p{
+            margin:6px 0;
+            font-size:14px;
+            color:#333;
+        }
+
+        /* 카드 */
+        .glass-card{
+            background:#fff;
+            border:1px solid #c0c0c0;
+            padding:15px;
+            margin-top:15px;
+        }
+
+        /* 업로드 영역 */
+        .upload-area{
+            border:2px dashed #999;
+            padding:25px;
+            text-align:center;
+            cursor:pointer;
+            background:#fafafa;
+        }
+        .upload-area.dragover{
+            background:#e8e8e8;
+        }
+        .upload-icon{
+            font-size:32px;
+        }
+        .upload-text{
+            font-weight:bold;
+        }
+        .upload-subtext{
+            font-size:12px;
+            color:#666;
+        }
+
+        #fileInput{ display:none; }
+
+        /* 정보 박스 */
+        .info-box{
+            margin-top:15px;
+            padding:10px;
+            background:#f0f0f0;
+            border:1px solid #ccc;
+            font-size:13px;
+        }
+
+        /* 통계 */
+        .stats-card{
+            padding:0;
+        }
+        .stats-header{
+            font-weight:bold;
+            padding:8px 10px;
+            background:#eee;
+            border-bottom:1px solid #ccc;
+        }
+        .stats-content{
+            padding:10px;
+        }
+        .stats-item{
+            font-size:14px;
+            margin-bottom:6px;
+        }
+
+        /* 로딩 */
+        #loading{
+            text-align:center;
+            padding:20px;
+        }
+        .spinner{
+            width:32px;
+            height:32px;
+            border:4px solid #ccc;
+            border-top:4px solid #333;
+            border-radius:50%;
+            margin:0 auto 10px;
+            animation:spin 1s linear infinite;
+        }
+        @keyframes spin{ to{ transform:rotate(360deg); } }
+
+        /* 결과 */
+        .output-area{
+            margin-top:15px;
+        }
+        .output-header h3{
+            margin:0 0 8px;
+            font-size:16px;
+        }
+
+        #outputText{
+            width:100%;
+            min-height:300px;
+            padding:10px;
+            border:1px solid #c0c0c0;
+            font-family:monospace;
+            font-size:13px;
+            resize:vertical;
+        }
+
+        /* 버튼 (Win95 스타일) */
+        .button-group{
+            margin-top:10px;
+            display:flex;
+            flex-wrap:wrap;
+            gap:8px;
+        }
+        .glass-button{
+            border:3px outset #c0c0c0;
+            background:#dcdcdc;
+            padding:8px 14px;
+            font-weight:bold;
+            cursor:pointer;
+        }
+        .glass-button:active{
+            border:3px inset #c0c0c0;
+        }
+
+        /* 토스트 */
+        .toast{
+            position:fixed;
+            bottom:15px;
+            left:50%;
+            transform:translateX(-50%);
+            background:#333;
+            color:#fff;
+            padding:8px 14px;
+            font-size:13px;
+            opacity:0;
+            transition:.2s;
+        }
+        .toast.show{
+            opacity:1;
+        }
+    </style>
+
+</head>
+<body>
+<div class="wrap">
+    <h4><b>PDF 파일 텍스트 추출 도구 (PDF Text Extractor)</b></h4>
+    <p style="font-size:14px;">PDF 파일을 업로드하면 텍스트를 자동으로 추출합니다.</p>
+
+    <div class="glass-card" id="uploadCard">
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">PDF 파일을 여기에 드래그하거나 클릭하여 선택하세요</div>
+            <div class="upload-subtext">지원 형식: PDF</div>
+            <input type="file" id="fileInput" accept=".pdf,application/pdf" />
+        </div>
+    </div>
+
+    <div class="info-box">
+        <strong>💡 사용 팁:</strong> 추출된 텍스트는 복사하거나 텍스트 파일로 다운로드할 수 있습니다.
+        <div class="small">※ 스캔본(이미지 PDF)은 텍스트가 거의 안 나올 수 있습니다. 그 경우 OCR 도구를 사용하세요.</div>
+    </div>
+
+    <div class="glass-card stats-card" id="statsArea" style="display:none;">
+        <div class="stats-header">📊 문서 정보</div>
+        <div class="stats-content">
+            <div class="stats-item"><strong>📄 파일명:</strong> <span id="statsFileName"></span></div>
+            <div class="stats-item"><strong>📑 페이지:</strong> <span id="statsPages"></span></div>
+            <div class="stats-item"><strong>📝 문자 수:</strong> <span id="statsChars"></span></div>
+        </div>
+    </div>
+
+    <div class="glass-card" id="loading">
+        <div class="spinner"></div>
+        <p>PDF 파일을 처리 중입니다…</p>
+        <p class="small" id="progressText">0 / 0 페이지</p>
+    </div>
+
+    <div class="glass-card output-area" id="outputArea">
+        <div class="output-header">
+            <h3>추출된 텍스트</h3>
+        </div>
+        <textarea id="outputText" readonly placeholder="여기에 추출 결과가 표시됩니다."></textarea>
+        <div class="button-group">
+            <button class="glass-button" id="copyBtn">📋 텍스트 복사</button>
+            <button class="glass-button" id="downloadBtn">💾 텍스트 파일로 저장</button>
+            <button class="glass-button" id="resetBtn">🔄 새로 시작</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast">복사되었습니다!</div>
+
+<!-- PDF.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+<script>
+    // PDF.js worker
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    const uploadCard = document.getElementById('uploadCard');
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+
+    const loading = document.getElementById('loading');
+    const progressText = document.getElementById('progressText');
+
+    const outputArea = document.getElementById('outputArea');
+    const outputText = document.getElementById('outputText');
+
+    const statsArea = document.getElementById('statsArea');
+    const statsFileName = document.getElementById('statsFileName');
+    const statsPages = document.getElementById('statsPages');
+    const statsChars = document.getElementById('statsChars');
+
+    const copyBtn = document.getElementById('copyBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    const toast = document.getElementById('toast');
+
+    let currentFileName = '';
+
+    function showToast(msg){
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(()=>toast.classList.remove('show'), 1200);
+    }
+
+    // 클릭 업로드
+    uploadArea.addEventListener('click', () => fileInput.click());
+
+    // 드래그 앤 드롭
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+    });
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if(files && files.length){
+            handleFile(files[0]);
+        }
+    });
+
+    // 파일 선택
+    fileInput.addEventListener('change', (e) => {
+        if(e.target.files && e.target.files.length){
+            handleFile(e.target.files[0]);
+        }
+    });
+
+    function isPdf(file){
+        // 일부 브라우저/환경에서 type이 비어있을 수 있어 확장자도 체크
+        const nameOk = (file.name || '').toLowerCase().endsWith('.pdf');
+        const typeOk = file.type === 'application/pdf';
+        return nameOk || typeOk;
+    }
+
+    async function handleFile(file){
+        if(!file) return;
+        if(!isPdf(file)){
+            alert('PDF 파일만 업로드 가능합니다.');
+            return;
+        }
+
+        currentFileName = (file.name || 'document').replace(/\.pdf$/i, '');
+
+        // UI 상태 전환
+        uploadCard.style.display = 'none';
+        statsArea.style.display = 'none';
+        outputArea.style.display = 'none';
+        loading.style.display = 'block';
+        outputText.value = '';
+
+        try{
+            const ab = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: ab }).promise;
+
+            const totalPages = pdf.numPages;
+            progressText.textContent = `0 / ${totalPages} 페이지`;
+
+            let fullText = '';
+
+            for(let i=1; i<=totalPages; i++){
+                progressText.textContent = `${i} / ${totalPages} 페이지`;
+
+                const page = await pdf.getPage(i);
+                const textContent = await page.getTextContent();
+
+                // 기본: item.str을 공백으로 join
+                // (필요하면 items의 transform을 이용해 줄바꿈 재구성도 가능)
+                const pageText = textContent.items.map(it => it.str).join(' ').replace(/\s+/g,' ').trim();
+
+                fullText += `\n=== 페이지 ${i} ===\n\n${pageText}\n`;
+            }
+
+            const out = fullText.trim();
+            outputText.value = out;
+
+            // 통계
+            const charCount = out.length;
+            statsFileName.textContent = file.name || '(unknown)';
+            statsPages.textContent = `${totalPages} 페이지`;
+            statsChars.textContent = `${charCount.toLocaleString('ko-KR')} 자`;
+
+            // 결과 표시
+            loading.style.display = 'none';
+            statsArea.style.display = 'block';
+            outputArea.style.display = 'block';
+
+        }catch(err){
+            console.error(err);
+            alert('PDF 파일을 읽는 중 오류가 발생했습니다: ' + (err && err.message ? err.message : String(err)));
+            reset();
+        }
+    }
+
+    // 복사
+    copyBtn.addEventListener('click', async ()=>{
+        const text = outputText.value || '';
+        if(!text.trim()){
+            alert('복사할 텍스트가 없습니다.');
+            return;
+        }
+
+        try{
+            await navigator.clipboard.writeText(text);
+            showToast('복사되었습니다!');
+        }catch(e){
+            // fallback
+            outputText.focus();
+            outputText.select();
+            try{
+                document.execCommand('copy');
+                showToast('복사되었습니다!');
+            }catch(err){
+                alert('복사에 실패했습니다. 직접 선택하여 복사하세요.');
+            }
+        }
+    });
+
+    // 다운로드
+    downloadBtn.addEventListener('click', ()=>{
+        const text = outputText.value || '';
+        if(!text.trim()){
+            alert('저장할 텍스트가 없습니다.');
+            return;
+        }
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = (currentFileName || 'pdf') + '_extracted.txt';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    });
+
+    // 리셋
+    resetBtn.addEventListener('click', reset);
+
+    function reset(){
+        uploadCard.style.display = 'block';
+        loading.style.display = 'none';
+        statsArea.style.display = 'none';
+        outputArea.style.display = 'none';
+        fileInput.value = '';
+        outputText.value = '';
+        currentFileName = '';
+        progressText.textContent = '0 / 0 페이지';
+    }
+
+    // 초기 상태
+    reset();
+</script>
+</body>
+</html>

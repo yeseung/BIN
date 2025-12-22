@@ -1,12 +1,9 @@
 ![스크린샷 2025-08-01 오후 2 01 24](https://github.com/user-attachments/assets/d8ed8796-9899-427d-957a-5592fecdb5ca)
-
 ![스크린샷 2025-08-01 오후 1 59 13](https://github.com/user-attachments/assets/c6783c14-58f5-4800-82bf-0042938fa725)
-
 ![스크린샷 2025-12-05 오후 2 08 23](https://github.com/user-attachments/assets/7cb6b4f0-88ad-450e-8d51-6c9340317366)
-
-
 ![스크린샷 2025-12-18 오후 3 26 58](https://github.com/user-attachments/assets/4ada58d6-ec8c-4a49-9bd0-cef52450f98e)
-![스크린샷 2025-12-18 오후 3 32 31](https://github.com/user-attachments/assets/af1ecb28-396d-48e4-bcec-15be8c353a57)<img width="2459" height="2692" alt="screencapture-localhost-63342-BIN-youtube-thumbnail-extractor-html-2025-12-18-16_37_31" src="https://github.com/user-attachments/assets/f7f0c2e7-3522-4c85-8f52-c9ab805f85cb" />
+![스크린샷 2025-12-18 오후 3 32 31](https://github.com/user-attachments/assets/af1ecb28-396d-48e4-bcec-15be8c353a57)
+<img width="2459" height="2692" alt="screencapture-localhost-63342-BIN-youtube-thumbnail-extractor-html-2025-12-18-16_37_31" src="https://github.com/user-attachments/assets/f7f0c2e7-3522-4c85-8f52-c9ab805f85cb" />
 <img width="2160" height="20494" alt="screencapture-localhost-63342-BIN-symbols-html-2025-12-18-16_29_21" src="https://github.com/user-attachments/assets/3d49a97c-fcae-4aab-af76-141342e1f744" />
 <img width="2162" height="3058" alt="screencapture-localhost-63342-BIN-salary-calculator-html-2025-12-18-16_26_21" src="https://github.com/user-attachments/assets/a5d1df4a-0be3-4bc8-b736-a9dbe222eb0e" />
 <img width="1774" height="4430" alt="screencapture-localhost-63342-BIN-pace-calculator1-html-2025-12-18-16_13_33" src="https://github.com/user-attachments/assets/c93cecfc-37dc-4a24-b005-985f9d1a29a0" />

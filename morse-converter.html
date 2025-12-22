@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>한글 · 영어 모스부호 변환기</title>
+
+    <style>
+        /* ===== 기본 ===== */
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #f5f7fa;
+            color: #111827;
+        }
+
+        h4 {
+            margin: 0 0 8px;
+        }
+
+        p {
+            margin: 0 0 12px;
+            line-height: 1.5;
+        }
+
+        button {
+            cursor: pointer;
+            border: 1px solid #d1d5db;
+            background: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background: #f3f4f6;
+        }
+
+        button.active {
+            background: #2563eb;
+            color: #fff;
+            border-color: #2563eb;
+        }
+
+        /* ===== 카드 ===== */
+        .glass-card {
+
+            max-width:980px;
+            margin:18px auto;
+
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 16px;
+        }
+
+        /* ===== 입력 ===== */
+        .form-input,
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 14px;
+            resize: vertical;
+        }
+
+        textarea {
+            min-height: 100px;
+        }
+
+        /* ===== 결과 ===== */
+        .result-textarea {
+            min-height: 80px;
+            padding: 10px;
+            background: #f9fafb;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            white-space: pre-wrap;
+        }
+
+        /* ===== 라벨 ===== */
+        .section-label {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        /* ===== 버튼 그룹 ===== */
+        .button-group,
+        .button-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .glass-button {
+            background: #2563eb;
+            color: #fff;
+            border: none;
+        }
+
+        .glass-button:hover {
+            background: #1d4ed8;
+        }
+
+        /* ===== 세그먼트 버튼 ===== */
+        .segmented {
+            display: flex;
+            gap: 6px;
+        }
+
+        .segmented button {
+            min-width: 70px;
+        }
+
+        /* ===== 심볼 ===== */
+        .symbol-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 8px 0;
+        }
+
+        .symbol-button {
+            width: 36px;
+            height: 36px;
+            font-size: 18px;
+            padding: 0;
+        }
+
+        /* ===== 속도 ===== */
+        .speed-control input[type=range] {
+            accent-color: #2563eb;
+        }
+
+        /* ===== 반응형 ===== */
+        @media (max-width: 600px) {
+            body {
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="glass-card">
+    <h4><b>한글 · 영어 모스부호 변환기 (Morse Code Converter)</b></h4>
+    <p style="font-size:13px;color:#374151;">
+        영문, 한글, 숫자, 일부 문장부호를 모스부호로 변환하거나 해독합니다.<br>
+        한글은 <b>SKATS 방식</b>을 사용합니다.
+    </p>
+
+    <!-- 언어 선택 -->
+    <div class="segmented">
+        <button id="langEnBtn" class="active">영어</button>
+        <button id="langKoBtn">한글</button>
+    </div>
+
+    <!-- 심볼 -->
+    <div class="symbol-controls">
+        <span style="font-size:12px;">모스 심볼</span>
+        <select id="symbolSelect" class="form-input" style="width:auto;">
+            <option value=".-">dot(.) dash(-)</option>
+            <option value="•—">dot(•) dash(—)</option>
+        </select>
+        <button class="symbol-button" id="symbolDashBtn">–</button>
+        <button class="symbol-button" id="symbolDotBtn">.</button>
+    </div>
+
+    <!-- 입력 -->
+    <label class="section-label">입력</label>
+    <textarea id="inputText" placeholder="텍스트 또는 모스부호를 입력하세요"></textarea>
+
+    <!-- SKATS -->
+    <div id="skatsCard" class="glass-card" style="display:none;margin-top:12px;">
+        <label class="section-label">SKATS</label>
+        <div id="skatsOutput" class="result-textarea"></div>
+    </div>
+
+    <!-- 컨트롤 -->
+    <div class="button-group" style="margin-top:12px;">
+        <button class="glass-button" id="encodeBtn">텍스트 → 모스</button>
+        <button class="glass-button" id="decodeBtn">모스 → 텍스트</button>
+        <button class="glass-button" id="skatsToTextBtn" style="display:none;">SKATS → 텍스트</button>
+        <button class="glass-button" id="playToggleBtn">재생 ▶</button>
+
+        <div class="speed-control">
+            <label style="font-size:12px;">속도</label>
+            <input type="range" id="speedSlider" min="5" max="50" value="20">
+            <span id="speedValue" style="font-size:12px;">20 WPM</span>
+        </div>
+    </div>
+</div>
+
+<!-- 출력 -->
+<div class="glass-card">
+    <label class="section-label">출력</label>
+    <div id="output" class="result-textarea"></div>
+
+    <div class="button-row" style="margin-top:10px;">
+        <button class="glass-button" id="moveToInputBtn">입력 이동</button>
+        <button class="glass-button" id="copyOut">복사</button>
+        <button class="glass-button" id="resetBtn">초기화</button>
+    </div>
+
+    <p style="font-size:12px;color:#666;margin-top:12px;">
+        글자 구분: 공백 1칸 / 단어 구분: 공백 2칸 또는 /
+    </p>
+</div>
+
+<!-- 외부 JS -->
+<script src="assets/js/morse-converter.js" defer></script>
+
+</body>
+</html>

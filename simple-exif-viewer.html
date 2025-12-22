@@ -1,0 +1,562 @@
+<!-- simple-exif-viewer.html (Vanilla JS + Clean CSS) -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Simple EXIF Viewer</title>
+    <style>
+        :root{
+            --bg:#f4f5f7;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --line:#e5e7eb;
+            --btn:#dcdcdc;
+            --shadow:0 10px 28px rgba(15,23,42,.08);
+            --radius:18px;
+            --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "SF Mono", monospace;
+        }
+        *{box-sizing:border-box}
+        body{
+            margin:0; padding:24px;
+            font-family:-apple-system,BlinkMacSystemFont,"Malgun Gothic",system-ui,sans-serif;
+            background:var(--bg); color:var(--text);
+        }
+        .page{ max-width:1100px; margin:0 auto; }
+        h1{ margin:0 0 8px; font-size:26px; font-weight:900; letter-spacing:-.2px; }
+        .subtitle{ margin:0 0 18px; color:var(--muted); font-size:14px; line-height:1.7; }
+
+        .toolbar{
+            display:flex;
+            flex-wrap:wrap;
+            gap:10px;
+            align-items:center;
+            margin:12px 0 18px;
+        }
+        .btn, .file-label{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap:8px;
+            color:#000;
+            font-weight:900;
+            border:3px outset #c0c0c0;
+            background:var(--btn);
+            padding:10px 20px;
+            font-size:16px;
+            cursor:pointer;
+            text-decoration:none;
+            user-select:none;
+            border-radius:10px;
+            transition:filter .15s, transform .05s;
+        }
+        .btn:hover, .file-label:hover{ filter:brightness(1.06); }
+        .btn:active, .file-label:active{ transform:translateY(1px); }
+        .btn:disabled{ opacity:.55; cursor:not-allowed; transform:none; }
+
+        .layout{
+            display:grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap:16px;
+            align-items:start;
+        }
+        .card{
+            background:var(--card);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            padding:18px 20px 20px;
+        }
+        .section-title{
+            margin:0 0 10px;
+            font-weight:900;
+            font-size:16px;
+            letter-spacing:-.2px;
+            display:flex;
+            justify-content:space-between;
+            gap:10px;
+            align-items:center;
+        }
+        .badge{
+            font-size:12px;
+            color:#1f2937;
+            background:#eef2ff;
+            border:1px solid #e0e7ff;
+            padding:6px 10px;
+            border-radius:999px;
+            font-weight:900;
+            white-space:nowrap;
+        }
+
+        .dropbox{
+            margin-top:12px;
+            width:90%;
+            height:160px;
+            overflow:auto;
+            border:2px dashed gray;
+            padding:20px;
+            margin-left:auto;
+            margin-right:auto;
+            background-color:#f9f9f9;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            text-align:center;
+            line-height:1.6;
+            border-radius:14px;
+            color:#374151;
+            transition:background .15s, border-color .15s;
+        }
+        .dropbox.drag{
+            background:#eef2ff;
+            border-color:#93c5fd;
+        }
+
+        #previewArea{ display:none; margin-top:14px; }
+        #previewCanvas{
+            width:100%;
+            height:auto;
+            border-radius:14px;
+            border:1px solid var(--line);
+            background:#fff;
+            box-shadow:0 10px 22px rgba(15,23,42,.08);
+        }
+
+        .kv{
+            display:grid;
+            grid-template-columns: 160px minmax(0,1fr);
+            gap:10px 12px;
+            margin-top:12px;
+            background:#fff;
+            border:3px inset #c0c0c0;
+            padding:14px;
+            border-radius:12px;
+            align-items:center;
+        }
+        .kv > div:nth-child(odd){
+            color:#111827;
+            font-weight:900;
+            font-size:13px;
+        }
+        .kv > div:nth-child(even){
+            color:#111827;
+            font-size:13px;
+            word-break:break-word;
+        }
+        .mono{ font-family:var(--mono); }
+
+        details{
+            margin-top:14px;
+            border:1px solid var(--line);
+            border-radius:14px;
+            background:#f9fafb;
+            padding:12px 12px 8px;
+        }
+        summary{
+            cursor:pointer;
+            font-weight:900;
+            color:#1f2937;
+        }
+        pre{
+            white-space:pre-wrap;
+            word-break:break-word;
+            background:#fff;
+            border:1px solid var(--line);
+            border-radius:12px;
+            padding:12px;
+            margin:10px 0 0;
+            font-family:var(--mono);
+            font-size:12px;
+            line-height:1.55;
+            max-height:360px;
+            overflow:auto;
+        }
+        .small{
+            margin-top:12px;
+            color:var(--muted);
+            font-size:13px;
+            line-height:1.6;
+        }
+
+        .row-actions{
+            display:flex;
+            flex-wrap:wrap;
+            gap:10px;
+            margin-top:12px;
+        }
+
+        @media (max-width: 900px){
+            .layout{ grid-template-columns:1fr; }
+            .kv{ grid-template-columns: 140px minmax(0,1fr); }
+            .btn, .file-label{ flex:1; }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <h1>Simple EXIF Viewer</h1>
+    <p class="subtitle">사진 파일의 EXIF 정보를 간편하게 확인할 수 있습니다. (업로드/드래그/붙여넣기 지원)</p>
+
+    <header>
+        <div class="toolbar">
+            <label for="file" class="file-label">이미지 파일 업로드</label>
+            <input id="file" type="file" accept="image/*" style="display:none" />
+            <button id="pasteBtn" class="btn" type="button">클립보드 붙여넣기</button>
+            <button id="clearBtn" class="btn" type="button">초기화</button>
+        </div>
+    </header>
+
+    <div class="layout">
+        <!-- Left -->
+        <div class="card">
+            <div class="section-title">
+                입력 / 미리보기
+                <span class="badge">Paste / Upload / Drag</span>
+            </div>
+
+            <div id="dz">
+                <div id="dropbox" class="dropbox" contenteditable="true" aria-label="이미지 입력 영역">
+                    이미지를 여기로 끌어다 놓거나<br/>
+                    업로드 / Ctrl+V 붙여넣기를 하세요
+                </div>
+            </div>
+
+            <div id="previewArea">
+                <canvas id="previewCanvas"></canvas>
+
+                <div class="kv">
+                    <div>파일명</div><div id="metaName" class="mono">-</div>
+                    <div>형식 / 용량</div><div id="metaType" class="mono">-</div>
+                    <div>해상도</div><div id="metaRes" class="mono">-</div>
+                    <div>파일크기</div><div id="metaBytes" class="mono">-</div>
+                </div>
+
+                <div class="row-actions">
+                    <button id="showRawBtn" class="btn" type="button">고급 메타 보기</button>
+                    <button id="downloadJson" class="btn" type="button">JSON 리포트 다운로드</button>
+                </div>
+
+                <div class="small">
+                    ※ 주의: 편집/리사이즈/메신저 전송된 이미지의 경우 EXIF가 제거되어 보이지 않을 수 있습니다.
+                </div>
+            </div>
+        </div>
+
+        <!-- Right -->
+        <div class="card">
+            <div class="section-title">EXIF 핵심 정보</div>
+
+            <div class="kv">
+                <div>제조사 (Make)</div><div id="exif-make">-</div>
+                <div>모델 (Model)</div><div id="exif-model">-</div>
+                <div>촬영일시</div><div id="exif-datetime">-</div>
+                <div>렌즈</div><div id="exif-lens">-</div>
+                <div>셔터속도</div><div id="exif-exposure">-</div>
+                <div>조리개 (f)</div><div id="exif-fnumber">-</div>
+                <div>ISO</div><div id="exif-iso">-</div>
+                <div>초점거리</div><div id="exif-focal">-</div>
+                <div>GPS (위도,경도)</div><div id="exif-gps">-</div>
+                <div>썸네일</div><div id="exif-thumb">-</div>
+            </div>
+
+            <details id="advanced">
+                <summary>고급 메타데이터 보기 (EXIF 전체, XMP, IPTC 등)</summary>
+                <pre id="rawMeta">-</pre>
+            </details>
+
+            <div class="small">
+                ※ GPS가 포함된 사진은 위치 정보가 노출될 수 있습니다. 공유 전 반드시 확인하세요.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- exifr -->
+<script src="https://unpkg.com/exifr/dist/full.umd.js"></script>
+<script>
+    const fileInput = document.getElementById('file');
+    const dropbox = document.getElementById('dropbox');
+    const previewCanvas = document.getElementById('previewCanvas');
+    const ctx = previewCanvas.getContext('2d');
+    const previewArea = document.getElementById('previewArea');
+    const pasteBtn = document.getElementById('pasteBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const showRawBtn = document.getElementById('showRawBtn');
+    const downloadJson = document.getElementById('downloadJson');
+
+    const metaName = document.getElementById('metaName');
+    const metaType = document.getElementById('metaType');
+    const metaRes  = document.getElementById('metaRes');
+    const metaBytes= document.getElementById('metaBytes');
+
+    const fields = {
+        make: document.getElementById('exif-make'),
+        model: document.getElementById('exif-model'),
+        datetime: document.getElementById('exif-datetime'),
+        lens: document.getElementById('exif-lens'),
+        exposure: document.getElementById('exif-exposure'),
+        fnumber: document.getElementById('exif-fnumber'),
+        iso: document.getElementById('exif-iso'),
+        focal: document.getElementById('exif-focal'),
+        gps: document.getElementById('exif-gps'),
+        thumb: document.getElementById('exif-thumb')
+    };
+
+    const rawMeta = document.getElementById('rawMeta');
+    const advanced = document.getElementById('advanced');
+
+    let current = { file: null, ab: null, exif: null };
+
+    function formatBytes(n){
+        if(!Number.isFinite(n)) return '-';
+        const units = ['B','KB','MB','GB'];
+        let i=0, v=n;
+        while(v>=1024 && i<units.length-1){ v/=1024; i++; }
+        return (i===0 ? v : v.toFixed(1)) + ' ' + units[i];
+    }
+
+    function reset(){
+        current = { file:null, ab:null, exif:null };
+        previewArea.style.display = 'none';
+        metaName.textContent='-';
+        metaType.textContent='-';
+        metaRes.textContent='-';
+        metaBytes.textContent='-';
+        for(const k in fields) fields[k].textContent='-';
+        rawMeta.textContent='-';
+        advanced.open = false;
+
+        // 안내문 복구
+        dropbox.innerHTML = `이미지를 여기로 끌어다 놓거나<br/>업로드 / Ctrl+V 붙여넣기를 하세요`;
+    }
+
+    function replacer(k,v){
+        if(v instanceof Uint8Array) return `[Uint8Array ${v.length}]`;
+        if(v instanceof ArrayBuffer) return `[ArrayBuffer ${v.byteLength}]`;
+        return v;
+    }
+
+    function exposureToString(exposureTime){
+        // exposureTime: seconds (number)
+        if(!exposureTime || typeof exposureTime !== 'number') return '-';
+        if(exposureTime >= 1) return exposureTime.toFixed(2) + 's';
+        const denom = Math.round(1 / exposureTime);
+        if(denom > 0) return `1/${denom}s`;
+        return String(exposureTime);
+    }
+
+    function populateCoreFields(exif){
+        if(!exif){
+            for(const k in fields) fields[k].textContent='-';
+            return;
+        }
+
+        fields.make.textContent = exif.Make || exif.make || '-';
+        fields.model.textContent = exif.Model || exif.model || '-';
+
+        fields.datetime.textContent =
+            exif.DateTimeOriginal ||
+            exif.CreateDate ||
+            exif.ModifyDate ||
+            exif.DateTime ||
+            '-';
+
+        fields.lens.textContent =
+            exif.LensModel ||
+            exif.Lens ||
+            exif.LensInfo ||
+            '-';
+
+        fields.exposure.textContent = exposureToString(exif.ExposureTime);
+
+        fields.fnumber.textContent =
+            (typeof exif.FNumber === 'number') ? ('f/' + exif.FNumber) : '-';
+
+        fields.iso.textContent =
+            exif.ISO ||
+            exif.ISOSpeedRatings ||
+            '-';
+
+        fields.focal.textContent =
+            (typeof exif.FocalLength === 'number') ? (exif.FocalLength + 'mm') : '-';
+
+        if(exif.GPSLatitude && exif.GPSLongitude){
+            fields.gps.textContent = `${exif.GPSLatitude}, ${exif.GPSLongitude}`;
+        }else{
+            fields.gps.textContent = '-';
+        }
+
+        // 썸네일: exifr은 thumbnail 관련 키가 환경에 따라 다를 수 있어 넓게 확인
+        const hasThumb = !!(exif.thumbnail || exif.ThumbnailImage || exif.JPEGInterchangeFormat);
+        fields.thumb.textContent = hasThumb ? '썸네일 포함(메타에 존재)' : '-';
+    }
+
+    async function drawPreview(file){
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        await new Promise((resolve, reject)=>{
+            img.onload = resolve;
+            img.onerror = reject;
+            img.src = url;
+        });
+
+        // 캔버스 최대 가로
+        const maxW = 1200;
+        const scale = Math.min(1, maxW / img.width);
+        previewCanvas.width  = Math.max(1, Math.floor(img.width * scale));
+        previewCanvas.height = Math.max(1, Math.floor(img.height * scale));
+
+        ctx.clearRect(0,0,previewCanvas.width,previewCanvas.height);
+        ctx.drawImage(img, 0, 0, previewCanvas.width, previewCanvas.height);
+
+        metaRes.textContent = img.width + ' × ' + img.height;
+
+        // dropbox 안에 이미지 미리보기 표시(가볍게)
+        dropbox.innerHTML = '';
+        const p = document.createElement('div');
+        p.style.display = 'flex';
+        p.style.flexDirection = 'column';
+        p.style.alignItems = 'center';
+        p.style.justifyContent = 'center';
+        p.style.gap = '8px';
+
+        const thumb = document.createElement('img');
+        thumb.decoding = 'async';
+        thumb.src = url;
+        thumb.style.maxWidth = '100%';
+        thumb.style.maxHeight = '150px';
+        thumb.style.borderRadius = '12px';
+        thumb.style.border = '1px solid #e5e7eb';
+        thumb.style.background = '#fff';
+
+        const small = document.createElement('div');
+        small.style.fontSize = '12px';
+        small.style.color = '#6b7280';
+        small.textContent = '미리보기 (원본은 캔버스/메타데이터로 표시)';
+
+        p.appendChild(thumb);
+        p.appendChild(small);
+        dropbox.appendChild(p);
+
+        // revoke는 너무 빨리하면 이미지가 깨질 수 있어 약간 지연
+        setTimeout(()=> URL.revokeObjectURL(url), 8000);
+    }
+
+    async function handleFile(file){
+        reset();
+        if(!file) return;
+
+        current.file = file;
+
+        metaName.textContent = file.name || '(clipboard)';
+        metaType.textContent = (file.type || 'unknown') + ' / ' + formatBytes(file.size);
+        metaBytes.textContent = formatBytes(file.size);
+
+        const ab = await file.arrayBuffer();
+        current.ab = ab;
+
+        // 미리보기
+        try{
+            await drawPreview(file);
+            previewArea.style.display = 'block';
+        }catch(e){
+            console.warn('preview error', e);
+            previewArea.style.display = 'block';
+        }
+
+        // EXIF 파싱
+        try{
+            const exif = await exifr.parse(ab, {
+                tiff:true, exif:true, ifd0:true,
+                gps:true, xmp:true, iptc:true, interop:true
+            });
+            current.exif = exif || null;
+            populateCoreFields(exif);
+            rawMeta.textContent = exif ? JSON.stringify(exif, replacer, 2) : '-';
+        }catch(e){
+            current.exif = null;
+            populateCoreFields(null);
+            rawMeta.textContent = 'EXIF 파싱 실패: ' + String(e);
+        }
+    }
+
+    // 업로드
+    fileInput.addEventListener('change', (e)=>{
+        const f = e.target.files && e.target.files[0];
+        if(f) handleFile(f);
+        // 같은 파일 재선택 가능
+        fileInput.value = '';
+    });
+
+    // Drag & Drop
+    ['dragenter','dragover'].forEach(ev=>{
+        dropbox.addEventListener(ev, (e)=>{
+            e.preventDefault();
+            dropbox.classList.add('drag');
+        });
+    });
+    ['dragleave','drop'].forEach(ev=>{
+        dropbox.addEventListener(ev, (e)=>{
+            e.preventDefault();
+            dropbox.classList.remove('drag');
+        });
+    });
+    dropbox.addEventListener('drop', (e)=>{
+        const files = e.dataTransfer && e.dataTransfer.files;
+        if(files && files.length) handleFile(files[0]);
+    });
+
+    // Paste: 버튼은 안내만, 실제 붙여넣기는 document paste로 받음
+    pasteBtn.addEventListener('click', ()=>{
+        alert('이미지를 복사한 뒤 이 창에서 Ctrl/⌘+V로 붙여넣기 하세요.');
+    });
+
+    document.addEventListener('paste', (e)=>{
+        const items = e.clipboardData && e.clipboardData.items;
+        if(!items) return;
+
+        for(const it of items){
+            if(it.type && it.type.indexOf('image') === 0){
+                const f = it.getAsFile();
+                if(f){
+                    handleFile(f);
+                    e.preventDefault();
+                    return;
+                }
+            }
+        }
+    });
+
+    clearBtn.addEventListener('click', reset);
+
+    showRawBtn.addEventListener('click', ()=>{
+        advanced.open = !advanced.open;
+        // 오른쪽 advanced로 스크롤 살짝 유도(모바일)
+        if(advanced.open) advanced.scrollIntoView({ behavior:'smooth', block:'start' });
+    });
+
+    downloadJson.addEventListener('click', ()=>{
+        if(!current.file){
+            alert('이미지를 먼저 업로드하세요.');
+            return;
+        }
+        const report = {
+            filename: current.file.name || '(clipboard)',
+            size: current.file.size,
+            mime: current.file.type,
+            resolution: metaRes.textContent,
+            exif: current.exif
+        };
+        const blob = new Blob([JSON.stringify(report, null, 2)], { type:'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = (current.file.name || 'exif') + '.json';
+        a.click();
+        setTimeout(()=> URL.revokeObjectURL(a.href), 4000);
+    });
+
+    // init
+    reset();
+</script>
+</body>
+</html>

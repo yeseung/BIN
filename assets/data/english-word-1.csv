@@ -1,0 +1,1041 @@
+번호,단어,의미
+1,a/an,하나의
+2,about,~에 대해
+3,above,~보다 위에
+4,able,~할 수 있는
+5,accident,"사고, 우연"
+6,"act(actual,interact)","행동하다 (실제의, 소통하다)"
+7,add,"더하다, 추가하다"
+8,address,주소
+9,adult,"성인, 어른"
+10,adventure,모험
+11,advertise,"광고하다, 알리다"
+12,advise,"조언하다, 충고하다"
+13,afraid,"두려워하는, 겁내는"
+14,after,~후에
+15,afternoon,오후
+16,again,다시
+17,against,~에 반대하여
+18,age,"나이, 연령"
+19,ago,~전에
+20,agree(disagree),"동의하다 (↔ 뜻이 다르다, 동의하지 않다)"
+21,ahead,"앞으로, 앞에"
+22,aim,"목적, 목표"
+23,airline,항공사
+24,airplane,비행기
+25,airport,공항
+26,album,"앨범, 음악 모음, 사진첩 등"
+27,alive,"살아있는, 생기있는"
+28,all,모든
+29,allow,"허락하다, 용납하다"
+30,almost,"거의, 대부분"
+31,alone,"혼자, 외로운"
+32,along,~을 따라
+33,aloud,"소리내어, 큰소리로"
+34,already,"이미, 벌써"
+35,alright,"괜찮은, 알았어, 좋아 (all right)"
+36,also,또한
+37,although,"비록 ~이긴 하지만, 그러나"
+38,always,"늘, 항상"
+39,amaze,놀라게 하다 (amazing)
+40,amount,"총액, 액수, (무엇의) 양"
+41,amuse,즐겁게 하다 (amuzement park)
+42,and,그리고
+43,angel,천사
+44,anger,"화, 분노"
+45,animal,동물
+46,anniversary,기념일
+47,another,"또 하나, 더, 다른"
+48,answer,답하다
+49,any,"어느, 어떤"
+50,apartment,아파트
+51,apology,"사과, 양해를 구하는 말"
+52,appear(disappear),나타나다 (↔사라지다)
+53,apple,사과
+54,appreciate,"고마워하다, 환영하다"
+55,approach,"다가가다, 접근법"
+56,architect(architecture),"건축가 (건축, 건축물)"
+57,area,"지역, 구역"
+58,arm,팔
+59,around,"주변에, 사방에"
+60,arrive,도착하다
+61,arrow,"화살, 화살표"
+62,art,"미술, 예술"
+63,article,"(신문, 잡지의) 글, 기사"
+64,as,~처럼
+65,ask,묻다
+66,asleep,"잠이 든, 자고 있는"
+67,at,~에서
+68,attack,공격하다
+69,attention,"주의, 주목"
+70,audience,"청중, 시청자"
+71,aunt,"고모, 이모, 아줌마"
+72,automatic,자동의
+73,autumn,가을 (fall)
+74,avail(available),도움이 되다 (이용할 수 있는)
+75,average,평균의
+76,awake,"깨어있는, 잠들지 않은"
+77,award,"상, 수여하다"
+78,away,"떨어져, 다른 곳으로"
+79,baby,아기
+80,back,"등, 뒤쪽"
+81,background,배경
+82,bad,나쁜
+83,badminton,배드민턴
+84,bag,가방
+85,bake,"굽다, 구워지다"
+86,balance,"균형, 균형을 유지하다"
+87,ball,공
+88,balloon,풍선
+89,banana,바나나
+90,bank,은행
+91,base,"맨 아랫 부분, 기초"
+92,baseball,야구
+93,basket,바구니
+94,basketball,농구
+95,bat,"야구방망이(배트), 박쥐"
+96,bath,"욕조, 목욕시키다"
+97,be,"있다, 존재하다"
+98,beach,해변
+99,bear,곰
+100,beauty,아름다움
+101,beautiful,아름다운
+102,because,"~때문에, 왜냐하면"
+103,become,~이 되다
+104,bed,침대
+105,bee,벌
+106,beef,소고기
+107,before,"~앞에, ~전에"
+108,beg,"간청하다, 애원하다"
+109,begin,시작하다
+110,behave(behavior),"행동하다 (행동, 태도)"
+111,behind,~뒤에
+112,believe,믿다
+113,bell,"종, 종소리"
+114,below,~아래에
+115,belt,"벨트, 허리띠"
+116,bench,벤치
+117,beside,~옆에
+118,between,~사이에
+119,beyond,"~저편에, 너머"
+120,big,큰
+121,bike,"자전거, 오토바이"
+122,bill,"청구서, 계산서"
+123,billion,10억
+124,bird,새
+125,birth,"탄생, 출생 (birthday)"
+126,biscuit,비스킷
+127,bite,"물다, 한 입 베어 문"
+128,bitter,"격렬한, 억울한, 쓴 맛"
+129,black,검은색
+130,blank,"빈, 빈칸, 여백"
+131,blanket,담요
+132,block,"사각형 덩어리, 건물, 막다"
+133,blood,"피, 혈액"
+134,blow,"(입으로) 불다, (바람이) 불다"
+135,blue,파란색
+136,board,"판자, 탑승하다, 승선하다"
+137,boat,"배, 보트"
+138,body,"몸, 신체"
+139,bone,뼈
+140,book,책
+141,borrow,"빌리다, (돈을) 꾸다"
+142,both,"둘다, ~뿐만 아니라 ~도"
+143,bottle,병
+144,bottom,"맨 아래, 아래쪽, 하의"
+145,box,상자
+146,boy,남자아이
+147,brain,뇌
+148,branch,"나뭇가지, 갈라지다"
+149,bread,빵
+150,break,"깨어지다, 고장나다"
+151,breakfast,"아침식사, 아침을 먹다"
+152,breath,숨
+153,breathe,"숨쉬다, 호흡하다"
+154,bridge,"다리, 다리를 놓다"
+155,brief,"짧은, 잠시 동안의, (글의) 요약"
+156,bright,"밝은, 눈부신"
+157,bring,"가져오다, 데려오다"
+158,brother,"형, 남동생"
+159,brown,갈색
+160,brush,"붓, 솔"
+161,build,"짓다, 건설하다"
+162,burn,"(불이) 타오르다, 화상"
+163,bus,버스
+164,bush,덤불
+165,business,"사업, 장사, 업무"
+166,busy,바쁜
+167,but,"그러나, 하지만"
+168,butter,버터
+169,button,단추
+170,buy,사다
+171,by,"~옆에, ~에"
+172,cake,케이크
+173,calculate,계산하다
+174,calendar,달력
+175,call,"~라고 부르다, 전화"
+176,calm,"침착한, 진정시키다"
+177,camera,카메라
+178,camp,"야영지, 텐트, 야영하다"
+179,campaign,캠페인
+180,cancel,취소하다
+181,candy,사탕
+182,cap,모자
+183,card,카드
+184,care,"돌봄, 보살핌"
+185,career,"직업, 사회생활, 경력"
+186,chicken,"닭, 닭고기"
+187,child,어린이
+188,cheap,값이 싼
+189,chocolate,초콜릿
+190,choice,선택
+191,choose,"선택하다, 고르다"
+192,church,교회
+193,cinema,영화관
+194,circle,"원형, 동그라미"
+195,city,도시
+196,class,"학급, 수업"
+197,classic,"대표적인, 고전적인, 모범적인"
+198,clean,깨끗한
+199,clear,"분명한, 확실한"
+200,clever,영리한
+201,climb,"오르다, 등산"
+202,clock,시계
+203,close,"가까운, 닫다"
+204,clothes,"옷, 의복"
+205,cloud,구름
+206,cow,"소, 젖소"
+207,craft,"공예, 공예품을 만들다"
+208,crawl,"기다, 기어가다"
+209,crayon,크레용
+210,crazy,"정상이 아닌, 미친듯이"
+211,cream,크림
+212,create(creature),"창조하다, 생물, 생명체"
+213,credible(incredible),믿을 수 있는 (↔믿을 수 없는)
+214,crisp,바삭바삭한
+215,cross,"X 표, +기호, 십자, 건너다, 가로지르다"
+216,crowd,"사람들, 군중"
+217,crown,왕관
+218,cruel,"잔혹한, 고통스러운, 괴로운"
+219,cry,울다
+220,culture,문화
+221,cup,컵
+222,curious(curiosity),"궁금한, 호기심이 많은 (호기심)"
+223,curtain,커튼
+224,customer,"손님, 고객"
+225,cut,"베다, 자르다"
+226,cute,귀여운
+227,cycle,"자전거, 오토바이, 순환(recylce)"
+228,dairy,"낙농의, 유제품의"
+229,damage,"손상, 훼손, 손상을 주다"
+230,dance,"춤, 춤추다"
+231,danger,위험
+232,dark,"어두운, 어둠"
+233,date,"날짜, 시기"
+234,daughter,딸
+235,day,"하루, 날, 요일"
+236,dead,죽은
+237,death,죽음
+238,delay,"지연, 미루다"
+239,delicious,맛있는
+240,deliver,배달하다
+241,dentist,치과의사
+242,depend,"의존하다, 의지하다"
+243,desk,책상
+244,detail,세부 사항
+245,dialogue,"대화, 대담"
+246,die,죽다
+247,dinner,저녁식사
+248,dirt(dirty),"먼지, 때 (더러운)"
+249,distance,거리
+250,dive,"뛰어들다, 다이빙하다"
+251,do,(어떤 동작이나 행위를) 하다
+252,doll,인형
+253,dolphin,돌고래
+254,door,문
+255,doubt,"의심, 의혹, 의심하다"
+256,draw,그리다
+257,dream,꿈
+258,drop,"떨어지다, 떨어뜨리다"
+259,drug,약물
+260,early,"이른, 예상보다 빨리"
+261,easy,"쉬운, 수월한"
+262,eat,먹다
+263,economy,경제
+264,effort,"수고, 노력"
+265,egg,달걀
+266,element,"요소, 성분"
+267,elephant,코끼리
+268,emergency,"비상, 응급"
+269,emotion,감정
+270,empty,"비어 있는, 빈"
+271,end,"끝, 끝나다"
+272,engine,엔진
+273,engineer,엔지니어
+274,envelope,"봉투, 감싸다"
+275,equal,"동일한, 같은"
+276,essay,"(짧은) 글, 리포트, 수필"
+277,establish,설립하다
+278,evening,저녁
+279,every,"모든, 매~마다"
+280,examine,조사하다
+281,exam,시험
+282,except,"제외하고는, ~라는 점만 제외하면"
+283,exchange,"교환, 교환하다"
+284,expensive,"비싼, 돈이 많이 드는"
+285,experience,경험
+286,explain,설명하다
+287,eye,눈
+288,face,얼굴
+289,fact,사실
+290,fall,"떨어지다, 가을"
+291,famous,유명한
+292,fancy,"원하다, 하고 싶다, 상상"
+293,fantastic,환상적인
+294,farm,농장
+295,fashion,패션
+296,fast,빠른
+297,fault,잘못
+298,fear,두려움
+299,feature,특징
+300,feel,느끼다
+301,female,여성
+302,field,"들판, 밭"
+303,fill,채우다
+304,finance,"자금, 재정"
+305,find,찾다
+306,fire,불
+307,fix,고치다
+308,flat,평평한
+309,flavor,맛
+310,float,뜨다
+311,flood,홍수
+312,fly,파리
+313,follow,따르다
+314,foot,발
+315,football,축구
+316,forest,숲
+317,forever,영원히
+318,forget,잊다
+319,form,"종류, 유형"
+320,fortune,운
+321,four,숫자 4
+322,fox,여우
+323,free,자유로운
+324,friend(friendship),친구 (우정)
+325,frog,개구리
+326,fruit,과일
+327,full,가득한
+328,future,미래
+329,game,게임
+330,gas,가스
+331,gate,"문, 입구"
+332,get,"받다, 얻다"
+333,ghost,"귀신, 유령"
+334,giraffe,기린
+335,girl,소녀
+336,glass,유리
+337,glue,풀
+338,god,하나님
+339,gold,금
+340,gorgeous,아주 멋진
+341,government,정부
+342,grape,포도
+343,graphic,그래픽의
+344,gray,회색
+345,great,엄청난
+346,green,초록색
+347,group,그룹
+348,grow,자라다
+349,guess,추측하다
+350,guide,가이드
+351,guilt,"유죄, 죄책감"
+352,guitar,기타
+353,guy,남자
+354,gymnasium,(gym) 체육관
+355,habit,습관
+356,half,반 (2분의 1)
+357,hamburger,햄버거
+358,hand,손
+359,handsome,"잘생긴, 멋있는"
+360,hang,"걸다, 매달다"
+361,happen,일어나다
+362,hard,열심히
+363,harvest,수확하다
+364,hat,모자
+365,hate,싫어하다
+366,have,"가지다, 있다"
+367,he,그
+368,head,머리
+369,health,건강
+370,hear,듣다
+371,heart,마음
+372,heat,열
+373,heaven,천국
+374,heavy,무거운
+375,height,키
+376,helmet,헬멧
+377,help,돕다
+378,here,여기
+379,hero,영웅
+380,hide,숨다
+381,high,높은
+382,highway,고속도로
+383,hike,"하이킹, 도보여행"
+384,hill,언덕
+385,hint,"힌트, 암시"
+386,hire,고용하다
+387,history,역사
+388,hit,때리다
+389,hobby,취미
+390,hold,잡고 있다
+391,hole,구멍
+392,holiday,휴일
+393,home,집
+394,homework,숙제
+395,honest,"솔직한, 정직한"
+396,honey,꿀
+397,hope,희망
+398,horse,말
+399,hospital,병원
+400,hot,더운
+401,hotel,호텔
+402,hour,시간
+403,house,집
+404,how,어떻게
+405,however,하지만
+406,hug,껴안다
+407,huge,거대한
+408,human,인간
+409,hundred,100
+410,hungry,배가 고프다
+411,hunt,사냥
+412,hurry,서두르다
+413,hurt,다치게 하다
+414,husband,남편
+415,ice,얼음
+416,idea,아이디어
+417,identity,"신분, 정체"
+418,ideology,관념
+419,ill,아픈
+420,image,"이미지, 인상, 그림"
+421,imagine,상상하다
+422,immediate,즉각적인
+423,import,수입
+424,important,중요한
+425,income,소득
+426,individual,개인
+427,influence,영향
+428,innocent,순결한
+429,inside,내부에
+430,instead,대신에
+431,interest,관심
+432,internet,인터넷
+433,into,~안으로
+434,issue,"문제, 사안"
+435,it,그것
+436,jacket,재킷
+437,jam,잼
+438,joke,농담
+439,job,직업
+440,journey,여행
+441,judge,판사
+442,journal,신문
+443,joy,(enjoy) 기쁨 (즐기다)
+444,jump,"점프, 도약"
+445,justice,"정당성, 공평성"
+446,juice,주스
+447,junior,"청소년의, 아랫사람"
+448,keep,유지하다
+449,key,열쇠
+450,kick,차기
+451,kid,어린이
+452,kill,죽이다
+453,kind,친절한
+454,king,왕
+455,kitchen,주방
+456,knee,무릎
+457,knife,칼
+458,knock,노크
+459,know,알다
+460,knowledge,지식
+461,label,상표
+462,lamb,양고기
+463,lamp,램프
+464,landscape,풍경
+465,language,언어
+466,large,크기가 큰
+467,last,마지막
+468,laugh,웃다
+469,law,법
+470,lawyer,변호사
+471,layer,"막 (층, 겹, 켜)"
+472,lazy,게으른
+473,leaf,잎
+474,learn,배우다
+475,leather,가죽
+476,leave,떠나다
+477,left,왼쪽
+478,leg,다리
+479,legal,합법적인
+480,lemon,레몬
+481,lesson,수업
+482,let,허락하다
+483,letter,편지
+484,library,도서관
+485,license,"허가하다, 면허증, 자격증"
+486,lid,뚜껑
+487,lie,거짓말하다
+488,life,삶
+489,lift,승강기
+490,light,빛
+491,like,좋아하다
+492,limit,한계
+493,line,선
+494,lion,사자
+495,lip,입술
+496,liquid,액체
+497,list,목록
+498,listen,듣다
+499,little,작은
+500,live,살다
+501,livingroom,거실
+502,locate,위치하고 있다
+503,lock,잠그다
+504,log,통나무
+505,long,긴
+506,look,바라보다
+507,loose,헐렁한
+508,lose,잃다
+509,lot,많은
+510,loud,시끄러운
+511,love,사랑
+512,low,낮은
+513,luck,운
+514,lunch,점심
+515,machine,기계
+516,mad,미친
+517,magazine,잡지
+518,magic,마법
+519,magnet,자석
+520,mail,우편
+521,main,기본
+522,maintain,유지하다
+523,major,전공
+524,make,만들다
+525,male,남성
+526,man,남성
+527,manage,관리하다
+528,many,많은
+529,map,지도
+530,marathon,마라톤
+531,marine,선박
+532,mark,표시
+533,market,시장
+534,marry,결혼하다
+535,marble,"구슬, 대리석"
+536,master,주인
+537,mathematics,수학
+538,matter,(material) 물질 (재료)
+539,maximum,최대의
+540,may,5월
+541,maybe,아마도
+542,meal,식사
+543,measure,측정하다
+544,meat,고기
+545,medicine,약
+546,melon,멜론
+547,member,회원
+548,mental,정신적인
+549,menu,메뉴
+550,message,메시지
+551,metal,금속
+552,microwave,전자레인지
+553,middle,가운데
+554,million,백만
+555,mind,정신
+556,minimum,최소한의
+557,minor,"별로 중요하지 않은, 작은"
+558,minute,분
+559,miracle,기적
+560,miss,놓치다
+561,mission,사명
+562,model,모델
+563,moment,순간
+564,monkey,원숭이
+565,moon,달
+566,morning,아침
+567,motion,"운동, 움직임"
+568,mountain,산
+569,mouse,생쥐
+570,movie,영화
+571,much,많이
+572,muscle,근육
+573,mushroom,버섯
+574,music,음악
+575,must,~해야 하다
+576,mystery,신비
+577,myth,신화
+578,name,이름
+579,nation,국가
+580,near,가까운
+581,neck,목
+582,need,필요로 하다
+583,neighbor,이웃
+584,nerve(nervous),"긴장, 불안 (불안해 하는)"
+585,nest,"둥지, (작은 동물의) 보금자리"
+586,neutral,중립적인
+587,never,결코~ 않다
+588,news,"소식, 뉴스"
+589,newspaper,신문
+590,night,밤
+591,noise,"시끄러운 소리, 소음"
+592,noon,"정오, 낮 12시, 한낮"
+593,norm(normal),"표준, 일반적인 것 (보통의)"
+594,nose,코
+595,not,아니다
+596,note(notion),"메모 (개념, 관념)"
+597,nothing,아무것도
+598,nowadays,"오늘날, 요즘"
+599,nurse,간호사
+600,occupy(occupation),차지하다 (직업)
+601,ocean,"해양, 바다"
+602,of,~의
+603,office(official),"사무실, 직장 (공식적인)"
+604,often,"자주, 흔히, 종종"
+605,one,하나의
+606,open,열려있는
+607,opinion,의견
+608,or,또는
+609,orchestra,오케스트라
+610,ordinary,보통의 일상적인
+611,organ,장기
+612,organize,"준비하다, 체계화하다"
+613,over,"넘어지게, 정상보다 많은, ~위에"
+614,overall,"종합적인, 전체의"
+615,pack,"(짐을) 싸다, 꾸리다"
+616,paint,페인트
+617,particular(particularly),특정한 (특별히)
+618,passenger,승객
+619,pilot,조종사
+620,pink,분홍색
+621,plan,"계획, 계획하다"
+622,plastic,플라스틱
+623,please(pleasure),"부디, 제발, 정말 (기쁨, 즐거움)"
+624,popular,인기있는
+625,possible,가능한
+626,post,"우편, 발송하다"
+627,potato,감자
+628,power,힘
+629,practical,현실적인
+630,practise,연습하다
+631,pray,기도하다
+632,prefer,~보다 더 좋아하다
+633,present,"현재의, 선물"
+634,price,"가격, 값"
+635,prince,왕자
+636,print,인쇄하다
+637,prize,"상, 상품"
+638,problem,문제
+639,professor,교수
+640,program,프로그램
+641,progress,"진전, 진행하다"
+642,project,"계획, 기획, 프로젝트"
+643,promise,"약속, 약속하다"
+644,proud,자랑스러운
+645,public,공공의
+646,publish(publisher),출판하다 (출판사)
+647,purchase,"구입, 매입하다"
+648,pure,"순수한, 깨끗한"
+649,push,밀다
+650,quality,(qualify) 품질 (자격)
+651,quantity,수량
+652,question,질문
+653,quite,"꽤, 상당히"
+654,rabbit,토끼
+655,rail,"난간, 레일"
+656,register,등록하다
+657,regular,정기적인
+658,remember,기억하다
+659,remind,상기시키다
+660,request,요구
+661,research,연구
+662,restaurant,식당
+663,restroom,화장실
+664,result,결과
+665,return,"돌아오다, 반납"
+666,rhythm,"리듬, 율동"
+667,ribbon,리본
+668,rice,"쌀, 밥"
+669,rich,"부유한, 부자"
+670,ride,타다
+671,right,오른쪽
+672,ring,반지
+673,rise,"증가, 오르다"
+674,river,강
+675,road,도로
+676,robot,로보트
+677,rock,바위
+678,rocket,로켓
+679,roll,"(둥글게 말아 놓은) 통, 두루마리"
+680,room,방
+681,root,뿌리
+682,rope,밧줄
+683,rose,장미
+684,round,둥근
+685,routine,"숙련, 습관적 행동"
+686,rude,무례한
+687,rule,규칙
+688,run,달리다
+689,rush,서두르다
+690,sad,슬픈
+691,safe,안전한
+692,salad,샐러드
+693,sale,판매
+694,salt,소금
+695,same,같은
+696,sample,견본
+697,sand,모래
+698,sandwich,샌드위치
+699,save,구하다
+700,say,말하다
+701,schedule,일정
+702,school,학교
+703,science,과학
+704,scissors,가위
+705,score,점수
+706,sea,바다
+707,second,두 번째
+708,see,보다
+709,seed,씨앗
+710,select,선택하다
+711,sell,팔다
+712,send,보내다
+713,sense,감각
+714,sentence,문장
+715,separate,분리된
+716,serious,심각한
+717,service,서비스
+718,set,"놓다, (두 개 이상의 물건으로 된) 한 조"
+719,settle,해결하다
+720,seven,숫자 7
+721,several,"몇 몇의, 각각의"
+722,shadow,그림자
+723,shake,흔들리다
+724,shape,모양
+725,she,그녀
+726,ship,배
+727,shirt,셔츠
+728,shoe,구두
+729,shop,가게
+730,short,짧은
+731,shoulder,어깨
+732,shout,"외치다, 고함"
+733,show,보여주다
+734,shy,수줍은
+735,sick,아픈
+736,silly,바보 같은
+737,silver,은
+738,similar,비슷한
+739,simple,단순한
+740,sing,노래하다
+741,sister,자매
+742,sit,앉다
+743,situation,상황
+744,six,숫자 6
+745,size,크기
+746,skate,스케이트
+747,ski,스키
+748,skill,기술
+749,skin,피부
+750,skirt,치마
+751,sky,하늘
+752,sleep,자다
+753,slow,느린
+754,small,작은
+755,smart,똑똑한
+756,smell,냄새가 나다
+757,smile,웃다
+758,smooth,매끄러운
+759,snack,간식
+760,snake,뱀
+761,snow,눈
+762,so,그래서
+763,soccer,축구
+764,social,사회의
+765,society,사회
+766,sock,"양말, 세게 치다"
+767,soft,부드러운
+768,software,소프트웨어
+769,solid,단단한
+770,solve,해결하다
+771,some,일부
+772,son,아들
+773,song,노래
+774,soon,곧
+775,sound,소리
+776,soup,"국, 스프"
+777,sour,시큼한
+778,south,남쪽
+779,space,공간
+780,speak,말하다
+781,special,특별한
+782,specific,특정한
+783,speech,연설
+784,speed,속도
+785,spend,경비
+786,spoon,숟가락
+787,sport,스포츠
+788,spring,봄
+789,spy,"스파이, 첩보원"
+790,square,정사각형
+791,staff,직원
+792,stand,서다
+793,star,별
+794,start,시작
+795,stay,머무르다
+796,steak,스테이크
+797,steal,훔치다
+798,steam,증기
+799,steel,강철
+800,stone,돌
+801,stop,멈추다
+802,store,가게
+803,storm,폭풍
+804,story,이야기
+805,straight,"똑바로, 곧은"
+806,strawberry,딸기
+807,street,거리
+808,stretch,늘이다
+809,stripe,줄무늬
+810,strong,강한
+811,structure,구조
+812,stuff,물건
+813,style,스타일
+814,subject,주제
+815,subway,지하철
+816,success,성공
+817,such,"앞에 이미 언급한, 그런"
+818,sugar,설탕
+819,sum(summary),합계 (요약)
+820,summer,여름
+821,sun,해
+822,supply,공급
+823,support,지원하다
+824,sure,확실히
+825,surface,표면
+826,surprise,놀라다
+827,survive,생존하다
+828,swallow,삼키다
+829,sweat,땀
+830,sweater,스웨터
+831,sweep,쓸다
+832,sweet,달콤한
+833,swim,수영하다
+834,swing,그네
+835,system,체계
+836,table,"테이블, 탁자"
+837,tail,꼬리
+838,take,"가지고 가다, 잡다 등"
+839,talk,말하다
+840,tall,키가 큰
+841,tape,테이프
+842,taste,맛
+843,teach,가르치다
+844,team,팀
+845,technology,기술
+846,telephone,전화
+847,television,텔레비전
+848,tell,말하다
+849,temperature,온도
+850,ten,숫자 10
+851,tennis,테니스
+852,tent,텐트
+853,term,"용어, 학기"
+854,terrible,끔찍한
+855,text,"텍스트, 본문"
+856,than,~보다
+857,that,저것
+858,the,그만큼
+859,theater,극장
+860,then,그 다음에
+861,there,거기
+862,therefore,그러므로
+863,they,그들
+864,thick,두꺼운
+865,thing,물건
+866,think,생각하다
+867,third,"세번째, 셋째의"
+868,thirst,"갈증, 목이 마르다"
+869,thirteen,숫자 13
+870,thirty,숫자 30
+871,this,이것
+872,though,그렇지만
+873,thousand,"천 (1,000)"
+874,three,숫자 3
+875,throat,목
+876,through,~을 통해
+877,throw,던지다
+878,ticket,표
+879,tide,"조수, 밀물과 썰물"
+880,tie,묶다
+881,tiger,호랑이
+882,tight,단단한
+883,time,시간
+884,tiny,매우 작은
+885,tip,(뾰족한) 끝
+886,tire,"피곤해지다, 지치다"
+887,tissue,"화장지, 조직"
+888,title,"제목, 제목을 붙이다"
+889,to,"~로, ~쪽으로"
+890,toast,토스트
+891,today,오늘
+892,together,함께
+893,toilet,화장실
+894,tomato,토마토
+895,tomorrow,내일
+896,tone,"어조, 말투, 분위기"
+897,tongue,"혀, 혀로 핥다"
+898,tonight,오늘 밤
+899,too,"너무, ~도, 또한"
+900,tool,"연장, 도구, 공구"
+901,tooth,"이, 치아, 이빨"
+902,top,"맨 위, 꼭대기"
+903,topic,주제
+904,total,"전체의, 전부의"
+905,towel,수건
+906,town,"소도시, 시내"
+907,toxic,유독성의
+908,toy,장난감
+909,tradition,전통
+910,traffic,교통체증
+911,train,기차
+912,transfer,"옮기다, 이동하다"
+913,translate,번역하다
+914,transport(transportation),"차량, 수송"
+915,trap,"덫, 올가미"
+916,travel,"(특히 장거리) 여행하다, 여행"
+917,tree,나무
+918,triangle,삼각형
+919,trick,속임수
+920,trip,여행
+921,trouble,"문제, 골칫거리"
+922,truck,트럭
+923,TRUE,"사실인, 맞는, 진짜의"
+924,trust,"신뢰, 신임"
+925,truth,"사실, 진실"
+926,try,"노력하다, 애쓰다, 시도"
+927,turn,"돌다, 돌리다"
+928,twelve,숫자 12
+929,twenty,숫자 20
+930,twice,두 번
+931,twin,쌍둥이
+932,twist,"휘다, 구부리다, 비틀다"
+933,two,숫자 2
+934,type,"휴형, 종류"
+935,ugly,못생긴
+936,umbrella,우산
+937,uncle,"삼촌, 아저씨"
+938,under,아래에
+939,understand,"이해하다, 알아듣다"
+940,uniform,"제복, 유니폼"
+941,universe,우주
+942,university,대학
+943,unless,~하지 않는 한
+944,until,~때 까지
+945,up,"위에, 위로"
+946,upset,"속상하게 하다, 화가 난"
+947,vacuum,"진공, 진공청소기"
+948,vegetable,야채
+949,very,"매우, 아주, 정말"
+950,victory,승리
+951,video,"비디오, 녹화하다"
+952,view,"견해, 관점, 보다"
+953,village,마을
+954,violin,바이올린
+955,vision,"시력, 눈, 시야"
+956,visit,방문하다
+957,vocabulary,어휘
+958,voice,"목소리, 음성"
+959,volume,"용량, 양"
+960,volunteer,자원봉사자
+961,vote,"표, 투표"
+962,wake,"깨다, 일어나다"
+963,walk,"걷다, 걸어가다"
+964,wall,"담, 벽"
+965,want,"원하다, 바라다"
+966,war,전쟁
+967,warm,"따뜻한, 따뜻하게 하다"
+968,wash,씻다
+969,waste,"낭비하다, 낭비, 쓰레기"
+970,watch,시계
+971,water,물
+972,watermelon,수박
+973,wave,"파도, 물결"
+974,way,"방법, 방식"
+975,we,"(나를 포함한 사람들을 가리켜) 우리, 저희"
+976,weak,"약한, 힘이 없는"
+977,weapon,무기
+978,wear,"(옷, 모자, 장갑, 신발 등을) 입고 있다"
+979,weather,날씨
+980,website,웹사이트 (홈페이지)
+981,wedding,"결혼, 결혼식"
+982,week,"주, 일주일"
+983,weekend,주말
+984,weight,"무게, 체중"
+985,welcome,"맞이하다, 환영하다"
+986,well,"잘, 좋게, 제대로"
+987,west,서쪽
+988,wet,젖은
+989,whale,고래
+990,what,무엇
+991,wheat,밀
+992,wheel,바퀴
+993,when,언제
+994,where,"어디에, 어디로"
+995,whether,~인지 아닌지
+996,which,"어느, 어떤 사람들, 어느 것들"
+997,while,"~하는 동안, 잠깐, 잠시"
+998,whisper,"속삭이다, 소곤거리다"
+999,white,하얀색
+1000,who,누구
+1001,whole,"전체의, 온전한, 모든"
+1002,why,"왜, 무엇때문에"
+1003,wife,"아내, 부인"
+1004,wild,"야생의, 자생의"
+1005,will,~할 것이다 (미래의 일)
+1006,win,이기다
+1007,wind,바람
+1008,window,창문
+1009,wine,"포도주, 와인"
+1010,wing,날개
+1011,winter,겨울
+1012,wipe,닦다
+1013,wire,철사
+1014,wise,"지혜로운, 현명한"
+1015,wish,"원하다, 바라다"
+1016,with,~와 함께
+1017,within,"~이내에, ~안에"
+1018,without,~없이
+1019,woman,"여자, 여성"
+1020,wonder,"궁금하다, 궁금해하다"
+1021,wood,"나무, 목재"
+1022,word,"단어, 낱말"
+1023,work,"일하다, 작업하다, 일, 직장"
+1024,world,세계
+1025,worry,걱정하다
+1026,worth,가치가 있는
+1027,would,"~일 것이다, ~였을 것이다"
+1028,write,"(글, 책 등을) 쓰다"
+1029,year,"해, 1년"
+1030,yell,"소리지르다, 고함치다"
+1031,yellow,노란색
+1032,yesterday,어제
+1033,yet,아직
+1034,you,"너, 당신"
+1035,young,"어린, 젊은"
+1036,zebra,얼룩말
+1037,zero,"영, 0"
+1038,zone,"지역, 구역"
+1039,zoo,동물원
+1040,zookeeper,사육사

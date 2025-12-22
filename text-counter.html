@@ -1,0 +1,323 @@
+<!-- text-counter.html (Vanilla JS + Clean CSS) -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>글자수 · 어절수 · 음절수 통합 계산기</title>
+    <style>
+        :root{
+            --bg:#f4f5f7;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --line:#e5e7eb;
+            --primary:#2563eb;
+            --primary2:#1d4ed8;
+            --shadow:0 10px 28px rgba(15,23,42,.08);
+            --chip:#f9fafb;
+        }
+        *{ box-sizing:border-box; }
+        body{
+            margin:0; padding:24px;
+            font-family:-apple-system,BlinkMacSystemFont,"Malgun Gothic",system-ui,sans-serif;
+            background:var(--bg); color:var(--text);
+        }
+        .page{ max-width:1100px; margin:0 auto; }
+        h1{
+            margin:0 0 8px;
+            font-size:26px; font-weight:900; letter-spacing:-.2px;
+        }
+        .subtitle{
+            margin:0 0 18px;
+            color:var(--muted);
+            font-size:14px; line-height:1.7;
+        }
+        .card{
+            background:var(--card);
+            border-radius:18px;
+            box-shadow:var(--shadow);
+            padding:18px 20px 20px;
+        }
+
+        .textarea-wrap{ position:relative; }
+        textarea{
+            width:100%;
+            min-height:320px;
+            resize:vertical;
+            border-radius:14px;
+            border:1px solid var(--line);
+            background:#f9fafb;
+            padding:14px 14px 24px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "SF Mono", monospace;
+            font-size:14px;
+            line-height:1.65;
+            outline:none;
+            transition:border-color .15s, box-shadow .15s, background .15s;
+        }
+        textarea:focus{
+            border-color:var(--primary);
+            box-shadow:0 0 0 1px rgba(37,99,235,.15);
+            background:#ffffff;
+        }
+        .byte-hint{
+            position:absolute;
+            right:12px;
+            bottom:8px;
+            font-size:11px;
+            color:#9ca3af;
+            user-select:none;
+        }
+
+        .actions{
+            margin-top:10px;
+            display:flex;
+            flex-wrap:wrap;
+            gap:8px;
+            justify-content:flex-end;
+        }
+        .btn{
+            border:0;
+            border-radius:999px;
+            padding:10px 14px;
+            font-size:13px;
+            cursor:pointer;
+            background:#e5e7eb;
+            color:#374151;
+            transition:background .15s, transform .05s;
+            white-space:nowrap;
+        }
+        .btn:hover{ background:#d1d5db; }
+        .btn:active{ transform:translateY(1px); }
+        .btn.primary{ background:var(--primary); color:#fff; }
+        .btn.primary:hover{ background:var(--primary2); }
+        .btn.ghost{ background:#f3f4f6; }
+
+        .stats{
+            display:grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap:10px;
+            margin-top:14px;
+        }
+        .stat{
+            border:1px solid var(--line);
+            background:var(--chip);
+            border-radius:14px;
+            padding:12px 12px 10px;
+            text-align:center;
+        }
+        .stat .label{
+            font-size:12px;
+            color:var(--muted);
+            margin-bottom:6px;
+            font-weight:700;
+        }
+        .stat .value{
+            font-size:22px;
+            font-weight:900;
+            letter-spacing:-.2px;
+            color:#4c1d95;
+        }
+        .stat .sub{
+            margin-top:4px;
+            font-size:12px;
+            color:#9ca3af;
+        }
+
+        .note{
+            margin-top:14px;
+            border:1px solid var(--line);
+            background:#fff;
+            border-radius:14px;
+            padding:12px 14px;
+            font-size:13px;
+            color:#374151;
+            line-height:1.7;
+        }
+        .note b{ color:#111827; }
+
+        @media (max-width: 900px){
+            .stats{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+        }
+        @media (max-width: 640px){
+            body{ padding:16px; }
+            h1{ font-size:22px; }
+            .stats{ grid-template-columns: 1fr; }
+            .actions{ justify-content:stretch; }
+            .btn{ flex:1; }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <h1>글자수 · 어절수 · 음절수 통합 계산기</h1>
+    <p class="subtitle">
+        텍스트를 입력하면 <b>글자수(공백 포함/제외)</b>, <b>어절수</b>, <b>한글 음절수</b>와
+        <b>UTF-8 바이트</b>를 실시간으로 계산합니다.
+    </p>
+
+    <div class="card">
+        <div class="textarea-wrap">
+        <textarea id="textInput" autocomplete="off" spellcheck="false"
+                  placeholder="여기에 텍스트를 입력하거나 붙여넣으세요."></textarea>
+            <div class="byte-hint" id="byteHint">0 Bytes</div>
+        </div>
+
+        <div class="actions">
+            <button type="button" class="btn ghost" id="btnPaste">붙여넣기</button>
+            <button type="button" class="btn ghost" id="btnStripSpaces">연속 공백 정리</button>
+            <button type="button" class="btn ghost" id="btnStripHtml">HTML 제거</button>
+            <button type="button" class="btn" id="btnCopy">텍스트 복사</button>
+            <button type="button" class="btn primary" id="btnClear">내용 지우기</button>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="label">1) 글자수 (공백 포함)</div>
+                <div class="value" id="charCountAll">0</div>
+                <div class="sub"><span id="byteCountAll">0</span> bytes</div>
+            </div>
+
+            <div class="stat">
+                <div class="label">2) 글자수 (공백 제외)</div>
+                <div class="value" id="charCountNoSpace">0</div>
+                <div class="sub"><span id="byteCountNoSpace">0</span> bytes</div>
+            </div>
+
+            <div class="stat">
+                <div class="label">3) 어절수</div>
+                <div class="value" id="wordCount">0</div>
+                <div class="sub">공백 기준 분리</div>
+            </div>
+
+            <div class="stat">
+                <div class="label">4) 음절수 (한글만)</div>
+                <div class="value" id="koreanSyllables">0</div>
+                <div class="sub">[가-힣] 매칭</div>
+            </div>
+        </div>
+
+        <div class="note">
+            <b>참고</b><br>
+            - 바이트는 <b>UTF-8</b> 기준으로 계산합니다.<br>
+            - 어절수는 <b>공백(연속 공백 포함)</b>을 기준으로 분리합니다.<br>
+            - 한글 음절수는 <b>[가-힣]</b> 범위만 카운트합니다. (자모(ㄱ,ㅏ) 등은 제외)
+        </div>
+    </div>
+</div>
+
+<script>
+    // UTF-8 byte length
+    function getUtf8ByteLength(str) {
+        if (window.TextEncoder) return new TextEncoder().encode(str).length;
+        // 아주 구형 브라우저 fallback(정확도는 떨어질 수 있음)
+        return unescape(encodeURIComponent(str)).length;
+    }
+
+    const el = {
+        input: document.getElementById('textInput'),
+        byteHint: document.getElementById('byteHint'),
+        charAll: document.getElementById('charCountAll'),
+        charNoSpace: document.getElementById('charCountNoSpace'),
+        byteAll: document.getElementById('byteCountAll'),
+        byteNoSpace: document.getElementById('byteCountNoSpace'),
+        words: document.getElementById('wordCount'),
+        syllables: document.getElementById('koreanSyllables'),
+
+        btnPaste: document.getElementById('btnPaste'),
+        btnStripSpaces: document.getElementById('btnStripSpaces'),
+        btnStripHtml: document.getElementById('btnStripHtml'),
+        btnCopy: document.getElementById('btnCopy'),
+        btnClear: document.getElementById('btnClear'),
+    };
+
+    function computeWordCount(text) {
+        const trimmed = text.trim();
+        if (!trimmed) return 0;
+        return trimmed.split(/\s+/).filter(Boolean).length;
+    }
+
+    function updateCounts() {
+        const text = el.input.value || "";
+
+        const noSpaceText = text.replace(/\s/g, "");
+
+        const charCountAll = text.length;
+        const charCountNoSpace = noSpaceText.length;
+
+        const byteCountAll = getUtf8ByteLength(text);
+        const byteCountNoSpace = getUtf8ByteLength(noSpaceText);
+
+        const wordCount = computeWordCount(text);
+        const koreanSyllables = (text.match(/[가-힣]/g) || []).length;
+
+        el.charAll.textContent = charCountAll;
+        el.charNoSpace.textContent = charCountNoSpace;
+        el.byteAll.textContent = byteCountAll;
+        el.byteNoSpace.textContent = byteCountNoSpace;
+        el.words.textContent = wordCount;
+        el.syllables.textContent = koreanSyllables;
+
+        el.byteHint.textContent = byteCountAll + " Bytes";
+    }
+
+    // events
+    el.input.addEventListener('input', updateCounts);
+
+    // buttons
+    el.btnClear.addEventListener('click', () => {
+        el.input.value = "";
+        updateCounts();
+        el.input.focus();
+    });
+
+    el.btnStripHtml.addEventListener('click', () => {
+        const text = el.input.value || "";
+        el.input.value = text.replace(/<[^>]*>/g, "");
+        updateCounts();
+        el.input.focus();
+    });
+
+    el.btnStripSpaces.addEventListener('click', () => {
+        // 줄 단위 앞뒤 공백 제거 + 연속 공백 1개로 정리(원하면 수정 가능)
+        const text = el.input.value || "";
+        const lines = text.split(/\r\n|\n|\r/).map(l => l.trim());
+        el.input.value = lines.join("\n").replace(/[ \t]{2,}/g, " ");
+        updateCounts();
+        el.input.focus();
+    });
+
+    el.btnCopy.addEventListener('click', async () => {
+        try{
+            await navigator.clipboard.writeText(el.input.value || "");
+            el.btnCopy.textContent = "복사됨";
+            setTimeout(() => (el.btnCopy.textContent = "텍스트 복사"), 900);
+        }catch(e){
+            // fallback
+            el.input.select();
+            document.execCommand('copy');
+            el.btnCopy.textContent = "복사됨";
+            setTimeout(() => (el.btnCopy.textContent = "텍스트 복사"), 900);
+        }
+    });
+
+    el.btnPaste.addEventListener('click', async () => {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+            try{
+                const t = await navigator.clipboard.readText();
+                el.input.value = t;
+                updateCounts();
+                el.input.focus();
+            }catch(e){
+                alert("클립보드에서 텍스트를 읽을 수 없습니다. 브라우저 권한을 확인해 주세요.");
+            }
+        } else {
+            alert("이 브라우저에서는 붙여넣기 버튼을 지원하지 않습니다. Ctrl+V(또는 ⌘V)를 사용해 주세요.");
+        }
+    });
+
+    // init
+    updateCounts();
+</script>
+</body>
+</html>
