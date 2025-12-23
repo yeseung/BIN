@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Child Height Predictor</title>
+    <style>
+        :root{
+            --bg1:#f6f8ff;
+            --bg2:#f4fbff;
+            --card:rgba(255,255,255,.72);
+            --stroke:rgba(15,23,42,.10);
+            --text:#0f172a;
+            --muted:#64748b;
+            --primary:#2563eb;
+            --primary2:#1d4ed8;
+            --danger:#ef4444;
+            --shadow:0 10px 30px rgba(2,8,23,.08);
+            --radius:16px;
+        }
+        *{box-sizing:border-box}
+        body{
+            margin:0;
+            font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,Arial,sans-serif;
+            color:var(--text);
+            background:
+                    radial-gradient(1200px 700px at 10% 0%, var(--bg2), transparent 60%),
+                    radial-gradient(900px 600px at 100% 10%, var(--bg1), transparent 55%),
+                    linear-gradient(180deg,#ffffff, #f8fafc);
+            min-height:100vh;
+        }
+        .wrap{max-width:980px;margin:18px auto;padding:0 14px}
+        .title{
+            margin:0 0 10px 0;
+            font-size:20px;
+            letter-spacing:-.2px;
+        }
+        .subtitle{
+            margin:0 0 14px 0;
+            font-size:13px;
+            color:var(--muted);
+            line-height:1.55;
+        }
+        .glass-card{
+            background:var(--card);
+            border:1px solid var(--stroke);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding:16px;
+            margin:12px 0;
+        }
+        .grid{
+            display:grid;
+            gap:12px;
+            grid-template-columns:repeat(2,minmax(0,1fr));
+        }
+        @media (max-width:720px){
+            .grid{grid-template-columns:1fr}
+        }
+        label{
+            display:block;
+            font-weight:700;
+            font-size:13px;
+            margin:0 0 6px 0;
+        }
+        .hint{font-weight:500;color:var(--muted);font-size:12px}
+        .form-input{
+            width:100%;
+            padding:12px 12px;
+            border-radius:12px;
+            border:1px solid rgba(15,23,42,.12);
+            background:rgba(255,255,255,.85);
+            outline:none;
+            font-size:14px;
+            transition:.15s ease;
+        }
+        .form-input:focus{
+            border-color:rgba(37,99,235,.45);
+            box-shadow:0 0 0 4px rgba(37,99,235,.12);
+        }
+        .form-input.error{
+            border-color:rgba(239,68,68,.55);
+            box-shadow:0 0 0 4px rgba(239,68,68,.10);
+        }
+        .btn-row{
+            display:flex;
+            flex-wrap:wrap;
+            gap:10px;
+            align-items:center;
+            justify-content:flex-start;
+        }
+        .glass-button{
+            border:0;
+            cursor:pointer;
+            padding:11px 14px;
+            border-radius:12px;
+            font-weight:800;
+            font-size:14px;
+            color:#fff;
+            background:linear-gradient(135deg,var(--primary),var(--primary2));
+            box-shadow:0 10px 18px rgba(37,99,235,.20);
+            transition:.15s ease;
+        }
+        .glass-button:active{transform:translateY(1px)}
+        .glass-button.secondary{
+            background:linear-gradient(135deg,#94a3b8,#64748b);
+            box-shadow:0 10px 18px rgba(100,116,139,.18);
+        }
+        .result{
+            width:100%;
+            min-height:150px;
+            padding:12px;
+            border-radius:12px;
+            border:1px solid rgba(15,23,42,.12);
+            background:rgba(255,255,255,.85);
+            font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+            font-size:13px;
+            line-height:1.55;
+            resize:vertical;
+            outline:none;
+        }
+        .badge{
+            display:inline-flex;
+            align-items:center;
+            gap:6px;
+            padding:6px 10px;
+            border-radius:999px;
+            font-size:12px;
+            color:var(--muted);
+            background:rgba(15,23,42,.05);
+            border:1px solid rgba(15,23,42,.08);
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="glass-card">
+        <h4 class="title"><b>자녀키 예측 계산기</b></h4>
+        <p class="subtitle">
+            Mid-parental height = (엄마키 + 아빠키) / 2<br>
+            예상되는 자녀키(아들) = Mid-parental height + 6.5<br>
+            예상되는 자녀키(딸) = Mid-parental height − 6.5
+        </p>
+        <span class="badge">단위: cm</span>
+    </div>
+
+    <div class="glass-card">
+        <div class="grid">
+            <div>
+                <label for="fht">아빠 키 (cm) <span class="hint">* 필수</span></label>
+                <input type="number" step="any" id="fht" class="form-input" placeholder="예: 175" inputmode="decimal" />
+            </div>
+            <div>
+                <label for="mht">엄마 키 (cm) <span class="hint">* 필수</span></label>
+                <input type="number" step="any" id="mht" class="form-input" placeholder="예: 162" inputmode="decimal" />
+            </div>
+        </div>
+
+        <div class="btn-row" style="margin-top:14px;">
+            <button class="glass-button" id="calcBtn" type="button" onclick="future()">🧮 자녀키 예측 계산하기</button>
+            <button class="glass-button secondary" type="button" onclick="resetAll()">🔄 초기화</button>
+        </div>
+    </div>
+
+    <div class="glass-card">
+        <label for="result">결과</label>
+        <textarea id="result" class="result" readonly placeholder="여기에 결과가 표시됩니다."></textarea>
+    </div>
+</div>
+
+<script>
+    function getNum(id){
+        const el = document.getElementById(id);
+        const v = Number(el.value);
+        return { el, v };
+    }
+
+    function mark(el, ok){
+        el.classList.remove('error');
+        if (!ok) el.classList.add('error');
+    }
+
+    function future(){
+        const { el: fEl, v: fht } = getNum("fht");
+        const { el: mEl, v: mht } = getNum("mht");
+        const out = document.getElementById("result");
+
+        const fOk = Number.isFinite(fht) && fht > 0;
+        const mOk = Number.isFinite(mht) && mht > 0;
+
+        mark(fEl, fOk);
+        mark(mEl, mOk);
+
+        if (!fOk || !mOk){
+            out.value = "부모의 키를 모두 정확히 입력해주세요.";
+            return;
+        }
+
+        // 아들: (f + m + 13) / 2  = mid + 6.5
+        // 딸 : (f + m - 13) / 2  = mid - 6.5
+        const boy = ((fht + mht + 13) / 2).toFixed(1);
+        const girl = ((fht + mht - 13) / 2).toFixed(1);
+        const mid = ((fht + mht) / 2).toFixed(1);
+
+        out.value =
+            "Mid-parental height : " + mid + " cm\n\n" +
+            "미래 아들의 키 : " + boy + " cm\n" +
+            "미래 딸의 키 : " + girl + " cm";
+    }
+
+    function resetAll(){
+        document.getElementById("fht").value = "";
+        document.getElementById("mht").value = "";
+        document.getElementById("result").value = "";
+        document.getElementById("fht").classList.remove("error");
+        document.getElementById("mht").classList.remove("error");
+        document.getElementById("fht").focus();
+    }
+
+    // Enter로 계산 (PC 사용 편의)
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && (document.activeElement.id === "fht" || document.activeElement.id === "mht")) {
+            e.preventDefault();
+            future();
+        }
+    });
+</script>
+</body>
+</html>

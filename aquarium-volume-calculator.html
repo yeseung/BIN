@@ -1,0 +1,697 @@
+<!-- File: aquarium-volume-calculator.html -->
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Aquarium Volume Calculator</title>
+    <meta name="description" content="어항 수조 부피 계산기: 물/소일 용량과 3D 미리보기 제공" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+
+            --line:#e6e8f0;
+            --shadow:0 14px 40px rgba(17,24,39,.10);
+
+            --radius:18px;
+            --accent:#2c5aa0;
+
+            --tip-bg:#eaf6f2;
+            --tip-line:#c8eadf;
+
+            --btn1a:#7c3aed;
+            --btn1b:#2563eb;
+
+            --btn-gray-a:#6b7280;
+            --btn-gray-b:#4b5563;
+        }
+
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .wrap{
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 26px 16px 48px;
+        }
+
+        .card{
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .header{
+            padding: 22px 22px 16px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .header h1{
+            margin:0 0 6px;
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: -0.3px;
+        }
+
+        .sub{
+            margin:0;
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .content{
+            padding: 18px 22px 22px;
+        }
+
+        .tips{
+            margin: 10px 0 14px;
+            background: var(--tip-bg);
+            border: 1px solid var(--tip-line);
+            border-radius: 14px;
+            padding: 14px 16px;
+        }
+        .tips .title{
+            margin:0 0 8px;
+            font-weight: 900;
+            color:#0f766e;
+        }
+        .tips ul{
+            margin:0;
+            padding-left: 18px;
+            color:#134e4a;
+            font-size: 14px;
+        }
+        .tips li{ margin: 6px 0; }
+
+        .grid{
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            align-items: start;
+        }
+        @media (max-width: 760px){
+            .grid{ grid-template-columns: 1fr; }
+        }
+
+        .panel{
+            border: 1px solid rgba(17,24,39,.08);
+            background: linear-gradient(180deg, rgba(255,255,255,.86), rgba(255,255,255,.70));
+            border-radius: 16px;
+            box-shadow: 0 12px 30px rgba(17,24,39,.06);
+            padding: 14px;
+        }
+
+        .fields{
+            display:grid;
+            gap: 10px;
+        }
+
+        .field label{
+            display:flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 800;
+            color:#374151;
+        }
+
+        .row2{
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        @media (max-width: 520px){
+            .row2{ grid-template-columns: 1fr; }
+        }
+
+        input[type="number"], select{
+            width:100%;
+            border-radius: 14px;
+            border: 1px solid rgba(17,24,39,.14);
+            background:#fff;
+            padding: 12px 12px;
+            font-size: 14px;
+            outline:none;
+            transition: box-shadow .15s ease, border-color .15s ease;
+        }
+        input[type="number"]:focus, select:focus{
+            border-color: rgba(124,58,237,.35);
+            box-shadow: 0 0 0 4px rgba(124,58,237,.12);
+        }
+
+        .help{
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: -2px;
+            line-height: 1.4;
+        }
+
+        .buttons{
+            display:flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 12px;
+        }
+
+        .btn{
+            appearance:none;
+            border-radius: 14px;
+            padding: 11px 16px;
+            font-weight: 900;
+            font-size: 14px;
+            cursor:pointer;
+            border: 1px solid rgba(17,24,39,.10);
+            transition: transform .08s ease, filter .15s ease, background .15s ease;
+        }
+        .btn:hover{ transform: translateY(-1px); filter: brightness(1.03); }
+        .btn:active{ transform: translateY(0); }
+
+        .btn-primary{
+            color:#fff;
+            border-color: rgba(124,58,237,.25);
+            background: linear-gradient(135deg, var(--btn1a), var(--btn1b));
+            box-shadow: 0 10px 20px rgba(37,99,235,.14);
+        }
+        .btn-copy{
+            background:#eef2ff;
+            border-color: rgba(124,58,237,.18);
+            color:#3730a3;
+        }
+        .btn-ghost{
+            color:#fff;
+            border-color: rgba(107,114,128,.35);
+            background: linear-gradient(135deg, var(--btn-gray-a), var(--btn-gray-b));
+            box-shadow: 0 10px 20px rgba(107,114,128,.12);
+        }
+
+        textarea{
+            width: 100%;
+            min-height: 240px;
+            resize: vertical;
+            border-radius: 16px;
+            border: 1px solid rgba(17,24,39,.10);
+            background: #fff;
+            padding: 12px 12px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 13px;
+            line-height: 1.55;
+            outline:none;
+        }
+        textarea:focus{
+            border-color: rgba(124,58,237,.28);
+            box-shadow: 0 0 0 4px rgba(124,58,237,.10);
+        }
+
+        .viewer{
+            border-radius: 16px;
+            border: 1px solid rgba(17,24,39,.10);
+            overflow: hidden;
+            background: #f8fafc;
+            min-height: 420px;
+        }
+        .viewer .viewer-head{
+            padding: 10px 12px;
+            font-size: 12px;
+            font-weight: 900;
+            color:#374151;
+            background: #fbfcff;
+            border-bottom: 1px solid rgba(17,24,39,.08);
+            display:flex;
+            align-items:center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .badge{
+            font-size: 11px;
+            color:#6b7280;
+            font-weight: 800;
+            display:inline-flex;
+            align-items:center;
+            gap: 8px;
+        }
+        .dot{
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background:#22c55e;
+            box-shadow: 0 0 0 4px rgba(34,197,94,.12);
+        }
+
+        /* 기존 inline 스타일 대체 */
+        #container{
+            width:100%;
+            height: 60vh;
+            min-height: 360px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="card">
+        <div class="header">
+            <h1>어항 수조 부피 계산기</h1>
+            <p class="sub">수조 내부 치수(유리 두께 반영)로 <b>물/소일 부피</b>를 계산하고, 아래에서 3D로 확인할 수 있습니다.</p>
+        </div>
+
+        <div class="content">
+            <div class="tips">
+                <div class="title">💡 사용 팁</div>
+                <ul>
+                    <li>자주 쓰는 규격은 <b>프리셋</b>을 선택하면 자동 입력/계산됩니다.</li>
+                    <li><b>유리두께(T)</b>는 mm 단위입니다. (예: 5T = 5mm)</li>
+                    <li>헤드스페이스는 넘침 방지를 위한 <b>윗 여유 공간</b>입니다.</li>
+                </ul>
+            </div>
+
+            <div class="grid">
+                <!-- Left: Inputs -->
+                <div class="panel">
+                    <div class="fields">
+                        <div class="row2">
+                            <div class="field">
+                                <label>
+                                    수조 가로 [너비] (cm)
+                                    <input type="number" step="any" id="tankWidth" placeholder="예: 45">
+                                </label>
+                            </div>
+                            <div class="field">
+                                <label>
+                                    수조 세로 [앞뒤길이] (cm)
+                                    <input type="number" step="any" id="tankDepth" placeholder="예: 30">
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="row2">
+                            <div class="field">
+                                <label>
+                                    수조 높이 [전체높이] (cm)
+                                    <input type="number" step="any" id="tankHeight" placeholder="예: 30">
+                                </label>
+                            </div>
+                            <div class="field">
+                                <label>
+                                    수조 두께 [유리두께] (T = mm)
+                                    <input type="number" step="any" value="5" id="wallThickness" placeholder="예: 5">
+                                </label>
+                                <div class="help">※ 입력은 mm, 내부 계산은 cm로 변환됩니다.</div>
+                            </div>
+                        </div>
+
+                        <div class="row2">
+                            <div class="field">
+                                <label>
+                                    소일 높이 [바닥재 높이] (cm)
+                                    <input type="number" step="any" value="0" id="soilHeight" placeholder="예: 3">
+                                </label>
+                            </div>
+                            <div class="field">
+                                <label>
+                                    윗부분 비워둘 공간 높이 (cm)
+                                    <input type="number" step="any" value="5" id="headspaceHeight" placeholder="예: 5">
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label for="tankPreset">
+                                ※ 자주 사용하는 수조크기
+                                <select id="tankPreset" onchange="applyPreset()">
+                                    <option value="">수조 크기 선택</option>
+                                    <option value="15큐브">15큐브</option>
+                                    <option value="20큐브">20큐브</option>
+                                    <option value="25큐브">25큐브</option>
+                                    <option value="25하이큐브">25하이큐브</option>
+                                    <option value="30큐브">30큐브</option>
+                                    <option value="35큐브">35큐브</option>
+                                    <option value="35하이큐브">35하이큐브</option>
+                                    <option value="45큐브">45큐브</option>
+                                    <option value="자반어항">자반(한자반)</option>
+                                    <option value="30배럭">30배럭</option>
+                                    <option value="2자소폭">2자 소폭</option>
+                                    <option value="2자중폭">2자 중폭</option>
+                                    <option value="2자광폭">2자 광폭</option>
+                                    <option value="3자광폭">3자 광폭</option>
+                                </select>
+                            </label>
+                        </div>
+
+                        <div class="buttons">
+                            <button class="btn btn-primary" type="button" onclick="aquaVolume()">💧 수조 물 부피 계산</button>
+                            <button class="btn btn-copy" type="button" onclick="copyToClipboard()">📋 복사</button>
+                            <button class="btn btn-ghost" type="button" onclick="resetAquaVolume()">🔄 초기화</button>
+                        </div>
+
+                        <textarea id="AquaResult" placeholder="계산 결과가 여기에 표시됩니다."></textarea>
+                    </div>
+                </div>
+
+                <!-- Right: 3D Viewer -->
+                <div class="panel">
+                    <div class="viewer">
+                        <div class="viewer-head">
+                            <span>3D 미리보기</span>
+                            <span class="badge"><span class="dot"></span> 드래그/휠로 회전/확대</span>
+                        </div>
+                        <div id="container"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/"
+      }
+    }
+</script>
+
+<script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    let scene, camera, renderer, controls;
+    let tank, water, soil;
+    const container = document.getElementById('container');
+
+    function initThree() {
+        scene = new THREE.Scene();
+
+        camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+        camera.position.set(50, 40, 60);
+        camera.lookAt(0, 0, 0);
+
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        container.innerHTML = "";
+        container.appendChild(renderer.domElement);
+
+        controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.enableZoom = true;
+        controls.enablePan = true;
+        controls.enableRotate = true;
+        controls.autoRotate = false;
+        controls.autoRotateSpeed = 0.5;
+        controls.minDistance = 10;
+        controls.maxDistance = 200;
+
+        controls.touches = {
+            ONE: THREE.TOUCH.ROTATE,
+            TWO: THREE.TOUCH.DOLLY_PAN
+        };
+
+        const mainLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        mainLight.position.set(0, 50, 0);
+        mainLight.castShadow = true;
+        mainLight.shadow.mapSize.width = 2048;
+        mainLight.shadow.mapSize.height = 2048;
+        mainLight.shadow.camera.near = 0.1;
+        mainLight.shadow.camera.far = 200;
+        mainLight.shadow.camera.left = -50;
+        mainLight.shadow.camera.right = 50;
+        mainLight.shadow.camera.top = 50;
+        mainLight.shadow.camera.bottom = -50;
+        scene.add(mainLight);
+
+        const sideLight = new THREE.DirectionalLight(0xffffff, 0.6);
+        sideLight.position.set(30, 20, 30);
+        scene.add(sideLight);
+
+        scene.add(new THREE.AmbientLight(0xaaaaaa));
+
+        animate();
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+        if (controls) controls.update();
+        if (renderer && scene && camera) renderer.render(scene, camera);
+    }
+
+    function createTankMesh(width, height, depth) {
+        const geometry = new THREE.BoxGeometry(width, height, depth);
+        const material = new THREE.MeshPhongMaterial({
+            color: 0x3399ff,
+            opacity: 0.1,
+            transparent: true,
+            side: THREE.DoubleSide,
+            shininess: 50,
+        });
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        return mesh;
+    }
+
+    function createWaterMesh(width, height, depth) {
+        const geometry = new THREE.BoxGeometry(width, height, depth);
+        const material = new THREE.MeshPhongMaterial({
+            color: 0x0044aa,
+            opacity: 1.0,
+            transparent: false,
+            side: THREE.DoubleSide,
+            shininess: 150,
+            specular: 0x444444,
+        });
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        return mesh;
+    }
+
+    function createSoilMesh(width, height, depth) {
+        const geometry = new THREE.BoxGeometry(width, height, depth);
+        const material = new THREE.MeshPhongMaterial({
+            color: 0x7B3F00,
+            opacity: 1,
+            transparent: false,
+        });
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        return mesh;
+    }
+
+    window.aquaVolume = function() {
+        let widthInputEl = document.getElementById("tankWidth");
+        let widthInput = Number(widthInputEl.value);
+        widthInputEl.style.border = "";
+
+        let depthInputEl = document.getElementById("tankDepth");
+        let depthInput = Number(depthInputEl.value);
+        depthInputEl.style.border = "";
+
+        let heightInputEl = document.getElementById("tankHeight");
+        let heightInput = Number(heightInputEl.value);
+        heightInputEl.style.border = "";
+
+        let wallThicknessInputEl = document.getElementById("wallThickness");
+        let wallThicknessInput = Number(wallThicknessInputEl.value) / 10; // mm → cm
+        wallThicknessInputEl.style.border = "";
+
+        let soilHeightInputEl = document.getElementById("soilHeight");
+        let soilHeightInput = Number(soilHeightInputEl.value);
+        soilHeightInputEl.style.border = "";
+
+        let headspaceInputEl = document.getElementById("headspaceHeight");
+        let headspaceInput = Number(headspaceInputEl.value);
+        headspaceInputEl.style.border = "";
+
+        let valid = true;
+
+        if (widthInputEl.value.trim() === '' || isNaN(widthInput) || widthInput <= 0) { widthInputEl.style.border = "3px solid #ef4444"; valid = false; }
+        if (depthInputEl.value.trim() === '' || isNaN(depthInput) || depthInput <= 0) { depthInputEl.style.border = "3px solid #ef4444"; valid = false; }
+        if (heightInputEl.value.trim() === '' || isNaN(heightInput) || heightInput <= 0) { heightInputEl.style.border = "3px solid #ef4444"; valid = false; }
+        if (wallThicknessInputEl.value.trim() === '' || isNaN(wallThicknessInput) || wallThicknessInput < 0) { wallThicknessInputEl.style.border = "3px solid #ef4444"; valid = false; }
+        if (soilHeightInputEl.value.trim() === '' || isNaN(soilHeightInput) || soilHeightInput < 0) { soilHeightInputEl.style.border = "3px solid #ef4444"; valid = false; }
+        if (headspaceInputEl.value.trim() === '' || isNaN(headspaceInput) || headspaceInput < 0) { headspaceInputEl.style.border = "3px solid #ef4444"; valid = false; }
+
+        if (!valid) {
+            document.getElementById("AquaResult").value = "모든 항목을 정확히 입력해주세요.";
+            return;
+        }
+
+        const usableHeight = heightInput - wallThicknessInput;
+        if (usableHeight < (soilHeightInput + headspaceInput)) {
+            document.getElementById("AquaResult").value =
+                `소일 높이(${soilHeightInput} cm)와 헤드스페이스(${headspaceInput} cm)가 수조 내부 높이(${usableHeight.toFixed(1)} cm)를 초과합니다. 다시 확인해주세요.`;
+            return;
+        }
+
+        const innerWidthCheck = widthInput - wallThicknessInput * 2;
+        const innerDepthCheck = depthInput - wallThicknessInput * 2;
+        const innerHeightCheck = heightInput - wallThicknessInput;
+        if (innerWidthCheck <= 0 || innerDepthCheck <= 0 || innerHeightCheck <= 0) {
+            document.getElementById("AquaResult").value =
+                "수조 두께가 너무 두꺼워 수조의 내부 공간이 없습니다. 다시 확인해주세요.";
+            return;
+        }
+
+        const innerWidth = widthInput - wallThicknessInput * 2;
+        const innerDepth = depthInput - wallThicknessInput * 2;
+        const innerHeight = heightInput - wallThicknessInput;
+
+        const soilVolumeCm3 = innerWidth * innerDepth * soilHeightInput;
+        const soilVolumeL = soilVolumeCm3 / 1000;
+
+        const waterHeight = innerHeight - soilHeightInput - headspaceInput;
+        const waterVolumeCm3 = innerWidth * innerDepth * waterHeight;
+        const waterVolumeL = waterVolumeCm3 / 1000;
+
+        const totalVolumeL = (innerWidth * innerDepth * innerHeight) / 1000;
+
+        let result = "";
+        result += `① 수조 외부 크기 : ${widthInput} × ${depthInput} × ${heightInput} cm (${wallThicknessInput*10}T)\n`;
+        result += `② 수조 내부 크기 : ${innerWidth.toFixed(1)} × ${innerDepth.toFixed(1)} × ${innerHeight.toFixed(1)} cm\n`;
+        result += `③ 수조 내부 부피 : ${totalVolumeL.toFixed(1)} L\n`;
+        result += `④ 물 높이 : ${waterHeight.toFixed(1)} cm\n`;
+        result += `⑤ 물 부피 : ${waterVolumeL.toFixed(1)} L\n`;
+        result += `⑥ 소일 높이 : ${soilHeightInput} cm\n`;
+        result += `⑦ 소일 부피 : ${soilVolumeL.toFixed(1)} L\n`;
+        result += `⑧ 물과 소일 부피 : ${(waterVolumeL + soilVolumeL).toFixed(1)} L\n`;
+        result += `⑨ 추천 물고기 수 : ${(waterVolumeL/1.5).toFixed(1)} 마리 (1.5L 당 1마리, 소형어(구피), 보통의 여과력 기준)`;
+
+        document.getElementById("AquaResult").value = result;
+
+        if (!scene || !renderer) initThree();
+
+        if (tank) scene.remove(tank);
+        if (water) scene.remove(water);
+        if (soil) scene.remove(soil);
+
+        tank = createTankMesh(widthInput, heightInput, depthInput);
+        scene.add(tank);
+
+        const baseY = -heightInput / 2 + wallThicknessInput;
+
+        soil = createSoilMesh(innerWidth, soilHeightInput, innerDepth);
+        soil.position.y = baseY + soilHeightInput / 2;
+        scene.add(soil);
+
+        water = createWaterMesh(innerWidth, waterHeight, innerDepth);
+        water.position.y = baseY + soilHeightInput + waterHeight / 2;
+        scene.add(water);
+
+        const maxDimension = Math.max(widthInput, heightInput, depthInput);
+        const cameraDistance = maxDimension * 1.5;
+
+        camera.position.set(cameraDistance, cameraDistance, cameraDistance);
+        camera.lookAt(0, 0, 0);
+        camera.updateProjectionMatrix();
+
+        if (controls) {
+            controls.minDistance = maxDimension * 0.5;
+            controls.maxDistance = maxDimension * 3;
+            controls.target.set(0, 0, 0);
+            controls.update();
+        }
+    }
+
+    const presets = {
+        "15큐브": [15, 15, 15, 5],
+        "20큐브": [20, 20, 20, 5],
+        "25큐브": [25, 25, 25, 5],
+        "25하이큐브": [25, 25, 30, 5],
+        "30큐브": [30, 30, 30, 5],
+        "35큐브": [35, 35, 35, 5],
+        "35하이큐브": [35, 35, 40, 5],
+        "40큐브": [40, 40, 40, 5],
+        "45큐브": [45, 45, 45, 6],
+        "자반어항": [45, 30, 30, 5],
+        "30배럭": [30, 45, 45, 5],
+        "2자소폭": [60, 30, 30, 6],
+        "2자중폭": [60, 35, 35, 6],
+        "2자광폭": [60, 45, 45, 6],
+        "3자광폭": [90, 45, 45, 8]
+    };
+
+    window.applyPreset = function() {
+        const select = document.getElementById("tankPreset");
+        const selected = select.value;
+        if (presets[selected]) {
+            const [w, d, h, t] = presets[selected];
+            document.getElementById("tankWidth").value = w;
+            document.getElementById("tankDepth").value = d;
+            document.getElementById("tankHeight").value = h;
+            document.getElementById("wallThickness").value = t;
+            document.getElementById("soilHeight").value = 0;
+            document.getElementById("headspaceHeight").value = 0;
+            window.aquaVolume();
+        }
+    }
+
+    window.copyToClipboard = function() {
+        const result = document.getElementById("AquaResult");
+        result.select();
+        result.setSelectionRange(0, 99999);
+        document.execCommand("copy");
+        alert("결과가 클립보드에 복사되었습니다.");
+    }
+
+    window.resetAquaVolume = function() {
+        document.getElementById("tankWidth").value = "";
+        document.getElementById("tankDepth").value = "";
+        document.getElementById("tankHeight").value = "";
+        document.getElementById("wallThickness").value = 5;
+        document.getElementById("soilHeight").value = 0;
+        document.getElementById("headspaceHeight").value = 5;
+        document.getElementById("tankPreset").selectedIndex = 0;
+
+        ["tankWidth","tankDepth","tankHeight","wallThickness","soilHeight","headspaceHeight"].forEach(id=>{
+            document.getElementById(id).style.border = "";
+        });
+
+        document.getElementById("AquaResult").value = "";
+
+        if (renderer && renderer.domElement && container.contains(renderer.domElement)) {
+            container.removeChild(renderer.domElement);
+        }
+
+        if (tank) scene.remove(tank);
+        if (water) scene.remove(water);
+        if (soil) scene.remove(soil);
+
+        scene = null;
+        renderer = null;
+        controls = null;
+        tank = null;
+        water = null;
+        soil = null;
+    }
+
+    window.addEventListener("resize", () => {
+        if (!renderer) return;
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        if (controls) controls.update();
+    });
+</script>
+</body>
+</html>

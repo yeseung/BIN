@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>배당 재투자 시뮬레이션 계산기</title>
+
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --line:#e5e7eb;
+            --text:#111827;
+            --muted:#6b7280;
+            --primary:#2563eb;
+            --primary2:#1d4ed8;
+            --danger:#ef4444;
+            --danger2:#dc2626;
+            --shadow:0 10px 30px rgba(0,0,0,.06);
+            --radius:16px;
+        }
+        *{box-sizing:border-box}
+        body{
+            margin:0;
+            background:var(--bg);
+            color:var(--text);
+            font:14px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;
+        }
+        .page-wrap{max-width:980px;margin:18px auto;padding:0 14px}
+        h4{margin:0 0 10px 0;font-size:18px}
+        b{font-weight:900}
+
+        .glass-card{
+            background:var(--card);
+            border:1px solid var(--line);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            padding:14px;
+            margin:12px 0;
+        }
+        .info-box{
+            margin:12px 0;
+            padding:12px 14px;
+            border-radius:16px;
+            border:1px solid rgba(37,99,235,.22);
+            background:rgba(37,99,235,.06);
+            color:#1e3a8a;
+        }
+        .warning-box{
+            margin-top:12px;
+            padding:12px 14px;
+            border-radius:16px;
+            border:1px solid rgba(245,158,11,.25);
+            background:rgba(245,158,11,.10);
+        }
+
+        .input-sections-container{
+            display:flex;
+            gap:14px;
+            align-items:flex-start;
+        }
+        @media (max-width:860px){
+            .input-sections-container{flex-direction:column}
+        }
+
+        label{font-weight:900}
+        .form-input, .form-select{
+            width:100%;
+            padding:11px 12px;
+            border-radius:14px;
+            border:1px solid var(--line);
+            outline:none;
+            background:#fff;
+            font-size:14px;
+        }
+        .form-input:focus, .form-select:focus{
+            border-color:rgba(37,99,235,.5);
+            box-shadow:0 0 0 4px rgba(37,99,235,.12);
+        }
+        small{display:inline-block;margin-top:6px;color:var(--muted)}
+
+        .button-container{
+            display:flex;
+            gap:10px;
+            justify-content:center;
+            flex-wrap:wrap;
+        }
+        .glass-button{
+            border:0;
+            border-radius:14px;
+            padding:11px 14px;
+            background:linear-gradient(135deg,#3B82F6,#1D4ED8);
+            color:#fff;
+            font-weight:900;
+            cursor:pointer;
+            box-shadow:0 10px 20px rgba(37,99,235,.18);
+            user-select:none;
+        }
+        .glass-button:hover{filter:brightness(.98)}
+        .glass-button:active{transform:translateY(1px)}
+        .glass-button:disabled{
+            cursor:not-allowed;
+            filter:grayscale(.2) brightness(.95);
+            opacity:.85;
+        }
+        .clear-button{
+            background:linear-gradient(135deg,#95a5a6,#7f8c8d);
+            box-shadow:0 10px 20px rgba(0,0,0,.10);
+        }
+
+        /* validation */
+        .error{border-color:rgba(239,68,68,.75)!important; box-shadow:0 0 0 4px rgba(239,68,68,.12)!important}
+        .success{border-color:rgba(16,185,129,.6)!important; box-shadow:0 0 0 4px rgba(16,185,129,.10)!important}
+
+        /* result */
+        #result h5{margin:0 0 10px 0}
+        #result-content{
+            background:#f9fafb;
+            padding:14px;
+            border-radius:14px;
+            border:1px solid var(--line);
+            font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Courier New",monospace;
+            font-size:13px;
+            max-height:520px;
+            overflow:auto;
+        }
+
+        table{
+            width:100%;
+            border-collapse:collapse;
+            margin-top:10px;
+            background:#fff;
+            border:1px solid var(--line);
+            border-radius:12px;
+            overflow:hidden;
+        }
+        th, td{
+            border-bottom:1px solid var(--line);
+            padding:10px 8px;
+            text-align:right;
+            white-space:nowrap;
+            font-size:12.5px;
+        }
+        th{
+            background:#f3f4f6;
+            color:#111827;
+            font-weight:900;
+        }
+        td:first-child, th:first-child{text-align:left}
+        tr:hover td{background:#fafafa}
+    </style>
+</head>
+
+<body>
+<div class="page-wrap">
+    <h4><b>배당 재투자 시뮬레이션 계산기</b></h4>
+
+    <div class="info-box">
+        <p style="font-size:14px;margin:0;">
+            간편하게 배당금을 모두 재투자 했을 경우 상황을 시뮬레이션 해볼 수 있습니다.<br>
+            ※ 배당금은 모두 같은 주식을 재투자 한다고 가정<br>
+            ※ 주식의 부분 투자 (소수점 매수) 는 불가하다고 가정
+        </p>
+    </div>
+
+    <div class="glass-card">
+        <div class="input-sections-container">
+            <div style="flex:1;">
+                <div style="margin:10px 0;">
+                    <label for="investMoney">현재 투자 금액 <span style="color:red;">*</span></label>
+                    <input type="number" step="any" id="investMoney" class="form-input" placeholder="예: 1000000">
+                </div>
+                <div style="margin:10px 0;">
+                    <label for="stockPrice">주식 1주당 가격 <span style="color:red;">*</span></label>
+                    <input type="number" step="any" id="stockPrice" class="form-input" placeholder="예: 50000">
+                </div>
+                <div style="margin:10px 0;">
+                    <label for="dividendRate">시가배당률 (%) <span style="color:red;">*</span></label>
+                    <input type="number" step="any" id="dividendRate" class="form-input" placeholder="예: 3.4">
+                    <small>※ 1년 배당수익률 기준</small>
+                </div>
+                <div style="margin:10px 0;">
+                    <label for="stockGrowthRate">주식 연평균 상승률 (%) <span style="color:red;">*</span></label>
+                    <input type="number" step="any" id="stockGrowthRate" class="form-input" value="3.0" placeholder="예: 3.0">
+                </div>
+            </div>
+
+            <div style="flex:1;">
+                <div style="margin:10px 0;">
+                    <label for="taxRate">배당소득세 (%) <span style="color:red;">*</span></label>
+                    <input type="number" step="any" id="taxRate" class="form-input" value="15.4" placeholder="예: 15.4">
+                </div>
+                <div style="margin:10px 0;">
+                    <label for="dividendCycle">배당주기 <span style="color:red;">*</span></label>
+                    <select id="dividendCycle" class="form-input">
+                        <option value="1">매월 배당</option>
+                        <option value="2">분기 배당</option>
+                        <option value="3">반기 배당</option>
+                        <option value="4">연 배당</option>
+                    </select>
+                </div>
+                <div style="margin:10px 0;">
+                    <label for="durationYears">시뮬레이션 출력 기간(년) <span style="color:red;">*</span></label>
+                    <input type="number" step="1" id="durationYears" class="form-input" value="10" placeholder="예: 10">
+                </div>
+            </div>
+        </div>
+
+        <div class="warning-box">
+            <p style="margin:0;font-size:13px;color:#856404;">
+                <strong>📋 배당주기 안내:</strong><br>
+                • 매월 배당: 배당금 매월 배당<br>
+                • 분기 배당: 3, 6, 9, 12월 배당 가정<br>
+                • 반기 배당: 6, 12월 배당 가정<br>
+                • 연 배당: 12월 배당 가정
+            </p>
+        </div>
+    </div>
+
+    <div class="glass-card">
+        <div class="button-container">
+            <button onclick="dividendCalc()" class="glass-button" id="calcButton">💰 배당금 계산하기</button>
+            <button onclick="clearAllInputs()" class="glass-button clear-button">🗑️ 초기화</button>
+        </div>
+    </div>
+
+    <div id="result" class="glass-card" style="display:none;">
+        <h5 style="color:#1e3a8a;margin:0 0 10px 0;font-size:18px;font-weight:900;">📊 배당 시뮬레이션 결과</h5>
+        <div id="result-content"></div>
+    </div>
+</div>
+
+<script>
+    function dividendCalc() {
+        const calcButton = document.getElementById('calcButton');
+        calcButton.disabled = true;
+        const originalText = calcButton.innerHTML;
+        calcButton.innerHTML = '⏳ 계산 중...';
+
+        document.getElementById('result').style.display = 'none';
+
+        const investMoney = parseFloat(document.getElementById('investMoney').value);
+        let stockPrice = parseFloat(document.getElementById('stockPrice').value);
+        const dividendRate = parseFloat(document.getElementById('dividendRate').value) / 100;
+        const stockGrowthRate = parseFloat(document.getElementById('stockGrowthRate').value) / 100;
+        const taxRate = parseFloat(document.getElementById('taxRate').value) / 100;
+        const dividendCycle = parseInt(document.getElementById('dividendCycle').value, 10);
+        const durationYears = parseInt(document.getElementById('durationYears').value, 10);
+
+        if (
+            isNaN(investMoney) || isNaN(stockPrice) || isNaN(dividendRate) || isNaN(stockGrowthRate) || isNaN(taxRate) || isNaN(durationYears) ||
+            investMoney <= 0 || stockPrice <= 0 || dividendRate < 0 || stockGrowthRate < 0 || taxRate < 0 || durationYears <= 0
+        ) {
+            showError("모든 항목을 정확하게 입력해주세요.");
+            calcButton.innerHTML = originalText;
+            calcButton.disabled = false;
+            return;
+        }
+
+        setTimeout(() => {
+            try {
+                let currentStocks = Math.floor(investMoney / stockPrice);
+                let remainingCash = investMoney % stockPrice;
+                let accumulatedDividend = 0;
+
+                const monthlyStockGrowth = Math.pow(1 + stockGrowthRate, 1 / 12) - 1;
+
+                const startDate = new Date();
+                let currentYear = startDate.getFullYear();
+                let currentMonth = startDate.getMonth() + 1;
+
+                let resultHtml = '<h6 style="margin:0 0 10px 0;"><b>[ 전체 수익 개요 ]</b></h6>';
+
+                // 테이블 헤더
+                let tableHtml = '<h6 style="margin:18px 0 8px 0;"><b>[ 배당 시뮬레이션 결과 ]</b></h6>';
+                tableHtml += `<p style="margin:0 0 10px 0;"><b>시작 투자금 :</b> ${money(investMoney)} 원</p>`;
+                tableHtml += '<table><thead><tr>' +
+                    '<th>기간</th>' +
+                    '<th>총 평가금액</th>' +
+                    '<th>1주당 가격</th>' +
+                    '<th>보유 주식 수</th>' +
+                    '<th>월평균 배당금</th>' +
+                    '<th>연환산 배당금</th>' +
+                    '</tr></thead><tbody>';
+
+                // 배당 표기용(최근 배당 시점 기준)
+                let currentAnnualDividend = 0;
+                let currentMonthlyAverageDividend = 0;
+
+                const monthsTotal = durationYears * 12;
+
+                for (let i = 0; i < monthsTotal; i++) {
+                    const monthIndex = (currentMonth - 1) % 12;
+                    let isDividendMonth = false;
+                    let monthlyDividend = 0;
+
+                    // 배당 지급 (세후, 지급월만 지급)
+                    if (dividendCycle === 1) {
+                        isDividendMonth = true;
+                        monthlyDividend = (currentStocks * stockPrice * dividendRate / 12) * (1 - taxRate);
+                    } else if (dividendCycle === 2) {
+                        if (monthIndex === 2 || monthIndex === 5 || monthIndex === 8 || monthIndex === 11) {
+                            isDividendMonth = true;
+                            monthlyDividend = (currentStocks * stockPrice * dividendRate / 4) * (1 - taxRate);
+                        }
+                    } else if (dividendCycle === 3) {
+                        if (monthIndex === 5 || monthIndex === 11) {
+                            isDividendMonth = true;
+                            monthlyDividend = (currentStocks * stockPrice * dividendRate / 2) * (1 - taxRate);
+                        }
+                    } else if (dividendCycle === 4) {
+                        if (monthIndex === 11) {
+                            isDividendMonth = true;
+                            monthlyDividend = (currentStocks * stockPrice * dividendRate) * (1 - taxRate);
+                        }
+                    }
+
+                    if (isDividendMonth) {
+                        accumulatedDividend += monthlyDividend;
+
+                        // "최근 배당 시점" 기준 연환산/월평균 업데이트
+                        if (dividendCycle === 1) {
+                            currentAnnualDividend = currentStocks * stockPrice * dividendRate * (1 - taxRate);
+                        } else if (dividendCycle === 2) {
+                            currentAnnualDividend = monthlyDividend * 4;
+                        } else if (dividendCycle === 3) {
+                            currentAnnualDividend = monthlyDividend * 2;
+                        } else if (dividendCycle === 4) {
+                            currentAnnualDividend = monthlyDividend;
+                        }
+                        currentMonthlyAverageDividend = currentAnnualDividend / 12;
+                    }
+
+                    // 배당금 재투자 (정수 주식만)
+                    if (accumulatedDividend >= stockPrice) {
+                        const purchasable = Math.floor(accumulatedDividend / stockPrice);
+                        currentStocks += purchasable;
+                        accumulatedDividend -= purchasable * stockPrice;
+                    }
+
+                    const totalValue = (currentStocks * stockPrice) + accumulatedDividend + remainingCash;
+
+                    tableHtml += `<tr>
+          <td>${currentYear}년 ${currentMonth}월</td>
+          <td>${money(totalValue)}</td>
+          <td>${money(stockPrice)}</td>
+          <td>${currentStocks.toLocaleString('ko-KR')}</td>
+          <td>${money(currentMonthlyAverageDividend)}</td>
+          <td>${money(currentAnnualDividend)}</td>
+        </tr>`;
+
+                    // 주가 상승
+                    stockPrice *= (1 + monthlyStockGrowth);
+
+                    // 달력 넘김
+                    currentMonth++;
+                    if (currentMonth > 12) {
+                        currentMonth = 1;
+                        currentYear++;
+                    }
+                }
+
+                tableHtml += '</tbody></table>';
+
+                // 최종 요약 (마지막 월 상승 반영된 stockPrice 값 기준)
+                const finalValue = (currentStocks * stockPrice) + accumulatedDividend + remainingCash;
+                const profit = finalValue - investMoney;
+                const returnRate = (profit / investMoney) * 100;
+
+                resultHtml += `
+        <p style="margin:0 0 6px 0;"><b>최종 평가금액 :</b> ${money(finalValue)} 원</p>
+        <p style="margin:0 0 10px 0;"><b>총 수익 :</b> ${money(profit)} 원 (${returnRate.toFixed(2)}%)</p>
+      `;
+
+                document.getElementById('result-content').innerHTML = resultHtml + tableHtml;
+                document.getElementById('result').style.display = 'block';
+            } catch (err) {
+                showError("계산 중 오류가 발생했습니다: " + err.message);
+            } finally {
+                calcButton.innerHTML = originalText;
+                calcButton.disabled = false;
+            }
+        }, 60);
+    }
+
+    function money(n){
+        if (!isFinite(n)) return '0';
+        return Number(n).toLocaleString('ko-KR', { maximumFractionDigits: 2 });
+    }
+
+    function showError(message) {
+        document.getElementById('result-content').innerHTML =
+            `<div style="color:#b91c1c;padding:14px;background:#ffebee;border-radius:14px;border:1px solid rgba(185,28,28,.2);">
+      ❌ <b>${escapeHtml(message)}</b>
+    </div>`;
+        document.getElementById('result').style.display = 'block';
+    }
+
+    function escapeHtml(text){
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function clearAllInputs() {
+        const fields = ['investMoney','stockPrice','dividendRate','stockGrowthRate','taxRate','durationYears'];
+        fields.forEach(id => {
+            const el = document.getElementById(id);
+            if (id === 'stockGrowthRate') el.value = '3.0';
+            else if (id === 'taxRate') el.value = '15.4';
+            else if (id === 'durationYears') el.value = '10';
+            else el.value = '';
+            el.classList.remove('error','success');
+        });
+        document.getElementById('dividendCycle').value = '1';
+        document.getElementById('result').style.display = 'none';
+    }
+
+    function addInputValidation() {
+        const fields = ['investMoney','stockPrice','dividendRate','stockGrowthRate','taxRate','durationYears'];
+        fields.forEach(id => {
+            const el = document.getElementById(id);
+            el.addEventListener('input', function(){
+                const v = parseFloat(this.value);
+                if (this.value.trim() && (isNaN(v) || v <= 0)) {
+                    this.classList.remove('success');
+                    this.classList.add('error');
+                } else if (this.value.trim()) {
+                    this.classList.remove('error');
+                    this.classList.add('success');
+                } else {
+                    this.classList.remove('error','success');
+                }
+            });
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => addInputValidation());
+</script>
+</body>
+</html>

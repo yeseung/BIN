@@ -1,0 +1,798 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Markdown Editor & Viewer</title>
+
+    <!-- Marked.js (Markdown parser) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --line:#e5e7eb;
+            --text:#111827;
+            --muted:#6b7280;
+            --primary:#2563eb;
+            --primary2:#1d4ed8;
+            --green:#10b981;
+            --green2:#059669;
+            --danger:#ef4444;
+            --danger2:#dc2626;
+            --shadow:0 10px 30px rgba(0,0,0,.06);
+            --radius:16px;
+        }
+        *{box-sizing:border-box}
+        body{
+            margin:0;
+            background:var(--bg);
+            color:var(--text);
+            font:14px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;
+        }
+        .page-wrap{max-width:980px;margin:18px auto;padding:0 14px}
+        h4{margin:0 0 6px 0;font-size:18px}
+        p{margin:0 0 14px 0;color:var(--muted)}
+
+        .glass-card{
+            background:var(--card);
+            border:1px solid var(--line);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            padding:14px;
+            margin:12px 0;
+        }
+
+        /* Upload */
+        .upload-area{
+            border:2px dashed rgba(37,99,235,.25);
+            border-radius:18px;
+            padding:28px 18px;
+            text-align:center;
+            background:linear-gradient(180deg, rgba(37,99,235,.06), rgba(37,99,235,.02));
+            cursor:pointer;
+            transition:.15s ease;
+            position:relative;
+            overflow:hidden;
+        }
+        .upload-area:hover{border-color:rgba(37,99,235,.45)}
+        .upload-area.dragover{
+            border-color:rgba(37,99,235,.75);
+            background:linear-gradient(180deg, rgba(37,99,235,.10), rgba(37,99,235,.03));
+            transform:translateY(-1px);
+        }
+        .upload-icon{font-size:34px;margin-bottom:8px}
+        .upload-text{font-weight:900;font-size:15px}
+        .upload-subtext{margin-top:6px;color:var(--muted);font-size:12px}
+        #fileInput{
+            position:absolute;
+            inset:0;
+            opacity:0;
+            cursor:pointer;
+        }
+
+        /* Buttons */
+        .button-group{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+        .glass-button{
+            border:0;
+            border-radius:14px;
+            padding:10px 14px;
+            background:linear-gradient(135deg,#3B82F6,#1D4ED8);
+            color:#fff;
+            font-weight:900;
+            cursor:pointer;
+            box-shadow:0 10px 20px rgba(37,99,235,.18);
+            user-select:none;
+        }
+        .glass-button:hover{filter:brightness(.98)}
+        .glass-button:active{transform:translateY(1px)}
+        .glass-button.secondary{
+            background:linear-gradient(135deg,#eef2ff,#e0e7ff);
+            color:#1f2937;
+            box-shadow:0 10px 20px rgba(2,6,23,.06);
+            border:1px solid var(--line);
+        }
+        .glass-button.danger{
+            background:linear-gradient(135deg,var(--danger),var(--danger2));
+            box-shadow:0 10px 20px rgba(220,38,38,.18);
+        }
+
+        /* Info box */
+        .info-box{
+            margin:12px 0;
+            padding:12px 14px;
+            border-radius:16px;
+            border:1px solid rgba(16,185,129,.25);
+            background:rgba(16,185,129,.08);
+            color:#064e3b;
+        }
+        .info-box ul{margin:6px 0 0 0}
+
+        /* Stats */
+        .stats-card{
+            background:#fff;
+            border:1px solid var(--line);
+            border-radius:16px;
+            box-shadow:var(--shadow);
+            overflow:hidden;
+            margin:12px 0;
+        }
+        .stats-header{
+            padding:10px 14px;
+            font-weight:900;
+            background:#f3f4f6;
+            border-bottom:1px solid var(--line);
+        }
+        .stats-content{
+            padding:12px 14px;
+            display:grid;
+            grid-template-columns:repeat(3,minmax(0,1fr));
+            gap:10px;
+        }
+        @media (max-width:860px){
+            .stats-content{grid-template-columns:1fr}
+        }
+        .stats-item{color:#374151}
+        .stats-item strong{color:#111827}
+
+        /* Editor container */
+        .editor-container{display:none}
+        .editor-header{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:10px;
+            flex-wrap:wrap;
+            margin-bottom:10px;
+        }
+        .editor-header h3{margin:0;font-size:16px}
+        .mode-toggle{
+            display:flex;
+            gap:8px;
+            padding:6px;
+            background:#f3f4f6;
+            border:1px solid var(--line);
+            border-radius:14px;
+        }
+        .mode-button{
+            border:1px solid var(--line);
+            background:#fff;
+            border-radius:12px;
+            padding:9px 12px;
+            cursor:pointer;
+            font-weight:900;
+            color:#374151;
+            box-shadow:0 6px 14px rgba(0,0,0,.05);
+        }
+        .mode-button.active{
+            border-color:rgba(37,99,235,.35);
+            box-shadow:0 10px 18px rgba(37,99,235,.14);
+            color:#111827;
+        }
+
+        textarea#editorText{
+            width:100%;
+            min-height:320px;
+            resize:vertical;
+            padding:12px 14px;
+            border:1px solid var(--line);
+            border-radius:16px;
+            outline:none;
+            font:13.5px/1.7 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+            background:#fff;
+        }
+        textarea#editorText:focus{
+            border-color:rgba(37,99,235,.5);
+            box-shadow:0 0 0 4px rgba(37,99,235,.12);
+        }
+
+        /* Viewer */
+        #viewerContent{
+            display:none;
+            border:1px solid var(--line);
+            border-radius:16px;
+            padding:14px;
+            background:#fff;
+            overflow:auto;
+            min-height:320px;
+        }
+        /* Markdown rendering styles */
+        #viewerContent h1,#viewerContent h2,#viewerContent h3,#viewerContent h4,#viewerContent h5,#viewerContent h6{
+            color:#1e3a8a;margin:1.1em 0 .6em 0;
+        }
+        #viewerContent h1{border-bottom:2px solid rgba(59,130,246,.25);padding-bottom:8px}
+        #viewerContent p{color:#111827}
+        #viewerContent a{color:var(--primary);text-decoration:none}
+        #viewerContent a:hover{text-decoration:underline}
+        #viewerContent code{
+            background:rgba(59,130,246,.10);
+            padding:2px 6px;
+            border-radius:6px;
+            font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+            font-size:.92em;
+        }
+        #viewerContent pre{
+            background:rgba(30,64,175,.08);
+            padding:14px;
+            border-radius:12px;
+            overflow:auto;
+            border-left:4px solid #3B82F6;
+        }
+        #viewerContent pre code{background:none;padding:0}
+        #viewerContent blockquote{
+            border-left:4px solid #3B82F6;
+            padding:6px 12px;
+            margin:12px 0;
+            background:rgba(59,130,246,.06);
+            border-radius:10px;
+            color:#374151;
+        }
+        #viewerContent table{
+            width:100%;
+            border-collapse:collapse;
+            margin:12px 0;
+        }
+        #viewerContent th,#viewerContent td{
+            border:1px solid rgba(59,130,246,.25);
+            padding:8px 10px;
+            text-align:left;
+        }
+        #viewerContent th{
+            background:rgba(59,130,246,.12);
+            color:#1e3a8a;
+        }
+        #viewerContent img{max-width:100%;border-radius:12px}
+
+        /* Save menu */
+        .save-menu{
+            position:absolute;
+            right:0;
+            top:44px;
+            min-width:220px;
+            background:#fff;
+            border:1px solid var(--line);
+            border-radius:14px;
+            box-shadow:0 14px 30px rgba(0,0,0,.10);
+            padding:6px;
+            z-index:20;
+        }
+        .save-menu-item{
+            width:100%;
+            text-align:left;
+            padding:10px 10px;
+            border:0;
+            background:#fff;
+            border-radius:12px;
+            cursor:pointer;
+            font-weight:800;
+            color:#111827;
+        }
+        .save-menu-item:hover{background:#f3f4f6}
+
+        /* Modal */
+        .modal-overlay{
+            position:fixed;
+            inset:0;
+            background:rgba(0,0,0,.35);
+            display:none;
+            align-items:center;
+            justify-content:center;
+            padding:16px;
+            z-index:50;
+        }
+        .modal-overlay.active{display:flex}
+        .modal-container{
+            width:min(920px, 100%);
+            max-height:80vh;
+            overflow:auto;
+            background:#fff;
+            border:1px solid var(--line);
+            border-radius:18px;
+            box-shadow:0 30px 70px rgba(0,0,0,.20);
+        }
+        .modal-header{
+            position:sticky;
+            top:0;
+            background:#fff;
+            border-bottom:1px solid var(--line);
+            padding:12px 14px;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+            z-index:2;
+        }
+        .modal-header h3{margin:0;font-size:16px}
+        .modal-close{
+            border:1px solid var(--line);
+            background:#fff;
+            border-radius:12px;
+            width:38px;height:38px;
+            cursor:pointer;
+            font-size:20px;
+            font-weight:900;
+        }
+        .modal-body{padding:14px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+        @media (max-width:860px){.modal-body{grid-template-columns:1fr}}
+
+        .syntax-item{
+            border:1px solid var(--line);
+            border-radius:16px;
+            padding:12px;
+            background:#fff;
+        }
+        .syntax-title{display:flex;gap:8px;align-items:center;font-weight:900;margin-bottom:8px}
+        .syntax-example{
+            background:#0b1220;
+            color:#e5e7eb;
+            border-radius:12px;
+            padding:10px 12px;
+            white-space:pre-wrap;
+            font:12.5px/1.6 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+            overflow:auto;
+        }
+        .syntax-preview{
+            margin-top:10px;
+            border:1px dashed #d1d5db;
+            border-radius:12px;
+            padding:10px 12px;
+            background:#fafafa;
+        }
+        .syntax-actions{margin-top:10px;text-align:right}
+        .syntax-insert-btn{
+            border:0;
+            border-radius:12px;
+            padding:9px 12px;
+            font-weight:900;
+            cursor:pointer;
+            background:linear-gradient(135deg,#3B82F6,#1D4ED8);
+            color:#fff;
+        }
+
+        /* small helper */
+        .muted{color:var(--muted)}
+    </style>
+</head>
+
+<body>
+<div class="page-wrap">
+    <h4><b>마크다운 편집기 &amp; 뷰어 (Markdown Editor &amp; Viewer)</b></h4>
+    <p style="font-size:14px;">
+        마크다운 파일(.md, .markdown)을 열거나 편집할 수 있습니다. 무료로 설치 없이 사용가능합니다.
+    </p>
+
+    <div class="glass-card" id="uploadCard">
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📝</div>
+            <div class="upload-text">MD 파일을 여기에 드래그하거나 클릭하여 선택하세요</div>
+            <div class="upload-subtext">지원 형식: .md, .markdown</div>
+            <input type="file" id="fileInput" accept=".md,.markdown" />
+        </div>
+        <div class="button-group" style="margin-top:20px;">
+            <button class="glass-button secondary" type="button" onclick="createNewFile()">✨ 새 파일 만들기</button>
+        </div>
+    </div>
+
+    <div class="info-box">
+        <strong>💡 사용 팁:</strong>
+        <ul style="margin:5px 0;padding-left:20px;">
+            <li>드래그 앤 드롭으로 MD 파일을 열거나 “새 파일 만들기” 버튼을 클릭하세요</li>
+            <li>편집 모드에서 마크다운을 작성하고 뷰어 모드에서 미리보기를 확인하세요</li>
+            <li>작성한 내용은 텍스트 파일로 저장하거나 복사할 수 있습니다</li>
+        </ul>
+    </div>
+
+    <div class="stats-card" id="statsArea" style="display:none;">
+        <div class="stats-header">📊 문서 정보</div>
+        <div class="stats-content">
+            <div class="stats-item"><strong>📄 파일명:</strong> <span id="statsFileName"></span></div>
+            <div class="stats-item"><strong>📝 문자 수:</strong> <span id="statsChars"></span></div>
+            <div class="stats-item"><strong>📏 줄 수:</strong> <span id="statsLines"></span></div>
+        </div>
+    </div>
+
+    <div class="glass-card editor-container" id="editorContainer">
+        <div class="editor-header">
+            <h3 id="editorTitle">마크다운 편집</h3>
+
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <button class="mode-button" id="syntaxBtn" type="button" onclick="openSyntaxModal()" style="margin:0;">📖 마크다운 문법</button>
+                <div class="mode-toggle">
+                    <button class="mode-button active" id="editModeBtn" type="button" onclick="switchMode('edit')">✏️ 편집</button>
+                    <button class="mode-button" id="viewModeBtn" type="button" onclick="switchMode('view')">👁️ 미리보기</button>
+                </div>
+            </div>
+        </div>
+
+        <textarea id="editorText" placeholder="마크다운을 입력하세요..."></textarea>
+        <div id="viewerContent"></div>
+
+        <div class="button-group" style="margin-top:12px;">
+            <button class="glass-button" type="button" onclick="copyText()">📋 텍스트 복사</button>
+
+            <div style="position:relative;display:inline-block;">
+                <button class="glass-button secondary" type="button" onclick="event.stopPropagation(); toggleSaveMenu();">💾 파일로 저장 ▼</button>
+                <div id="saveMenu" class="save-menu" style="display:none;" onclick="event.stopPropagation();">
+                    <button class="save-menu-item" type="button" onclick="downloadFile('md')">📄 Markdown (.md/.markdown)</button>
+                    <button class="save-menu-item" type="button" onclick="downloadFile('html')">🌐 HTML (.html)</button>
+                    <button class="save-menu-item" type="button" onclick="downloadFile('txt')">📝 텍스트 (.txt)</button>
+                </div>
+            </div>
+
+            <button class="glass-button danger" type="button" onclick="reset()">🔄 새로 시작</button>
+        </div>
+
+        <div class="muted" style="text-align:center;margin-top:10px;font-size:12px;">
+            ※ 단어/문단 미리보기는 marked.js가 로드되어야 정상 동작합니다.
+        </div>
+    </div>
+
+    <!-- 마크다운 문법 모달 -->
+    <div class="modal-overlay" id="syntaxModal" onclick="closeSyntaxModalOnOverlay(event)">
+        <div class="modal-container" onclick="event.stopPropagation();">
+            <div class="modal-header">
+                <h3>📖 마크다운 문법 가이드</h3>
+                <button class="modal-close" type="button" onclick="closeSyntaxModal()">×</button>
+            </div>
+            <div class="modal-body" id="syntaxModalBody"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* Marked.js 설정 */
+    if (typeof marked !== 'undefined') {
+        marked.setOptions({ breaks:true, gfm:true });
+    }
+
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const uploadCard = document.getElementById('uploadCard');
+    const editorContainer = document.getElementById('editorContainer');
+    const editorText = document.getElementById('editorText');
+    const viewerContent = document.getElementById('viewerContent');
+    const statsArea = document.getElementById('statsArea');
+    const statsFileName = document.getElementById('statsFileName');
+    const statsChars = document.getElementById('statsChars');
+    const statsLines = document.getElementById('statsLines');
+    const editModeBtn = document.getElementById('editModeBtn');
+    const viewModeBtn = document.getElementById('viewModeBtn');
+    const editorTitle = document.getElementById('editorTitle');
+
+    let currentFileName = '';
+    let currentFileExtension = '.md';
+    let currentMode = 'edit';
+
+    /* 클릭으로 파일 선택 */
+    uploadArea.addEventListener('click', () => fileInput.click());
+
+    /* 드래그 앤 드롭 */
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+    uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+
+        const files = e.dataTransfer.files;
+        if (!files || files.length === 0) return;
+
+        const file = files[0];
+        const name = (file.name || '').toLowerCase();
+        if (name.endsWith('.md') || name.endsWith('.markdown') || file.type === 'text/markdown') {
+            handleFile(file);
+        } else {
+            alert('마크다운 파일(.md, .markdown)만 업로드 가능합니다.');
+        }
+    });
+
+    /* 파일 선택 이벤트 */
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files.length > 0) handleFile(e.target.files[0]);
+    });
+
+    /* 파일 처리 */
+    async function handleFile(file) {
+        const lower = (file.name || '').toLowerCase();
+        if (lower.endsWith('.markdown')) {
+            currentFileName = file.name.replace(/\.markdown$/i, '');
+            currentFileExtension = '.markdown';
+        } else if (lower.endsWith('.md')) {
+            currentFileName = file.name.replace(/\.md$/i, '');
+            currentFileExtension = '.md';
+        } else {
+            currentFileName = file.name || 'document';
+            currentFileExtension = '.md';
+        }
+
+        uploadCard.style.display = 'none';
+        statsArea.style.display = 'none';
+        editorContainer.style.display = 'block';
+
+        try {
+            const text = await file.text();
+            editorText.value = text;
+            updateStats();
+            updateViewer();
+            switchMode('view');
+        } catch (err) {
+            alert('파일을 읽는 중 오류가 발생했습니다: ' + err.message);
+            uploadCard.style.display = 'block';
+            editorContainer.style.display = 'none';
+        }
+    }
+
+    /* 새 파일 만들기 */
+    function createNewFile() {
+        currentFileName = 'new_file';
+        currentFileExtension = '.md';
+        uploadCard.style.display = 'none';
+        statsArea.style.display = 'none';
+        editorContainer.style.display = 'block';
+        editorText.value = '';
+        updateStats();
+        updateViewer();
+        switchMode('edit');
+        editorText.focus();
+    }
+
+    /* 모드 전환 */
+    function switchMode(mode) {
+        currentMode = mode;
+        const syntaxBtn = document.getElementById('syntaxBtn');
+
+        if (mode === 'edit') {
+            editorText.style.display = 'block';
+            viewerContent.style.display = 'none';
+            editModeBtn.classList.add('active');
+            viewModeBtn.classList.remove('active');
+            editorTitle.textContent = '마크다운 편집';
+            if (syntaxBtn) syntaxBtn.style.display = 'inline-block';
+        } else {
+            updateViewer();
+            editorText.style.display = 'none';
+            viewerContent.style.display = 'block';
+            editModeBtn.classList.remove('active');
+            viewModeBtn.classList.add('active');
+            editorTitle.textContent = '마크다운 미리보기';
+            if (syntaxBtn) syntaxBtn.style.display = 'none';
+        }
+    }
+
+    /* 뷰어 업데이트 */
+    function updateViewer() {
+        const text = editorText.value || '';
+        if (typeof marked !== 'undefined') {
+            viewerContent.innerHTML = marked.parse(text);
+        } else {
+            viewerContent.innerHTML =
+                '<p style="color:#EF4444;font-weight:900;">⚠️ 마크다운 파서를 로드할 수 없습니다. (marked.js)</p>' +
+                '<pre>' + escapeHtml(text) + '</pre>';
+        }
+        updateStats();
+    }
+
+    /* HTML escape */
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    /* 통계 */
+    function updateStats() {
+        const text = editorText.value || '';
+        const charCount = text.length;
+        const lineCount = text.length ? text.split('\n').length : 0;
+
+        statsChars.textContent = `${charCount.toLocaleString('ko-KR')} 자`;
+        statsLines.textContent = `${lineCount.toLocaleString('ko-KR')} 줄`;
+
+        if (currentFileName && currentFileName !== 'new_file') {
+            statsFileName.textContent = currentFileName + (currentFileExtension || '.md');
+            statsArea.style.display = 'block';
+        } else {
+            statsArea.style.display = 'none';
+        }
+    }
+
+    /* 편집 변경 */
+    editorText.addEventListener('input', () => {
+        if (currentMode === 'view') updateViewer();
+        updateStats();
+    });
+
+    /* 복사 */
+    async function copyText() {
+        const text = editorText.value || '';
+        try{
+            await navigator.clipboard.writeText(text);
+            alert('텍스트가 클립보드에 복사되었습니다!');
+        }catch(e){
+            editorText.select();
+            document.execCommand('copy');
+            alert('텍스트가 클립보드에 복사되었습니다!');
+        }
+    }
+
+    /* 저장 메뉴 */
+    function toggleSaveMenu() {
+        const menu = document.getElementById('saveMenu');
+        const isOpen = (menu.style.display === 'block');
+        if (!isOpen) {
+            menu.style.display = 'block';
+            setTimeout(() => document.addEventListener('click', closeSaveMenuOnOutsideClick), 0);
+        } else {
+            closeSaveMenu();
+        }
+    }
+    function closeSaveMenuOnOutsideClick(event) {
+        const menu = document.getElementById('saveMenu');
+        const saveWrap = event.target.closest('[onclick*="toggleSaveMenu"]');
+        if (!menu.contains(event.target) && !saveWrap) closeSaveMenu();
+    }
+    function closeSaveMenu() {
+        const menu = document.getElementById('saveMenu');
+        menu.style.display = 'none';
+        document.removeEventListener('click', closeSaveMenuOnOutsideClick);
+    }
+
+    /* 파일 저장 */
+    function downloadFile(format='md') {
+        closeSaveMenu();
+
+        const text = editorText.value || '';
+        let content = text;
+        let mimeType = 'text/markdown;charset=utf-8';
+        let extension = currentFileExtension || '.md';
+
+        const baseFileName =
+                  (currentFileName && currentFileName !== 'new_file')
+                      ? currentFileName
+                      : ('markdown_' + new Date().toISOString().slice(0,10));
+
+        if (format === 'html') {
+            mimeType = 'text/html;charset=utf-8';
+            extension = '.html';
+            const htmlContent = (typeof marked !== 'undefined') ? marked.parse(text) : ('<pre>' + escapeHtml(text) + '</pre>');
+            content = `<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>${escapeHtml(baseFileName)}</title>
+<style>
+  body{max-width:800px;margin:0 auto;padding:20px;font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;line-height:1.7;color:#111}
+  h1,h2,h3,h4,h5,h6{color:#1E40AF;margin-top:1.4em}
+  h1{border-bottom:2px solid rgba(59,130,246,.25);padding-bottom:8px}
+  code{background:rgba(59,130,246,.12);padding:2px 6px;border-radius:6px;font-family:ui-monospace,Menlo,Consolas,monospace}
+  pre{background:rgba(30,64,175,.08);padding:14px;border-radius:12px;overflow:auto;border-left:4px solid #3B82F6}
+  pre code{background:none;padding:0}
+  blockquote{border-left:4px solid #3B82F6;padding-left:12px;color:#374151;background:rgba(59,130,246,.06);border-radius:10px;margin:12px 0}
+  table{width:100%;border-collapse:collapse;margin:12px 0}
+  th,td{border:1px solid rgba(59,130,246,.25);padding:8px 10px;text-align:left}
+  th{background:rgba(59,130,246,.12);color:#1E40AF}
+  a{color:#2563eb;text-decoration:none}
+  a:hover{text-decoration:underline}
+  img{max-width:100%;height:auto;border-radius:10px}
+</style>
+</head>
+<body>
+${htmlContent}
+</body>
+</html>`;
+        } else if (format === 'txt') {
+            mimeType = 'text/plain;charset=utf-8';
+            extension = '.txt';
+        } else {
+            // md: 업로드 파일이 .markdown 이면 그대로 유지, 새파일은 .md
+            mimeType = 'text/markdown;charset=utf-8';
+            extension = (currentFileName && currentFileName !== 'new_file') ? (currentFileExtension || '.md') : '.md';
+        }
+
+        const blob = new Blob([content], { type:mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = baseFileName + extension;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    /* 리셋 */
+    function reset() {
+        if (!confirm('정말 새로 시작하시겠습니까? 현재 작성 중인 내용은 저장되지 않습니다.')) return;
+        uploadCard.style.display = 'block';
+        statsArea.style.display = 'none';
+        editorContainer.style.display = 'none';
+        fileInput.value = '';
+        editorText.value = '';
+        viewerContent.innerHTML = '';
+        currentFileName = '';
+        currentFileExtension = '.md';
+        switchMode('edit');
+    }
+
+    /* 문법 데이터 */
+    const markdownSyntax = [
+        { title:'제목 (Headers)', icon:'📌', example:'# 제목 1\n## 제목 2\n### 제목 3\n#### 제목 4\n##### 제목 5\n###### 제목 6', preview:'# 제목 1\n## 제목 2\n### 제목 3' },
+        { title:'굵게 (Bold)', icon:'**', example:'**굵은 텍스트**', preview:'**굵은 텍스트**' },
+        { title:'기울임 (Italic)', icon:'*', example:'*기울임 텍스트*', preview:'*기울임 텍스트*' },
+        { title:'취소선 (Strikethrough)', icon:'~~', example:'~~취소선 텍스트~~', preview:'~~취소선 텍스트~~' },
+        { title:'링크 (Link)', icon:'🔗', example:'[링크 텍스트](https://example.com)', preview:'[링크 텍스트](https://example.com)' },
+        { title:'이미지 (Image)', icon:'🖼️', example:'![이미지 설명](이미지URL.jpg)', preview:'![이미지 설명](이미지URL.jpg)' },
+        { title:'인라인 코드', icon:'`', example:'`코드`', preview:'`코드`' },
+        { title:'코드 블록', icon:'```', example:'```javascript\nconsole.log("Hello");\n```', preview:'```javascript\nconsole.log("Hello");\n```' },
+        { title:'순서 없는 목록', icon:'•', example:'- 항목 1\n- 항목 2\n  - 하위 항목', preview:'- 항목 1\n- 항목 2' },
+        { title:'순서 있는 목록', icon:'1.', example:'1. 항목 1\n2. 항목 2\n3. 항목 3', preview:'1. 항목 1\n2. 항목 2' },
+        { title:'인용구', icon:'>', example:'> 인용구 내용', preview:'> 인용구 내용' },
+        { title:'수평선', icon:'---', example:'---', preview:'---' },
+        { title:'표 (Table)', icon:'📊', example:'| 헤더 1 | 헤더 2 |\n|--------|--------|\n| 셀 1   | 셀 2   |', preview:'| 헤더 1 | 헤더 2 |\n|--------|--------|\n| 셀 1   | 셀 2   |' },
+        { title:'체크박스', icon:'☑️', example:'- [ ] 미완료 작업\n- [x] 완료된 작업', preview:'- [ ] 미완료 작업\n- [x] 완료된 작업' },
+        { title:'줄바꿈', icon:'↩️', example:'첫 번째 줄  \n두 번째 줄', preview:'첫 번째 줄  \n두 번째 줄' },
+        { title:'참조 스타일 링크', icon:'🔖', example:'[링크 텍스트][ref]\n\n[ref]: https://example.com', preview:'[링크 텍스트][ref]' },
+        { title:'자동 링크', icon:'🌐', example:'<https://example.com>', preview:'<https://example.com>' }
+    ];
+
+    /* 모달 */
+    function openSyntaxModal() {
+        const modal = document.getElementById('syntaxModal');
+        const modalBody = document.getElementById('syntaxModalBody');
+
+        modalBody.innerHTML = markdownSyntax.map((s, i) => `
+    <div class="syntax-item">
+      <div class="syntax-title"><span>${s.icon}</span><span>${s.title}</span></div>
+      <div class="syntax-example">${escapeHtml(s.example)}</div>
+      ${s.preview ? `<div class="syntax-preview">${typeof marked !== 'undefined' ? marked.parse(s.preview) : escapeHtml(s.preview)}</div>` : ''}
+      <div class="syntax-actions">
+        <button class="syntax-insert-btn" type="button" onclick="insertSyntax(${i})">입력</button>
+      </div>
+    </div>
+  `).join('');
+
+        modal.classList.add('active');
+    }
+    function closeSyntaxModal() {
+        document.getElementById('syntaxModal').classList.remove('active');
+    }
+    function closeSyntaxModalOnOverlay(e) {
+        if (e.target && e.target.id === 'syntaxModal') closeSyntaxModal();
+    }
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeSyntaxModal();
+    });
+
+    /* 삽입 */
+    function insertSyntax(index) {
+        const s = markdownSyntax[index];
+        const ta = editorText;
+        const start = ta.selectionStart;
+        const end = ta.selectionEnd;
+        const value = ta.value || '';
+
+        const before = value.substring(0, start);
+        const after = value.substring(end);
+        const insertText = s.example;
+
+        ta.value = before + insertText + after;
+
+        const newPos = start + insertText.length;
+        ta.setSelectionRange(newPos, newPos);
+        ta.focus();
+
+        updateStats();
+        if (currentMode === 'view') updateViewer();
+        closeSyntaxModal();
+    }
+
+    /* 초기 */
+    updateStats();
+    switchMode('edit');
+</script>
+</body>
+</html>

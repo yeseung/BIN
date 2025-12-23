@@ -1,0 +1,476 @@
+<!-- File: dog-age-calculator.html -->
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dog Age Calculator (UCSD Formula)</title>
+    <meta name="description" content="UCSD 공식(2019 연구 기반) 반려견 나이 ↔ 사람 나이 환산기" />
+
+    <style>
+        /* ===== Theme ===== */
+        :root{
+            --bg: #f6f7fb;
+            --card: #ffffff;
+            --text: #111827;
+            --muted: #6b7280;
+
+            --line: #e6e8f0;
+            --shadow: 0 14px 40px rgba(17, 24, 39, 0.10);
+
+            /* Dropzone */
+            --drop-bg: #f7fbff;
+            --drop-line: #bcd3f3;
+
+            /* Button (soft violet) */
+            --btn-bg: #eef2ff;
+            --btn-line: #d6ddff;
+            --btn-text: #374151;
+
+            /* Tips */
+            --tip-bg: #eaf6f2;
+            --tip-line: #c8eadf;
+        }
+
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        /* ===== Layout ===== */
+        .wrap{
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 26px 16px 40px;
+        }
+
+        /* ===== Card ===== */
+        .card{
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .header{
+            padding: 22px 22px 16px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .header h1{
+            margin: 0 0 6px;
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+        }
+
+        .sub{
+            margin: 0 0 12px;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .formula{
+            display:inline-block;
+            background: #f3f6ff;
+            border: 1px solid #dfe6ff;
+            color: #334155;
+            padding: 10px 12px;
+            border-radius: 14px;
+            font-size: 13px;
+        }
+        .formula code{
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-weight: 700;
+        }
+
+        /* ===== Content ===== */
+        .content{
+            padding: 18px 22px 22px;
+        }
+
+        /* ===== Mode radio cards ===== */
+        .mode{
+            display:flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+        .radio-card{
+            flex: 1 1 260px;
+            display:flex;
+            gap: 10px;
+            align-items: center;
+            padding: 12px 12px;
+            border-radius: 14px;
+            border: 1px solid var(--line);
+            background: #fafbff;
+            cursor: pointer;
+            user-select:none;
+            transition: transform .08s ease, border-color .15s ease, background .15s ease;
+        }
+        .radio-card:hover{
+            transform: translateY(-1px);
+            border-color: #cfe0ff;
+            background: #f5f8ff;
+        }
+        .radio-card input{
+            appearance:none;
+            width: 18px;
+            height: 18px;
+            border-radius: 999px;
+            border: 2px solid rgba(17,24,39,.25);
+            display:grid;
+            place-items:center;
+            background:#fff;
+            margin:0;
+        }
+        .radio-card input::before{
+            content:"";
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            background: #7c3aed;
+            transform: scale(0);
+            transition: transform .12s ease;
+        }
+        .radio-card input:checked{
+            border-color: rgba(124,58,237,.55);
+        }
+        .radio-card input:checked::before{
+            transform: scale(1);
+        }
+        .radio-title{
+            font-weight: 800;
+            font-size: 14px;
+            letter-spacing: -0.2px;
+        }
+        .radio-desc{
+            margin-top: 2px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        /* ===== Fields ===== */
+        .grid{
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        @media (max-width: 720px){
+            .grid{ grid-template-columns: 1fr; }
+        }
+
+        .field{
+            border: 1px solid var(--line);
+            background: #fbfcff;
+            border-radius: 14px;
+            padding: 12px;
+        }
+        .field label{
+            display:block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #374151;
+        }
+        .hint{
+            display:block;
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+        input[type="number"]{
+            width:100%;
+            border-radius: 12px;
+            border: 1px solid rgba(17,24,39,.12);
+            background: #ffffff;
+            padding: 12px 12px;
+            font-size: 14px;
+            outline:none;
+        }
+        input[type="number"]:focus{
+            border-color: rgba(124,58,237,.35);
+            box-shadow: 0 0 0 4px rgba(124,58,237,.12);
+        }
+
+        /* ===== Result area ===== */
+        .result{
+            border: 1px solid var(--line);
+            background: #fbfcff;
+            border-radius: 14px;
+            padding: 12px;
+        }
+        textarea{
+            width:100%;
+            min-height: 110px;
+            resize: vertical;
+            border: 0;
+            outline: none;
+            background: transparent;
+            font-family: inherit;
+            font-size: 14px;
+            color: var(--text);
+            line-height: 1.55;
+        }
+        .error{
+            color: #b91c1c;
+        }
+
+        /* ===== Button row ===== */
+        .row{
+            display:flex;
+            align-items:center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .btn{
+            appearance:none;
+            border: 1px solid var(--btn-line);
+            background: var(--btn-bg);
+            color: var(--btn-text);
+            border-radius: 14px;
+            padding: 10px 16px;
+            font-weight: 800;
+            font-size: 13px;
+            cursor:pointer;
+            transition: transform .08s ease, background .15s ease, border-color .15s ease;
+            box-shadow: 0 6px 16px rgba(99,102,241,.10);
+        }
+        .btn:hover{
+            background: #e9edff;
+            border-color: #c6cffc;
+            transform: translateY(-1px);
+        }
+        .btn:active{ transform: translateY(0); }
+
+        .badge{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+        .dot{
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: #22c55e;
+            box-shadow: 0 0 0 4px rgba(34,197,94,.12);
+        }
+
+        .footer-note{
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        /* ===== Optional: Dropzone (if you add it in HTML) ===== */
+        .dropzone{
+            margin-top: 14px;
+            background: var(--drop-bg);
+            border: 2px dashed var(--drop-line);
+            border-radius: 16px;
+            padding: 34px 14px;
+            text-align:center;
+        }
+        .dropzone .headline{
+            font-weight: 900;
+            font-size: 18px;
+            margin: 0 0 6px;
+        }
+        .dropzone .support{
+            margin:0;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        /* ===== Optional: Tips box (if you add it in HTML) ===== */
+        .tips{
+            margin-top: 18px;
+            background: var(--tip-bg);
+            border: 1px solid var(--tip-line);
+            border-radius: 14px;
+            padding: 16px 18px;
+        }
+        .tips .tips-title{
+            font-weight: 900;
+            color: #0f766e;
+            margin: 0 0 10px;
+        }
+        .tips ul{
+            margin: 0;
+            padding-left: 18px;
+            color: #134e4a;
+            font-size: 14px;
+        }
+        .tips li{ margin: 6px 0; }
+
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="card">
+        <div class="header">
+            <h1>반려견 나이 계산기 (UCSD 공식)</h1>
+            <p class="sub">UCSD 연구(2019) 기반 공식으로 반려견의 생물학적 나이를 사람 나이로 환산합니다.</p>
+            <div class="formula">
+                <div><b>Human Age</b> = <code>16 × ln(Dog Age) + 31</code></div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="mode" role="tablist" aria-label="변환 모드 선택">
+                <label class="radio-card">
+                    <input type="radio" name="age-convert" value="human" checked>
+                    <div>
+                        <div class="radio-title">반려견 나이 → 사람 나이</div>
+                        <div class="radio-desc">Dog Age 입력 시 Human Age 자동 계산</div>
+                    </div>
+                </label>
+
+                <label class="radio-card">
+                    <input type="radio" name="age-convert" value="dog">
+                    <div>
+                        <div class="radio-title">사람 나이 → 반려견 나이</div>
+                        <div class="radio-desc">Human Age 입력 시 Dog Age 역산</div>
+                    </div>
+                </label>
+            </div>
+
+            <div class="grid">
+                <div class="field" id="dogAgeInputDiv">
+                    <label for="dogAge"><b>반려견 나이 (year)</b></label>
+                    <input type="number" id="dogAge" inputmode="decimal" step="0.1" min="0" placeholder="예: 3.5" />
+                    <span class="hint">나이 입력 시 자동 계산됩니다. (0보다 커야 함)</span>
+                </div>
+
+                <div class="field" id="humanAgeInputDiv" style="display:none;">
+                    <label for="humanAge"><b>사람 나이 (year)</b></label>
+                    <input type="number" id="humanAge" inputmode="decimal" step="0.1" min="0" placeholder="예: 28" />
+                    <span class="hint">나이 입력 시 자동 계산됩니다. (0보다 커야 함)</span>
+                </div>
+
+                <div class="result" style="grid-column: 1 / -1;">
+                    <textarea id="result" readonly aria-label="계산 결과">값을 입력하면 결과가 여기에 표시됩니다.</textarea>
+
+                    <div class="row">
+                        <button class="btn" id="clearBtn" type="button">입력/결과 초기화</button>
+                        <span class="badge"><span class="dot"></span> 자연로그 ln 사용</span>
+                    </div>
+
+                    <div class="footer-note">
+                        ※ 이 공식은 “나이 비례(×7)” 방식이 아니라, DNA 메틸화 패턴을 바탕으로 한 로그 모델을 사용합니다.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ---- Elements
+    const modeRadios = document.querySelectorAll('input[name="age-convert"]');
+    const dogDiv = document.getElementById('dogAgeInputDiv');
+    const humanDiv = document.getElementById('humanAgeInputDiv');
+    const dogInput = document.getElementById('dogAge');
+    const humanInput = document.getElementById('humanAge');
+    const resultBox = document.getElementById('result');
+    const clearBtn = document.getElementById('clearBtn');
+
+    // ---- Helpers
+    const isValidPositive = (n) => Number.isFinite(n) && n > 0;
+
+    function setResult(text, isError=false){
+        resultBox.value = text;
+        resultBox.classList.toggle('error', isError);
+    }
+
+    function getMode(){
+        const checked = document.querySelector('input[name="age-convert"]:checked');
+        return checked ? checked.value : 'human';
+    }
+
+    function toggleMode(mode){
+        if (mode === 'human') {
+            dogDiv.style.display = 'block';
+            humanDiv.style.display = 'none';
+            humanInput.value = '';
+            setResult('값을 입력하면 결과가 여기에 표시됩니다.');
+            dogInput.focus();
+        } else {
+            dogDiv.style.display = 'none';
+            humanDiv.style.display = 'block';
+            dogInput.value = '';
+            setResult('값을 입력하면 결과가 여기에 표시됩니다.');
+            humanInput.focus();
+        }
+    }
+
+    function calculateHumanAge(){
+        const dogAge = parseFloat(dogInput.value);
+        if (!isValidPositive(dogAge)){
+            if (dogInput.value.trim() === '') {
+                setResult('값을 입력하면 결과가 여기에 표시됩니다.');
+                return;
+            }
+            setResult('반려견 나이는 0보다 커야 합니다. 항목을 다시 입력해주세요.', true);
+            return;
+        }
+
+        // Human Age = 16 * ln(Dog Age) + 31
+        const humanAge = 16 * Math.log(dogAge) + 31;
+        setResult(`반려견 나이 ${dogAge.toFixed(1)}세는 사람 나이 약 ${humanAge.toFixed(1)}세에 해당합니다.`);
+    }
+
+    function calculateDogAge(){
+        const humanAge = parseFloat(humanInput.value);
+        if (!isValidPositive(humanAge)){
+            if (humanInput.value.trim() === '') {
+                setResult('값을 입력하면 결과가 여기에 표시됩니다.');
+                return;
+            }
+            setResult('사람 나이는 0보다 커야 합니다. 항목을 다시 입력해주세요.', true);
+            return;
+        }
+
+        // Dog Age = exp((Human Age - 31) / 16)
+        const dogAge = Math.exp((humanAge - 31) / 16);
+        setResult(`사람 나이 ${humanAge.toFixed(1)}세는 반려견 나이 약 ${dogAge.toFixed(1)}세에 해당합니다.`);
+    }
+
+    function clearAll(){
+        dogInput.value = '';
+        humanInput.value = '';
+        setResult('값을 입력하면 결과가 여기에 표시됩니다.');
+        resultBox.classList.remove('error');
+        (getMode() === 'human' ? dogInput : humanInput).focus();
+    }
+
+    // ---- Events
+    modeRadios.forEach(r => {
+        r.addEventListener('change', (e) => toggleMode(e.target.value));
+    });
+
+    dogInput.addEventListener('input', () => {
+        if (getMode() === 'human') calculateHumanAge();
+    });
+
+    humanInput.addEventListener('input', () => {
+        if (getMode() === 'dog') calculateDogAge();
+    });
+
+    clearBtn.addEventListener('click', clearAll);
+
+    // init
+    toggleMode('human');
+</script>
+</body>
+</html>

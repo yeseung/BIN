@@ -1,0 +1,1044 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Absolute Pitch Test | 절대음감 테스트</title>
+    <meta name="description" content="WebAudio로 단음/멜로디/화음을 듣고 피아노 건반으로 맞추는 절대음감 테스트. 난이도, 10문제, 카운트다운, 랭킹(Top100) 지원." />
+
+    <style>
+        :root{
+            --bg1:#f6f8ff;
+            --bg2:#eef2ff;
+            --card: rgba(255,255,255,.78);
+            --stroke: rgba(17,24,39,.14);
+            --text:#111827;
+            --muted:#4b5563;
+            --blue:#2563eb;
+            --blue2:#1e40af;
+            --green:#16a34a;
+            --red:#dc2626;
+            --amber:#f59e0b;
+
+            --shadow: 0 18px 45px rgba(17,24,39,.14);
+            --radius: 14px;
+            --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+        }
+
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", "Malgun Gothic", Arial, sans-serif;
+            color: var(--text);
+            background:
+                    radial-gradient(1100px 700px at 15% 10%, #dbeafe 0%, transparent 55%),
+                    radial-gradient(900px 650px at 85% 15%, #e9d5ff 0%, transparent 55%),
+                    linear-gradient(180deg, var(--bg1), var(--bg2));
+            min-height:100vh;
+        }
+
+        .wrap{
+            max-width: 980px;
+            margin: 22px auto 60px;
+            padding: 0 14px;
+        }
+
+        .calc-wrapper{
+            background: var(--card);
+            border: 1px solid var(--stroke);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 16px;
+            margin: 14px 0;
+        }
+
+        /* Win98-ish header (optional) */
+        .medcalc-header{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap: 10px;
+            padding: 8px 10px;
+            background:#c0c0c0;
+            border: 2px outset #fff;
+            font-family: "Tahoma","MS Sans Serif",system-ui,sans-serif;
+        }
+
+        .text-center{ text-align:center; }
+        h4,h5{ margin:0 0 10px 0; }
+        p{ margin: 8px 0; }
+        .muted{ color:#666; }
+
+        .start-button, .back-button{
+            width: 100%;
+            padding: 10px 12px;
+            font-weight: 900;
+            border-radius: 12px;
+            cursor:pointer;
+            border: 1px solid rgba(37,99,235,.25);
+            background: rgba(255,255,255,.75);
+            transition: .15s ease;
+            box-shadow: 0 12px 22px rgba(17,24,39,.10);
+            user-select:none;
+        }
+        .start-button:hover, .back-button:hover{ transform: translateY(-1px); }
+        .start-button{
+            background: linear-gradient(135deg, rgba(37,99,235,.95), rgba(30,64,175,.95));
+            color: #fff;
+            border-color: rgba(37,99,235,.45);
+            margin-top: 10px;
+        }
+        .back-button{
+            margin-top: 14px;
+            background: rgba(255,255,255,.75);
+        }
+
+        /* Difficulty */
+        .difficulty-section{
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(37,99,235,.18);
+            background: rgba(255,255,255,.55);
+        }
+        .difficulty-section h5{
+            text-align:center;
+            font-weight: 1000;
+            margin-bottom: 12px;
+            color: var(--blue2);
+        }
+        .difficulty-options{
+            display:grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+        @media (max-width: 560px){
+            .difficulty-options{ grid-template-columns: 1fr; }
+        }
+        .difficulty-option{
+            display:flex;
+            align-items:center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 2px solid rgba(37,99,235,.18);
+            background: rgba(255,255,255,.70);
+            cursor:pointer;
+            user-select:none;
+            transition:.15s ease;
+        }
+        .difficulty-option:hover{ transform: translateY(-1px); }
+        .difficulty-option input{ cursor:pointer; }
+        .difficulty-option label{ font-weight: 900; cursor:pointer; }
+
+        /* Top100 */
+        .hall-title{
+            text-align:center;
+            margin-bottom: 12px;
+            background:#c0c0c0;
+            padding: 8px 12px;
+            border: 2px inset #c0c0c0;
+            font-family: "Tahoma","MS Sans Serif",system-ui,sans-serif;
+            font-weight: 1000;
+        }
+        #rankingContainer{
+            max-height: 300px;
+            overflow:auto;
+            border: 3px inset #c0c0c0;
+            padding: 10px;
+            background-color: #f9f9f9;
+            font-family: "Tahoma","MS Sans Serif",system-ui,sans-serif;
+        }
+
+        /* Game header */
+        .game-header{
+            display:flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: space-between;
+            align-items:center;
+            padding: 10px 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(37,99,235,.18);
+            background: rgba(255,255,255,.60);
+            margin-bottom: 12px;
+        }
+        .question-info, .score-info{
+            font-weight: 1000;
+            color: #0f172a;
+        }
+        .volume-control{
+            display:flex;
+            align-items:center;
+            gap: 8px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(17,24,39,.10);
+            background: rgba(255,255,255,.75);
+        }
+        .volume-slider{ width: 140px; }
+        #volumeValue{ font-family: var(--mono); font-weight: 900; color: #0f172a; }
+
+        /* Visualization area */
+        .visualization-area{
+            position: relative;
+            border-radius: 14px;
+            border: 1px solid rgba(37,99,235,.18);
+            background: linear-gradient(45deg, #e3f2fd, #bbdefb);
+            padding: 14px;
+            min-height: 90px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            overflow:hidden;
+            margin-bottom: 14px;
+        }
+        .countdown{
+            font-size: 44px;
+            font-weight: 1000;
+            color: rgba(30,64,175,.9);
+            text-shadow: 0 10px 22px rgba(17,24,39,.18);
+            user-select:none;
+        }
+
+        .wave-container{
+            display:flex;
+            align-items:flex-end;
+            gap: 6px;
+            height: 55px;
+        }
+        .wave-bar{
+            width: 10px;
+            border-radius: 6px;
+            background: rgba(37,99,235,.75);
+            animation: wave 0.9s ease-in-out infinite;
+            transform-origin: bottom;
+        }
+        .wave-bar:nth-child(2){ animation-delay: .08s; }
+        .wave-bar:nth-child(3){ animation-delay: .16s; }
+        .wave-bar:nth-child(4){ animation-delay: .24s; }
+        .wave-bar:nth-child(5){ animation-delay: .32s; }
+        .wave-bar:nth-child(6){ animation-delay: .40s; }
+        .wave-bar:nth-child(7){ animation-delay: .48s; }
+        .wave-bar:nth-child(8){ animation-delay: .56s; }
+        .wave-bar:nth-child(9){ animation-delay: .64s; }
+        .wave-bar:nth-child(10){ animation-delay: .72s; }
+
+        @keyframes wave{
+            0%,100%{ transform: scaleY(.25); opacity:.55; }
+            50%{ transform: scaleY(1.1); opacity:1; }
+        }
+
+        /* Result message */
+        .result-message{
+            white-space: pre-wrap;
+            word-break: break-word;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(17,24,39,.12);
+            background: rgba(255,255,255,.70);
+            margin: 10px 0 14px;
+            font-family: "Tahoma","MS Sans Serif",system-ui,sans-serif;
+            min-height: 42px;
+        }
+        .result-correct{ border-color: rgba(22,163,74,.25); background: rgba(22,163,74,.08); color: #065f46; font-weight: 900; }
+        .result-incorrect{ border-color: rgba(220,38,38,.25); background: rgba(220,38,38,.08); color: #7f1d1d; font-weight: 900; }
+        .result-progress{ border-color: rgba(245,158,11,.25); background: rgba(245,158,11,.08); color: #7c2d12; font-weight: 900; }
+        .result-final{ border-color: rgba(37,99,235,.25); background: rgba(37,99,235,.08); color: #0b2b6d; font-weight: 1000; }
+
+        /* Piano */
+        .piano-container{
+            display:flex;
+            justify-content:center;
+            margin: 14px 0 6px;
+        }
+        .piano{
+            position: relative;
+            display:flex;
+            gap: 2px;
+            padding: 10px;
+            border-radius: 16px;
+            border: 1px solid rgba(17,24,39,.12);
+            background: rgba(255,255,255,.60);
+            box-shadow: 0 14px 30px rgba(17,24,39,.10);
+            overflow:hidden;
+        }
+
+        .key{
+            position: relative;
+            display:flex;
+            align-items:flex-end;
+            justify-content:center;
+            font-weight: 1000;
+            user-select:none;
+            cursor:pointer;
+            transition: .08s ease;
+        }
+
+        .white-key{
+            width: 46px;
+            height: 170px;
+            background: #fff;
+            border: 2px solid rgba(17,24,39,.18);
+            border-radius: 10px;
+            padding-bottom: 10px;
+            color: #111827;
+            z-index: 1;
+            box-shadow: inset 0 -10px 18px rgba(0,0,0,.06);
+        }
+        .white-key:active{ transform: translateY(1px); }
+
+        .black-key{
+            width: 30px;
+            height: 110px;
+            background: linear-gradient(180deg, #111827, #0b1220);
+            border: 2px solid rgba(255,255,255,.10);
+            border-radius: 10px;
+            color: rgba(255,255,255,.92);
+            margin-left: -17px;
+            margin-right: -17px;
+            z-index: 2;
+            padding-bottom: 10px;
+            box-shadow: 0 10px 18px rgba(0,0,0,.28);
+        }
+        .black-key:active{ transform: translateY(1px); }
+
+        /* Key states */
+        .key.pressed{
+            outline: 4px solid rgba(37,99,235,.20);
+            box-shadow: 0 0 0 6px rgba(37,99,235,.10);
+        }
+        .key.correct{
+            outline: 4px solid rgba(22,163,74,.22);
+            box-shadow: 0 0 0 7px rgba(22,163,74,.12);
+        }
+        .key.incorrect{
+            outline: 4px solid rgba(220,38,38,.22);
+            box-shadow: 0 0 0 7px rgba(220,38,38,.12);
+        }
+        .key.show-answer{
+            outline: 4px dashed rgba(245,158,11,.45);
+            box-shadow: 0 0 0 7px rgba(245,158,11,.10);
+        }
+
+        /* Ranking registration */
+        #rankingRegistration{
+            margin-top: 16px;
+            padding: 14px;
+            background: #e0e0e0;
+            border: 3px outset #c0c0c0;
+            font-family: "Tahoma","MS Sans Serif",system-ui,sans-serif;
+            border-radius: 10px;
+        }
+        .ranking-form{
+            display:flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .ranking-form-row{
+            display:flex;
+            gap: 10px;
+            align-items:center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        #playerName{
+            flex: 1;
+            min-width: 180px;
+        }
+
+        /* Utilities */
+        .hidden{ display:none !important; }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <!-- START SCREEN -->
+    <div class="calc-wrapper pitch-test-wrapper start-screen" id="startScreen">
+        <h4><b>절대음감 테스트</b></h4>
+        <p class="muted" style="margin-bottom: 18px; font-size: 16px;">
+            당신의 절대음감 능력을 테스트해보세요!
+        </p>
+
+        <div class="difficulty-section">
+            <h5>《 난이도 선택 》</h5>
+            <div class="difficulty-options">
+                <div class="difficulty-option">
+                    <input type="radio" id="beginner" name="difficulty" value="beginner" checked>
+                    <label for="beginner">초급 (단음)</label>
+                </div>
+                <div class="difficulty-option">
+                    <input type="radio" id="intermediate" name="difficulty" value="intermediate">
+                    <label for="intermediate">중급 (멜로디 2개)</label>
+                </div>
+                <div class="difficulty-option">
+                    <input type="radio" id="advanced" name="difficulty" value="advanced">
+                    <label for="advanced">고급 (멜로디 3개)</label>
+                </div>
+                <div class="difficulty-option">
+                    <input type="radio" id="expert" name="difficulty" value="expert">
+                    <label for="expert">전문가 (화음 2개)</label>
+                </div>
+                <div class="difficulty-option">
+                    <input type="radio" id="master" name="difficulty" value="master">
+                    <label for="master">마스터 (화음 3개)</label>
+                </div>
+            </div>
+        </div>
+
+        <input type="button" value="테스트 시작" class="start-button" onclick="startGame()">
+
+        <div style="margin-top: 22px;">
+            <h5 class="hall-title">명예의 전당 (Top 100)</h5>
+            <div id="rankingContainer">
+                <p>랭킹 정보를 불러오는 중…</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- PLAY SCREEN -->
+    <div class="calc-wrapper pitch-test-wrapper play-screen hidden" id="playScreen">
+
+
+        <div class="game-header" style="margin-top: 12px;">
+            <div class="question-info" id="questionInfo">문제 1 / 10</div>
+
+            <div class="volume-control">
+                <label for="volumeSlider">🔊</label>
+                <input type="range" id="volumeSlider" min="0" max="100" value="50" class="volume-slider">
+                <span id="volumeValue">50%</span>
+            </div>
+
+            <div class="score-info" id="scoreInfo">정답: 0</div>
+        </div>
+
+        <div class="visualization-area" id="visualizationArea">
+            <div class="wave-container" id="waveContainer" style="display:none;">
+                <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+                <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+            </div>
+            <div class="countdown" id="countdown" style="display:none;">5</div>
+        </div>
+
+        <div class="result-message" id="resultMessage"> </div>
+
+        <div class="piano-container">
+            <div class="piano" id="piano" aria-label="피아노 건반">
+                <!-- C4 -->
+                <div class="key white-key" data-note="C4"  data-frequency="261.63">C</div>
+                <div class="key black-key" data-note="C#4" data-frequency="277.18">C#</div>
+                <!-- D4 -->
+                <div class="key white-key" data-note="D4"  data-frequency="293.66">D</div>
+                <div class="key black-key" data-note="D#4" data-frequency="311.13">D#</div>
+                <!-- E4 -->
+                <div class="key white-key" data-note="E4"  data-frequency="329.63">E</div>
+                <!-- F4 -->
+                <div class="key white-key" data-note="F4"  data-frequency="349.23">F</div>
+                <div class="key black-key" data-note="F#4" data-frequency="369.99">F#</div>
+                <!-- G4 -->
+                <div class="key white-key" data-note="G4"  data-frequency="392.00">G</div>
+                <div class="key black-key" data-note="G#4" data-frequency="415.30">G#</div>
+                <!-- A4 -->
+                <div class="key white-key" data-note="A4"  data-frequency="440.00">A</div>
+                <div class="key black-key" data-note="A#4" data-frequency="466.16">A#</div>
+                <!-- B4 -->
+                <div class="key white-key" data-note="B4"  data-frequency="493.88">B</div>
+                <!-- C5 -->
+                <div class="key white-key" data-note="C5"  data-frequency="523.25">C</div>
+            </div>
+        </div>
+
+        <div id="rankingRegistration" style="display:none;">
+            <h5 style="margin: 0 0 12px; text-align:center;">랭킹 등록</h5>
+            <div class="ranking-form">
+                <div class="ranking-form-row">
+                    <label for="playerName" style="font-weight: 1000;">이름:</label>
+                    <input type="text" id="playerName" maxlength="12" placeholder="12글자까지"
+                           style="padding: 6px 8px; border: 2px inset #c0c0c0; font-family: 'Tahoma','MS Sans Serif',sans-serif;">
+                </div>
+                <div class="ranking-form-row" style="justify-content:center;">
+                    <input type="button" value="랭킹 등록" onclick="registerRanking()"
+                           style="background:#dcdcdc; color:#000; border:3px outset #c0c0c0; padding:6px 12px; cursor:pointer; font-weight: 1000;">
+                </div>
+            </div>
+        </div>
+
+        <input type="button" value="메인으로 돌아가기" class="back-button" onclick="backToStart()">
+    </div>
+</div>
+
+<script>
+    // 게임 상태
+    let gameState = {
+        currentQuestion: 1,
+        totalQuestions: 10,
+        score: 0,
+        difficulty: 'beginner',
+        currentAnswer: [],
+        isPlaying: false,
+        canAnswer: false,
+        audioContext: null,
+        oscillators: [],
+        volume: 0.5,
+        playInterval: null,
+        timeoutId: null,
+        countdownInterval: null,
+        selectedNotes: [],
+        requiredNotes: 1,
+        isMelody: false,
+        melodyIndex: 0,
+        melodyInterval: null,
+        nextQuestionTimeout: null,
+        messageTimeout: null
+    };
+
+    // 음계 주파수 (C4 ~ C5)
+    const noteFrequencies = {
+        'C4': 261.63, 'C#4': 277.18, 'D4': 293.66, 'D#4': 311.13,
+        'E4': 329.63, 'F4': 349.23, 'F#4': 369.99, 'G4': 392.00,
+        'G#4': 415.30, 'A4': 440.00, 'A#4': 466.16, 'B4': 493.88,
+        'C5': 523.25
+    };
+
+    // 난이도별 점수(문항당 가중치) + 한글명
+    const difficultyScores = { beginner:2, intermediate:4, advanced:6, expert:8, master:10 };
+    const difficultyNames  = { beginner:'초급', intermediate:'중급', advanced:'고급', expert:'전문가', master:'마스터' };
+
+    // 게임 시작
+    function startGame() {
+        const selectedDifficulty = document.querySelector('input[name="difficulty"]:checked');
+        if (!selectedDifficulty) { alert('난이도를 선택해주세요!'); return; }
+
+        gameState.difficulty = selectedDifficulty.value;
+
+        document.getElementById('startScreen').style.display = 'none';
+        document.getElementById('playScreen').classList.remove('hidden');
+
+        gameState.currentQuestion = 1;
+        gameState.score = 0;
+        gameState.isPlaying = true;
+        gameState.canAnswer = false;
+
+        initializeAudio().then(() => startQuestion());
+    }
+
+    async function initializeAudio() {
+        if (!gameState.audioContext) {
+            gameState.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (gameState.audioContext.state === 'suspended') {
+            await gameState.audioContext.resume();
+        }
+
+        // 짧은 테스트 톤(사용자에게 “소리가 난다” 확인용)
+        const osc = gameState.audioContext.createOscillator();
+        const gain = gameState.audioContext.createGain();
+        osc.connect(gain);
+        gain.connect(gameState.audioContext.destination);
+        osc.frequency.setValueAtTime(440, gameState.audioContext.currentTime);
+        osc.type = 'sine';
+
+        gain.gain.setValueAtTime(0, gameState.audioContext.currentTime);
+        gain.gain.linearRampToValueAtTime(0.10 * gameState.volume, gameState.audioContext.currentTime + 0.08);
+        gain.gain.linearRampToValueAtTime(0, gameState.audioContext.currentTime + 0.35);
+
+        osc.start();
+        osc.stop(gameState.audioContext.currentTime + 0.40);
+    }
+
+    function startQuestion() {
+        updateUI();
+        generateQuestion();
+        playQuestion();
+    }
+
+    function updateUI() {
+        document.getElementById('questionInfo').textContent =
+            `문제 ${gameState.currentQuestion} / ${gameState.totalQuestions}`;
+        document.getElementById('scoreInfo').textContent = `정답: ${gameState.score}`;
+    }
+
+    function generateQuestion() {
+        const notes = Object.keys(noteFrequencies);
+        gameState.currentAnswer = [];
+        gameState.selectedNotes = [];
+        gameState.melodyIndex = 0;
+
+        if (gameState.difficulty === 'beginner') {
+            const randomNote = notes[Math.floor(Math.random() * notes.length)];
+            gameState.currentAnswer = [randomNote];
+            gameState.requiredNotes = 1;
+            gameState.isMelody = false;
+        } else if (gameState.difficulty === 'intermediate') {
+            const shuffled = [...notes].sort(() => 0.5 - Math.random());
+            gameState.currentAnswer = shuffled.slice(0, 2);
+            gameState.requiredNotes = 2;
+            gameState.isMelody = true;
+        } else if (gameState.difficulty === 'advanced') {
+            const shuffled = [...notes].sort(() => 0.5 - Math.random());
+            gameState.currentAnswer = shuffled.slice(0, 3);
+            gameState.requiredNotes = 3;
+            gameState.isMelody = true;
+        } else if (gameState.difficulty === 'expert') {
+            const shuffled = [...notes].sort(() => 0.5 - Math.random());
+            gameState.currentAnswer = shuffled.slice(0, 2);
+            gameState.requiredNotes = 2;
+            gameState.isMelody = false;
+        } else {
+            const shuffled = [...notes].sort(() => 0.5 - Math.random());
+            gameState.currentAnswer = shuffled.slice(0, 3);
+            gameState.requiredNotes = 3;
+            gameState.isMelody = false;
+        }
+    }
+
+    function playQuestion() {
+        clearAllTimers();
+        showVisualization();
+
+        gameState.canAnswer = true;
+        startCountdown();
+
+        if (gameState.isMelody) {
+            playMelody();
+        } else {
+            playNotes();
+            gameState.playInterval = setInterval(() => playNotes(), 1500);
+        }
+
+        gameState.timeoutId = setTimeout(() => {
+            if (gameState.canAnswer) {
+                gameState.canAnswer = false;
+                clearAllTimers();
+                hideCountdown();
+                showWaveVisualization();
+                handleTimeout();
+            }
+        }, 5000);
+    }
+
+    function showVisualization() {
+        document.getElementById('visualizationArea').style.background =
+            'linear-gradient(45deg, #e3f2fd, #bbdefb)';
+    }
+
+    function startCountdown() {
+        const el = document.getElementById('countdown');
+        el.style.display = 'block';
+
+        let timeLeft = 5;
+        el.textContent = timeLeft;
+
+        gameState.countdownInterval = setInterval(() => {
+            timeLeft--;
+            el.textContent = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(gameState.countdownInterval);
+                gameState.countdownInterval = null;
+            }
+        }, 1000);
+    }
+
+    function hideCountdown() {
+        document.getElementById('countdown').style.display = 'none';
+    }
+
+    function showWaveVisualization() {
+        document.getElementById('waveContainer').style.display = 'flex';
+    }
+
+    function stopOscillators() {
+        gameState.oscillators.forEach(o => { try { o.stop(); } catch(e){} });
+        gameState.oscillators = [];
+    }
+
+    function playNotes() {
+        stopOscillators();
+
+        if (gameState.audioContext.state === 'suspended') {
+            gameState.audioContext.resume().then(playNotesInternal);
+        } else {
+            playNotesInternal();
+        }
+    }
+
+    function playNotesInternal() {
+        const now = gameState.audioContext.currentTime;
+        const count = gameState.currentAnswer.length;
+
+        gameState.currentAnswer.forEach((note) => {
+            const frequency = noteFrequencies[note];
+            const oscillator = gameState.audioContext.createOscillator();
+            const gainNode = gameState.audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(gameState.audioContext.destination);
+
+            oscillator.frequency.setValueAtTime(frequency, now);
+            oscillator.type = 'sine';
+
+            const baseVolume = 0.55 / count; // (화음일수록 개별 볼륨 낮춤)
+            const finalVolume = baseVolume * gameState.volume;
+
+            gainNode.gain.setValueAtTime(0, now);
+            gainNode.gain.linearRampToValueAtTime(finalVolume, now + 0.08);
+            gainNode.gain.linearRampToValueAtTime(0, now + 1.05);
+
+            oscillator.start(now);
+            oscillator.stop(now + 1.10);
+
+            gameState.oscillators.push(oscillator);
+        });
+    }
+
+    function playMelody() {
+        playSingleNote(gameState.currentAnswer[0]);
+
+        gameState.melodyInterval = setInterval(() => {
+            gameState.melodyIndex++;
+            if (gameState.melodyIndex < gameState.currentAnswer.length) {
+                playSingleNote(gameState.currentAnswer[gameState.melodyIndex]);
+            } else {
+                gameState.melodyIndex = 0;
+                playSingleNote(gameState.currentAnswer[0]);
+            }
+        }, 800);
+    }
+
+    function playSingleNote(note) {
+        stopOscillators();
+
+        if (gameState.audioContext.state === 'suspended') {
+            gameState.audioContext.resume().then(() => playSingleNoteInternal(note));
+        } else {
+            playSingleNoteInternal(note);
+        }
+    }
+
+    function playSingleNoteInternal(note) {
+        const now = gameState.audioContext.currentTime;
+        const frequency = noteFrequencies[note];
+
+        const oscillator = gameState.audioContext.createOscillator();
+        const gainNode = gameState.audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(gameState.audioContext.destination);
+
+        oscillator.frequency.setValueAtTime(frequency, now);
+        oscillator.type = 'sine';
+
+        const finalVolume = 0.35 * gameState.volume;
+        gainNode.gain.setValueAtTime(0, now);
+        gainNode.gain.linearRampToValueAtTime(finalVolume, now + 0.07);
+        gainNode.gain.linearRampToValueAtTime(0, now + 0.55);
+
+        oscillator.start(now);
+        oscillator.stop(now + 0.60);
+
+        gameState.oscillators.push(oscillator);
+    }
+
+    function setupVolumeControl() {
+        const volumeSlider = document.getElementById('volumeSlider');
+        const volumeValue  = document.getElementById('volumeValue');
+
+        volumeSlider.addEventListener('input', function() {
+            gameState.volume = this.value / 100;
+            volumeValue.textContent = this.value + '%';
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // 건반 클릭
+        document.querySelectorAll('.key').forEach(key => {
+            key.addEventListener('click', function() {
+                if (!gameState.canAnswer || !gameState.isPlaying) return;
+                const clickedNote = this.dataset.note;
+                checkAnswer(clickedNote);
+            });
+        });
+
+        setupVolumeControl();
+        loadRankings();
+    });
+
+    function checkAnswer(clickedNote) {
+        if (!gameState.canAnswer) return;
+        if (gameState.selectedNotes.includes(clickedNote)) return;
+
+        const clickedKey = document.querySelector(`[data-note="${clickedNote}"]`);
+        clickedKey.classList.add('pressed');
+
+        gameState.selectedNotes.push(clickedNote);
+
+        if (gameState.selectedNotes.length < gameState.requiredNotes) {
+            const remaining = gameState.requiredNotes - gameState.selectedNotes.length;
+            showProgressMessage(`${remaining}개의 음을 더 선택하세요`);
+            return;
+        }
+
+        gameState.canAnswer = false;
+        clearAllTimers();
+
+        let isCorrect = false;
+
+        if (gameState.isMelody) {
+            if (gameState.selectedNotes.length === gameState.currentAnswer.length) {
+                isCorrect = gameState.selectedNotes.every((note, idx) => note === gameState.currentAnswer[idx]);
+            }
+        } else {
+            if (gameState.selectedNotes.length === gameState.currentAnswer.length) {
+                isCorrect = gameState.selectedNotes.every(note => gameState.currentAnswer.includes(note));
+            }
+        }
+
+        if (isCorrect) {
+            gameState.score++;
+            showResult('정답입니다!', 'correct');
+            gameState.selectedNotes.forEach(note => {
+                document.querySelector(`[data-note="${note}"]`).classList.add('correct');
+            });
+        } else {
+            showResult(`오답입니다. 정답: ${gameState.currentAnswer.join(', ')}`, 'incorrect');
+            gameState.selectedNotes.forEach(note => {
+                document.querySelector(`[data-note="${note}"]`).classList.add('incorrect');
+            });
+            gameState.currentAnswer.forEach(note => {
+                document.querySelector(`[data-note="${note}"]`).classList.add('show-answer');
+            });
+        }
+
+        hideCountdown();
+        showWaveVisualization();
+
+        gameState.nextQuestionTimeout = setTimeout(() => {
+            resetKeys();
+            nextQuestion();
+        }, 2000);
+    }
+
+    function clearAllTimers() {
+        if (gameState.playInterval) { clearInterval(gameState.playInterval); gameState.playInterval = null; }
+        if (gameState.timeoutId) { clearTimeout(gameState.timeoutId); gameState.timeoutId = null; }
+        if (gameState.countdownInterval) { clearInterval(gameState.countdownInterval); gameState.countdownInterval = null; }
+        if (gameState.melodyInterval) { clearInterval(gameState.melodyInterval); gameState.melodyInterval = null; }
+        if (gameState.nextQuestionTimeout) { clearTimeout(gameState.nextQuestionTimeout); gameState.nextQuestionTimeout = null; }
+        if (gameState.messageTimeout) { clearTimeout(gameState.messageTimeout); gameState.messageTimeout = null; }
+
+        stopOscillators();
+    }
+
+    function handleTimeout() {
+        if (gameState.selectedNotes.length > 0) {
+            showResult(`시간 초과! (${gameState.selectedNotes.length}/${gameState.requiredNotes}개 선택) 정답: ${gameState.currentAnswer.join(', ')}`, 'incorrect');
+            gameState.selectedNotes.forEach(note => {
+                document.querySelector(`[data-note="${note}"]`).classList.add('incorrect');
+            });
+        } else {
+            showResult(`시간 초과! 정답: ${gameState.currentAnswer.join(', ')}`, 'incorrect');
+        }
+
+        gameState.currentAnswer.forEach(note => {
+            document.querySelector(`[data-note="${note}"]`).classList.add('show-answer');
+        });
+
+        gameState.nextQuestionTimeout = setTimeout(() => {
+            resetKeys();
+            nextQuestion();
+        }, 2000);
+    }
+
+    function showProgressMessage(message) {
+        const el = document.getElementById('resultMessage');
+        el.textContent = message;
+        el.className = 'result-message result-progress';
+
+        gameState.messageTimeout = setTimeout(() => {
+            el.textContent = ' ';
+            el.className = 'result-message';
+        }, 2000);
+    }
+
+    function showResult(message, type) {
+        const el = document.getElementById('resultMessage');
+        el.textContent = message;
+        el.className = `result-message result-${type}`;
+        el.style.display = 'block';
+    }
+
+    function resetKeys() {
+        document.querySelectorAll('.key').forEach(key => {
+            key.classList.remove('pressed', 'correct', 'incorrect', 'show-answer');
+        });
+    }
+
+    function nextQuestion() {
+        document.getElementById('resultMessage').textContent = ' ';
+        document.getElementById('resultMessage').className = 'result-message';
+        document.getElementById('waveContainer').style.display = 'none';
+
+        gameState.currentQuestion++;
+
+        if (gameState.currentQuestion > gameState.totalQuestions) endGame();
+        else startQuestion();
+    }
+
+    function endGame() {
+        gameState.isPlaying = false;
+        clearAllTimers();
+        hideCountdown();
+        document.getElementById('waveContainer').style.display = 'none';
+
+        const percentage = Math.round((gameState.score / gameState.totalQuestions) * 100);
+        showFinalScore(gameState.score, gameState.totalQuestions, percentage);
+    }
+
+    function showFinalScore(score, total, percentage) {
+        const el = document.getElementById('resultMessage');
+
+        const difficultyScore = difficultyScores[gameState.difficulty];
+        const totalScore = score * difficultyScore;
+        const difficultyName = difficultyNames[gameState.difficulty];
+
+        let message = `[ Game Over ]\n`;
+        message += `맞춘 문제수: ${score}/${total} (${percentage}%)\n`;
+        message += `총 점수: ${totalScore} 점 (${difficultyName})\n\n`;
+
+        if (percentage >= 90) {
+            message += `완벽한 절대음감을 가지고 계시네요!\n모든 음을 정확히 구분하셨네요!`;
+        } else if (percentage >= 70) {
+            message += `훌륭한 음감 입니다!\n거의 완벽한 절대음감이에요!`;
+        } else if (percentage >= 50) {
+            message += `나쁘지 않네요. 괜찮은 음감입니다!\n좀 더 연습하면 더 좋아질 거예요!`;
+        } else {
+            message += `더 연습해보세요!\n절대음감은 꾸준한 연습이 필요해요!`;
+        }
+
+        el.textContent = message;
+        el.className = 'result-message result-final';
+        el.style.display = 'block';
+
+        showRankingRegistration(totalScore, score, total, difficultyName);
+    }
+
+    function showRankingRegistration(totalScore, correctCount, totalQuestions, difficultyName) {
+        document.getElementById('rankingRegistration').style.display = 'block';
+        document.getElementById('playerName').value = '';
+        document.getElementById('playerName').focus();
+
+        window.currentGameResult = {
+            totalScore, correctCount, totalQuestions,
+            difficulty: gameState.difficulty,
+            difficultyName
+        };
+    }
+
+    function registerRanking() {
+        const playerName = document.getElementById('playerName').value.trim();
+
+        if (!playerName) { alert('이름을 입력해주세요!'); return; }
+        if (playerName.length > 12) { alert('이름은 12글자까지 입력 가능합니다!'); return; }
+        if (!/^[가-힣a-zA-Z0-9]+$/.test(playerName)) {
+            alert('이름은 한글, 영문, 숫자만 입력 가능합니다!');
+            return;
+        }
+
+        const payload = {
+            name: playerName,
+            totalScore: window.currentGameResult.totalScore,
+            correctCount: window.currentGameResult.correctCount,
+            totalQuestions: window.currentGameResult.totalQuestions,
+            difficulty: window.currentGameResult.difficulty,
+            difficultyName: window.currentGameResult.difficultyName,
+            timestamp: new Date().toISOString()
+        };
+
+        fetch('https://www.medcalc.co.kr/js/pitch_test_ranking_save_ko.php', {
+            method: 'POST',
+            mode: 'cors',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert('랭킹에 등록되었습니다!');
+                document.getElementById('rankingRegistration').style.display = 'none';
+                loadRankings();
+            } else {
+                alert('랭킹 등록에 실패했습니다: ' + (data.error || '알 수 없는 오류'));
+            }
+        })
+        .catch(err => {
+            console.error('랭킹 등록 오류:', err);
+            alert('랭킹 등록 중 오류가 발생했습니다.');
+        });
+    }
+
+    function backToStart() {
+        document.getElementById('playScreen').classList.add('hidden');
+        document.getElementById('startScreen').style.display = 'block';
+
+        clearAllTimers();
+
+        gameState.isPlaying = false;
+        gameState.canAnswer = false;
+        gameState.currentQuestion = 1;
+        gameState.score = 0;
+        gameState.selectedNotes = [];
+        gameState.currentAnswer = [];
+
+        resetKeys();
+        document.getElementById('resultMessage').textContent = ' ';
+        document.getElementById('resultMessage').className = 'result-message';
+        document.getElementById('waveContainer').style.display = 'none';
+        document.getElementById('countdown').style.display = 'none';
+        document.getElementById('rankingRegistration').style.display = 'none';
+
+        loadRankings();
+    }
+
+    // 랭킹 로딩
+    function loadRankings() {
+        fetch('https://www.medcalc.co.kr/js/pitch_test_ranking_get_ko.php', {
+            method: 'GET',
+            mode: 'cors',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(res => {
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return res.json();
+        })
+        .then(data => {
+            const container = document.getElementById('rankingContainer');
+            container.innerHTML = '';
+
+            if (!data || data.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:#666;">아직 등록된 랭킹이 없습니다.</p>';
+                return;
+            }
+
+            data.forEach((entry, idx) => {
+                const row = document.createElement('p');
+                row.style.margin = '4px 0';
+                row.style.fontSize = '15px';
+                row.style.textAlign = 'left';
+                if (idx < 10) row.style.fontWeight = 'bold';
+
+                row.textContent = `#${idx+1}. ${entry.name} - [${entry.difficultyName}] ${entry.correctCount}문제 - Score ${entry.totalScore}`;
+                container.appendChild(row);
+            });
+        })
+        .catch(err => {
+            const container = document.getElementById('rankingContainer');
+            container.innerHTML = '<p style="color:red;text-align:center;">랭킹 정보를 불러올 수 없습니다.<br>서버 연결을 확인해주세요.</p>';
+            console.error('랭킹 로딩 오류:', err);
+        });
+    }
+</script>
+</body>
+</html>

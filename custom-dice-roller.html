@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Custom Dice Roller | 만능 주사위</title>
+    <meta name="description" content="사용자가 주사위(최대 6개) 각 면(6면)을 원하는 텍스트로 세팅하고 던질 수 있는 만능 주사위." />
+
+    <style>
+        :root{
+            --bg1:#f6f8ff;
+            --bg2:#eef2ff;
+            --card: rgba(255,255,255,.78);
+            --stroke: rgba(17,24,39,.14);
+            --text:#111827;
+            --muted:#4b5563;
+            --blue:#2563eb;
+            --shadow: 0 18px 45px rgba(17,24,39,.14);
+            --radius: 14px;
+            --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+        }
+
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR","Malgun Gothic", Arial, sans-serif;
+            color: var(--text);
+            background:
+                    radial-gradient(1100px 700px at 15% 10%, #dbeafe 0%, transparent 55%),
+                    radial-gradient(900px 650px at 85% 15%, #e9d5ff 0%, transparent 55%),
+                    linear-gradient(180deg, var(--bg1), var(--bg2));
+            min-height:100vh;
+        }
+
+        .wrap{ max-width: 980px; margin: 22px auto 60px; padding: 0 14px; }
+
+        .calc-wrapper{
+            background: var(--card);
+            border: 1px solid var(--stroke);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 16px;
+            margin: 14px 0;
+        }
+
+        h4{ margin: 0 0 10px 0; }
+        p{ margin: 8px 0; }
+        .muted{ color: #666; }
+
+        label{ display:inline-block; margin: 6px 0; }
+        select, input[type="text"]{
+            padding: 8px 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(17,24,39,.18);
+            background: rgba(255,255,255,.75);
+            outline: none;
+            font-family: inherit;
+        }
+        input[type="text"]{ width: 220px; max-width: 100%; }
+
+        /* Buttons */
+        .button-group{
+            display:flex;
+            gap: 10px;
+            justify-content:center;
+            align-items:center;
+            margin-top: 18px;
+            flex-wrap: wrap;
+        }
+        button{
+            border: 3px outset #c0c0c0;
+            background: #dcdcdc;
+            padding: 10px 14px;
+            cursor:pointer;
+            font-weight: 900;
+            border-radius: 10px;
+            transition: .15s ease;
+            user-select:none;
+        }
+        button:hover{ transform: translateY(-1px); }
+        button:active{ border-style: inset; transform: translateY(0); }
+
+        .config-button{
+            padding: 8px 10px;
+            border-radius: 10px;
+            margin-right: 6px;
+            margin-bottom: 6px;
+            font-weight: 900;
+            background: rgba(255,255,255,.65);
+        }
+        .config-button.active{
+            background: rgba(37,99,235,.15);
+            border-color: rgba(37,99,235,.35);
+        }
+
+        /* Dice input forms */
+        #diceConfigButtons{
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(37,99,235,.18);
+            background: rgba(255,255,255,.55);
+        }
+
+        .dice-input-form{
+            display:none;
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(17,24,39,.12);
+            background: rgba(255,255,255,.65);
+        }
+        .dice-input-form.active{ display:block; }
+
+        .dice-input-form h4{
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+        .dice-input-form label{
+            display:flex;
+            align-items:center;
+            justify-content: space-between;
+            gap: 10px;
+            margin: 6px 0;
+            flex-wrap: wrap;
+        }
+        .dice-input-form label span{ font-weight: 900; }
+        .dice-face-input{
+            flex: 1;
+            min-width: 180px;
+        }
+
+        /* Results */
+        #diceResultsContainer{
+            display:flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 10px;
+        }
+        .single-dice-display{
+            width: 120px;
+            height: 120px;
+            border: 3px inset #c0c0c0;
+            border-radius: 16px;
+            background: #fff;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            position: relative;
+            overflow:hidden;
+            box-shadow: 0 14px 28px rgba(17,24,39,.10);
+            font-family: var(--mono);
+        }
+
+        /* Rolling effect */
+        .rolling{
+            border-color: orange !important;
+            box-shadow: 0 0 0 6px rgba(255,165,0,.16), 0 14px 28px rgba(17,24,39,.10);
+        }
+        @keyframes rollText {
+            0% { transform: translateY(0); opacity: .6; }
+            100% { transform: translateY(-6px); opacity: 1; }
+        }
+        .rolling-text{
+            font-size: 48px;
+            animation: rollText .25s infinite alternate;
+        }
+
+        /* Dice dots (for 1~6 numeric faces only) */
+        .dice-dot{
+            width: 14px;
+            height: 14px;
+            background: #111;
+            border-radius: 50%;
+            position:absolute;
+            box-shadow: inset 0 0 0 2px rgba(255,255,255,.10);
+        }
+        /* Positions */
+        .dot-top-left{ top: 18px; left: 18px; }
+        .dot-top-right{ top: 18px; right: 18px; }
+        .dot-middle-left{ top: 50%; left: 18px; transform: translateY(-50%); }
+        .dot-middle-right{ top: 50%; right: 18px; transform: translateY(-50%); }
+        .dot-center{ top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .dot-bottom-left{ bottom: 18px; left: 18px; }
+        .dot-bottom-right{ bottom: 18px; right: 18px; }
+
+        /* Small helper */
+        .row{
+            display:flex;
+            gap: 10px;
+            align-items:center;
+            flex-wrap: wrap;
+        }
+
+        .note{
+            font-size: 13px;
+            color: var(--muted);
+            background: rgba(255,255,255,.55);
+            border: 1px solid rgba(17,24,39,.10);
+            padding: 8px 10px;
+            border-radius: 12px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="calc-wrapper">
+        <h4><b>만능 주사위 (사용자가 세팅)</b></h4>
+        <p class="muted" style="font-size:14px;">
+            사용자 임의로 여러 개의 주사위 각 면을 세팅할 수 있습니다.<br>
+            어떤 게임이든 적용할 수 있습니다.
+        </p>
+
+        <div class="row" style="margin-top: 10px;">
+            <label><b>주사위 개수 : </b>
+                <select id="diceCount">
+                    <option value="1" selected>1개</option>
+                    <option value="2">2개</option>
+                    <option value="3">3개</option>
+                    <option value="4">4개</option>
+                    <option value="5">5개</option>
+                    <option value="6">6개</option>
+                </select>
+            </label>
+        </div>
+
+        <div id="diceConfigButtons">
+            <p id="diceConfigTitle" style="font-weight:bold; margin:0 0 8px 0;">각 주사위 내용 입력 :</p>
+            <!-- buttons injected -->
+        </div>
+
+        <div id="diceInputFormsContainer" style="margin-top: 14px;"></div>
+
+        <div class="note">
+            팁) 면 값은 숫자뿐 아니라 “꽝”, “보너스”, “아이템A” 같이 텍스트도 가능합니다.
+            (단, 결과가 1~6 숫자면 점(dots)으로 표시됩니다.)
+        </div>
+
+        <div id="diceResultsContainer" style="margin-top: 16px;"></div>
+
+        <div class="button-group">
+            <button id="play-btn" onclick="playMultipleDice()">주사위 던지기</button>
+            <button id="reset-btn" onclick="defaultDice()">초기화</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const diceCountSelect = document.getElementById('diceCount');
+    const diceConfigButtonsContainer = document.getElementById('diceConfigButtons');
+    const diceInputFormsContainer = document.getElementById('diceInputFormsContainer');
+    const diceResultsContainer = document.getElementById('diceResultsContainer');
+    const diceConfigTitle = document.getElementById('diceConfigTitle');
+
+    // 각 주사위의 면 값 저장: [[face1..face6], [..], ...]
+    let allDiceFaces = [];
+
+    // 면(1~6) 점 생성
+    function createDiceDots(faceValue) {
+        let dotsHtml = '';
+        const dotClasses = {
+            1: ['dot-center'],
+            2: ['dot-top-left', 'dot-bottom-right'],
+            3: ['dot-top-left', 'dot-center', 'dot-bottom-right'],
+            4: ['dot-top-left', 'dot-top-right', 'dot-bottom-left', 'dot-bottom-right'],
+            5: ['dot-top-left', 'dot-top-right', 'dot-center', 'dot-bottom-left', 'dot-bottom-right'],
+            6: ['dot-top-left', 'dot-top-right', 'dot-middle-left', 'dot-middle-right', 'dot-bottom-left', 'dot-bottom-right']
+        };
+        if (dotClasses[faceValue]) {
+            dotClasses[faceValue].forEach(cls => {
+                dotsHtml += `<div class="dice-dot ${cls}"></div>`;
+            });
+        }
+        return dotsHtml;
+    }
+
+    // 결과 표시(1~6은 점, 그 외 텍스트)
+    function displaySingleDiceResult(displayElement, result) {
+        const parsed = parseInt(result, 10);
+        if (!isNaN(parsed) && parsed >= 1 && parsed <= 6 && String(result).trim() === String(parsed)) {
+            displayElement.innerHTML = `
+          <div style="position:relative; width:100%; height:100%;">
+            ${createDiceDots(parsed)}
+          </div>`;
+        } else {
+            displayElement.innerHTML = `<span style="font-size: 28px; font-weight: 900; text-align:center; padding: 8px;">${escapeHtml(result)}</span>`;
+        }
+        displayElement.style.borderColor = 'black';
+        displayElement.classList.remove('rolling');
+    }
+
+    function escapeHtml(str){
+        return String(str)
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'","&#039;");
+    }
+
+    // 주사위 입력 폼 생성
+    function createDiceInputForm(diceIndex) {
+        const formDiv = document.createElement('div');
+        formDiv.classList.add('dice-input-form');
+        formDiv.id = `diceInputForm_${diceIndex}`;
+        formDiv.innerHTML = `
+        <h4>${diceIndex + 1}번 주사위 설정</h4>
+        ${[1,2,3,4,5,6].map((n,i)=>`
+          <label>
+            <span>면 ${n} :</span>
+            <input type="text" class="dice-face-input" data-dice-index="${diceIndex}" data-face-index="${i}">
+          </label>
+        `).join('')}
+      `;
+
+        const inputs = formDiv.querySelectorAll('.dice-face-input');
+        inputs.forEach((input, faceIndex) => {
+            if (!allDiceFaces[diceIndex]) allDiceFaces[diceIndex] = ['1','2','3','4','5','6'];
+
+            input.value = (allDiceFaces[diceIndex][faceIndex] !== undefined)
+                ? allDiceFaces[diceIndex][faceIndex]
+                : String(faceIndex + 1);
+
+            input.addEventListener('change', (e) => {
+                allDiceFaces[diceIndex][faceIndex] = e.target.value.trim();
+            });
+        });
+
+        return formDiv;
+    }
+
+    // 설정 UI 갱신
+    function updateDiceConfiguration() {
+        const numberOfDice = parseInt(diceCountSelect.value, 10);
+
+        // 이전 버튼들 제거 (제목 p는 유지)
+        [...diceConfigButtonsContainer.querySelectorAll('button.config-button')].forEach(b => b.remove());
+        diceInputFormsContainer.innerHTML = '';
+
+        while (allDiceFaces.length < numberOfDice) {
+            allDiceFaces.push(['1','2','3','4','5','6']);
+        }
+        allDiceFaces = allDiceFaces.slice(0, numberOfDice);
+
+        for (let i = 0; i < numberOfDice; i++) {
+            const button = document.createElement('button');
+            button.classList.add('config-button');
+            button.textContent = `${i + 1}번 주사위`;
+            button.dataset.diceIndex = i;
+            button.type = 'button';
+            button.onclick = (e) => showDiceInputForm(parseInt(e.currentTarget.dataset.diceIndex, 10));
+            diceConfigButtonsContainer.appendChild(button);
+
+            const form = createDiceInputForm(i);
+            diceInputFormsContainer.appendChild(form);
+        }
+
+        if (numberOfDice >= 1) showDiceInputForm(0);
+
+        // 1개일 때는 제목 숨김
+        diceConfigTitle.style.display = (numberOfDice === 1) ? 'none' : 'block';
+    }
+
+    // 특정 주사위 폼 표시
+    function showDiceInputForm(index) {
+        document.querySelectorAll('.dice-input-form').forEach(form => form.classList.remove('active'));
+        const targetForm = document.getElementById(`diceInputForm_${index}`);
+        if (targetForm) targetForm.classList.add('active');
+
+        document.querySelectorAll('.config-button').forEach(btn => btn.classList.remove('active'));
+        const activeButton = document.querySelector(`.config-button[data-dice-index="${index}"]`);
+        if (activeButton) activeButton.classList.add('active');
+    }
+
+    // 던지기
+    function playMultipleDice() {
+        const numberOfDice = parseInt(diceCountSelect.value, 10);
+        diceResultsContainer.innerHTML = '';
+
+        // 유효성 검사
+        for (let i = 0; i < numberOfDice; i++) {
+            const faces = allDiceFaces[i];
+            for (let j = 0; j < 6; j++) {
+                if (!faces || faces[j] === undefined || String(faces[j]).trim() === '') {
+                    alert(`${i + 1}번째 주사위의 ${j + 1}번째 면 값을 입력해주세요!`);
+                    showDiceInputForm(i);
+                    return;
+                }
+            }
+        }
+
+        for (let i = 0; i < numberOfDice; i++) {
+            const diceDisplay = document.createElement('div');
+            diceDisplay.classList.add('single-dice-display', 'rolling');
+            diceDisplay.innerHTML = `<span class="rolling-text">...</span>`;
+            diceResultsContainer.appendChild(diceDisplay);
+
+            const faces = allDiceFaces[i];
+            const randomIndex = Math.floor(Math.random() * faces.length);
+            const result = faces[randomIndex];
+
+            setTimeout(() => displaySingleDiceResult(diceDisplay, result), 900 + (i * 120));
+        }
+    }
+
+    // 초기화
+    function defaultDice() {
+        diceCountSelect.value = "1";
+        allDiceFaces = [['1','2','3','4','5','6']];
+
+        updateDiceConfiguration();
+        diceResultsContainer.innerHTML = '';
+
+        const initialDiceDisplay = document.createElement('div');
+        initialDiceDisplay.classList.add('single-dice-display');
+        initialDiceDisplay.innerHTML = '<span style="font-size: 48px; font-weight: 1000;">?</span>';
+        initialDiceDisplay.style.borderColor = 'black';
+        diceResultsContainer.appendChild(initialDiceDisplay);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        defaultDice();
+        diceCountSelect.addEventListener('change', updateDiceConfiguration);
+    });
+</script>
+</body>
+</html>

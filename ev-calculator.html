@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Camera Exposure Value Calculator</title>
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --line:#e5e7eb;
+            --text:#111827;
+            --muted:#6b7280;
+            --primary:#2563eb;
+            --danger:#dc2626;
+            --shadow:0 10px 30px rgba(0,0,0,.06);
+            --radius:16px;
+        }
+        *{box-sizing:border-box}
+        body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif}
+        .page-wrap{max-width:980px;margin:18px auto;padding:0 14px}
+
+        h4{margin:0 0 6px 0;font-size:18px}
+        p{margin:0 0 14px 0;color:var(--muted)}
+        .glass-card{
+            background:var(--card);
+            border:1px solid var(--line);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            padding:14px;
+            margin:12px 0;
+        }
+
+        .input-sections-container{
+            display:grid;
+            grid-template-columns:repeat(3,minmax(0,1fr));
+            gap:12px;
+        }
+        @media (max-width:860px){
+            .input-sections-container{grid-template-columns:1fr}
+        }
+
+        .input-group{display:flex;flex-direction:column;gap:8px}
+        .input-label{font-weight:700;color:#111827}
+        .form-select,.form-input{
+            width:100%;
+            padding:10px 12px;
+            border:1px solid var(--line);
+            border-radius:12px;
+            background:#fff;
+            outline:none;
+        }
+        .form-select:focus,.form-input:focus{border-color:rgba(37,99,235,.5);box-shadow:0 0 0 4px rgba(37,99,235,.12)}
+        .stop-controls{display:flex;gap:8px;flex-wrap:wrap}
+        .stop-button{
+            padding:8px 10px;
+            border:1px solid var(--line);
+            border-radius:12px;
+            background:#fff;
+            cursor:pointer;
+            font-weight:700;
+            color:#111827;
+        }
+        .stop-button:hover{border-color:#cbd5e1}
+
+        .segment-tabs{
+            display:flex;
+            gap:8px;
+            padding:6px;
+            background:#f3f4f6;
+            border:1px solid var(--line);
+            border-radius:14px;
+        }
+        .segment-tab{
+            flex:1;
+            border:0;
+            background:transparent;
+            padding:10px 12px;
+            border-radius:12px;
+            font-weight:800;
+            color:#374151;
+            cursor:pointer;
+            white-space:nowrap;
+        }
+        .segment-tab.active{background:#fff;box-shadow:0 6px 14px rgba(0,0,0,.06);color:#111827}
+
+        .calc-mode-section{display:none}
+        .calc-mode-section.active{display:block}
+
+        .glass-button{
+            border:0;
+            border-radius:14px;
+            padding:10px 14px;
+            background:linear-gradient(135deg,#3B82F6,#1D4ED8);
+            color:#fff;
+            font-weight:900;
+            cursor:pointer;
+            box-shadow:0 10px 20px rgba(37,99,235,.18);
+        }
+        .glass-button:hover{filter:brightness(.98)}
+        .glass-button:active{transform:translateY(1px)}
+        .button-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+
+        .result-display{display:flex;flex-direction:column;gap:10px}
+        .result-value{
+            font-size:22px;
+            font-weight:900;
+            color:#0f172a;
+            padding:14px;
+            border:1px solid var(--line);
+            border-radius:14px;
+            background:#f8fafc;
+            text-align:center;
+        }
+        .result-info{
+            padding:12px;
+            border:1px dashed #d1d5db;
+            border-radius:14px;
+            color:#374151;
+            background:#fff;
+            white-space:pre-wrap;
+        }
+
+        .error-message{
+            display:none;
+            margin:12px 0;
+            padding:12px;
+            border-radius:14px;
+            border:1px solid rgba(220,38,38,.3);
+            background:rgba(220,38,38,.08);
+            color:var(--danger);
+            font-weight:800;
+        }
+
+        .warning-box{
+            margin:12px 0 0 0;
+            padding:12px;
+            border-radius:14px;
+            border:1px solid rgba(245,158,11,.35);
+            background:rgba(245,158,11,.10);
+        }
+        .reverse-mode-selector{display:flex;flex-direction:column;gap:10px}
+    </style>
+</head>
+
+<body>
+<div class="page-wrap">
+
+    <h4><b>카메라 노출 계산기 (Camera Exposure Value Calculator)</b></h4>
+    <p>
+        조리개, 셔터 스피드, ISO를 설정하여 노출값(EV)을 계산하거나, EV 값으로부터 적절한 설정을 찾을 수 있습니다.
+    </p>
+
+    <div class="glass-card">
+        <div class="segment-tabs" id="mode-tabs">
+            <button class="segment-tab active" type="button" onclick="switchMode('forward')">노출 계산</button>
+            <button class="segment-tab" type="button" onclick="switchMode('reverse')">노출 역계산</button>
+        </div>
+    </div>
+
+    <!-- 정계산 모드 -->
+    <div id="forward-mode" class="calc-mode-section active">
+        <div class="glass-card">
+            <div class="input-sections-container">
+
+                <div class="input-group">
+                    <label for="aperture" class="input-label">조리개 (Aperture) <span style="color:red">*</span></label>
+                    <select id="aperture" class="form-select">
+                        <option value="">선택하세요</option>
+                        <option value="0.7">f/0.7</option>
+                        <option value="1.0">f/1.0</option>
+                        <option value="1.2">f/1.2</option>
+                        <option value="1.4">f/1.4</option>
+                        <option value="1.8">f/1.8</option>
+                        <option value="2.0">f/2.0</option>
+                        <option value="2.2">f/2.2</option>
+                        <option value="2.5">f/2.5</option>
+                        <option value="2.8">f/2.8</option>
+                        <option value="3.2">f/3.2</option>
+                        <option value="3.5">f/3.5</option>
+                        <option value="4.0">f/4.0</option>
+                        <option value="4.5">f/4.5</option>
+                        <option value="5.0">f/5.0</option>
+                        <option value="5.6">f/5.6</option>
+                        <option value="6.3">f/6.3</option>
+                        <option value="7.1">f/7.1</option>
+                        <option value="8.0">f/8.0</option>
+                        <option value="9.0">f/9.0</option>
+                        <option value="10">f/10</option>
+                        <option value="11">f/11</option>
+                        <option value="13">f/13</option>
+                        <option value="14">f/14</option>
+                        <option value="16">f/16</option>
+                        <option value="18">f/18</option>
+                        <option value="20">f/20</option>
+                        <option value="22">f/22</option>
+                        <option value="25">f/25</option>
+                        <option value="29">f/29</option>
+                        <option value="32">f/32</option>
+                        <option value="36">f/36</option>
+                        <option value="40">f/40</option>
+                        <option value="45">f/45</option>
+                        <option value="51">f/51</option>
+                        <option value="57">f/57</option>
+                        <option value="64">f/64</option>
+                        <option value="custom-aperture">직접 입력</option>
+                    </select>
+                    <div id="custom-aperture-container" style="display:none;margin-top:10px;">
+                        <input type="number" id="custom-aperture" class="form-input" step="0.1" min="0.1" placeholder="예: 2.8">
+                    </div>
+                    <div class="stop-controls">
+                        <button type="button" class="stop-button" onclick="adjustAperture(-1)">-1 stop</button>
+                        <button type="button" class="stop-button" onclick="adjustAperture(1)">+1 stop</button>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="shutter-speed" class="input-label">셔터 스피드 (Shutter Speed) <span style="color:red">*</span></label>
+                    <select id="shutter-speed" class="form-select">
+                        <option value="">선택하세요</option>
+                        <option value="0.000125">1/8000초</option>
+                        <option value="0.00025">1/4000초</option>
+                        <option value="0.0005">1/2000초</option>
+                        <option value="0.001">1/1000초</option>
+                        <option value="0.002">1/500초</option>
+                        <option value="0.004">1/250초</option>
+                        <option value="0.003125">1/320초</option>
+                        <option value="0.00625">1/160초</option>
+                        <option value="0.005">1/200초</option>
+                        <option value="0.008">1/125초</option>
+                        <option value="0.01">1/100초</option>
+                        <option value="0.0125">1/80초</option>
+                        <option value="0.0167">1/60초</option>
+                        <option value="0.02">1/50초</option>
+                        <option value="0.025">1/40초</option>
+                        <option value="0.0333">1/30초</option>
+                        <option value="0.04">1/25초</option>
+                        <option value="0.05">1/20초</option>
+                        <option value="0.0667">1/15초</option>
+                        <option value="0.1">1/10초</option>
+                        <option value="0.125">1/8초</option>
+                        <option value="0.1667">1/6초</option>
+                        <option value="0.25">1/4초</option>
+                        <option value="0.3333">1/3초</option>
+                        <option value="0.5">1/2초</option>
+                        <option value="1">1초</option>
+                        <option value="1.3">1.3초</option>
+                        <option value="1.6">1.6초</option>
+                        <option value="2">2초</option>
+                        <option value="2.5">2.5초</option>
+                        <option value="3">3초</option>
+                        <option value="4">4초</option>
+                        <option value="6">6초</option>
+                        <option value="8">8초</option>
+                        <option value="10">10초</option>
+                        <option value="15">15초</option>
+                        <option value="20">20초</option>
+                        <option value="30">30초</option>
+                        <option value="45">45초</option>
+                        <option value="60">60초</option>
+                        <option value="custom-shutter">직접 입력</option>
+                    </select>
+                    <div id="custom-shutter-container" style="display:none;margin-top:10px;">
+                        <input type="number" id="custom-shutter" class="form-input" step="any" min="0.000001" placeholder="예: 0.001 (1/1000초) 또는 2 (2초)">
+                    </div>
+                    <div class="stop-controls">
+                        <button type="button" class="stop-button" onclick="adjustShutterSpeed(-1)">-1 stop</button>
+                        <button type="button" class="stop-button" onclick="adjustShutterSpeed(1)">+1 stop</button>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="iso" class="input-label">ISO 감도 <span style="color:red">*</span></label>
+                    <select id="iso" class="form-select">
+                        <option value="">선택하세요</option>
+                        <option value="25">ISO 25</option>
+                        <option value="32">ISO 32</option>
+                        <option value="50">ISO 50</option>
+                        <option value="64">ISO 64</option>
+                        <option value="80">ISO 80</option>
+                        <option value="100">ISO 100</option>
+                        <option value="125">ISO 125</option>
+                        <option value="160">ISO 160</option>
+                        <option value="200">ISO 200</option>
+                        <option value="250">ISO 250</option>
+                        <option value="320">ISO 320</option>
+                        <option value="400">ISO 400</option>
+                        <option value="500">ISO 500</option>
+                        <option value="640">ISO 640</option>
+                        <option value="800">ISO 800</option>
+                        <option value="1000">ISO 1000</option>
+                        <option value="1250">ISO 1250</option>
+                        <option value="1600">ISO 1600</option>
+                        <option value="2000">ISO 2000</option>
+                        <option value="2500">ISO 2500</option>
+                        <option value="3200">ISO 3200</option>
+                        <option value="4000">ISO 4000</option>
+                        <option value="5000">ISO 5000</option>
+                        <option value="6400">ISO 6400</option>
+                        <option value="8000">ISO 8000</option>
+                        <option value="10000">ISO 10000</option>
+                        <option value="12800">ISO 12800</option>
+                        <option value="16000">ISO 16000</option>
+                        <option value="20000">ISO 20000</option>
+                        <option value="25600">ISO 25600</option>
+                        <option value="32000">ISO 32000</option>
+                        <option value="40000">ISO 40000</option>
+                        <option value="51200">ISO 51200</option>
+                        <option value="64000">ISO 64000</option>
+                        <option value="80000">ISO 80000</option>
+                        <option value="102400">ISO 102400</option>
+                        <option value="custom-iso">직접 입력</option>
+                    </select>
+                    <div id="custom-iso-container" style="display:none;margin-top:10px;">
+                        <input type="number" id="custom-iso" class="form-input" step="1" min="1" placeholder="예: 400">
+                    </div>
+                    <div class="stop-controls">
+                        <button type="button" class="stop-button" onclick="adjustISO(-1)">-1 stop</button>
+                        <button type="button" class="stop-button" onclick="adjustISO(1)">+1 stop</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <div class="button-row" style="margin:6px 0;">
+                <button type="button" onclick="calculateEV()" class="glass-button">🔍 노출값 계산</button>
+                <button type="button" onclick="clearAllInputs()" class="glass-button" style="background:linear-gradient(135deg,#95a5a6,#7f8c8d);box-shadow:0 10px 20px rgba(127,140,141,.18)">🗑️ 초기화</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 역계산 모드 -->
+    <div id="reverse-mode" class="calc-mode-section">
+        <div class="glass-card">
+            <div class="reverse-mode-selector">
+                <div class="segment-tabs" style="margin-bottom:0;">
+                    <button type="button" class="segment-tab active" onclick="selectReverseMode('1')">EV + ISO</button>
+                    <button type="button" class="segment-tab" onclick="selectReverseMode('2')">EV + 조리개 + ISO</button>
+                    <button type="button" class="segment-tab" onclick="selectReverseMode('3')">EV + 셔터 + ISO</button>
+                </div>
+                <input type="hidden" id="reverse-mode-type" value="1">
+            </div>
+
+            <div class="input-sections-container" style="margin-top:12px;grid-template-columns:repeat(3,minmax(0,1fr));">
+                <div class="input-group">
+                    <label for="reverse-ev" class="input-label">노출값 (EV) <span style="color:red">*</span></label>
+                    <input type="number" id="reverse-ev" class="form-input" step="0.1" placeholder="예: 12.5">
+                </div>
+
+                <div class="input-group" id="reverse-iso-group">
+                    <label for="reverse-iso" class="input-label">ISO 감도 <span style="color:red">*</span></label>
+                    <select id="reverse-iso" class="form-select">
+                        <option value="">선택하세요</option>
+                        <option value="100">ISO 100</option>
+                        <option value="200">ISO 200</option>
+                        <option value="400">ISO 400</option>
+                        <option value="800">ISO 800</option>
+                        <option value="1600">ISO 1600</option>
+                        <option value="3200">ISO 3200</option>
+                        <option value="6400">ISO 6400</option>
+                    </select>
+                </div>
+
+                <div class="input-group" id="reverse-aperture-group" style="display:none;">
+                    <label for="reverse-aperture" class="input-label">조리개 (Aperture) <span style="color:red">*</span></label>
+                    <select id="reverse-aperture" class="form-select">
+                        <option value="">선택하세요</option>
+                        <option value="1.4">f/1.4</option>
+                        <option value="2.0">f/2.0</option>
+                        <option value="2.8">f/2.8</option>
+                        <option value="4.0">f/4.0</option>
+                        <option value="5.6">f/5.6</option>
+                        <option value="8.0">f/8.0</option>
+                        <option value="11">f/11</option>
+                        <option value="16">f/16</option>
+                        <option value="22">f/22</option>
+                        <option value="32">f/32</option>
+                    </select>
+                </div>
+
+                <div class="input-group" id="reverse-shutter-group" style="display:none;">
+                    <label for="reverse-shutter" class="input-label">셔터 스피드 (Shutter Speed) <span style="color:red">*</span></label>
+                    <select id="reverse-shutter" class="form-select">
+                        <option value="">선택하세요</option>
+                        <option value="0.001">1/1000초</option>
+                        <option value="0.002">1/500초</option>
+                        <option value="0.004">1/250초</option>
+                        <option value="0.008">1/125초</option>
+                        <option value="0.0167">1/60초</option>
+                        <option value="0.0333">1/30초</option>
+                        <option value="0.0667">1/15초</option>
+                        <option value="0.125">1/8초</option>
+                        <option value="0.25">1/4초</option>
+                        <option value="0.5">1/2초</option>
+                        <option value="1">1초</option>
+                        <option value="2">2초</option>
+                        <option value="4">4초</option>
+                        <option value="8">8초</option>
+                        <option value="15">15초</option>
+                        <option value="30">30초</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <div class="button-row" style="margin:6px 0;">
+                <button type="button" onclick="calculateReverseEV()" class="glass-button">🔍 역계산 실행</button>
+                <button type="button" onclick="clearReverseInputs()" class="glass-button" style="background:linear-gradient(135deg,#95a5a6,#7f8c8d);box-shadow:0 10px 20px rgba(127,140,141,.18)">🗑️ 초기화</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="error-message" class="error-message"></div>
+
+    <div id="result-container" class="glass-card" style="display:none;">
+        <h5 style="color:#1e3a8a;margin:0 0 10px 0;font-size:18px;font-weight:900;">
+            📊 노출값 (EV) 계산 결과
+        </h5>
+        <div class="result-display">
+            <div class="result-value" id="result-value">EV 0.0</div>
+            <div class="result-info" id="result-info"></div>
+        </div>
+    </div>
+
+    <div class="warning-box">
+        <p style="margin:0;font-size:13px;color:#856404;">
+            <strong>⚠️ 주의사항:</strong> 계산된 노출값은 참고용입니다. 실제 촬영 시에는 조리개, 셔터 스피드, ISO를 조정하여 적절한 노출을 확보하세요.
+        </p>
+    </div>
+
+</div>
+
+<!-- 외부 계산 로직 -->
+<script src="assets/js/EV-calculator.js"></script>
+
+<!-- UI 보조 (외부 JS에 같은 함수가 있으면 이 스크립트는 “겹치지 않게” 최소만 처리) -->
+<script>
+    // 모드 탭 UI만 확실히 동작시키기 (외부 스크립트에 switchMode가 있으면 그걸 우선)
+    if (typeof window.switchMode !== "function") {
+        window.switchMode = function(mode){
+            const tabs = document.querySelectorAll("#mode-tabs .segment-tab");
+            tabs.forEach(btn=>btn.classList.remove("active"));
+
+            const forwardBtn = tabs[0];
+            const reverseBtn = tabs[1];
+
+            const forward = document.getElementById("forward-mode");
+            const reverse = document.getElementById("reverse-mode");
+
+            if(mode==="reverse"){
+                reverseBtn.classList.add("active");
+                forward.classList.remove("active");
+                reverse.classList.add("active");
+            }else{
+                forwardBtn.classList.add("active");
+                reverse.classList.remove("active");
+                forward.classList.add("active");
+            }
+        }
+    }
+</script>
+</body>
+</html>

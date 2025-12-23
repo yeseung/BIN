@@ -1,0 +1,738 @@
+<!-- File: random-ranking-generator.html -->
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Random Ranking / Team Split / Random Pick</title>
+    <meta name="description" content="순위정하기 · 팀나누기 · 랜덤선택을 한 번에" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+
+            --line:#e6e8f0;
+            --shadow:0 14px 40px rgba(17,24,39,.10);
+            --radius:18px;
+
+            --drop-bg:#eaf4ff;
+            --drop-line:rgba(37,99,235,.28);
+
+            --btn-a:#7c3aed; /* violet */
+            --btn-b:#2563eb; /* blue */
+
+            --ok-a:#10b981;
+            --ok-b:#059669;
+
+            --gray-a:#9ca3af;
+            --gray-b:#6b7280;
+
+            --danger:#ef4444;
+            --warn:#f59e0b;
+
+            --code-bg:#f3f4f6;
+            --tip-bg:#eaf6f2;
+            --tip-line:#c8eadf;
+        }
+
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .wrap{
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 26px 16px 48px;
+        }
+
+        .card{
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .header{
+            padding: 22px 22px 14px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        h1{
+            margin:0 0 8px;
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: -0.3px;
+        }
+
+        .sub{
+            margin:0;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .content{ padding: 18px 22px 22px; }
+
+        /* Tip box (light green) */
+        .tip{
+            background: var(--tip-bg);
+            border: 1px solid var(--tip-line);
+            border-radius: 14px;
+            padding: 12px 14px;
+            margin-bottom: 14px;
+        }
+        .tip .title{
+            margin:0 0 8px;
+            font-weight: 900;
+            color:#0f766e;
+        }
+        .tip ul{
+            margin:0;
+            padding-left: 18px;
+            color:#134e4a;
+            font-size: 14px;
+        }
+        .tip li{ margin: 6px 0; }
+        .tip code{
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 13px;
+        }
+
+        /* Dashed dropzone look */
+        .dropzone{
+            background: var(--drop-bg);
+            border: 2px dashed var(--drop-line);
+            border-radius: 16px;
+            padding: 14px;
+            margin: 12px 0;
+        }
+
+        .panel{
+            border: 1px solid rgba(17,24,39,.08);
+            background: linear-gradient(180deg, rgba(255,255,255,.86), rgba(255,255,255,.70));
+            border-radius: 16px;
+            box-shadow: 0 12px 30px rgba(17,24,39,.06);
+            padding: 14px;
+        }
+
+        .grid{
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            align-items: start;
+        }
+        @media (max-width: 900px){
+            .grid{ grid-template-columns: 1fr; }
+        }
+
+        .field{
+            display:flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+        .field label{
+            font-size: 13px;
+            font-weight: 900;
+            color:#374151;
+        }
+
+        input[type="number"], select{
+            width:100%;
+            border-radius: 14px;
+            border: 1px solid rgba(17,24,39,.14);
+            background:#fff;
+            padding: 12px 12px;
+            font-size: 14px;
+            outline:none;
+            transition: box-shadow .15s ease, border-color .15s ease;
+        }
+        input[type="number"]:focus, select:focus{
+            border-color: rgba(124,58,237,.35);
+            box-shadow: 0 0 0 4px rgba(124,58,237,.12);
+        }
+
+        /* Mode cards */
+        .mode{
+            display:grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+        @media (max-width: 900px){
+            .mode{ grid-template-columns: 1fr; }
+        }
+
+        .radio-card{
+            border: 1px solid rgba(17,24,39,.10);
+            border-radius: 16px;
+            padding: 12px 12px;
+            background: #fff;
+            display:flex;
+            gap: 10px;
+            align-items:flex-start;
+            cursor:pointer;
+            transition: transform .08s ease, box-shadow .15s ease, border-color .15s ease;
+            user-select: none;
+        }
+        .radio-card:hover{ transform: translateY(-1px); box-shadow: 0 12px 24px rgba(17,24,39,.07); }
+        .radio-card input{ margin-top: 4px; }
+        .radio-title{ font-weight: 1000; }
+        .radio-desc{ color: var(--muted); font-size: 12px; margin-top: 2px; line-height: 1.4; }
+
+        .radio-card.active{
+            border-color: rgba(124,58,237,.35);
+            box-shadow: 0 0 0 4px rgba(124,58,237,.12);
+        }
+
+        /* Buttons */
+        .row{
+            display:flex;
+            align-items:center;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .btn{
+            appearance:none;
+            border-radius: 14px;
+            padding: 11px 14px;
+            font-weight: 900;
+            font-size: 13px;
+            cursor:pointer;
+            border: 1px solid rgba(17,24,39,.10);
+            transition: transform .08s ease, filter .15s ease;
+            user-select: none;
+            color:#fff;
+        }
+        .btn:hover{ transform: translateY(-1px); filter: brightness(1.03); }
+        .btn:active{ transform: translateY(0); }
+
+        .btn-primary{
+            background: linear-gradient(135deg, var(--btn-a), var(--btn-b));
+            box-shadow: 0 10px 20px rgba(37,99,235,.14);
+        }
+        .btn-success{
+            background: linear-gradient(135deg, var(--ok-a), var(--ok-b));
+            box-shadow: 0 10px 20px rgba(16,185,129,.14);
+        }
+        .btn-gray{
+            background: linear-gradient(135deg, var(--gray-a), var(--gray-b));
+            box-shadow: 0 10px 20px rgba(107,114,128,.12);
+        }
+
+        .badge{
+            display:inline-flex;
+            align-items:center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 900;
+        }
+        .dot{
+            width: 8px; height: 8px; border-radius: 999px;
+            background:#22c55e;
+            box-shadow: 0 0 0 4px rgba(34,197,94,.12);
+        }
+
+        /* Output */
+        textarea{
+            width: 100%;
+            min-height: 320px;
+            resize: vertical;
+            border-radius: 16px;
+            border: 1px solid rgba(17,24,39,.10);
+            padding: 12px 12px;
+            font-size: 14px;
+            line-height: 1.7;
+            outline: none;
+            background:#fff;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            white-space: pre;
+        }
+
+        .hint{
+            margin-top: 8px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .invalid{
+            border: 3px solid var(--danger) !important;
+            box-shadow: none !important;
+        }
+        .warn{
+            border: 3px solid var(--warn) !important;
+            box-shadow: none !important;
+        }
+
+        .mini{
+            font-size: 12px;
+            color: var(--muted);
+            margin: 6px 0 0;
+        }
+
+        .toggleline{
+            display:flex;
+            gap: 10px;
+            align-items:center;
+            flex-wrap: wrap;
+            margin-top: 6px;
+        }
+        .check{
+            display:flex;
+            align-items:center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 800;
+            color:#374151;
+            user-select:none;
+        }
+        .check input{ width: 18px; height: 18px; }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="card">
+        <div class="header">
+            <h1>랜덤 순위 정하기 / 팀 나누기 / 랜덤 선택</h1>
+            <p class="sub">순위 정하기, 팀나누기, 랜덤 선택 중에서 선택하여 결과를 생성할 수 있습니다.</p>
+        </div>
+
+        <div class="content">
+            <div class="tip">
+                <div class="title">💡 사용 팁</div>
+                <ul>
+                    <li><b>참여 인원 수</b>를 먼저 정하고 모드를 선택하세요.</li>
+                    <li>팀 나누기는 <code>팀 수</code>, 랜덤 선택은 <code>선택 인원</code> 옵션이 추가됩니다.</li>
+                    <li>결과는 <b>복사</b> 버튼으로 바로 공유할 수 있어요.</li>
+                </ul>
+            </div>
+
+            <!-- dashed dropzone area -->
+            <div class="dropzone">
+                <div class="grid">
+                    <div class="panel">
+                        <div class="field">
+                            <label for="participantCount">참여 인원 수 (2 ~ 1000명)</label>
+                            <input type="number" id="participantCount" min="2" max="1000" value="10" />
+                            <div class="mini">※ 숫자만 사용. 예: 10</div>
+                        </div>
+
+                        <div class="field">
+                            <label for="modeSelect">생성 모드 선택</label>
+                            <select id="modeSelect">
+                                <option value="ranking">순위 정하기</option>
+                                <option value="teams">팀 나누기</option>
+                                <option value="random">랜덤 선택</option>
+                            </select>
+                        </div>
+
+                        <div class="mode" role="tablist" aria-label="모드 빠른 선택">
+                            <label class="radio-card" data-mode="ranking">
+                                <input type="radio" name="modeRadio" value="ranking" checked>
+                                <div>
+                                    <div class="radio-title">🏆 순위 정하기</div>
+                                    <div class="radio-desc">모든 인원을 랜덤 순위로 배정</div>
+                                </div>
+                            </label>
+
+                            <label class="radio-card" data-mode="teams">
+                                <input type="radio" name="modeRadio" value="teams">
+                                <div>
+                                    <div class="radio-title">👥 팀 나누기</div>
+                                    <div class="radio-desc">A조~로 균등 분배</div>
+                                </div>
+                            </label>
+
+                            <label class="radio-card" data-mode="random">
+                                <input type="radio" name="modeRadio" value="random">
+                                <div>
+                                    <div class="radio-title">🎲 랜덤 선택</div>
+                                    <div class="radio-desc">몇 명을 추첨(중복 옵션)</div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="row" style="justify-content:flex-start; margin-top: 12px;">
+                            <span class="badge"><span class="dot"></span> 즉시 생성 가능</span>
+                        </div>
+                    </div>
+
+                    <div class="panel" id="modeOptions">
+                        <!-- dynamic options -->
+                    </div>
+                </div>
+
+                <div class="row" style="margin-top: 14px;">
+                    <button class="btn btn-success" id="generateBtn" type="button">🎯 생성하기</button>
+                    <button class="btn btn-primary" id="copyBtn" type="button">📋 복사</button>
+                    <button class="btn btn-gray" id="clearBtn" type="button">🗑️ 초기화</button>
+                </div>
+                <div class="hint">※ 랜덤은 <b>cryptographically secure</b> 난수(<code>crypto.getRandomValues</code>)를 사용합니다.</div>
+            </div>
+
+            <div class="panel">
+                <textarea id="output" readonly>값을 설정한 뒤 “생성하기”를 누르면 결과가 표시됩니다.</textarea>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ---------- Secure RNG helpers (avoid Math.random sort bias)
+    function randInt(maxExclusive) {
+        if (maxExclusive <= 0) return 0;
+        const a = new Uint32Array(1);
+        const limit = Math.floor(0xFFFFFFFF / maxExclusive) * maxExclusive;
+        let x;
+        do {
+            crypto.getRandomValues(a);
+            x = a[0];
+        } while (x >= limit);
+        return x % maxExclusive;
+    }
+
+    function shuffle(arr){
+        // Fisher–Yates
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = randInt(i + 1);
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    // ---------- DOM
+    const participantCountEl = document.getElementById('participantCount');
+    const modeSelectEl = document.getElementById('modeSelect');
+    const modeOptionsEl = document.getElementById('modeOptions');
+    const outputEl = document.getElementById('output');
+
+    const generateBtn = document.getElementById('generateBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const clearBtn = document.getElementById('clearBtn');
+
+    const modeCards = document.querySelectorAll('.radio-card');
+    const modeRadios = document.querySelectorAll('input[name="modeRadio"]');
+
+    // ---------- UI helpers
+    function setMode(mode){
+        modeSelectEl.value = mode;
+        document.querySelector(`input[name="modeRadio"][value="${mode}"]`).checked = true;
+        updateModeOptions();
+        syncModeCardActive();
+    }
+
+    function syncModeCardActive(){
+        const mode = modeSelectEl.value;
+        modeCards.forEach(card => {
+            card.classList.toggle('active', card.dataset.mode === mode);
+        });
+    }
+
+    function markInvalid(el, state){ el.classList.toggle('invalid', !!state); }
+    function markWarn(el, state){ el.classList.toggle('warn', !!state); }
+
+    function nowKST(){
+        return new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+    }
+
+    function padLine(title){
+        return '═'.repeat(Math.max(12, Math.min(30, title.length + 6)));
+    }
+
+    // ---------- Validators
+    function getCount(){
+        return parseInt(participantCountEl.value, 10);
+    }
+
+    function validateBase(){
+        const count = getCount();
+        markInvalid(participantCountEl, false);
+
+        if (!Number.isFinite(count) || count < 2 || count > 1000) {
+            markInvalid(participantCountEl, true);
+            outputEl.value = "2명에서 1000명 사이의 숫자를 입력하세요.";
+            return null;
+        }
+        return count;
+    }
+
+    // ---------- Generators
+    function generateRanking(count){
+        const reverseOrder = document.getElementById('reverseOrder')?.checked || false;
+
+        const numbers = Array.from({ length: count }, (_, i) => i + 1);
+        shuffle(numbers);
+
+        let result = '🎯 랜덤 순위 생성 결과\n';
+        result += padLine(result) + '\n';
+        result += `📊 총 참가자: ${count}명\n`;
+        result += `🕐 생성 시간: ${nowKST()}\n`;
+        result += padLine(result) + '\n\n';
+
+        result += '🏆 순위 결과\n';
+        result += '─'.repeat(18) + '\n';
+
+        numbers.forEach((num, idx) => {
+            const rank = reverseOrder ? (count - idx) : (idx + 1);
+            const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '🏅';
+            result += `${medal} ${rank}등: ${num}번\n`;
+        });
+
+        result += '\n' + padLine(result);
+        return result;
+    }
+
+    function generateTeams(count){
+        const teamCountEl = document.getElementById('teamCount');
+        const teamCount = parseInt(teamCountEl?.value || 4, 10);
+
+        markInvalid(teamCountEl, false);
+        markWarn(teamCountEl, false);
+
+        if (!Number.isFinite(teamCount) || teamCount < 2 || teamCount > 20) {
+            markInvalid(teamCountEl, true);
+            return "팀 수는 2개에서 20개 사이로 설정해주세요.";
+        }
+        if (teamCount > count) {
+            markWarn(teamCountEl, true);
+            return `팀 수(${teamCount}개)가 참가자 수(${count}명)보다 많을 수 없습니다.`;
+        }
+
+        const teamNames = Array.from({ length: teamCount }, (_, i) => `${String.fromCharCode(65 + i)}조`);
+        const teamEmojis = ['🔴','🔵','🟢','🟡','🟣','🟠','⚫','⚪','🟤','🟫','🔶','🔷','🔸','🔹','🔺','🔻','💎','🌟','⭐','✨'];
+
+        const numbers = Array.from({ length: count }, (_, i) => i + 1);
+        shuffle(numbers);
+
+        const membersPerTeam = Math.floor(count / teamCount);
+        const remainder = count % teamCount;
+
+        let result = '🎯 팀 나누기 결과\n';
+        result += padLine(result) + '\n';
+        result += `👥 총 팀 수: ${teamCount}개\n`;
+        result += `👤 총 참가자: ${count}명\n`;
+        result += `🕐 생성 시간: ${nowKST()}\n`;
+        result += padLine(result) + '\n\n';
+
+        let index = 0;
+        for (let i = 0; i < teamCount; i++) {
+            const teamSize = membersPerTeam + (i < remainder ? 1 : 0);
+            const teamEmoji = teamEmojis[i % teamEmojis.length];
+            result += `${teamEmoji} ${teamNames[i]} (${teamSize}명)\n`;
+            result += '─'.repeat(18) + '\n';
+            for (let j = 0; j < teamSize; j++) {
+                result += `   👤 ${numbers[index++]}번\n`;
+            }
+            result += '\n';
+        }
+
+        result += padLine(result);
+        return result;
+    }
+
+    function generateRandom(count){
+        const selectCountEl = document.getElementById('selectCount');
+        const allowDuplicate = document.getElementById('allowDuplicate')?.checked || false;
+        const selectCount = parseInt(selectCountEl?.value || 3, 10);
+
+        markInvalid(selectCountEl, false);
+
+        if (!Number.isFinite(selectCount) || selectCount < 1 || selectCount > count) {
+            markInvalid(selectCountEl, true);
+            return `선택할 인원 수는 1명에서 ${count}명 사이로 설정해주세요.`;
+        }
+
+        const numbers = Array.from({ length: count }, (_, i) => i + 1);
+
+        let result = '🎯 랜덤 선택 결과\n';
+        result += padLine(result) + '\n';
+        result += `🎲 선택 방식: ${allowDuplicate ? '중복 허용' : '중복 불허'}\n`;
+        result += `👥 전체 참가자: ${count}명\n`;
+        result += `🎯 선택 인원: ${selectCount}명\n`;
+        result += `🕐 생성 시간: ${nowKST()}\n`;
+        result += padLine(result) + '\n\n';
+
+        result += '🏆 당첨자 명단\n';
+        result += '─'.repeat(18) + '\n';
+
+        if (allowDuplicate) {
+            for (let i = 0; i < selectCount; i++) {
+                const idx = randInt(count);
+                const prize = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '🎁';
+                result += `${prize} ${i + 1}번째 당첨: ${numbers[idx]}번\n`;
+            }
+        } else {
+            shuffle(numbers);
+            const selected = numbers.slice(0, selectCount);
+            selected.forEach((num, i) => {
+                const prize = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '🎁';
+                result += `${prize} ${i + 1}번째 당첨: ${num}번\n`;
+            });
+        }
+
+        result += '\n' + padLine(result);
+        return result;
+    }
+
+    // ---------- Actions
+    function generateResult(){
+        const count = validateBase();
+        if (!count) return;
+
+        const mode = modeSelectEl.value;
+
+        let result = '';
+        if (mode === 'ranking') result = generateRanking(count);
+        if (mode === 'teams')   result = generateTeams(count);
+        if (mode === 'random')  result = generateRandom(count);
+
+        outputEl.value = result;
+    }
+
+    async function copyToClipboard(){
+        const text = outputEl.value || '';
+        if (!text.trim()) return;
+
+        try{
+            await navigator.clipboard.writeText(text);
+            copyBtn.textContent = '✅ 복사됨';
+            setTimeout(() => copyBtn.textContent = '📋 복사', 1200);
+        }catch(e){
+            outputEl.select();
+            document.execCommand('copy');
+            copyBtn.textContent = '✅ 복사됨';
+            setTimeout(() => copyBtn.textContent = '📋 복사', 1200);
+        }
+    }
+
+    function clearAll(){
+        participantCountEl.value = "10";
+        setMode('ranking');
+        outputEl.value = "값을 설정한 뒤 “생성하기”를 누르면 결과가 표시됩니다.";
+        markInvalid(participantCountEl, false);
+    }
+
+    // ---------- Dynamic options
+    function addValidationListeners(){
+        const teamCountInput = document.getElementById('teamCount');
+        const selectCountInput = document.getElementById('selectCount');
+
+        if (teamCountInput){
+            teamCountInput.addEventListener('input', () => {
+                const v = parseInt(teamCountInput.value, 10);
+                const c = getCount() || 0;
+
+                markInvalid(teamCountInput, false);
+                markWarn(teamCountInput, false);
+
+                if (!Number.isFinite(v) || v < 2 || v > 20) markInvalid(teamCountInput, true);
+                else if (c > 0 && v > c) markWarn(teamCountInput, true);
+            });
+        }
+
+        if (selectCountInput){
+            selectCountInput.addEventListener('input', () => {
+                const v = parseInt(selectCountInput.value, 10);
+                const c = getCount() || 0;
+
+                markInvalid(selectCountInput, false);
+                if (!Number.isFinite(v) || v < 1 || (c > 0 && v > c)) markInvalid(selectCountInput, true);
+            });
+        }
+    }
+
+    function updateModeOptions(){
+        const mode = modeSelectEl.value;
+
+        let html = '';
+        if (mode === 'ranking'){
+            html = `
+          <h2 style="margin:0 0 8px; font-size:16px; font-weight:1000;">🏆 순위 정하기 옵션</h2>
+          <div class="toggleline">
+            <label class="check"><input type="checkbox" id="reverseOrder"> 역순으로 표시</label>
+          </div>
+          <div class="hint">※ 기본은 1등부터 오름차순 표시입니다.</div>
+        `;
+        }
+
+        if (mode === 'teams'){
+            html = `
+          <h2 style="margin:0 0 8px; font-size:16px; font-weight:1000;">👥 팀 나누기 옵션</h2>
+          <div class="field" style="margin-bottom:0;">
+            <label for="teamCount">팀 수 (2 ~ 20개)</label>
+            <input type="number" id="teamCount" min="2" max="20" value="4" />
+            <div class="hint">※ 팀 수는 참가자 수보다 많을 수 없습니다.</div>
+          </div>
+        `;
+        }
+
+        if (mode === 'random'){
+            html = `
+          <h2 style="margin:0 0 8px; font-size:16px; font-weight:1000;">🎲 랜덤 선택 옵션</h2>
+          <div class="field" style="margin-bottom:8px;">
+            <label for="selectCount">선택할 인원 수</label>
+            <input type="number" id="selectCount" min="1" max="1000" value="3" />
+            <div class="hint">※ 1명 이상, 참가자 수 이하로 설정하세요.</div>
+          </div>
+          <div class="toggleline">
+            <label class="check"><input type="checkbox" id="allowDuplicate"> 중복 허용</label>
+          </div>
+        `;
+        }
+
+        modeOptionsEl.innerHTML = html;
+        syncModeCardActive();
+        setTimeout(addValidationListeners, 0);
+    }
+
+    // ---------- Events
+    modeSelectEl.addEventListener('change', () => {
+        updateModeOptions();
+        syncModeCardActive();
+    });
+
+    participantCountEl.addEventListener('input', () => {
+        // if options depend on count, re-check warnings
+        addValidationListeners();
+    });
+
+    modeCards.forEach(card => {
+        card.addEventListener('click', () => setMode(card.dataset.mode));
+    });
+
+    modeRadios.forEach(r => {
+        r.addEventListener('change', (e) => setMode(e.target.value));
+    });
+
+    generateBtn.addEventListener('click', generateResult);
+    copyBtn.addEventListener('click', copyToClipboard);
+    clearBtn.addEventListener('click', clearAll);
+
+    // init
+    document.addEventListener('DOMContentLoaded', () => {
+        setMode('ranking');
+        updateModeOptions();
+    });
+    setMode('ranking');
+</script>
+</body>
+</html>

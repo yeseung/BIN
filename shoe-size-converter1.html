@@ -1,0 +1,446 @@
+<!-- File: shoe-size-converter.html -->
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Shoe Size Converter</title>
+    <meta name="description" content="한국(KR) mm 기준으로 US/UK/EU/JP/CN 신발 사이즈를 변환합니다. (성별/브랜드 US 보정 포함)" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+
+            --line:#e6e8f0;
+            --shadow:0 14px 40px rgba(17,24,39,.10);
+            --radius:18px;
+
+            --btn-a:#7c3aed; /* violet */
+            --btn-b:#2563eb; /* blue */
+
+            --tip-bg:#eaf6f2;
+            --tip-line:#c8eadf;
+
+            --note-bg:#fff7ed;
+            --note-line:#fed7aa;
+
+            --danger:#ef4444;
+            --code-bg:#f3f4f6;
+        }
+
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .wrap{
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 26px 16px 48px;
+        }
+
+        .card{
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .header{
+            padding: 22px 22px 14px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        h1{
+            margin:0 0 8px;
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: -0.3px;
+        }
+
+        .sub{
+            margin:0;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .content{ padding: 18px 22px 22px; }
+
+        .panel{
+            border: 1px solid rgba(17,24,39,.08);
+            background: linear-gradient(180deg, rgba(255,255,255,.86), rgba(255,255,255,.70));
+            border-radius: 16px;
+            box-shadow: 0 12px 30px rgba(17,24,39,.06);
+            padding: 14px;
+        }
+
+        .grid{
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            align-items: start;
+        }
+        @media (max-width: 760px){
+            .grid{ grid-template-columns: 1fr; }
+        }
+
+        .tip{
+            background: var(--tip-bg);
+            border: 1px solid var(--tip-line);
+            border-radius: 14px;
+            padding: 12px 14px;
+            margin-bottom: 14px;
+        }
+        .tip .title{
+            margin:0 0 8px;
+            font-weight: 900;
+            color:#0f766e;
+        }
+        .tip ul{
+            margin:0;
+            padding-left: 18px;
+            color:#134e4a;
+            font-size: 14px;
+        }
+        .tip li{ margin: 6px 0; }
+        .tip code{
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 13px;
+        }
+
+        .field{
+            display:flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+        .field label{
+            font-size: 13px;
+            font-weight: 900;
+            color:#374151;
+        }
+        .help{
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.4;
+            margin-top: -2px;
+        }
+
+        select{
+            width:100%;
+            border-radius: 14px;
+            border: 1px solid rgba(17,24,39,.14);
+            background:#fff;
+            padding: 12px 12px;
+            font-size: 14px;
+            outline:none;
+            transition: box-shadow .15s ease, border-color .15s ease;
+        }
+        select:focus{
+            border-color: rgba(124,58,237,.35);
+            box-shadow: 0 0 0 4px rgba(124,58,237,.12);
+        }
+
+        .radio-row{
+            display:flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            padding: 10px 10px;
+            border: 1px dashed rgba(37,99,235,.25);
+            background: rgba(59,130,246,.06);
+            border-radius: 14px;
+        }
+        .radio-row b{ margin-right: 4px; }
+        .radio{
+            display:flex;
+            align-items:center;
+            gap: 8px;
+            padding: 8px 10px;
+            border-radius: 12px;
+            background: rgba(255,255,255,.75);
+            border: 1px solid rgba(17,24,39,.10);
+            cursor: pointer;
+            user-select: none;
+        }
+        .radio input{ transform: translateY(1px); }
+
+        .actions{
+            display:flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 12px;
+        }
+
+        .btn{
+            appearance:none;
+            border-radius: 14px;
+            padding: 11px 16px;
+            font-weight: 900;
+            font-size: 14px;
+            cursor:pointer;
+            border: 1px solid rgba(17,24,39,.10);
+            transition: transform .08s ease, filter .15s ease;
+            user-select: none;
+        }
+        .btn:hover{ transform: translateY(-1px); filter: brightness(1.03); }
+        .btn:active{ transform: translateY(0); }
+
+        .btn-primary{
+            color:#fff;
+            border-color: rgba(124,58,237,.25);
+            background: linear-gradient(135deg, var(--btn-a), var(--btn-b));
+            box-shadow: 0 10px 20px rgba(37,99,235,.14);
+        }
+        .btn-ghost{
+            background:#eef2ff;
+            border-color: rgba(124,58,237,.18);
+            color:#3730a3;
+        }
+
+        textarea{
+            width: 100%;
+            min-height: 250px;
+            resize: vertical;
+            border-radius: 16px;
+            border: 1px solid rgba(17,24,39,.10);
+            background: #fff;
+            padding: 12px 12px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 13px;
+            line-height: 1.55;
+            outline:none;
+        }
+        textarea:focus{
+            border-color: rgba(124,58,237,.28);
+            box-shadow: 0 0 0 4px rgba(124,58,237,.10);
+        }
+
+        .note{
+            margin-top: 12px;
+            background: var(--note-bg);
+            border: 1px solid var(--note-line);
+            border-radius: 14px;
+            padding: 12px 14px;
+            font-size: 13px;
+            color:#7c2d12;
+            line-height: 1.7;
+        }
+        .note b{ color:#7c2d12; }
+
+        .pill{
+            display:inline-flex;
+            align-items:center;
+            gap: 8px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(17,24,39,.10);
+            background:#fff;
+            color:#374151;
+            font-size: 12px;
+            font-weight: 900;
+            margin-top: 10px;
+        }
+        .dot{
+            width: 8px; height: 8px; border-radius: 999px;
+            background:#22c55e;
+            box-shadow: 0 0 0 4px rgba(34,197,94,.12);
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="card">
+        <div class="header">
+            <h1>신발 사이즈 변환기 (Shoe Size Converter)</h1>
+            <p class="sub">한국(KR) mm 기준으로 <b>US/UK/EU/JP/CN</b> 사이즈를 변환합니다. (브랜드별 <b>US</b> 보정 포함)</p>
+        </div>
+
+        <div class="content">
+            <div class="tip">
+                <div class="title">💡 사용 팁</div>
+                <ul>
+                    <li><b>성별</b>을 먼저 선택하면 KR(mm) 옵션이 바뀝니다.</li>
+                    <li><b>브랜드 보정</b>은 <b>US 사이즈</b>에만 적용됩니다.</li>
+                    <li>결과는 대략값이며, 모델/라스트(발볼) 등에 따라 차이가 날 수 있습니다.</li>
+                </ul>
+            </div>
+
+            <div class="grid">
+                <!-- Inputs -->
+                <div class="panel">
+                    <div class="field">
+                        <label>성별 선택</label>
+                        <div class="radio-row" role="radiogroup" aria-label="성별 선택">
+                            <label class="radio">
+                                <input type="radio" name="gender" value="male" checked>
+                                <span>남성</span>
+                            </label>
+                            <label class="radio">
+                                <input type="radio" name="gender" value="female">
+                                <span>여성</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label for="brand">브랜드별 미국(US) 사이즈 보정</label>
+                        <select id="brand">
+                            <option value="default">일반 사이즈</option>
+                            <option value="nike">Nike</option>
+                            <option value="adidas">Adidas</option>
+                            <option value="vans">Vans</option>
+                            <option value="converse">Converse</option>
+                        </select>
+                        <div class="help">※ 보정은 US만 적용됩니다. (예: Nike +0.5)</div>
+                    </div>
+
+                    <div class="field">
+                        <label for="koreanSize">한국(KR) 사이즈 선택</label>
+                        <select id="koreanSize"></select>
+                    </div>
+
+                    <div class="actions">
+                        <button class="btn btn-primary" type="button" onclick="convertSize()">👟 신발 사이즈 변환하기</button>
+                        <button class="btn btn-ghost" type="button" onclick="resetAll()">🔄 초기화</button>
+                    </div>
+
+                    <div class="pill"><span class="dot"></span> 선택 후 바로 변환해도 됩니다.</div>
+                </div>
+
+                <!-- Output -->
+                <div class="panel">
+                    <textarea id="result" readonly aria-label="변환 결과">성별/브랜드/KR(mm)을 선택한 후 변환 버튼을 누르세요.</textarea>
+
+                    <div class="note">
+                        <b>※ 유의사항</b><br>
+                        본 변환기는 일반적인 기준에 따라 제작한 대략적인 도구입니다. 브랜드/모델/발볼(라스트)에 따라 실제 사이즈와 차이가 있을 수 있습니다.<br>
+                        특히 <b>EU</b> 사이즈는 공인 단일 기준이 없어 쇼핑몰/브랜드별로 1~2 사이즈 이상 차이가 날 수 있습니다.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 실제 매핑 데이터 (남성 기준 예시)
+    const sizeMap = {
+        male: {
+            240: { US: 6, UK: 5.5, EU: 39, JP: 24, CN: 38 },
+            245: { US: 6.5, UK: 6, EU: 39.5, JP: 24.5, CN: 39 },
+            250: { US: 7, UK: 6.5, EU: 40, JP: 25, CN: 40 },
+            255: { US: 7.5, UK: 7, EU: 40.5, JP: 25.5, CN: 41 },
+            260: { US: 8, UK: 7.5, EU: 41, JP: 26, CN: 42 },
+            265: { US: 8.5, UK: 8, EU: 42, JP: 26.5, CN: 43 },
+            270: { US: 9, UK: 8.5, EU: 42.5, JP: 27, CN: 44 },
+            275: { US: 9.5, UK: 9, EU: 43, JP: 27.5, CN: 45 },
+            280: { US: 10, UK: 9.5, EU: 44, JP: 28, CN: 46 },
+            285: { US: 10.5, UK: 10, EU: 44.5, JP: 28.5, CN: 47 },
+            290: { US: 11, UK: 10.5, EU: 45, JP: 29, CN: 48 },
+            295: { US: 11.5, UK: 11, EU: 45.5, JP: 29.5, CN: 49 },
+            300: { US: 12, UK: 11.5, EU: 46, JP: 30, CN: 50 }
+        },
+        female: {
+            220: { US: 5, UK: 2.5, EU: 35, JP: 22, CN: 34 },
+            225: { US: 5.5, UK: 3, EU: 35.5, JP: 22.5, CN: 35 },
+            230: { US: 6, UK: 3.5, EU: 36, JP: 23, CN: 36 },
+            235: { US: 6.5, UK: 4, EU: 36.5, JP: 23.5, CN: 37 },
+            240: { US: 7, UK: 4.5, EU: 37.5, JP: 24, CN: 38 },
+            245: { US: 7.5, UK: 5, EU: 38, JP: 24.5, CN: 39 },
+            250: { US: 8, UK: 5.5, EU: 39, JP: 25, CN: 40 },
+            255: { US: 8.5, UK: 6, EU: 39.5, JP: 25.5, CN: 41 },
+            260: { US: 9, UK: 6.5, EU: 40, JP: 26, CN: 42 },
+            265: { US: 9.5, UK: 7, EU: 40.5, JP: 26.5, CN: 43 },
+            270: { US: 10, UK: 7.5, EU: 41, JP: 27, CN: 44 },
+            275: { US: 10.5, UK: 8, EU: 42, JP: 27.5, CN: 45 },
+            280: { US: 11, UK: 8.5, EU: 42.5, JP: 28, CN: 46 }
+        }
+    };
+
+    // 브랜드 보정값 (US 기준만 보정)
+    const brandAdjust = {
+        nike: 0.5,
+        adidas: 0.0,
+        vans: 0.5,
+        converse: -0.5,
+        default: 0.0
+    };
+
+    const genderRadios = document.querySelectorAll('input[name="gender"]');
+    const brandSelect = document.getElementById("brand");
+    const sizeSelect = document.getElementById("koreanSize");
+    const resultBox = document.getElementById("result");
+
+    function getGender(){
+        const checked = document.querySelector('input[name="gender"]:checked');
+        return checked ? checked.value : "male";
+    }
+
+    function updateSizeOptions() {
+        const gender = getGender();
+        sizeSelect.innerHTML = "";
+
+        for (let mm in sizeMap[gender]) {
+            const opt = document.createElement("option");
+            opt.value = mm;
+            opt.text = mm + " mm";
+            sizeSelect.appendChild(opt);
+        }
+    }
+
+    function convertSize() {
+        const gender = getGender();
+        const brand = brandSelect.value;
+        const selectedText = brandSelect.options[brandSelect.selectedIndex].text;
+        const mm = sizeSelect.value;
+
+        const size = sizeMap[gender][mm];
+        if (!size){
+            resultBox.value = "사이즈 데이터를 찾지 못했습니다. 성별/사이즈를 다시 선택해주세요.";
+            return;
+        }
+
+        const usAdj = (size.US + (brandAdjust[brand] || 0)).toFixed(1);
+
+        resultBox.value =
+            `한국(KR) : ${mm} mm\n` +
+            `미국(US) : ${usAdj} (${selectedText} 기준)\n` +
+            `영국(UK) : ${size.UK}\n` +
+            `유럽(EU) : ${size.EU}\n` +
+            `일본(JP) : ${size.JP} cm\n` +
+            `중국(CN) : ${size.CN}`;
+    }
+
+    function resetAll(){
+        document.querySelector('input[name="gender"][value="male"]').checked = true;
+        brandSelect.value = "default";
+        updateSizeOptions();
+        resultBox.value = "성별/브랜드/KR(mm)을 선택한 후 변환 버튼을 누르세요.";
+    }
+
+    // Events
+    genderRadios.forEach(r => r.addEventListener("change", updateSizeOptions));
+    window.addEventListener("load", () => {
+        updateSizeOptions();
+    });
+</script>
+</body>
+</html>

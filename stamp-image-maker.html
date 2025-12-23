@@ -1,0 +1,1120 @@
+<!-- File: stamp-image-maker.html -->
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Stamp Image Maker</title>
+    <meta name="description" content="이름을 입력하면 다양한 도장 이미지를 생성합니다. 투명 배경 PNG, 복사/다운로드 지원." />
+
+    <!-- 기본 한글 폰트 (명조/고딕) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+
+            --line:#e6e8f0;
+            --shadow:0 14px 40px rgba(17,24,39,.10);
+
+            --accent:#2c5aa0;
+            --accent2:#7c3aed;
+
+            --glass: rgba(255,255,255,.72);
+            --glass-line: rgba(255,255,255,.55);
+
+            --tip-bg:#eaf6f2;
+            --tip-line:#c8eadf;
+
+            --warn-bg:#fff6dc;
+            --warn-line:#ffe2a8;
+
+            --radius:18px;
+        }
+
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .wrap{
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 26px 16px 48px;
+        }
+
+        h4{
+            margin: 0 0 8px;
+            font-size: 24px;
+            letter-spacing: -0.3px;
+        }
+
+        p{
+            margin: 0 0 14px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        /* white main panel (optional) */
+        .panel{
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 20px;
+        }
+
+        /* Info / Warning boxes */
+        .info-box{
+            margin-top: 14px;
+            background: var(--tip-bg);
+            border: 1px solid var(--tip-line);
+            border-radius: 14px;
+            padding: 16px 18px;
+        }
+        .info-box h5{
+            margin:0 0 10px;
+            font-size: 15px;
+            font-weight: 800;
+            color: #0f766e;
+            display:flex;
+            align-items:center;
+            gap:8px;
+        }
+        .info-box ul{
+            margin: 0;
+            padding-left: 18px;
+            color:#134e4a;
+            font-size: 14px;
+        }
+        .info-box li{ margin: 6px 0; }
+
+        .warning-box{
+            margin-top: 14px;
+            background: var(--warn-bg);
+            border: 1px solid var(--warn-line);
+            border-radius: 14px;
+            padding: 14px 16px;
+        }
+
+        /* Glass card (input + gallery container) */
+        .glass-card{
+            margin-top: 14px;
+            padding: 18px;
+            border-radius: var(--radius);
+            border: 1px solid rgba(17,24,39,.08);
+            background: linear-gradient(180deg, rgba(255,255,255,.86), rgba(255,255,255,.70));
+            box-shadow: 0 12px 30px rgba(17,24,39,.08);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Inputs */
+        .form-input{
+            width: 100%;
+            border-radius: 14px;
+            border: 1px solid rgba(17,24,39,.14);
+            background: #fff;
+            padding: 12px 12px;
+            font-size: 14px;
+            outline: none;
+            transition: box-shadow .15s ease, border-color .15s ease;
+        }
+        .form-input:focus{
+            border-color: rgba(124,58,237,.35);
+            box-shadow: 0 0 0 4px rgba(124,58,237,.12);
+        }
+        .form-input.error{
+            border-color: rgba(239,68,68,.55);
+            box-shadow: 0 0 0 4px rgba(239,68,68,.10);
+        }
+        .form-input.success{
+            border-color: rgba(34,197,94,.55);
+            box-shadow: 0 0 0 4px rgba(34,197,94,.10);
+        }
+
+        /* Buttons */
+        .glass-button{
+            appearance:none;
+            border: 1px solid rgba(124,58,237,.25);
+            background: linear-gradient(135deg, #7c3aed, #2563eb);
+            color: #fff;
+            font-weight: 800;
+            font-size: 14px;
+            padding: 11px 16px;
+            border-radius: 14px;
+            cursor:pointer;
+            box-shadow: 0 10px 20px rgba(37,99,235,.14);
+            transition: transform .08s ease, filter .15s ease;
+        }
+        .glass-button:hover{ transform: translateY(-1px); filter: brightness(1.03); }
+        .glass-button:active{ transform: translateY(0); }
+
+        /* Error message */
+        .error-message{
+            display:none;
+            margin-top: 12px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(239,68,68,.25);
+            background: rgba(239,68,68,.06);
+            color: #b91c1c;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        /* Gallery */
+        .stamp-gallery{
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+        @media (max-width: 900px){
+            .stamp-gallery{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 560px){
+            .stamp-gallery{ grid-template-columns: 1fr; }
+        }
+
+        .category-title{
+            grid-column: 1 / -1;
+            margin-top: 8px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(17,24,39,.08);
+            background: #f7f8ff;
+            color: #111827;
+            font-weight: 900;
+            letter-spacing: -0.2px;
+        }
+
+        .subcategory-title{
+            grid-column: 1 / -1;
+            display:flex;
+            align-items:flex-start;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 6px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(17,24,39,.08);
+            background: #fbfcff;
+            color: #1f2937;
+            font-weight: 900;
+            letter-spacing: -0.2px;
+            flex-wrap: wrap;
+        }
+
+        .adjust-controls{
+            display:flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items:center;
+            justify-content: flex-end;
+        }
+        .adjust-group{
+            display:flex;
+            align-items:center;
+            gap: 6px;
+            padding: 6px 8px;
+            border: 1px solid rgba(17,24,39,.08);
+            border-radius: 12px;
+            background: #ffffff;
+        }
+        .adjust-group label{
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 800;
+        }
+        .adjust-btn{
+            width: 30px;
+            height: 30px;
+            border-radius: 10px;
+            border: 1px solid rgba(17,24,39,.10);
+            background: #f3f4f6;
+            cursor:pointer;
+            font-weight: 900;
+            color:#374151;
+            transition: transform .08s ease, background .15s ease;
+            line-height: 1;
+        }
+        .adjust-btn:hover{ background:#eef2ff; transform: translateY(-1px); }
+        .adjust-btn:active{ transform: translateY(0); }
+
+        /* Stamp item */
+        .stamp-item{
+            border: 1px solid rgba(17,24,39,.08);
+            border-radius: 16px;
+            background: #ffffff;
+            padding: 12px;
+            box-shadow: 0 10px 22px rgba(17,24,39,.06);
+            display:flex;
+            flex-direction: column;
+            align-items:center;
+            gap: 10px;
+        }
+        .stamp-item canvas{
+            width: 200px;
+            height: 200px;
+            border-radius: 12px;
+            background: repeating-conic-gradient(from 45deg, rgba(0,0,0,.025) 0 10deg, rgba(0,0,0,0) 10deg 20deg);
+            border: 1px solid rgba(17,24,39,.08);
+        }
+        .stamp-item-label{
+            text-align:center;
+            font-size: 12px;
+            color:#374151;
+            font-weight: 800;
+            line-height: 1.35;
+            padding: 0 4px;
+            word-break: keep-all;
+        }
+        .stamp-item-actions{
+            display:flex;
+            gap: 8px;
+            width: 100%;
+            justify-content:center;
+        }
+
+        .btn-download, .btn-copy{
+            appearance:none;
+            border-radius: 12px;
+            padding: 9px 12px;
+            font-weight: 900;
+            font-size: 12px;
+            cursor:pointer;
+            border: 1px solid rgba(17,24,39,.10);
+            transition: transform .08s ease, background .15s ease, border-color .15s ease;
+            min-width: 92px;
+        }
+        .btn-download{
+            background: #eef2ff;
+            border-color: rgba(124,58,237,.18);
+            color:#3730a3;
+        }
+        .btn-copy{
+            background: #ecfeff;
+            border-color: rgba(14,116,144,.18);
+            color:#0e7490;
+        }
+        .btn-download:hover, .btn-copy:hover{
+            transform: translateY(-1px);
+            border-color: rgba(17,24,39,.18);
+        }
+        .btn-download:active, .btn-copy:active{ transform: translateY(0); }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="panel">
+        <h4><b>도장 이미지 만들기 (Stamp Image Maker)</b></h4>
+        <p style="font-size:14px;">
+            이름을 입력하면 여러 가지 도장 이미지를 생성합니다. 투명한 배경이며, 다양한 글씨체와 스타일을 선택할 수 있습니다.
+            모두 무료이며 회원가입, 로그인, 이메일 수집 없이 이용 가능합니다.
+        </p>
+
+        <div class="info-box">
+            <h5>📋 사용 방법</h5>
+            <ul>
+                <li>이름을 입력하면 다양한 형태의 도장 이미지가 생성됩니다.</li>
+                <li>도장 이미지는 투명 배경이며, 클립보드 복사, 다운로드 가능합니다.</li>
+                <li>이름은 2~4자 입력 가능합니다.</li>
+            </ul>
+        </div>
+
+        <div class="glass-card">
+            <div style="margin: 10px 0;">
+                <label for="nameInput" style="display:block; margin-bottom: 6px; font-weight: 900;">
+                    이름 <span style="color: #ef4444;">*</span>
+                </label>
+                <input type="text" id="nameInput" class="form-input" placeholder="예: 홍길동 또는 洪吉東 입력" maxlength="4">
+                <small style="color:#6b7280; font-size: 11px; display:block; margin-top: 6px;">
+                    ※ 한글 또는 한자로 입력하세요 (2~4자).
+                </small>
+            </div>
+
+            <div style="text-align:center; margin: 18px 0 0; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+                <button onclick="generateAllStamps()" class="glass-button">🔍 도장 이미지 만들기</button>
+                <button onclick="resetAllAdjustments()" class="glass-button" style="background: linear-gradient(135deg, #6B7280, #4B5563); border-color: rgba(107,114,128,.35);">
+                    🔄 초기화
+                </button>
+            </div>
+        </div>
+
+        <div id="error-message" class="error-message"></div>
+
+        <div id="stamp-gallery-container" class="glass-card" style="display:none;">
+            <h5 style="color: var(--accent); margin: 0 0 14px; font-size: 18px; font-weight: 900; text-align:center;">
+                📊 도장 이미지 갤러리
+            </h5>
+            <div id="stamp-gallery" class="stamp-gallery"></div>
+        </div>
+
+        <div class="warning-box">
+            <p style="margin:0; font-size: 13px; color:#856404;">
+                <strong>⚠️ 주의사항:</strong> 이 도구는 개인적인 용도로 사용하는 도장 이미지를 만듭니다.
+                공식 문서나 법적 효력이 필요한 용도로는 사용할 수 없습니다.
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 도장 설정
+    const STAMP_CONFIG = {
+        size: 200, // 기본 크기 (실제 도장 크기에 가깝게)
+        stampColor: '#DC143C', // 진한 빨간색 (인주색)
+        backgroundColor: 'transparent'
+    };
+
+    // 글씨체 옵션 (기본: 명조, 고딕, 궁서체, 한컴훈민정음, 한글재민, 독립)
+    const FONT_STYLES = [
+        { id: 'myeongjo', name: '명조체', font: "'Nanum Myeongjo', serif", weight: '700' },
+        { id: 'gothic', name: '고딕체', font: "'Noto Sans KR', sans-serif", weight: '400' },
+        { id: 'gungseo', name: '궁서체', font: "'DeokongPrincess', serif", weight: '400' },
+        { id: 'hancom', name: '한컴훈민정음', font: "'HancomHunminjeongeum', serif", weight: '400' },
+        { id: 'jaemin', name: '한글재민', font: "'HangulJaemin30', serif", weight: '400' },
+        { id: 'independent', name: '독립', font: "'Independent', serif", weight: '400' }
+    ];
+
+    // 도장 스타일 옵션 (양각, 음각만)
+    const STAMP_STYLES = [
+        { id: 'raised', name: '양각' },
+        { id: 'engraved', name: '음각' }
+    ];
+
+    // 각 유형별 조정값 저장 (형태-스타일을 키로 사용)
+    const adjustmentSettings = {};
+
+    // 각 유형별 도장 그룹 저장 (재그리기용)
+    const stampGroups = {};
+
+    // 한글/한자 판단
+    function containsHanja(text) {
+        const hanjaPattern = /[\u4E00-\u9FFF]/;
+        return hanjaPattern.test(text);
+    }
+
+    // 이름에 "인" 추가
+    function formatNameWithIn(name) {
+        if (!name || name.trim() === '') return '';
+        const trimmed = name.trim();
+        if (containsHanja(trimmed)) {
+            return trimmed + '印';
+        }
+        return trimmed + '인';
+    }
+
+    // 이름을 분할 (원형 도장용)
+    function splitNameForCircle(name) {
+        const trimmed = name.trim();
+        const nameLength = trimmed.length;
+
+        // 2글자: 인 없이 한 줄 중간 배치
+        if (nameLength === 2) {
+            return { top: trimmed, bottom: '', isSingleLine: true, originalLength: 2 };
+        }
+        // 3글자: 인 추가해서 4글자 (위 2글자, 아래 2글자)
+        else if (nameLength === 3) {
+            const isHanja = containsHanja(trimmed);
+            if (isHanja) {
+                return {
+                    top: trimmed.substring(2, 3) + trimmed.substring(0, 1),  // 3,1
+                    bottom: '印' + trimmed.substring(1, 2),                  // 印,2
+                    isSingleLine: false,
+                    originalLength: 3
+                };
+            } else {
+                const withIn = formatNameWithIn(trimmed);
+                return {
+                    top: withIn.substring(0, 2),
+                    bottom: withIn.substring(2, 4),
+                    isSingleLine: false,
+                    originalLength: 3
+                };
+            }
+        }
+        // 4글자: 인 없이 4글자 그대로 (위 2글자, 아래 2글자)
+        else if (nameLength === 4) {
+            return {
+                top: trimmed.substring(0, 2),
+                bottom: trimmed.substring(2, 4),
+                isSingleLine: false,
+                originalLength: 4
+            };
+        }
+        // 기본값
+        else {
+            return {
+                top: trimmed.substring(0, 2) || '',
+                bottom: trimmed.substring(2, 4) || '',
+                isSingleLine: false,
+                originalLength: nameLength
+            };
+        }
+    }
+
+    // 이름을 분할 (타원형 도장용 - 인 제외)
+    function splitNameForOval(name) {
+        const trimmed = name.trim();
+        const nameLength = trimmed.length;
+
+        if (nameLength === 2) {
+            return { chars: [trimmed.substring(0, 1), trimmed.substring(1, 2)], shouldSkip: false };
+        } else if (nameLength === 3) {
+            return {
+                chars: [trimmed.substring(0, 1), trimmed.substring(1, 2), trimmed.substring(2, 3)],
+                shouldSkip: false
+            };
+        } else if (nameLength === 4) {
+            return { chars: [], shouldSkip: true };
+        } else {
+            return { chars: trimmed.split('').slice(0, 3), shouldSkip: false };
+        }
+    }
+
+    // Canvas 고해상도 설정
+    function setupHighDPICanvas(canvas, size) {
+        const dpr = window.devicePixelRatio || 1;
+        const displaySize = size;
+
+        canvas.width = displaySize * dpr;
+        canvas.height = displaySize * dpr;
+        canvas.style.width = displaySize + 'px';
+        canvas.style.height = displaySize + 'px';
+
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        ctx.scale(dpr, dpr);
+        return ctx;
+    }
+
+    // 입력값 검증
+    function validateInput() {
+        const nameInput = document.getElementById('nameInput');
+        const name = nameInput.value.trim();
+
+        if (!name || name === '') {
+            showError('이름을 입력해주세요.');
+            nameInput.classList.add('error');
+            nameInput.classList.remove('success');
+            return false;
+        }
+
+        if (name.length < 2 || name.length > 4) {
+            showError('이름은 2글자에서 4글자까지 입력 가능합니다.');
+            nameInput.classList.add('error');
+            nameInput.classList.remove('success');
+            return false;
+        }
+
+        nameInput.classList.remove('error');
+        nameInput.classList.add('success');
+        hideError();
+        return true;
+    }
+
+    // 오류 메시지 표시
+    function showError(message) {
+        const errorDiv = document.getElementById('error-message');
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+    }
+
+    // 오류 메시지 숨기기
+    function hideError() {
+        document.getElementById('error-message').style.display = 'none';
+    }
+
+    // 원형 도장 그리기
+    function drawCircleStamp(canvas, nameParts, fontStyle, stampStyle, adjustments = {}) {
+        const ctx = setupHighDPICanvas(canvas, STAMP_CONFIG.size);
+        const size = STAMP_CONFIG.size;
+
+        ctx.clearRect(0, 0, size, size);
+
+        const centerX = size / 2;
+        const centerY = size / 2;
+        const radius = size / 2 - 20;
+
+        ctx.save();
+
+        if (stampStyle === 'engraved') {
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+            ctx.fillStyle = STAMP_CONFIG.stampColor;
+            ctx.fill();
+        }
+
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+        ctx.strokeStyle = STAMP_CONFIG.stampColor;
+        ctx.lineWidth = 4;
+        ctx.stroke();
+
+        const fontConfig = FONT_STYLES.find(f => f.id === fontStyle) || FONT_STYLES[0];
+        const baseFontSize = fontStyle === 'gungseo' ? 70 : 60;
+        const fontSize = baseFontSize + (adjustments.fontSize || 0);
+
+        let fontFamily = fontConfig.font.replace(/'/g, '');
+        ctx.font = `${fontConfig.weight} ${fontSize}px ${fontFamily}`;
+        ctx.fillStyle = stampStyle === 'engraved' ? '#FFFFFF' : STAMP_CONFIG.stampColor;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        const letterSpacing = adjustments.letterSpacing || 0;
+        const lineSpacingMultiplier = 0.5 + (adjustments.lineSpacing || 0) / 100;
+
+        if (nameParts.isSingleLine && nameParts.originalLength === 2) {
+            const baseHorizontalSpacing = radius * 0.3;
+            const horizontalSpacing = baseHorizontalSpacing + letterSpacing;
+            ctx.fillText(nameParts.top[0] || '', centerX - horizontalSpacing, centerY);
+            ctx.fillText(nameParts.top[1] || '', centerX + horizontalSpacing, centerY);
+        } else {
+            const lineSpacing = fontSize * lineSpacingMultiplier;
+            const topY = centerY - lineSpacing;
+            const bottomY = centerY + lineSpacing;
+
+            const baseHorizontalSpacing = radius * 0.35;
+            const horizontalSpacing = baseHorizontalSpacing + letterSpacing;
+
+            ctx.fillText(nameParts.top[0] || '', centerX - horizontalSpacing, topY);
+            ctx.fillText(nameParts.top[1] || '', centerX + horizontalSpacing, topY);
+            ctx.fillText(nameParts.bottom[0] || '', centerX - horizontalSpacing, bottomY);
+            ctx.fillText(nameParts.bottom[1] || '', centerX + horizontalSpacing, bottomY);
+        }
+
+        ctx.restore();
+        addTextureEffect(ctx, size, size, stampStyle);
+    }
+
+    // 타원형 도장 그리기
+    function drawOvalStamp(canvas, nameChars, fontStyle, stampStyle, adjustments = {}) {
+        const ctx = setupHighDPICanvas(canvas, STAMP_CONFIG.size);
+        const size = STAMP_CONFIG.size;
+
+        ctx.clearRect(0, 0, size, size);
+
+        const centerX = size / 2;
+        const centerY = size / 2;
+        const width = size * 0.6;
+        const height = size * 0.8;
+
+        ctx.save();
+
+        if (stampStyle === 'engraved') {
+            ctx.beginPath();
+            ctx.ellipse(centerX, centerY, width / 2, height / 2, 0, 0, Math.PI * 2);
+            ctx.fillStyle = STAMP_CONFIG.stampColor;
+            ctx.fill();
+        }
+
+        ctx.beginPath();
+        ctx.ellipse(centerX, centerY, width / 2, height / 2, 0, 0, Math.PI * 2);
+        ctx.strokeStyle = STAMP_CONFIG.stampColor;
+        ctx.lineWidth = 4;
+        ctx.stroke();
+
+        const fontConfig = FONT_STYLES.find(f => f.id === fontStyle) || FONT_STYLES[0];
+        const baseFontSize = 54;
+        const fontSize = baseFontSize + (adjustments.fontSize || 0);
+
+        let fontFamily = fontConfig.font.replace(/'/g, '');
+        ctx.font = `${fontConfig.weight} ${fontSize}px ${fontFamily}`;
+
+        ctx.fillStyle = stampStyle === 'engraved' ? '#FFFFFF' : STAMP_CONFIG.stampColor;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        const lineSpacingMultiplier = 3.3 - (adjustments.lineSpacing || 0) / 10;
+        const letterSpacing = adjustments.letterSpacing || 0;
+
+        const charCount = nameChars.chars.length;
+        if (charCount === 2) {
+            const spacing = height / lineSpacingMultiplier;
+            ctx.fillText(nameChars.chars[0] || '', centerX + letterSpacing, centerY - spacing / 2);
+            ctx.fillText(nameChars.chars[1] || '', centerX + letterSpacing, centerY + spacing / 2);
+        } else if (charCount === 3) {
+            const spacing = height / lineSpacingMultiplier;
+            ctx.fillText(nameChars.chars[0] || '', centerX + letterSpacing, centerY - spacing);
+            ctx.fillText(nameChars.chars[1] || '', centerX + letterSpacing, centerY);
+            ctx.fillText(nameChars.chars[2] || '', centerX + letterSpacing, centerY + spacing);
+        }
+
+        ctx.restore();
+        addTextureEffect(ctx, size, size, stampStyle);
+    }
+
+    // 사각형 도장 그리기
+    function drawSquareStamp(canvas, nameParts, fontStyle, stampStyle, adjustments = {}) {
+        const ctx = setupHighDPICanvas(canvas, STAMP_CONFIG.size);
+        const size = STAMP_CONFIG.size;
+
+        ctx.clearRect(0, 0, size, size);
+
+        const centerX = size / 2;
+        const centerY = size / 2;
+        const squareSize = size - 50;
+        const squareX = centerX - squareSize / 2;
+        const squareY = centerY - squareSize / 2;
+
+        ctx.save();
+
+        if (stampStyle === 'engraved') {
+            ctx.fillStyle = STAMP_CONFIG.stampColor;
+            ctx.fillRect(squareX, squareY, squareSize, squareSize);
+        }
+
+        ctx.beginPath();
+        ctx.rect(squareX, squareY, squareSize, squareSize);
+        ctx.strokeStyle = STAMP_CONFIG.stampColor;
+        ctx.lineWidth = 4;
+        ctx.stroke();
+
+        const fontConfig = FONT_STYLES.find(f => f.id === fontStyle) || FONT_STYLES[0];
+        const baseFontSize = fontStyle === 'gungseo' ? 70 : 60;
+        const fontSize = baseFontSize + (adjustments.fontSize || 0);
+
+        let fontFamily = fontConfig.font.replace(/'/g, '');
+        ctx.font = `${fontConfig.weight} ${fontSize}px ${fontFamily}`;
+
+        ctx.fillStyle = stampStyle === 'engraved' ? '#FFFFFF' : STAMP_CONFIG.stampColor;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        const letterSpacing = adjustments.letterSpacing || 0;
+        const lineSpacingMultiplier = 0.45 + (adjustments.lineSpacing || 0) / 100;
+
+        if (nameParts.isSingleLine && nameParts.originalLength === 2) {
+            const baseHorizontalSpacing = squareSize * 0.18;
+            const horizontalSpacing = baseHorizontalSpacing + letterSpacing;
+            ctx.fillText(nameParts.top[0] || '', centerX - horizontalSpacing, centerY);
+            ctx.fillText(nameParts.top[1] || '', centerX + horizontalSpacing, centerY);
+        } else {
+            const lineSpacing = fontSize * lineSpacingMultiplier;
+            const topY = centerY - lineSpacing;
+            const bottomY = centerY + lineSpacing;
+
+            const baseHorizontalSpacing = squareSize * 0.18;
+            const horizontalSpacing = baseHorizontalSpacing + letterSpacing;
+
+            ctx.fillText(nameParts.top[0] || '', centerX - horizontalSpacing, topY);
+            ctx.fillText(nameParts.top[1] || '', centerX + horizontalSpacing, topY);
+            ctx.fillText(nameParts.bottom[0] || '', centerX - horizontalSpacing, bottomY);
+            ctx.fillText(nameParts.bottom[1] || '', centerX + horizontalSpacing, bottomY);
+        }
+
+        ctx.restore();
+        addTextureEffect(ctx, size, size, stampStyle);
+    }
+
+    // 텍스처 효과 추가
+    function addTextureEffect(ctx, width, height, style) {
+        ctx.save();
+
+        const imageData = ctx.getImageData(0, 0, width, height);
+        const data = imageData.data;
+
+        for (let i = 0; i < data.length; i += 4) {
+            if (data[i + 3] > 0) {
+                const noise = (Math.random() - 0.5) * 8;
+                data[i] = Math.max(0, Math.min(255, data[i] + noise));
+                data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + noise));
+                data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + noise));
+            }
+        }
+
+        ctx.putImageData(imageData, 0, 0);
+        ctx.restore();
+    }
+
+    // 카테고리 제목 생성
+    function createCategoryTitle(text) {
+        const title = document.createElement('div');
+        title.className = 'category-title';
+        title.textContent = text;
+        return title;
+    }
+
+    // 서브카테고리 제목 생성 (조정 버튼 포함)
+    function createSubcategoryTitle(text, typeKey, redrawCallback) {
+        const container = document.createElement('div');
+        container.className = 'subcategory-title';
+
+        const titleText = document.createElement('span');
+        titleText.textContent = text;
+        container.appendChild(titleText);
+
+        if (!adjustmentSettings[typeKey]) {
+            adjustmentSettings[typeKey] = { fontSize: 0, letterSpacing: 0, lineSpacing: 0 };
+        }
+
+        const controls = document.createElement('div');
+        controls.className = 'adjust-controls';
+
+        const fontSizeGroup = createAdjustGroup('글자크기', typeKey, 'fontSize', redrawCallback);
+        const letterSpacingGroup = createAdjustGroup('자간', typeKey, 'letterSpacing', redrawCallback);
+        const lineSpacingGroup = createAdjustGroup('줄간격', typeKey, 'lineSpacing', redrawCallback);
+
+        controls.appendChild(fontSizeGroup);
+        controls.appendChild(letterSpacingGroup);
+        controls.appendChild(lineSpacingGroup);
+
+        container.appendChild(controls);
+        return container;
+    }
+
+    // 조정 그룹 생성
+    function createAdjustGroup(label, typeKey, adjustType, redrawCallback) {
+        const group = document.createElement('div');
+        group.className = 'adjust-group';
+
+        const labelEl = document.createElement('label');
+        labelEl.textContent = label;
+        group.appendChild(labelEl);
+
+        const decreaseBtn = document.createElement('button');
+        decreaseBtn.className = 'adjust-btn';
+        decreaseBtn.type = 'button';
+        decreaseBtn.textContent = '−';
+        decreaseBtn.onclick = () => adjustValue(typeKey, adjustType, -1, redrawCallback);
+
+        const increaseBtn = document.createElement('button');
+        increaseBtn.className = 'adjust-btn';
+        increaseBtn.type = 'button';
+        increaseBtn.textContent = '+';
+        increaseBtn.onclick = () => adjustValue(typeKey, adjustType, 1, redrawCallback);
+
+        group.appendChild(decreaseBtn);
+        group.appendChild(increaseBtn);
+        return group;
+    }
+
+    // 조정값 변경 및 재그리기
+    function adjustValue(typeKey, adjustType, delta, redrawCallback) {
+        if (!adjustmentSettings[typeKey]) {
+            adjustmentSettings[typeKey] = { fontSize: 0, letterSpacing: 0, lineSpacing: 0 };
+        }
+
+        const limits = {
+            fontSize: { min: -20, max: 20 },
+            letterSpacing: { min: -10, max: 10 },
+            lineSpacing: { min: -30, max: 30 }
+        };
+
+        const limit = limits[adjustType];
+        adjustmentSettings[typeKey][adjustType] = Math.max(
+            limit.min,
+            Math.min(limit.max, adjustmentSettings[typeKey][adjustType] + delta)
+        );
+
+        if (redrawCallback) redrawCallback(typeKey, adjustmentSettings[typeKey]);
+    }
+
+    // 모든 조정값 초기화 및 완전 초기 상태로 복원
+    function resetAllAdjustments() {
+        Object.keys(adjustmentSettings).forEach(key => {
+            adjustmentSettings[key] = { fontSize: 0, letterSpacing: 0, lineSpacing: 0 };
+        });
+
+        Object.keys(stampGroups).forEach(key => delete stampGroups[key]);
+
+        const nameInput = document.getElementById('nameInput');
+        nameInput.value = '';
+        nameInput.classList.remove('error', 'success');
+
+        const galleryContainer = document.getElementById('stamp-gallery-container');
+        galleryContainer.style.display = 'none';
+
+        const gallery = document.getElementById('stamp-gallery');
+        gallery.innerHTML = '';
+
+        hideError();
+    }
+
+    // 폰트 로드 확인 및 대기
+    async function ensureFontsLoaded() {
+        try {
+            await document.fonts.ready;
+
+            const deokongLoaded = document.fonts.check('1em DeokongPrincess');
+            if (!deokongLoaded) {
+                const deokongFont = new FontFace('DeokongPrincess',
+                    'url(https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2205@1.0/DeogonPrincess.woff2)');
+                await deokongFont.load();
+                document.fonts.add(deokongFont);
+            }
+
+            const hancomLoaded = document.fonts.check('1em HancomHunminjeongeum');
+            if (!hancomLoaded) {
+                const hancomFont = new FontFace('HancomHunminjeongeum',
+                    'url(https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomHoonminjeongeumH.woff)');
+                await hancomFont.load();
+                document.fonts.add(hancomFont);
+            }
+
+            const jaeminLoaded = document.fonts.check('1em HangulJaemin30');
+            if (!jaeminLoaded) {
+                const jaeminFont = new FontFace('HangulJaemin30',
+                    'url(https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2307-1@1.1/Hangeuljaemin4-Regular.woff2)');
+                await jaeminFont.load();
+                document.fonts.add(jaeminFont);
+            }
+
+            const independentLoaded = document.fonts.check('1em Independent');
+            if (!independentLoaded) {
+                const independentFont = new FontFace('Independent',
+                    'url(https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_twelve@1.1/Dokrip.woff)');
+                await independentFont.load();
+                document.fonts.add(independentFont);
+            }
+
+            return true;
+        } catch (error) {
+            console.warn('폰트 로드 실패:', error);
+            return false;
+        }
+    }
+
+    // 모든 도장 생성
+    async function generateAllStamps() {
+        if (!validateInput()) return;
+
+        await ensureFontsLoaded();
+
+        const name = document.getElementById('nameInput').value.trim();
+        const gallery = document.getElementById('stamp-gallery');
+        gallery.innerHTML = '';
+
+        Object.keys(stampGroups).forEach(key => delete stampGroups[key]);
+
+        const nameParts = splitNameForCircle(name);
+        const nameChars = splitNameForOval(name);
+        const nameLength = name.trim().length;
+
+        // 1) 원형
+        gallery.appendChild(createCategoryTitle('1) 원형'));
+
+        // 1-1) 원형-양각
+        const typeKey1 = 'circle-raised';
+        const group1 = { items: [], nameParts, stampStyle: 'raised', drawFunc: drawCircleStamp };
+        const redrawCallback1 = (typeKey, adjustments) => {
+            group1.items.forEach(item => {
+                drawCircleStamp(item.canvas, item.nameParts, item.fontStyle, item.stampStyle, adjustments);
+            });
+        };
+        gallery.appendChild(createSubcategoryTitle('1-1) 원형 - 양각', typeKey1, redrawCallback1));
+        FONT_STYLES.forEach(fontStyle => {
+            const canvas = document.createElement('canvas');
+            const adjustments = adjustmentSettings[typeKey1] || {};
+            drawCircleStamp(canvas, nameParts, fontStyle.id, 'raised', adjustments);
+            const item = createStampItem(canvas, `원형 - 양각 - ${fontStyle.name}`, name);
+            gallery.appendChild(item);
+            group1.items.push({ canvas, nameParts, fontStyle: fontStyle.id, stampStyle: 'raised' });
+        });
+        stampGroups[typeKey1] = group1;
+
+        // 1-2) 원형-음각
+        const typeKey2 = 'circle-engraved';
+        const group2 = { items: [], nameParts, stampStyle: 'engraved', drawFunc: drawCircleStamp };
+        const redrawCallback2 = (typeKey, adjustments) => {
+            group2.items.forEach(item => {
+                drawCircleStamp(item.canvas, item.nameParts, item.fontStyle, item.stampStyle, adjustments);
+            });
+        };
+        gallery.appendChild(createSubcategoryTitle('1-2) 원형 - 음각', typeKey2, redrawCallback2));
+        FONT_STYLES.forEach(fontStyle => {
+            const canvas = document.createElement('canvas');
+            const adjustments = adjustmentSettings[typeKey2] || {};
+            drawCircleStamp(canvas, nameParts, fontStyle.id, 'engraved', adjustments);
+            const item = createStampItem(canvas, `원형 - 음각 - ${fontStyle.name}`, name);
+            gallery.appendChild(item);
+            group2.items.push({ canvas, nameParts, fontStyle: fontStyle.id, stampStyle: 'engraved' });
+        });
+        stampGroups[typeKey2] = group2;
+
+        // 2) 타원형 (4글자일 때 제외)
+        if (nameLength !== 4 && !nameChars.shouldSkip) {
+            gallery.appendChild(createCategoryTitle('2) 타원형'));
+
+            // 2-1) 타원형-양각
+            const typeKey3 = 'oval-raised';
+            const group3 = { items: [], nameChars, stampStyle: 'raised', drawFunc: drawOvalStamp };
+            const redrawCallback3 = (typeKey, adjustments) => {
+                group3.items.forEach(item => {
+                    drawOvalStamp(item.canvas, item.nameChars, item.fontStyle, item.stampStyle, adjustments);
+                });
+            };
+            gallery.appendChild(createSubcategoryTitle('2-1) 타원형 - 양각', typeKey3, redrawCallback3));
+            FONT_STYLES.forEach(fontStyle => {
+                const canvas = document.createElement('canvas');
+                const adjustments = adjustmentSettings[typeKey3] || {};
+                drawOvalStamp(canvas, nameChars, fontStyle.id, 'raised', adjustments);
+                const item = createStampItem(canvas, `타원형 - 양각 - ${fontStyle.name}`, name);
+                gallery.appendChild(item);
+                group3.items.push({ canvas, nameChars, fontStyle: fontStyle.id, stampStyle: 'raised' });
+            });
+            stampGroups[typeKey3] = group3;
+
+            // 2-2) 타원형-음각
+            const typeKey4 = 'oval-engraved';
+            const group4 = { items: [], nameChars, stampStyle: 'engraved', drawFunc: drawOvalStamp };
+            const redrawCallback4 = (typeKey, adjustments) => {
+                group4.items.forEach(item => {
+                    drawOvalStamp(item.canvas, item.nameChars, item.fontStyle, item.stampStyle, adjustments);
+                });
+            };
+            gallery.appendChild(createSubcategoryTitle('2-2) 타원형 - 음각', typeKey4, redrawCallback4));
+            FONT_STYLES.forEach(fontStyle => {
+                const canvas = document.createElement('canvas');
+                const adjustments = adjustmentSettings[typeKey4] || {};
+                drawOvalStamp(canvas, nameChars, fontStyle.id, 'engraved', adjustments);
+                const item = createStampItem(canvas, `타원형 - 음각 - ${fontStyle.name}`, name);
+                gallery.appendChild(item);
+                group4.items.push({ canvas, nameChars, fontStyle: fontStyle.id, stampStyle: 'engraved' });
+            });
+            stampGroups[typeKey4] = group4;
+        }
+
+        // 3) 사각형
+        gallery.appendChild(createCategoryTitle('3) 사각형'));
+
+        // 3-1) 사각형-양각
+        const typeKey5 = 'square-raised';
+        const group5 = { items: [], nameParts, stampStyle: 'raised', drawFunc: drawSquareStamp };
+        const redrawCallback5 = (typeKey, adjustments) => {
+            group5.items.forEach(item => {
+                drawSquareStamp(item.canvas, item.nameParts, item.fontStyle, item.stampStyle, adjustments);
+            });
+        };
+        gallery.appendChild(createSubcategoryTitle('3-1) 사각형 - 양각', typeKey5, redrawCallback5));
+        FONT_STYLES.forEach(fontStyle => {
+            const canvas = document.createElement('canvas');
+            const adjustments = adjustmentSettings[typeKey5] || {};
+            drawSquareStamp(canvas, nameParts, fontStyle.id, 'raised', adjustments);
+            const item = createStampItem(canvas, `사각형 - 양각 - ${fontStyle.name}`, name);
+            gallery.appendChild(item);
+            group5.items.push({ canvas, nameParts, fontStyle: fontStyle.id, stampStyle: 'raised' });
+        });
+        stampGroups[typeKey5] = group5;
+
+        // 3-2) 사각형-음각
+        const typeKey6 = 'square-engraved';
+        const group6 = { items: [], nameParts, stampStyle: 'engraved', drawFunc: drawSquareStamp };
+        const redrawCallback6 = (typeKey, adjustments) => {
+            group6.items.forEach(item => {
+                drawSquareStamp(item.canvas, item.nameParts, item.fontStyle, item.stampStyle, adjustments);
+            });
+        };
+        gallery.appendChild(createSubcategoryTitle('3-2) 사각형 - 음각', typeKey6, redrawCallback6));
+        FONT_STYLES.forEach(fontStyle => {
+            const canvas = document.createElement('canvas');
+            const adjustments = adjustmentSettings[typeKey6] || {};
+            drawSquareStamp(canvas, nameParts, fontStyle.id, 'engraved', adjustments);
+            const item = createStampItem(canvas, `사각형 - 음각 - ${fontStyle.name}`, name);
+            gallery.appendChild(item);
+            group6.items.push({ canvas, nameParts, fontStyle: fontStyle.id, stampStyle: 'engraved' });
+        });
+        stampGroups[typeKey6] = group6;
+
+        document.getElementById('stamp-gallery-container').style.display = 'block';
+        document.getElementById('stamp-gallery-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // 도장 아이템 생성
+    function createStampItem(canvas, label, name) {
+        const item = document.createElement('div');
+        item.className = 'stamp-item';
+
+        const labelDiv = document.createElement('div');
+        labelDiv.className = 'stamp-item-label';
+        labelDiv.textContent = label;
+
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'stamp-item-actions';
+
+        const downloadBtn = document.createElement('button');
+        downloadBtn.className = 'btn-download';
+        downloadBtn.type = 'button';
+        downloadBtn.textContent = 'Down';
+        downloadBtn.onclick = () => downloadStampCanvas(canvas, name, label);
+
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'btn-copy';
+        copyBtn.type = 'button';
+        copyBtn.textContent = 'Copy';
+        copyBtn.onclick = () => copyCanvasToClipboard(canvas, copyBtn);
+
+        actionsDiv.appendChild(downloadBtn);
+        actionsDiv.appendChild(copyBtn);
+
+        item.appendChild(canvas);
+        item.appendChild(labelDiv);
+        item.appendChild(actionsDiv);
+
+        return item;
+    }
+
+    // 도장 다운로드
+    function downloadStampCanvas(canvas, name, label) {
+        const link = document.createElement('a');
+        link.download = `${name}_${label.replace(/\s+/g, '_')}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    }
+
+    // 클립보드 복사
+    async function copyCanvasToClipboard(canvas, button) {
+        try {
+            const blob = await new Promise(resolve => {
+                canvas.toBlob(resolve, 'image/png', 1.0);
+            });
+            await navigator.clipboard.write([
+                new ClipboardItem({ 'image/png': blob })
+            ]);
+
+            const originalText = button.textContent;
+            button.textContent = 'Copied';
+            button.disabled = true;
+
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.disabled = false;
+            }, 2000);
+        } catch (err) {
+            showError('클립보드 복사에 실패했습니다.');
+            console.error('클립보드 복사 오류:', err);
+        }
+    }
+
+    // 실시간 입력 검증
+    document.addEventListener('DOMContentLoaded', function() {
+        const nameInput = document.getElementById('nameInput');
+
+        nameInput.addEventListener('input', function() {
+            const name = this.value.trim();
+            if (name === '') {
+                this.classList.remove('error', 'success');
+            } else if (name.length > 10) {
+                this.classList.add('error');
+                this.classList.remove('success');
+            } else {
+                this.classList.remove('error');
+                this.classList.add('success');
+            }
+        });
+
+        nameInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') generateAllStamps();
+        });
+    });
+</script>
+</body>
+</html>

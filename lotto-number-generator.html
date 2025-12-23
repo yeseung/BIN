@@ -1,0 +1,562 @@
+<!-- File: lotto-number-generator.html -->
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lotto Number Generator</title>
+    <meta name="description" content="임의의 로또 번호를 생성하고 분석합니다." />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --line:#e6e8f0;
+            --shadow:0 14px 40px rgba(17,24,39,.10);
+            --radius:18px;
+
+            --btn-a:#7c3aed; /* violet */
+            --btn-b:#2563eb; /* blue */
+            --ok-a:#10b981;
+            --ok-b:#059669;
+            --gray-a:#9ca3af;
+            --gray-b:#6b7280;
+            --danger:#ef4444;
+
+            --code-bg:#f3f4f6;
+
+            --drop-bg:#eaf4ff;
+            --drop-line:rgba(37,99,235,.28);
+        }
+
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .wrap{
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 26px 16px 48px;
+        }
+
+        .card{
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .header{
+            padding: 22px 22px 14px;
+            border-bottom: 1px solid var(--line);
+        }
+        h1{
+            margin:0 0 8px;
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: -0.3px;
+        }
+        .sub{
+            margin:0;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .content{ padding: 18px 22px 22px; }
+
+        .dropzone{
+            background: var(--drop-bg);
+            border: 2px dashed var(--drop-line);
+            border-radius: 16px;
+            padding: 14px;
+            margin: 12px 0;
+        }
+
+        .glass-card{
+            background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.78));
+            border: 1px solid rgba(17,24,39,.10);
+            border-radius: 16px;
+            box-shadow: 0 12px 30px rgba(17,24,39,.06);
+            padding: 14px;
+            margin: 10px 0;
+        }
+
+        .glass-card h2{
+            margin: 0 0 10px;
+            font-size: 16px;
+            font-weight: 1000;
+            color:#2c5aa0;
+        }
+
+        .input-sections-container{
+            display:flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .input-sections-container > div{
+            flex: 1;
+            min-width: 220px;
+        }
+
+        label{
+            display:block;
+            margin-bottom: 6px;
+            font-weight: 900;
+            color:#374151;
+            font-size: 13px;
+        }
+
+        input[type="number"]{
+            width:100%;
+            border-radius: 14px;
+            border: 1px solid rgba(17,24,39,.14);
+            background:#fff;
+            padding: 12px 12px;
+            font-size: 14px;
+            outline:none;
+            transition: box-shadow .15s ease, border-color .15s ease;
+        }
+        input[type="number"]:focus{
+            border-color: rgba(124,58,237,.35);
+            box-shadow: 0 0 0 4px rgba(124,58,237,.12);
+        }
+        .invalid{
+            border: 3px solid var(--danger) !important;
+            box-shadow: none !important;
+        }
+
+        small{
+            color:#6b7280;
+            font-size: 11px;
+            display:block;
+            margin-top: 6px;
+            line-height: 1.4;
+        }
+
+        .row{
+            display:flex;
+            justify-content:center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+
+        .btn{
+            appearance:none;
+            border-radius: 14px;
+            padding: 11px 14px;
+            font-weight: 900;
+            font-size: 13px;
+            cursor:pointer;
+            border: 1px solid rgba(17,24,39,.10);
+            transition: transform .08s ease, filter .15s ease;
+            user-select: none;
+            color:#fff;
+        }
+        .btn:hover{ transform: translateY(-1px); filter: brightness(1.03); }
+        .btn:active{ transform: translateY(0); }
+
+        .btn-primary{
+            background: linear-gradient(135deg, var(--btn-a), var(--btn-b));
+            box-shadow: 0 10px 20px rgba(37,99,235,.14);
+        }
+        .btn-success{
+            background: linear-gradient(135deg, var(--ok-a), var(--ok-b));
+            box-shadow: 0 10px 20px rgba(16,185,129,.14);
+        }
+        .btn-gray{
+            background: linear-gradient(135deg, var(--gray-a), var(--gray-b));
+            box-shadow: 0 10px 20px rgba(107,114,128,.12);
+        }
+
+        /* Lotto cards area */
+        #lotto-cards{ display:none; }
+        #main-numbers{
+            display:flex;
+            justify-content:center;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-top: 10px;
+        }
+
+        .lotto-card{
+            width: 64px;
+            height: 64px;
+            border-radius: 999px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-weight: 1000;
+            font-size: 18px;
+            color: #fff;
+            letter-spacing: 0.5px;
+            box-shadow: 0 10px 18px rgba(17,24,39,.14);
+            position: relative;
+            overflow: hidden;
+            transform: translateZ(0);
+        }
+
+        /* spinning effect */
+        .lotto-card.spinning{
+            animation: wobble .8s ease-in-out infinite;
+            filter: saturate(1.08);
+        }
+        @keyframes wobble{
+            0%{ transform: translateY(0) rotate(0deg) scale(1); }
+            25%{ transform: translateY(-2px) rotate(-2deg) scale(1.02); }
+            50%{ transform: translateY(0) rotate(2deg) scale(1.01); }
+            75%{ transform: translateY(2px) rotate(-1deg) scale(1.02); }
+            100%{ transform: translateY(0) rotate(0deg) scale(1); }
+        }
+
+        .lotto-card.final{
+            animation: pop .28s ease-out;
+        }
+        @keyframes pop{
+            0%{ transform: scale(.92); }
+            100%{ transform: scale(1); }
+        }
+
+        /* Color themes */
+        .red{ background: linear-gradient(135deg, #ef4444, #b91c1c); }
+        .blue{ background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .green{ background: linear-gradient(135deg, #10b981, #047857); }
+        .yellow{ background: linear-gradient(135deg, #f59e0b, #b45309); }
+        .purple{ background: linear-gradient(135deg, #8b5cf6, #5b21b6); }
+        .pink{ background: linear-gradient(135deg, #ec4899, #9d174d); }
+        .orange{ background: linear-gradient(135deg, #f97316, #c2410c); }
+        .teal{ background: linear-gradient(135deg, #14b8a6, #0f766e); }
+        .indigo{ background: linear-gradient(135deg, #6366f1, #3730a3); }
+        .rose{ background: linear-gradient(135deg, #fb7185, #be123c); }
+
+        /* Output area */
+        .result-box{
+            background:#fff;
+            border-radius: 16px;
+            border: 1px solid rgba(17,24,39,.10);
+            padding: 14px;
+            min-height: 220px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            line-height: 1.65;
+            font-size: 14px;
+        }
+
+        .hint{
+            margin-top: 8px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .mono{
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="card">
+        <div class="header">
+            <h1>로또 번호 생성기 (Lotto Number Generator)</h1>
+            <p class="sub">임의의 로또 번호를 생성하고 분석합니다.</p>
+        </div>
+
+        <div class="content">
+            <div class="dropzone">
+                <div class="glass-card">
+                    <h2>⚙️ 로또 설정</h2>
+                    <div class="input-sections-container">
+                        <div>
+                            <label for="lottoCount">번호 개수</label>
+                            <input type="number" id="lottoCount" min="1" max="10" value="6" />
+                            <small>※ 1-10개 사이</small>
+                        </div>
+                        <div>
+                            <label for="lottoMax">최대 번호</label>
+                            <input type="number" id="lottoMax" min="10" max="100" value="45" />
+                            <small>※ 10-100 사이</small>
+                        </div>
+                    </div>
+                    <div class="hint">※ 난수는 <span class="mono">crypto.getRandomValues</span> 기반(편향 최소화 Fisher–Yates)으로 섞습니다.</div>
+                </div>
+
+                <div class="glass-card">
+                    <div class="row">
+                        <button class="btn btn-success" id="genBtn" type="button">🎲 로또 번호 생성</button>
+                        <button class="btn btn-primary" id="copyBtn" type="button">📋 복사</button>
+                        <button class="btn btn-gray" id="clearBtn" type="button">🗑️ 초기화</button>
+                    </div>
+                </div>
+
+                <div class="glass-card" id="lotto-cards">
+                    <h2 style="text-align:center;">🎰 로또 번호</h2>
+                    <div id="main-numbers"></div>
+                    <div class="hint" style="text-align:center;">※ 각 공은 0.2초 간격으로 등장하고, 1.5초 후 최종 번호로 멈춥니다.</div>
+                </div>
+
+                <div class="glass-card">
+                    <div id="output" class="result-box">여기에 로또 번호가 생성됩니다...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // -------- Secure RNG + unbiased shuffle
+    function randInt(maxExclusive) {
+        if (maxExclusive <= 0) return 0;
+        const a = new Uint32Array(1);
+        const limit = Math.floor(0xFFFFFFFF / maxExclusive) * maxExclusive;
+        let x;
+        do {
+            crypto.getRandomValues(a);
+            x = a[0];
+        } while (x >= limit);
+        return x % maxExclusive;
+    }
+
+    function shuffle(arr){
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = randInt(i + 1);
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    // -------- DOM
+    const lottoCountEl = document.getElementById('lottoCount');
+    const lottoMaxEl = document.getElementById('lottoMax');
+    const outputEl = document.getElementById('output');
+    const cardsWrapEl = document.getElementById('lotto-cards');
+    const mainNumbersEl = document.getElementById('main-numbers');
+
+    document.getElementById('genBtn').addEventListener('click', generateLotto);
+    document.getElementById('copyBtn').addEventListener('click', copyToClipboard);
+    document.getElementById('clearBtn').addEventListener('click', clearResult);
+
+    function nowKST(){
+        return new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+    }
+
+    function markInvalid(el, state){
+        if (!el) return;
+        el.classList.toggle('invalid', !!state);
+    }
+
+    // -------- Lotto logic
+    function generateLotto(){
+        const lottoCount = parseInt(lottoCountEl.value || 6, 10);
+        const lottoMax = parseInt(lottoMaxEl.value || 45, 10);
+
+        markInvalid(lottoCountEl, false);
+        markInvalid(lottoMaxEl, false);
+
+        if (!Number.isFinite(lottoCount) || lottoCount < 1 || lottoCount > 10) {
+            markInvalid(lottoCountEl, true);
+            alert('번호 개수는 1-10개 사이로 설정해주세요.');
+            return;
+        }
+        if (!Number.isFinite(lottoMax) || lottoMax < 10 || lottoMax > 100) {
+            markInvalid(lottoMaxEl, true);
+            alert('최대 번호는 10-100 사이로 설정해주세요.');
+            return;
+        }
+        if (lottoCount > lottoMax){
+            markInvalid(lottoCountEl, true);
+            markInvalid(lottoMaxEl, true);
+            alert(`번호 개수(${lottoCount})가 최대 번호(${lottoMax})보다 클 수 없습니다.`);
+            return;
+        }
+
+        // Generate numbers
+        const numbers = Array.from({ length: lottoMax }, (_, i) => i + 1);
+        shuffle(numbers);
+        const selected = numbers.slice(0, lottoCount).sort((a,b) => a-b);
+
+        // Cards animation
+        displayLottoCards(selected, lottoMax);
+
+        // Build result text (plain text; cards are visual)
+        const lines = [];
+        lines.push("로또 번호 생성 결과");
+        lines.push("─".repeat(24));
+        lines.push(`번호 개수: ${lottoCount}개`);
+        lines.push(`번호 범위: 1 ~ ${lottoMax}`);
+        lines.push(`로또 번호: ${selected.join(", ")}`);
+        lines.push(`생성 시간: ${nowKST()}`);
+        lines.push("─".repeat(24));
+        lines.push("");
+
+        lines.push("번호 분석");
+        lines.push("─".repeat(24));
+
+        // low/mid/high by thirds
+        const a = Math.floor(lottoMax / 3);
+        const b = Math.floor(lottoMax * 2 / 3);
+        const lowCount  = selected.filter(n => n <= a).length;
+        const midCount  = selected.filter(n => n > a && n <= b).length;
+        const highCount = selected.filter(n => n > b).length;
+
+        lines.push(`낮은 번호 (1-${a}): ${lowCount}개`);
+        lines.push(`중간 번호 (${a+1}-${b}): ${midCount}개`);
+        lines.push(`높은 번호 (${b+1}-${lottoMax}): ${highCount}개`);
+
+        // odd/even
+        const oddCount = selected.filter(n => n % 2 === 1).length;
+        const evenCount = selected.filter(n => n % 2 === 0).length;
+        lines.push("");
+        lines.push(`홀수: ${oddCount}개, 짝수: ${evenCount}개`);
+
+        // consecutive
+        const consecutive = checkConsecutive(selected);
+        lines.push(`연속 번호: ${consecutive.length ? consecutive.join(", ") : "없음"}`);
+
+        // sum
+        const sum = selected.reduce((acc, n) => acc + n, 0);
+        lines.push(`번호 합계: ${sum}`);
+
+        // luck index
+        const luckIndex = calculateLuckIndex(selected, lottoMax);
+        lines.push(`행운 지수: ${luckIndex}/100`);
+        lines.push("");
+        lines.push("─".repeat(24));
+        lines.push("행운을 빕니다.");
+        lines.push("");
+        lines.push("※ 행운 지수는 홀짝 균형(30점), 고저 분산(25점), 연속번호 패널티(20점), 합계 적정성(25점)을 종합한 임의 지표이며 실제 당첨 확률과 무관합니다.");
+
+        outputEl.textContent = lines.join("\n");
+    }
+
+    // -------- Cards
+    function displayLottoCards(selected, lottoMax){
+        cardsWrapEl.style.display = 'block';
+        mainNumbersEl.innerHTML = '';
+
+        selected.forEach((num, index) => {
+            const card = document.createElement('div');
+            card.className = `lotto-card ${getCardColor(num, lottoMax)} spinning`;
+            card.textContent = '??';
+            mainNumbersEl.appendChild(card);
+
+            animateNumber(card, num, lottoMax, index * 200);
+        });
+    }
+
+    function animateNumber(card, finalNumber, max, delay){
+        setTimeout(() => {
+            let current = 1;
+            const interval = setInterval(() => {
+                current = randInt(max) + 1;
+                card.textContent = String(current).padStart(2, '0');
+            }, 50);
+
+            setTimeout(() => {
+                clearInterval(interval);
+                card.textContent = String(finalNumber).padStart(2, '0');
+                card.classList.remove('spinning');
+                card.classList.add('final');
+            }, 1500);
+        }, delay);
+    }
+
+    function getCardColor(num, max){
+        const ratio = num / max;
+        const colors = ['red','blue','green','yellow','purple','pink','orange','teal','indigo','rose'];
+        const idx = Math.floor(ratio * colors.length);
+        return colors[Math.min(idx, colors.length - 1)];
+    }
+
+    // -------- Analysis helpers
+    function checkConsecutive(numbers){
+        const consecutive = [];
+        for (let i = 0; i < numbers.length - 1; i++){
+            if (numbers[i+1] - numbers[i] === 1){
+                if (!consecutive.includes(numbers[i])) consecutive.push(numbers[i]);
+                if (!consecutive.includes(numbers[i+1])) consecutive.push(numbers[i+1]);
+            }
+        }
+        return consecutive;
+    }
+
+    function calculateLuckIndex(numbers, max){
+        let score = 0;
+
+        // odd/even balance (30)
+        const odd = numbers.filter(n => n % 2 === 1).length;
+        const even = numbers.length - odd;
+        const balance = Math.abs(odd - even);
+        score += Math.max(0, 30 - balance * 5);
+
+        // distribution (25): low/mid/high thirds
+        const a = max / 3;
+        const b = (max * 2) / 3;
+        const low  = numbers.filter(n => n <= a).length;
+        const mid  = numbers.filter(n => n > a && n <= b).length;
+        const high = numbers.filter(n => n > b).length;
+        const distribution = Math.min(low, mid, high);
+        score += distribution * 8; // up to ~24
+
+        // consecutive penalty (20)
+        const consecutive = checkConsecutive(numbers);
+        score += Math.max(0, 20 - consecutive.length * 3);
+
+        // sum sanity (25)
+        const sum = numbers.reduce((a, b) => a + b, 0);
+        const expectedSum = (max + 1) * numbers.length / 2; // expected mean * count
+        const sumDiff = Math.abs(sum - expectedSum) / expectedSum;
+        score += Math.max(0, 25 - sumDiff * 50);
+
+        return Math.min(100, Math.max(0, Math.round(score)));
+    }
+
+    // -------- Clipboard + Reset
+    async function copyToClipboard(){
+        const text = (outputEl.textContent || "").trim();
+        if (!text) return;
+
+        try{
+            await navigator.clipboard.writeText(text);
+            alert('결과가 클립보드에 복사되었습니다!');
+        }catch(e){
+            // fallback
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            alert('결과가 클립보드에 복사되었습니다!');
+        }
+    }
+
+    function clearResult(){
+        outputEl.textContent = "여기에 로또 번호가 생성됩니다...";
+        cardsWrapEl.style.display = 'none';
+        mainNumbersEl.innerHTML = '';
+        lottoCountEl.value = "6";
+        lottoMaxEl.value = "45";
+        markInvalid(lottoCountEl, false);
+        markInvalid(lottoMaxEl, false);
+    }
+</script>
+</body>
+</html>

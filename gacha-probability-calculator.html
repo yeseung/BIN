@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gacha Probability Calculator | 게임 아이템 뽑기 확률 계산기</title>
+    <meta name="description" content="확률형 아이템(가챠) 뽑기에서 목표 아이템을 목표 개수 이상 획득할 누적 확률을 계산하고, 누적확률 그래프를 표시합니다. (선택: 천장 시스템)" />
+    <style>
+        :root{
+            --bg1:#f5f7fb;
+            --bg2:#eef3ff;
+            --card: rgba(255,255,255,.72);
+            --card2: rgba(255,255,255,.55);
+            --stroke: rgba(44, 90, 160, .22);
+            --text:#111827;
+            --muted:#4b5563;
+            --blue:#2563eb;
+            --blue2:#1e40af;
+            --green:#16a34a;
+            --red:#dc2626;
+            --shadow: 0 18px 45px rgba(17,24,39,.12);
+            --radius: 14px;
+            --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+
+        *{box-sizing:border-box}
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", "Malgun Gothic", Arial, sans-serif;
+            color:var(--text);
+            background: radial-gradient(1200px 800px at 20% 10%, #dbeafe 0%, transparent 55%),
+            radial-gradient(900px 700px at 80% 20%, #e9d5ff 0%, transparent 55%),
+            linear-gradient(180deg, var(--bg1), var(--bg2));
+            min-height:100vh;
+        }
+
+        .wrap{
+            max-width: 980px;
+            margin: 24px auto 60px;
+            padding: 0 14px;
+        }
+
+        .page-title{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            margin: 0 0 10px 0;
+        }
+        .page-title h1{
+            font-size: 22px;
+            margin:0;
+            letter-spacing:-.3px;
+        }
+        .page-title .badge{
+            font-size:12px;
+            padding:4px 10px;
+            border-radius:999px;
+            border:1px solid var(--stroke);
+            background: rgba(255,255,255,.6);
+            color: var(--blue2);
+        }
+
+        .lead{
+            margin: 6px 0 18px 0;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.55;
+        }
+
+        .glass-card{
+            background: var(--card);
+            border: 1px solid var(--stroke);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 16px 16px;
+            margin: 14px 0;
+        }
+
+        .grid{
+            display:grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+        @media (max-width: 760px){
+            .grid{ grid-template-columns: 1fr; }
+        }
+
+        label{
+            font-weight: 800;
+            font-size: 13px;
+            display:block;
+            margin-bottom:6px;
+            color:#111827;
+        }
+
+        .form-input{
+            width: 100%;
+            padding: 10px 12px;
+            font-size: 14px;
+            border-radius: 12px;
+            border: 2px solid rgba(59,130,246,.25);
+            background: rgba(255,255,255,.7);
+            outline: none;
+            transition: .15s ease;
+        }
+        .form-input:focus{
+            border-color: rgba(37,99,235,.65);
+            box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+        }
+        .form-input.error{
+            border-color: rgba(220,38,38,.65);
+            box-shadow: 0 0 0 4px rgba(220,38,38,.10);
+        }
+        .help{
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 6px;
+            line-height: 1.45;
+        }
+
+        .checkbox-row{
+            display:flex;
+            gap: 10px;
+            align-items:center;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+        .checkbox-row input{ transform: translateY(1px); }
+
+        .btn-row{
+            display:flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 6px;
+        }
+
+        .glass-button{
+            border: 1px solid var(--stroke);
+            background: rgba(255,255,255,.7);
+            color: #0f172a;
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: .15s ease;
+            box-shadow: 0 12px 24px rgba(17,24,39,.10);
+            user-select: none;
+        }
+        .glass-button:hover{ transform: translateY(-1px); }
+        .glass-button:active{ transform: translateY(0px); }
+
+        .glass-button.primary{
+            background: linear-gradient(135deg, rgba(37,99,235,.95), rgba(30,64,175,.95));
+            border-color: rgba(37,99,235,.55);
+            color: white;
+        }
+        .glass-button.gray{
+            background: linear-gradient(135deg, rgba(149,165,166,.95), rgba(127,140,141,.95));
+            border-color: rgba(107,114,128,.55);
+            color: white;
+        }
+
+        .error-message{
+            display:none;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(220,38,38,.35);
+            background: rgba(220,38,38,.07);
+            color: #991b1b;
+            font-size: 13px;
+            font-weight: 800;
+            margin: 10px 0;
+            white-space: pre-wrap;
+        }
+
+        pre#result{
+            background: rgba(255,255,255,.78);
+            border: 3px inset #c0c0c0;
+            padding: 12px 12px;
+            cursor: text;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: var(--mono);
+            font-size: 12.5px;
+            line-height: 1.55;
+            border-radius: 10px;
+            min-height: 140px;
+            margin: 0;
+        }
+
+        .chart-wrap{
+            margin-top: 12px;
+            background: rgba(255,255,255,.78);
+            border: 3px inset #c0c0c0;
+            border-radius: 10px;
+            padding: 10px;
+        }
+        canvas{ display:block; max-width:100%; height:auto; }
+
+        .tiny-note{
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--muted);
+            text-align:center;
+            line-height: 1.55;
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="page-title">
+        <h1>게임 아이템 뽑기 확률 계산기</h1>
+        <span class="badge">Binomial + Pity(단순 모델)</span>
+    </div>
+    <p class="lead">
+        확률형 아이템 뽑기에서 <b>목표 아이템을 목표 개수 이상</b> 획득할 누적 확률을 계산합니다.
+        천장(피티) 시스템은 <b>“pityCount회 이상이면 1개는 확정”</b>으로 단순화한 모델을 사용합니다.
+    </p>
+
+    <div class="glass-card">
+        <div class="grid">
+            <div>
+                <label for="boxPrice">1회 뽑기 비용 (원)</label>
+                <input type="number" id="boxPrice" class="form-input" min="1" value="3000" />
+                <div class="help">예: 3000</div>
+            </div>
+
+            <div>
+                <label for="itemProb">아이템이 나올 확률 (%)</label>
+                <input type="number" id="itemProb" class="form-input" min="0" max="100" step="0.01" value="5" />
+                <div class="help">예: 0.5, 1, 5, 12.34</div>
+            </div>
+
+            <div>
+                <label for="totalDraws">총 뽑기 횟수 (회)</label>
+                <input type="number" id="totalDraws" class="form-input" min="1" value="5" />
+                <div class="help">그래프는 최대 200포인트로 제한됩니다.</div>
+            </div>
+
+            <div>
+                <label for="targetCount">목표 아이템 개수</label>
+                <input type="number" id="targetCount" class="form-input" min="1" value="1" />
+                <div class="help">예: 1개 이상 / 2개 이상 …</div>
+            </div>
+        </div>
+
+        <div class="checkbox-row" style="margin-top: 10px;">
+            <label style="margin:0; font-weight:900;">
+                <input type="checkbox" id="usePity" checked onchange="togglePity()">
+                천장 시스템 사용
+            </label>
+            <span class="help" style="margin:0;">(체크 해제 시 일반 이항분포 누적 확률)</span>
+        </div>
+
+        <div id="pityInputWrapper" style="margin-top: 10px;">
+            <label for="pityCount">천장 시스템 횟수 (회) [pity system]</label>
+            <input type="number" id="pityCount" class="form-input" min="1" value="90" />
+            <div class="help">단순 모델: 총 뽑기 횟수 n ≥ pityCount 이면 “목표 개수 이상 확률”을 1로 처리(아래 스크립트 기준).</div>
+        </div>
+
+        <div class="btn-row">
+            <button class="glass-button primary" type="button" onclick="itemCalculate()">🎲 뽑기 확률 계산하기</button>
+            <button class="glass-button gray" type="button" onclick="resetAll()">🗑️ 초기화</button>
+        </div>
+
+        <div id="error-message" class="error-message"></div>
+    </div>
+
+    <div class="glass-card">
+        <pre id="result">여기에 결과가 표시됩니다.</pre>
+        <div class="chart-wrap" style="margin-top:12px;">
+            <canvas id="chart" width="400" height="280"></canvas>
+        </div>
+        <div class="tiny-note">
+            ※ 천장(피티) 시스템은 게임마다 규칙이 달라, 정확한 확률/기대값을 내려면 “천장 도달 시 확정 방식(리셋 여부, 확정 카운트, 50/50 등)”을 모델링해야 합니다.
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    function togglePity() {
+        const isChecked = document.getElementById("usePity").checked;
+        document.getElementById("pityInputWrapper").style.display = isChecked ? "block" : "none";
+    }
+
+    function showError(msg){
+        const el = document.getElementById("error-message");
+        el.textContent = msg;
+        el.style.display = "block";
+    }
+    function hideError(){
+        const el = document.getElementById("error-message");
+        el.style.display = "none";
+        el.textContent = "";
+    }
+
+    // 이항계수 (k가 커도 어느 정도 버팀. n이 매우 크면 정확도/성능 이슈 가능)
+    function combination(n, k) {
+        if (k > n) return 0;
+        if (k === 0 || k === n) return 1;
+        k = Math.min(k, n - k);
+        let res = 1;
+        for (let i = 1; i <= k; i++) {
+            res = (res * (n - i + 1)) / i;
+        }
+        return res;
+    }
+
+    // 이항분포: P(X >= targetCount)
+    function cumulativeProbMultiple(n, targetCount, p) {
+        let prob = 0;
+        for (let k = targetCount; k <= n; k++) {
+            prob += combination(n, k) * Math.pow(p, k) * Math.pow(1 - p, n - k);
+        }
+        return prob;
+    }
+
+    // 천장(단순): n < pityCount면 이항분포, n >= pityCount면 1로 단순화
+    function cumProbPityMultiple(n, targetCount, p, pityCount) {
+        if (n < pityCount) return cumulativeProbMultiple(n, targetCount, p);
+        return 1;
+    }
+
+    // 1개 획득까지 기대 뽑기(천장 포함) - “최대 M회에 무조건 1개”인 기하분포 절단(단순)
+    function expectedDraws(p, M) {
+        let expected = 0;
+        for (let k = 1; k < M; k++) {
+            expected += k * Math.pow(1 - p, k - 1) * p;
+        }
+        expected += M * Math.pow(1 - p, M - 1);
+        return expected;
+    }
+
+    function fmtWon(n){
+        return Math.round(n).toLocaleString("ko-KR") + "원";
+    }
+
+    function markInvalid(input, isBad){
+        input.classList.toggle("error", !!isBad);
+    }
+
+    function itemCalculate() {
+        hideError();
+
+        const boxPriceEl = document.getElementById("boxPrice");
+        const itemProbEl = document.getElementById("itemProb");
+        const totalDrawsEl = document.getElementById("totalDraws");
+        const targetCountEl = document.getElementById("targetCount");
+        const usePityEl = document.getElementById("usePity");
+        const pityCountEl = document.getElementById("pityCount");
+
+        const boxPrice = parseFloat(boxPriceEl.value);
+        const p = parseFloat(itemProbEl.value) / 100;
+        const totalDraws = parseInt(totalDrawsEl.value, 10);
+        const targetCount = parseInt(targetCountEl.value, 10);
+        const usePity = usePityEl.checked;
+        const pityCount = usePity ? parseInt(pityCountEl.value, 10) : null;
+
+        // validation
+        const badBox = isNaN(boxPrice) || boxPrice <= 0;
+        const badP = isNaN(p) || p <= 0 || p > 1;
+        const badN = isNaN(totalDraws) || totalDraws <= 0;
+        const badT = isNaN(targetCount) || targetCount <= 0;
+        const badM = usePity && (isNaN(pityCount) || pityCount <= 0);
+
+        markInvalid(boxPriceEl, badBox);
+        markInvalid(itemProbEl, badP);
+        markInvalid(totalDrawsEl, badN);
+        markInvalid(targetCountEl, badT);
+        if (usePity) markInvalid(pityCountEl, badM);
+
+        if (badBox || badP || badN || badT || badM) {
+            showError("모든 입력값을 올바르게 입력하세요.\n(확률은 0보다 커야 하며, 비용/횟수/목표개수는 1 이상이어야 합니다.)");
+            return;
+        }
+
+        // output
+        let output = `[ 확률형 아이템 뽑기 계산기 결과 ]\n\n`;
+        output += `1회 뽑기 비용 : ${boxPrice.toLocaleString("ko-KR")}원\n`;
+        output += `아이템 확률 : ${(p * 100).toFixed(3)}%\n`;
+        output += usePity ? `천장 시스템 횟수 : ${pityCount}회\n` : `천장 시스템 : 미적용\n`;
+        output += `총 뽑기 횟수 : ${totalDraws}회\n`;
+        output += `목표 아이템 개수 : ${targetCount}개\n\n`;
+
+        // cumulative probability at N
+        const cumProb = usePity
+            ? cumProbPityMultiple(totalDraws, targetCount, p, pityCount)
+            : cumulativeProbMultiple(totalDraws, targetCount, p);
+
+        output += `총 ${totalDraws}회 뽑기 시 원하는 아이템 ${targetCount}개 이상 얻을 확률: ${(cumProb * 100).toFixed(2)}%\n\n`;
+
+        // expectation (only meaningful for targetCount=1 in this simple model)
+        if (usePity) {
+            const expDraws = expectedDraws(p, pityCount);
+            const avgCost = expDraws * boxPrice;
+            output += `원하는 아이템 1개 획득 평균 뽑기 횟수 (천장 고려/단순): ${expDraws.toFixed(2)}회\n`;
+            output += `원하는 아이템 1개 획득 평균 비용 (단순): ${fmtWon(avgCost)}\n\n`;
+        } else {
+            // geometric expectation (no pity) for 1 item
+            const expNoPity = 1 / p;
+            output += `원하는 아이템 1개 획득 평균 뽑기 횟수 (천장 없음/이론): ${expNoPity.toFixed(2)}회\n`;
+            output += `원하는 아이템 1개 획득 평균 비용 (이론): ${fmtWon(expNoPity * boxPrice)}\n\n`;
+        }
+
+        // table
+        const limit = Math.min(
+            totalDraws,
+            usePity ? Math.min(pityCount + 10, 200) : 200
+        );
+
+        output += `뽑기 횟수별 누적 확률 (${usePity ? "천장 반영(단순)" : "천장 미사용"})\n`;
+        output += `────────────────────────\n`;
+        for (let i = 1; i <= limit; i++) {
+            const pr = usePity
+                ? cumProbPityMultiple(i, targetCount, p, pityCount)
+                : cumulativeProbMultiple(i, targetCount, p);
+            output += `${String(i).padStart(3, " ")}회 : ${(pr * 100).toFixed(2)}%\n`;
+        }
+
+        document.getElementById("result").textContent = output;
+
+        // chart
+        const labels = [];
+        const series = [];
+
+        for (let i = 1; i <= limit; i++) {
+            const pr = usePity
+                ? cumProbPityMultiple(i, targetCount, p, pityCount)
+                : cumulativeProbMultiple(i, targetCount, p);
+            labels.push(i);
+            series.push(Number((pr * 100).toFixed(2)));
+        }
+
+        const ctx = document.getElementById("chart").getContext("2d");
+        if (window.myChart) window.myChart.destroy();
+
+        window.myChart = new Chart(ctx, {
+            type: "line",
+            data: {
+                labels,
+                datasets: [{
+                    label: "누적 확률 (%)",
+                    data: series,
+                    fill: false,
+                    tension: 0.2,
+                    pointRadius: 2,
+                    pointHoverRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { title: { display: true, text: "시도 횟수" } },
+                    y: { beginAtZero: true, max: 100, title: { display: true, text: "누적 확률 (%)" } }
+                },
+                plugins: {
+                    legend: { display: true },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => `누적 확률: ${ctx.raw}%`
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function resetAll(){
+        hideError();
+        document.getElementById("boxPrice").value = 3000;
+        document.getElementById("itemProb").value = 5;
+        document.getElementById("totalDraws").value = 5;
+        document.getElementById("targetCount").value = 1;
+        document.getElementById("usePity").checked = true;
+        document.getElementById("pityCount").value = 90;
+        togglePity();
+        document.getElementById("result").textContent = "여기에 결과가 표시됩니다.";
+
+        if (window.myChart) {
+            window.myChart.destroy();
+            window.myChart = null;
+        }
+
+        ["boxPrice","itemProb","totalDraws","targetCount","pityCount"].forEach(id=>{
+            document.getElementById(id).classList.remove("error");
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        togglePity();
+        // Enter로 계산
+        ["boxPrice","itemProb","totalDraws","targetCount","pityCount"].forEach(id=>{
+            const el = document.getElementById(id);
+            el.addEventListener("keydown", (e)=>{ if(e.key==="Enter") itemCalculate(); });
+        });
+    });
+</script>
+</body>
+</html>

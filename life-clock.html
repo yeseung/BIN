@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>인생시계 계산기 (우리 인생이 24시간 시계라면)</title>
+
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --line:#e5e7eb;
+      --text:#111827;
+      --muted:#6b7280;
+
+      /* warm accent for this tool */
+      --accent:#ff6b35;
+      --accent2:#ff8c42;
+      --ink:#2b2b2b;
+
+      --shadow:0 10px 30px rgba(0,0,0,.06);
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font:14px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;
+    }
+    .page-wrap{max-width:980px;margin:18px auto;padding:0 14px}
+    h4{margin:0 0 10px 0;font-size:18px}
+    b{font-weight:900}
+
+    .description-text{margin:0 0 12px 0;color:#374151}
+    .description-text span{display:inline-block;margin-top:4px}
+
+    .glass-card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:14px;
+      margin:12px 0;
+    }
+
+    .input-group{margin:10px 0}
+    label{display:block;margin-bottom:6px;font-weight:900;color:#111827}
+    .form-input{
+      width:100%;
+      padding:11px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      outline:none;
+      background:#fff;
+      font-size:14px;
+    }
+    .form-input:focus{
+      border-color:rgba(255,107,53,.55);
+      box-shadow:0 0 0 4px rgba(255,107,53,.12);
+    }
+
+    .button-group{
+      display:flex;
+      gap:10px;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+    .glass-button{
+      border:0;
+      border-radius:14px;
+      padding:11px 14px;
+      background:linear-gradient(135deg,var(--accent2),var(--accent));
+      color:#fff;
+      font-weight:900;
+      cursor:pointer;
+      box-shadow:0 10px 20px rgba(255,107,53,.18);
+      user-select:none;
+    }
+    .glass-button:hover{filter:brightness(.98)}
+    .glass-button:active{transform:translateY(1px)}
+    .glass-button.secondary{
+      background:linear-gradient(135deg,#95a5a6,#7f8c8d);
+      box-shadow:0 10px 20px rgba(0,0,0,.10);
+    }
+
+    /* validation */
+    .error{border-color:rgba(239,68,68,.75)!important; box-shadow:0 0 0 4px rgba(239,68,68,.12)!important}
+    .success{border-color:rgba(16,185,129,.6)!important; box-shadow:0 0 0 4px rgba(16,185,129,.10)!important}
+
+    /* clock container */
+    #clockContainer{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding:10px;
+    }
+
+    /* result card content */
+    #result{
+      padding:2px;
+      outline:none;
+      color:var(--ink);
+    }
+    #result h3{margin:0;font-size:22px}
+    #result h5{margin:0}
+
+    /* 작은 안내 */
+    .tip{
+      font-size:12px;
+      color:var(--muted);
+      text-align:center;
+      margin-top:4px;
+    }
+  </style>
+</head>
+
+<body>
+<div class="page-wrap">
+  <h4><b>인생시계 계산기 (우리 인생이 24시간 시계라면)</b></h4>
+  <p class="description-text">
+    인생시계 : 사람의 일생을 24시간에 빗대어 표시한 것<br>
+    <span style="font-size: 13px; color: #8B7355;">당신의 인생이 지금 몇 시인지 확인해보세요</span>
+  </p>
+
+  <div class="glass-card">
+    <div class="input-group">
+      <label for="birth">태어난 날 (birthday) <span style="color:#ff6b35;">*</span></label>
+      <input type="date" id="birth" name="birthD" class="form-input" required>
+    </div>
+
+    <div class="input-group">
+      <label for="life">예상 생존기간 (년) <span style="color:#8B7355;font-size:13px;">[1년 = 365일 가정]</span></label>
+      <input type="number" id="life" name="lifeY" class="form-input" placeholder="1~100 사이" value="100" min="1" max="100">
+    </div>
+
+    <div class="input-group">
+      <label for="checkDate">오늘 날짜 (today) [기준날짜] <span style="color:#ff6b35;">*</span></label>
+      <input type="date" id="checkDate" name="checkDate" class="form-input" required>
+    </div>
+    <div class="tip">※ 결과 영역은 클릭해서 텍스트를 수정할 수 있어요.</div>
+  </div>
+
+  <div class="glass-card">
+    <div class="button-group">
+      <button onclick="lifeTime()" class="glass-button">⏰ 인생시계 계산하기</button>
+      <button onclick="clearAllInputs()" class="glass-button secondary">🔄 초기화</button>
+    </div>
+  </div>
+
+  <div id="clockContainer" style="display:none;"></div>
+
+  <div class="glass-card" id="resultCard" style="display:none;">
+    <div id="result" contenteditable="true"></div>
+    <div class="button-group" style="margin-top:16px;">
+      <button onclick="speakText()" class="glass-button">🔊 소리로 듣기</button>
+      <button onclick="stopSpeak()" class="glass-button secondary">⏸️ 읽기 중지</button>
+      <button onclick="shareToKakao()" class="glass-button" style="background: linear-gradient(135deg, #FEE500, #FDD835); color:#000 !important;">
+        💬 카톡으로 공유하기
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* -------------------------
+     기본 날짜 세팅(오늘/40년전)
+  -------------------------- */
+  var today = new Date();
+  var mm = today.getMonth() + 1;
+  var dd = today.getDate();
+  var yy = today.getFullYear();
+  var uu = today.getFullYear() - 40;
+  if (dd < 10) dd = '0' + dd;
+  if (mm < 10) mm = '0' + mm;
+
+  /* -------------------------
+     TTS / Clock globals
+  -------------------------- */
+  let isSpeaking = false;
+
+  // 시계 애니메이션 전역 변수
+  let clockInterval = null;
+  let clockHour = 0;
+  let clockMinute = 0;
+  let clockSecond = 0;
+
+  /* -------------------------
+     유틸
+  -------------------------- */
+  function pad2(n){ return (n<10 ? '0'+n : ''+n); }
+
+  /* -------------------------
+     메인 계산
+  -------------------------- */
+  function lifeTime() {
+    var birthDate = document.getElementById("birth").valueAsDate;
+    if (!birthDate) {
+      alert("태어난 날짜를 입력해주세요.");
+      document.getElementById("birth").classList.add('error');
+      return;
+    } else {
+      document.getElementById("birth").classList.remove('error');
+      document.getElementById("birth").classList.add('success');
+    }
+
+    var birthMonth = birthDate.getMonth() + 1;
+    var birthDay = birthDate.getDate();
+    var birthYear = birthDate.getFullYear();
+
+    var lifeYear = parseInt(document.getElementById("life").value, 10);
+    if (lifeYear > 100) {
+      document.getElementById('result').innerHTML = "수명은 100세 이하로 입력해주세요.";
+      document.getElementById("life").classList.add('error');
+      document.getElementById('resultCard').style.display = 'block';
+      return;
+    } else if (lifeYear <= 0 || isNaN(lifeYear)) {
+      document.getElementById('result').innerHTML = "수명은 1세 이상으로 입력해주세요.";
+      document.getElementById("life").classList.add('error');
+      document.getElementById('resultCard').style.display = 'block';
+      return;
+    } else {
+      document.getElementById("life").classList.remove('error');
+      document.getElementById("life").classList.add('success');
+    }
+
+    // 예상 사망일 (365일*lifeYear 가정)
+    var deathDate = new Date(birthDate);
+    deathDate.setDate(birthDate.getDate() + (lifeYear * 365));
+    var deathMonth = pad2(deathDate.getMonth() + 1);
+    var deathDay = pad2(deathDate.getDate());
+    var deathYear = deathDate.getFullYear();
+
+    // 기준 날짜
+    var cdMs = document.getElementById("checkDate").valueAsDate;
+    if (!cdMs) {
+      alert("기준 날짜를 입력해주세요.");
+      document.getElementById("checkDate").classList.add('error');
+      return;
+    } else {
+      document.getElementById("checkDate").classList.remove('error');
+      document.getElementById("checkDate").classList.add('success');
+    }
+
+    // 남은 기간(일)
+    var gapMs = parseInt((deathDate.getTime() - cdMs.getTime()) / 1000 / 60 / 60 / 24, 10);
+    var gapYear = parseInt(gapMs / 365, 10);
+    var gapMonth = parseInt((gapMs % 365) / 30, 10);
+    var gapDay = parseInt((gapMs % 365) % 30, 10);
+
+    // 살아온 기간(일)
+    var gapMs2 = parseInt((cdMs.getTime() - birthDate.getTime()) / 1000 / 60 / 60 / 24, 10);
+    var gap2Year = parseInt(gapMs2 / 365, 10);
+    var gap2Month = parseInt((gapMs2 % 365) / 30, 10);
+    var gap2Day = parseInt((gapMs2 % 365) % 30, 10);
+
+    // 인생을 24시간으로 환산
+    var lifeClockS = parseInt(((86400 * gapMs2) / (lifeYear * 365)), 10);
+    var lifeClockM = parseInt(lifeClockS / 60, 10);
+    var lifeClockSec = parseInt(lifeClockS % 60, 10);
+    var lifeClockHour = parseInt(lifeClockM / 60, 10);
+    var lifeClockMin = parseInt(lifeClockM % 60, 10);
+
+    if (gapMs2 >= (lifeYear * 365)) {
+      document.getElementById('result').innerHTML = "이미 예상 수명보다 오래 사셨습니다.";
+      document.getElementById('resultCard').style.display = 'block';
+      return;
+    }
+
+    // 오전/오후/밤 라벨
+    var sun, sunEmoji = "";
+    if (lifeClockHour == 24) {
+      sun = "자정"; sunEmoji = "🌙"; lifeClockHour -= 12;
+    } else if (lifeClockHour >= 21) {
+      sun = "밤"; sunEmoji = "🌙"; lifeClockHour -= 12;
+    } else if (lifeClockHour >= 18) {
+      sun = "저녁"; sunEmoji = "🌆"; lifeClockHour -= 12;
+    } else if (lifeClockHour > 12) {
+      sun = "오후"; sunEmoji = "☀️"; lifeClockHour -= 12;
+    } else if (lifeClockHour == 12) {
+      sun = "낮"; sunEmoji = "☀️"; lifeClockHour = 12;
+    } else if (lifeClockHour >= 9) {
+      sun = "오전"; sunEmoji = "🌅";
+    } else if (lifeClockHour >= 6) {
+      sun = "아침"; sunEmoji = "🌅";
+    } else if (lifeClockHour >= 0) {
+      sun = "새벽"; sunEmoji = "🌙";
+    } else {
+      document.getElementById('result').innerHTML = "오전-오후 입력 오류";
+      document.getElementById('resultCard').style.display = 'block';
+      return;
+    }
+
+    // 결과 출력
+    document.getElementById('result').innerHTML =
+            "<div style='text-align:center;margin-bottom:20px;'>" +
+            "<h3 style='color:#FF6B35;margin:0 0 8px 0;font-size:22px;'>《 인생시계 계산기 》</h3>" +
+            "<p style='color:#8B7355;margin:0;font-size:14px;'>우리 인생이 24시간 시계라면</p>" +
+            "</div>" +
+
+            "<div style='background:rgba(255,248,240,0.55);padding:16px;border-radius:12px;margin:16px 0;border:1px solid rgba(255,107,53,.12);'>" +
+            "<p style='margin:8px 0;'><strong>✓ 태어난 날 :</strong> " + birthYear + "년 " + birthMonth + "월 " + birthDay + "일</p>" +
+            "<p style='margin:8px 0;'><strong>✓ 생존 기간 :</strong> " + lifeYear + "년</p>" +
+            "<p style='margin:8px 0;'><strong>✓ 오늘 날짜 :</strong> " + cdMs.getFullYear() + "년 " + (cdMs.getMonth() + 1) + "월 " + cdMs.getDate() + "일</p>" +
+            "</div>" +
+
+            "<div style='background:rgba(255,140,66,0.10);padding:16px;border-radius:12px;margin:16px 0;border-left:4px solid #FF8C42;'>" +
+            "<p style='margin:8px 0;'><strong>임종 예정일 :</strong> <b style='color:#FF6B35;'>" + deathYear + "년 " + deathMonth + "월 " + deathDay + "일</b></p>" +
+            "<p style='margin:8px 0;'><strong>남은 시간 :</strong> <b style='color:#FF6B35;'>약 " + gapYear + "년 " + gapMonth + "개월 " + gapDay + "일 (" + gapMs + "일)</b></p>" +
+            "</div>" +
+
+            "<div style='background:rgba(255,237,213,0.55);padding:16px;border-radius:12px;margin:16px 0;border-left:4px solid #FFA500;'>" +
+            "<p style='margin:8px 0;'><strong>지금까지 살아온 시간 :</strong> <b style='color:#FF8C42;'>총 " + gap2Year + "년 " + gap2Month + "개월 " + gap2Day + "일 (" + gapMs2 + "일)</b></p>" +
+            "</div>" +
+
+            "<div id='summaryText' style='background:rgba(255,248,240,0.65);padding:18px;border-radius:14px;margin:20px 0;line-height:1.8;font-size:15px;color:#3a3a3a;border:1px solid rgba(139,115,85,.18);'>" +
+            "<p style='margin:8px 0;'>당신의 임종 예정일은 " + deathYear + "년 " + deathMonth + "월 " + deathDay + "일 입니다. 임종 예정일까지는 약 " + gapYear + "년 " + gapMonth + "개월 " + gapDay + "일(" + gapMs + "일)이 남았습니다.<br>" +
+            "당신은 오늘까지 총 " + gap2Year + "년 " + gap2Month + "개월 " + gap2Day + "일(" + gapMs2 + "일)을 열심히 살아왔습니다. 우리의 인생이 24시간 시계라면 지금 당신은 " + sun + " " + lifeClockHour + "시 " + lifeClockMin + "분 " + lifeClockSec + "초를 지나고 있습니다.</p>" +
+            "</div>" +
+
+            "<div style='text-align:center;background:linear-gradient(135deg, rgba(255,140,66,0.16), rgba(255,165,0,0.16));padding:20px;border-radius:14px;margin:20px 0;border:1px solid rgba(255,140,66,.18);'>" +
+            "<p style='margin:0;font-size:18px;font-weight:900;color:#8B4513;'>" + sunEmoji + " 당신의 인생시계</p>" +
+            "<p style='margin:8px 0 0 0;font-size:24px;font-weight:900;color:#FF6B35;'>" + sun + " " + lifeClockHour + "시 " + lifeClockMin + "분 " + lifeClockSec + "초</p>" +
+            "<p style='margin:8px 0 0 0;font-size:13px;color:#8B7355;'>지금 이 순간을 소중히</p>" +
+            "</div>";
+
+    document.getElementById('clockContainer').style.display = 'flex';
+    document.getElementById('resultCard').style.display = 'block';
+
+    // 기존 애니메이션 중지
+    if (clockInterval) { clearInterval(clockInterval); clockInterval = null; }
+
+    // 시계 시간 저장
+    clockHour = lifeClockHour;
+    clockMinute = lifeClockMin;
+    clockSecond = lifeClockSec;
+
+    // 초기 시계 그리기
+    drawClock(clockHour, clockMinute, clockSecond);
+
+    // 초침 애니메이션 (1초마다)
+    clockInterval = setInterval(function(){
+      clockSecond++;
+      if (clockSecond >= 60) clockSecond = 0;
+      drawClock(clockHour, clockMinute, clockSecond);
+    }, 1000);
+  }
+
+  /* -------------------------
+     TTS: summaryText만 읽기
+  -------------------------- */
+  function speakText() {
+    const summaryElement = document.getElementById('summaryText');
+
+    if (!('speechSynthesis' in window)) {
+      alert('이 브라우저는 음성 읽기 기능을 지원하지 않습니다.\nChrome, Edge, Safari 등을 사용해주세요.');
+      return;
+    }
+    if (!summaryElement || !summaryElement.textContent.trim()) {
+      alert('읽을 내용이 없습니다. 먼저 인생시계를 계산해주세요.');
+      return;
+    }
+
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      isSpeaking = false;
+    }
+
+    const msg = new SpeechSynthesisUtterance();
+    msg.text = summaryElement.textContent.trim();
+    msg.lang = "ko-KR";
+    msg.rate = 0.9;
+    msg.pitch = 1;
+    msg.onend = () => isSpeaking = false;
+
+    isSpeaking = true;
+    window.speechSynthesis.speak(msg);
+  }
+  function stopSpeak() {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      isSpeaking = false;
+    }
+  }
+
+  /* -------------------------
+     공유(Web Share API)
+  -------------------------- */
+  function shareToKakao() {
+    const resultText = document.getElementById('result').textContent;
+    if (!resultText.trim()) {
+      alert('공유할 결과가 없습니다. 먼저 인생시계를 계산해주세요.');
+      return;
+    }
+    const shareText = resultText.replace(/\s+/g, ' ').trim();
+    const currentUrl = window.location.href;
+
+    if (navigator.share) {
+      navigator.share({
+        title: '인생시계 계산 결과',
+        text: shareText,
+        url: currentUrl
+      }).catch((error) => {
+        if (error && error.name !== 'AbortError') {
+          alert('공유 기능을 사용할 수 없습니다.\n브라우저에서 공유 기능을 지원하지 않거나 공유가 취소되었습니다.');
+        }
+      });
+    } else {
+      alert('이 브라우저는 공유 기능을 지원하지 않습니다.\n모바일 브라우저(Chrome, Safari, Edge 등)에서 사용해주세요.');
+    }
+  }
+
+  /* -------------------------
+     초기화
+  -------------------------- */
+  function clearAllInputs() {
+    document.getElementById("birth").value = uu + '-' + mm + '-' + dd;
+    document.getElementById("checkDate").value = yy + '-' + mm + '-' + dd;
+    document.getElementById("life").value = "100";
+
+    ['birth','checkDate','life'].forEach(id=>{
+      const el = document.getElementById(id);
+      el.classList.remove('error','success');
+    });
+
+    if (clockInterval) { clearInterval(clockInterval); clockInterval = null; }
+
+    document.getElementById('resultCard').style.display = 'none';
+    document.getElementById('clockContainer').style.display = 'none';
+  }
+
+  /* -------------------------
+     Canvas Clock (네온 스타일)
+  -------------------------- */
+  function drawClock(hour, minute, second) {
+    const isMobile = window.innerWidth <= 767;
+    const canvasSize = isMobile ? Math.min(300, window.innerWidth - 40) : 350;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = canvasSize;
+    canvas.height = canvasSize;
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    canvas.style.maxWidth = canvasSize + 'px';
+    canvas.style.maxHeight = canvasSize + 'px';
+
+    const ctx = canvas.getContext('2d');
+    const radius = canvasSize / 2;
+
+    ctx.save();
+    ctx.translate(radius, radius);
+    ctx.clearRect(-radius, -radius, canvasSize, canvasSize);
+
+    // dark base
+    const baseGradient = ctx.createRadialGradient(0,0,0,0,0,radius);
+    baseGradient.addColorStop(0, '#0a0a0f');
+    baseGradient.addColorStop(0.4, '#1a1a2e');
+    baseGradient.addColorStop(0.7, '#16213e');
+    baseGradient.addColorStop(1, '#0f1419');
+
+    ctx.beginPath();
+    ctx.arc(0,0,radius-6,0,Math.PI*2);
+    ctx.fillStyle = baseGradient;
+    ctx.fill();
+
+    // neon ring
+    const neonRingGradient = ctx.createLinearGradient(-radius,-radius,radius,radius);
+    neonRingGradient.addColorStop(0, '#00ffff');
+    neonRingGradient.addColorStop(0.25, '#ff00ff');
+    neonRingGradient.addColorStop(0.5, '#00d4ff');
+    neonRingGradient.addColorStop(0.75, '#ff00ff');
+    neonRingGradient.addColorStop(1, '#00ffff');
+
+    ctx.beginPath();
+    ctx.arc(0,0,radius-6,0,Math.PI*2);
+    ctx.strokeStyle = neonRingGradient;
+    ctx.lineWidth = 4;
+    ctx.shadowColor = '#00ffff';
+    ctx.shadowBlur = 20;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // inner rings
+    for (let i=0;i<2;i++){
+      ctx.beginPath();
+      ctx.arc(0,0,radius-20-i*10,0,Math.PI*2);
+      const ringColor = i===0 ? 'rgba(0,255,255,0.3)' : 'rgba(255,0,255,0.2)';
+      ctx.strokeStyle = ringColor;
+      ctx.lineWidth = 1.5;
+      ctx.shadowColor = ringColor;
+      ctx.shadowBlur = 15;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
+    // hour dots
+    for (let i=0;i<12;i++){
+      const angle = (i*Math.PI)/6;
+      const isMain = (i%3===0);
+      const x = Math.sin(angle)*(radius-28);
+      const y = -Math.cos(angle)*(radius-28);
+      const dotSize = isMain ? 6 : 3;
+      const neonColor = isMain ? '#00ffff' : '#00d4ff';
+
+      ctx.beginPath();
+      ctx.arc(x,y,dotSize+3,0,Math.PI*2);
+      ctx.fillStyle = neonColor;
+      ctx.shadowColor = neonColor;
+      ctx.shadowBlur = 12;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      ctx.beginPath();
+      ctx.arc(x,y,dotSize,0,Math.PI*2);
+      const dotGrad = ctx.createRadialGradient(x,y,0,x,y,dotSize);
+      dotGrad.addColorStop(0,'#ffffff');
+      dotGrad.addColorStop(0.5,neonColor);
+      dotGrad.addColorStop(1,neonColor);
+      ctx.fillStyle = dotGrad;
+      ctx.shadowColor = neonColor;
+      ctx.shadowBlur = 8;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // minute dots
+    for (let i=0;i<60;i++){
+      if (i%5!==0){
+        const angle = (i*Math.PI)/30;
+        const x = Math.sin(angle)*(radius-26);
+        const y = -Math.cos(angle)*(radius-26);
+
+        ctx.beginPath();
+        ctx.arc(x,y,1.5,0,Math.PI*2);
+        ctx.fillStyle = 'rgba(0,255,255,0.5)';
+        ctx.shadowColor = 'rgba(0,255,255,0.6)';
+        ctx.shadowBlur = 6;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+    }
+
+    // numbers
+    const fontSize = isMobile ? Math.max(20, canvasSize * 0.075) : 26;
+    ctx.font = `900 ${fontSize}px Arial, sans-serif`;
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center';
+
+    const mainNumbers = [12,3,6,9];
+    for (let num=1;num<=12;num++){
+      if (mainNumbers.includes(num)){
+        const ang = (num*Math.PI)/6;
+        ctx.save();
+        ctx.rotate(ang);
+        ctx.translate(0, -radius*0.72);
+        ctx.rotate(-ang);
+
+        const textNeonColor = (num%3===0) ? '#00ffff' : '#ff00ff';
+        ctx.fillStyle = textNeonColor;
+        ctx.shadowColor = textNeonColor;
+        ctx.shadowBlur = 15;
+        ctx.fillText(String(num),0,0);
+        ctx.shadowBlur = 0;
+        ctx.restore();
+      }
+    }
+
+    // hands
+    const hourAngle = ((hour % 12) + minute / 60) * Math.PI / 6;
+    drawHand(ctx, hourAngle, radius * 0.48, 8, '#00ffff');
+
+    const minuteAngle = (minute + second / 60) * Math.PI / 30;
+    drawHand(ctx, minuteAngle, radius * 0.72, 5, '#ff00ff');
+
+    const secondAngle = second * Math.PI / 30;
+    drawHand(ctx, secondAngle, radius * 0.82, 3, '#00ffcc');
+
+    // center
+    const centerGradient = ctx.createRadialGradient(0,0,0,0,0,10);
+    centerGradient.addColorStop(0,'#ffffff');
+    centerGradient.addColorStop(0.3,'#00ffff');
+    centerGradient.addColorStop(0.7,'#ff00ff');
+    centerGradient.addColorStop(1,'#00d4ff');
+
+    ctx.beginPath();
+    ctx.arc(0,0,10,0,Math.PI*2);
+    ctx.fillStyle = centerGradient;
+    ctx.shadowColor = '#00ffff';
+    ctx.shadowBlur = 20;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.beginPath();
+    ctx.arc(0,0,10,0,Math.PI*2);
+    ctx.strokeStyle = '#00ffff';
+    ctx.lineWidth = 2;
+    ctx.shadowColor = '#00ffff';
+    ctx.shadowBlur = 12;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    ctx.beginPath();
+    ctx.arc(0,0,6,0,Math.PI*2);
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.shadowColor = '#ffffff';
+    ctx.shadowBlur = 8;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.restore();
+
+    // mount
+    const container = document.getElementById('clockContainer');
+    container.innerHTML = '';
+    container.appendChild(canvas);
+  }
+
+  function drawHand(ctx, pos, length, width, color) {
+    ctx.save();
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 20;
+
+    const gx = Math.sin(pos) * length;
+    const gy = -Math.cos(pos) * length;
+    const handGrad = ctx.createLinearGradient(0, 0, gx, gy);
+    handGrad.addColorStop(0, '#ffffff');
+    handGrad.addColorStop(0.2, color);
+    handGrad.addColorStop(0.8, color);
+    handGrad.addColorStop(1, 'rgba(255,255,255,0.8)');
+
+    ctx.beginPath();
+    ctx.lineWidth = width;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.rotate(pos);
+    ctx.moveTo(0,0);
+    ctx.lineTo(0,-length);
+    ctx.strokeStyle = handGrad;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.lineWidth = width * 0.5;
+    ctx.moveTo(0,0);
+    ctx.lineTo(0,-length);
+    ctx.strokeStyle = '#ffffff';
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 15;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(0,-length,width*0.6,0,Math.PI*2);
+    const endGrad = ctx.createRadialGradient(0,-length,0,0,-length,width*0.6);
+    endGrad.addColorStop(0,'#ffffff');
+    endGrad.addColorStop(0.4,color);
+    endGrad.addColorStop(1,color);
+    ctx.fillStyle = endGrad;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 18;
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  /* -------------------------
+     초기 세팅 + 실시간 검증
+  -------------------------- */
+  document.addEventListener('DOMContentLoaded', function(){
+    document.getElementById('birth').value = uu + '-' + mm + '-' + dd;
+    document.getElementById('checkDate').value = yy + '-' + mm + '-' + dd;
+
+    ['birth','checkDate','life'].forEach(id=>{
+      const el = document.getElementById(id);
+      el.addEventListener('input', function(){
+        if (this.value.trim()){
+          this.classList.remove('error');
+          this.classList.add('success');
+        } else {
+          this.classList.remove('error','success');
+        }
+      });
+    });
+  });
+</script>
+
+</body>
+</html>

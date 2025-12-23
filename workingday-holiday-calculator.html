@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Working Day & Holiday Counter (KR)</title>
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffffcc;
+            --border: rgba(0,0,0,.15);
+            --text:#1f2937;
+            --muted:#6b7280;
+            --blue:#2563eb;
+            --green:#16a34a;
+            --red:#dc2626;
+            --orange:#f59e0b;
+            --shadow: 0 12px 40px rgba(0,0,0,.08);
+            --radius: 14px;
+            --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+            --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        }
+
+        *{ box-sizing: border-box; }
+        body{
+            margin:0;
+            font-family: var(--font);
+            background: radial-gradient(1200px 600px at 20% 0%, #e8f0ff 0%, transparent 60%),
+            radial-gradient(1200px 600px at 90% 10%, #ffe9f0 0%, transparent 55%),
+            var(--bg);
+            color: var(--text);
+        }
+        .wrap{
+            max-width: 980px;
+            margin: 24px auto;
+            padding: 0 14px 40px;
+        }
+
+        .header{
+            text-align:center;
+            margin: 10px 0 18px;
+        }
+        .header h1{
+            margin:0 0 8px;
+            font-size: 22px;
+            letter-spacing: -.2px;
+        }
+        .header p{
+            margin:0;
+            color: var(--muted);
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        .glass-card{
+            background: var(--card);
+            border: 1px solid rgba(255,255,255,.35);
+            box-shadow: var(--shadow);
+            border-radius: var(--radius);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 16px;
+            margin: 12px 0;
+        }
+
+        .row{
+            display:flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .col{
+            flex:1 1 240px;
+            min-width: 240px;
+        }
+
+        label{
+            display:block;
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+        .req{ color: var(--red); }
+
+        .form-input{
+            width:100%;
+            height: 42px;
+            padding: 0 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,.9);
+            font-size: 14px;
+            outline: none;
+            transition: .15s ease;
+        }
+        .form-input:focus{
+            border-color: rgba(37,99,235,.5);
+            box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+        }
+
+        .btn-row{
+            display:flex;
+            justify-content:center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 2px 0;
+        }
+        .glass-button{
+            border: 0;
+            border-radius: 12px;
+            padding: 12px 16px;
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 14px;
+            color: #fff;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            box-shadow: 0 10px 25px rgba(37,99,235,.25);
+            transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+            user-select: none;
+            min-width: 220px;
+        }
+        .glass-button:hover{ transform: translateY(-1px); }
+        .glass-button:active{ transform: translateY(0); opacity: .92; }
+        .glass-button.secondary{
+            background: linear-gradient(135deg, #9ca3af, #6b7280);
+            box-shadow: 0 10px 25px rgba(107,114,128,.25);
+            min-width: 140px;
+        }
+        .glass-button:disabled{
+            opacity: .55;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .warning-box{
+            background: rgba(245,158,11,.12);
+            border: 1px solid rgba(245,158,11,.25);
+            color: #7c4a00;
+            padding: 12px 14px;
+            border-radius: 12px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .error-box{
+            display:none;
+            background: rgba(220,38,38,.10);
+            border: 1px solid rgba(220,38,38,.25);
+            color: #7f1d1d;
+            padding: 12px 14px;
+            border-radius: 12px;
+            font-size: 13px;
+            line-height: 1.5;
+            margin-top: 10px;
+        }
+
+        .result{
+            display:none;
+        }
+
+        .hero{
+            background: linear-gradient(135deg, rgba(59,130,246,.14), rgba(236,72,153,.12));
+            border: 1px solid rgba(59,130,246,.20);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 14px;
+        }
+        .hero-title{
+            font-weight: 900;
+            font-size: 18px;
+            margin: 0 0 12px;
+            display:flex;
+            align-items:center;
+            gap: 8px;
+        }
+        .stat-grid{
+            display:grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+        .stat{
+            background: rgba(255,255,255,.6);
+            border: 1px solid rgba(0,0,0,.06);
+            border-radius: 14px;
+            padding: 14px;
+            text-align:center;
+        }
+        .stat .num{
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: -.5px;
+            margin-bottom: 6px;
+        }
+        .stat .lab{
+            font-size: 13px;
+            color: var(--muted);
+            font-weight: 700;
+        }
+        .stat.total .num{ color: #111827; }
+        .stat.work .num{ color: var(--green); }
+        .stat.off .num{ color: var(--red); }
+
+        .sub-grid{
+            display:grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+            margin: 12px 0 14px;
+        }
+        .pill{
+            background: rgba(37,99,235,.08);
+            border: 1px solid rgba(37,99,235,.20);
+            border-radius: 14px;
+            padding: 12px;
+            text-align:center;
+        }
+        indicating{
+            display:block;
+        }
+        .pill .num{
+            font-size: 18px;
+            font-weight: 900;
+            color: #1d4ed8;
+            margin-bottom: 4px;
+        }
+        .pill .lab{
+            font-size: 13px;
+            color: var(--muted);
+            font-weight: 700;
+        }
+
+        .list-box{
+            background: rgba(255,255,255,.65);
+            border: 1px solid rgba(0,0,0,.08);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+        .list-head{
+            padding: 12px 14px;
+            background: rgba(0,0,0,.03);
+            border-bottom: 1px solid rgba(0,0,0,.06);
+            font-weight: 900;
+            display:flex;
+            align-items:center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .list-head small{
+            color: var(--muted);
+            font-weight: 700;
+        }
+        .list{
+            max-height: 320px;
+            overflow: auto;
+            padding: 8px 12px;
+            background: rgba(255,255,255,.7);
+        }
+        .item{
+            display:flex;
+            align-items:center;
+            gap: 10px;
+            padding: 8px 6px;
+            border-bottom: 1px dashed rgba(0,0,0,.10);
+        }
+        .item:last-child{ border-bottom: 0; }
+        .date{
+            font-family: var(--mono);
+            font-weight: 900;
+            color: #0f172a;
+            min-width: 92px;
+        }
+        .badge{
+            font-size: 12px;
+            font-weight: 900;
+            padding: 4px 10px;
+            border-radius: 999px;
+            color: #fff;
+            white-space: nowrap;
+        }
+        .b-sat{ background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .b-sun{ background: linear-gradient(135deg, #ef4444, #b91c1c); }
+        .b-hol{ background: linear-gradient(135deg, #f59e0b, #d97706); }
+
+        .ratio{
+            margin-top: 12px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(16,185,129,.12), rgba(59,130,246,.10));
+            border: 1px solid rgba(0,0,0,.06);
+            color: #0f172a;
+            font-size: 13px;
+            text-align:center;
+            font-weight: 800;
+        }
+
+        .loading{
+            display:none;
+            align-items:center;
+            justify-content:center;
+            gap: 10px;
+            padding: 10px 0 0;
+            color: var(--muted);
+            font-weight: 800;
+            font-size: 13px;
+        }
+        .spinner{
+            width: 18px; height: 18px;
+            border-radius: 50%;
+            border: 3px solid rgba(0,0,0,.12);
+            border-top-color: rgba(37,99,235,.9);
+            animation: spin .9s linear infinite;
+        }
+        @keyframes spin{ to { transform: rotate(360deg);} }
+
+        .footnote{
+            margin-top: 10px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+            text-align:center;
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="header">
+        <h1>📅 특정 기간 내 평일 & 공휴일 수 계산기</h1>
+        <p>
+            선택한 기간에서 <b>평일(Working Day)</b>과 <b>휴일(Holiday)</b> 개수를 계산합니다.<br>
+            휴일은 <b>토/일 + 대한민국 공휴일</b>을 포함합니다.
+        </p>
+    </div>
+
+    <div class="glass-card">
+        <div class="row">
+            <div class="col">
+                <label for="startDate">시작일 <span class="req">*</span></label>
+                <input type="date" id="startDate" class="form-input">
+            </div>
+            <div class="col">
+                <label for="endDate">종료일 <span class="req">*</span></label>
+                <input type="date" id="endDate" class="form-input">
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            공휴일 정보를 불러오는 중…
+        </div>
+
+        <div class="error-box" id="errorBox"></div>
+    </div>
+
+    <div class="glass-card">
+        <div class="btn-row">
+            <button class="glass-button" id="calcBtn">📊 평일/공휴일 수 계산하기</button>
+            <button class="glass-button secondary" id="resetBtn">초기화</button>
+        </div>
+    </div>
+
+    <div class="glass-card result" id="resultCard">
+        <div id="resultContent"></div>
+    </div>
+
+    <div class="warning-box">
+        <strong>ℹ️ 참고:</strong> 대한민국 공휴일 데이터는 <b>한국천문연구원 특일 정보 API</b>(공공데이터포털)를 사용합니다.
+        <div class="footnote">
+            ※ 1년(365~366일) 초과 기간은 성능/호출량을 위해 제한하는 것을 권장합니다.
+        </div>
+    </div>
+</div>
+
+<script>
+    // =========================
+    // 설정
+    // =========================
+    // ⚠️ 서비스키는 노출되므로, 운영에서는 서버 프록시(php)로 감추는 것을 추천합니다.
+    const SERVICE_KEY = 'li9mSpO68gQ%2BoRq2KYxinPdRUJAJ4YL98gfEOPZGp6v94o2JJkhNEk3NhHcun9uDrYMsEDzKBrUGqwK1zyjxgg%3D%3D'; // 예: 'ZRC%2B...%3D%3D'
+    const API_URL = 'https://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getRestDeInfo';
+
+    // 검색 기간 제한(권장)
+    const MAX_DAYS = 366;
+
+    // =========================
+    // 유틸
+    // =========================
+    function pad2(n){ return String(n).padStart(2,'0'); }
+
+    function yyyymmdd(date){
+        return date.getFullYear() + pad2(date.getMonth()+1) + pad2(date.getDate());
+    }
+
+    function toDateInputValue(d){
+        const y = d.getFullYear();
+        const m = pad2(d.getMonth()+1);
+        const day = pad2(d.getDate());
+        return `${y}-${m}-${day}`;
+    }
+
+    function daysDiffInclusive(start, end){
+        const ms = 1000*60*60*24;
+        // Date는 로컬 자정 기준이지만, DST 영향이 있는 국가에서 안전하게 하려면 UTC로 계산 추천.
+        // 한국은 DST가 없지만, 안전하게 UTC로 계산:
+        const s = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate());
+        const e = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate());
+        return Math.floor((e - s)/ms) + 1;
+    }
+
+    function showLoading(on){
+        document.getElementById('loading').style.display = on ? 'flex' : 'none';
+        document.getElementById('calcBtn').disabled = !!on;
+    }
+
+    function showError(msg){
+        const box = document.getElementById('errorBox');
+        box.style.display = 'block';
+        box.innerHTML = msg;
+    }
+
+    function hideError(){
+        const box = document.getElementById('errorBox');
+        box.style.display = 'none';
+        box.innerHTML = '';
+    }
+
+    function escapeHtml(str){
+        return String(str)
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'","&#039;");
+    }
+
+    // =========================
+    // 공휴일 API
+    // - 월 단위로만 호출 (최적화)
+    // - 병렬 fetch
+    // - XML 파싱
+    // =========================
+    async function fetchHolidaysByMonth(year, month){
+        const solYear = year;
+        const solMonth = pad2(month);
+        const url = `${API_URL}?serviceKey=${SERVICE_KEY}&solYear=${solYear}&solMonth=${solMonth}`;
+
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`공휴일 API 호출 실패 (${year}-${solMonth}) : HTTP ${res.status}`);
+
+        const text = await res.text();
+        const xml = new DOMParser().parseFromString(text, 'text/xml');
+
+        // 에러 응답 대응
+        const resultCode = xml.querySelector('resultCode');
+        const resultMsg = xml.querySelector('resultMsg');
+        if (resultCode && resultCode.textContent !== '00') {
+            throw new Error(`공휴일 API 오류 (${year}-${solMonth}) : ${resultMsg ? resultMsg.textContent : 'Unknown error'}`);
+        }
+
+        const items = Array.from(xml.getElementsByTagName('item'));
+        if (!items.length) return [];
+
+        return items.map(item => {
+            const locdate = item.getElementsByTagName('locdate')[0]?.textContent?.trim();
+            const dateName = item.getElementsByTagName('dateName')[0]?.textContent?.trim();
+            return locdate ? { date: locdate, name: dateName || '공휴일' } : null;
+        }).filter(Boolean);
+    }
+
+    function listYearMonthsBetween(start, end){
+        const out = [];
+        const cur = new Date(start.getFullYear(), start.getMonth(), 1);
+        const last = new Date(end.getFullYear(), end.getMonth(), 1);
+
+        while (cur <= last){
+            out.push({ y: cur.getFullYear(), m: cur.getMonth()+1 });
+            cur.setMonth(cur.getMonth()+1);
+        }
+        return out;
+    }
+
+    async function buildHolidayMap(start, end){
+        const ymList = listYearMonthsBetween(start, end);
+
+        // 병렬 호출
+        const promises = ymList.map(({y,m}) => fetchHolidaysByMonth(y,m));
+        const results = await Promise.all(promises);
+
+        // holidayMap[yyyymmdd] = "공휴일명"
+        const map = {};
+        results.flat().forEach(h => {
+            map[h.date] = h.name;
+        });
+        return map;
+    }
+
+    // =========================
+    // 계산 & 렌더
+    // =========================
+    function renderResult({ totalDays, workingDays, holidayDays, weekendCount, nationalHolidayCount, holidayDetails }){
+        const workRatio = ((workingDays / totalDays) * 100).toFixed(1);
+        const holRatio = ((holidayDays / totalDays) * 100).toFixed(1);
+
+        let html = `
+        <div class="hero">
+          <div class="hero-title">📊 계산 결과</div>
+          <div class="stat-grid">
+            <div class="stat total">
+              <div class="num">${totalDays}</div>
+              <div class="lab">총 일수</div>
+            </div>
+            <div class="stat work">
+              <div class="num">${workingDays}</div>
+              <div class="lab">💼 평일</div>
+            </div>
+            <div class="stat off">
+              <div class="num">${holidayDays}</div>
+              <div class="lab">🏖️ 휴일</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sub-grid">
+          <div class="pill">
+            <div class="num">${weekendCount}</div>
+            <div class="lab">주말 (토/일)</div>
+          </div>
+          <div class="pill">
+            <div class="num">${nationalHolidayCount}</div>
+            <div class="lab">국가 공휴일</div>
+          </div>
+        </div>
+
+        <div class="list-box">
+          <div class="list-head">
+            <span>📅 상세 휴일 목록</span>
+            <small>총 ${holidayDays}일</small>
+          </div>
+          <div class="list">
+      `;
+
+        if (!holidayDetails.length){
+            html += `<div style="padding:12px; color:#6b7280; font-weight:700;">표시할 휴일이 없습니다.</div>`;
+        } else {
+            holidayDetails.forEach(item => {
+                // item: { yyyymmdd, label, type }
+                const badgeClass = item.type === 'sat' ? 'b-sat' : (item.type === 'sun' ? 'b-sun' : 'b-hol');
+                const icon = item.type === 'sat' ? '🔵' : (item.type === 'sun' ? '🔴' : '🎉');
+                html += `
+            <div class="item">
+              <span>${icon}</span>
+              <span class="date">${item.yyyymmdd}</span>
+              <span class="badge ${badgeClass}">${escapeHtml(item.label)}</span>
+            </div>
+          `;
+            });
+        }
+
+        html += `
+          </div>
+        </div>
+
+        <div class="ratio">
+          평일 비율 <b>${workRatio}%</b> · 휴일 비율 <b>${holRatio}%</b>
+        </div>
+      `;
+
+        document.getElementById('resultContent').innerHTML = html;
+        document.getElementById('resultCard').style.display = 'block';
+    }
+
+    function calculateWorkingAndHolidays(start, end, holidayMap){
+        let workingDays = 0;
+        const holidayDetails = [];
+
+        const cur = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+        const last = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+
+        while (cur <= last){
+            const ymd = yyyymmdd(cur);
+            const dow = cur.getDay(); // 0:Sun ... 6:Sat
+            const isWeekend = (dow === 0 || dow === 6);
+            const holidayName = holidayMap[ymd];
+
+            if (isWeekend || holidayName){
+                if (dow === 6) holidayDetails.push({ yyyymmdd: ymd, label: '토요일', type:'sat' });
+                else if (dow === 0) holidayDetails.push({ yyyymmdd: ymd, label: '일요일', type:'sun' });
+                else holidayDetails.push({ yyyymmdd: ymd, label: holidayName, type:'hol' });
+            } else {
+                workingDays++;
+            }
+
+            cur.setDate(cur.getDate()+1);
+        }
+
+        // weekendCount는 휴일목록에서 토/일만 세기
+        const weekendCount = holidayDetails.filter(x => x.type === 'sat' || x.type === 'sun').length;
+        const holidayDays = holidayDetails.length;
+        const nationalHolidayCount = holidayDays - weekendCount;
+
+        // 보기 좋게 날짜 오름차순 정렬(현재는 기간 순회라 이미 오름차순)
+        return { workingDays, holidayDays, weekendCount, nationalHolidayCount, holidayDetails };
+    }
+
+    // =========================
+    // 이벤트
+    // =========================
+    async function onCalculate(){
+        hideError();
+
+        const sVal = document.getElementById('startDate').value;
+        const eVal = document.getElementById('endDate').value;
+
+        if (!sVal || !eVal){
+            showError('시작일과 종료일을 모두 입력해주세요.');
+            return;
+        }
+
+        const start = new Date(sVal);
+        const end = new Date(eVal);
+
+        if (isNaN(start.getTime()) || isNaN(end.getTime())){
+            showError('날짜 형식이 올바르지 않습니다.');
+            return;
+        }
+        if (start > end){
+            showError('시작일은 종료일보다 늦을 수 없습니다.');
+            return;
+        }
+
+        const totalDays = daysDiffInclusive(start, end);
+        if (totalDays > MAX_DAYS){
+            showError(`검색 기간은 최대 ${MAX_DAYS}일(약 1년)까지 권장합니다. (현재: ${totalDays}일)`);
+            return;
+        }
+
+        // 결과 카드 숨김
+        document.getElementById('resultCard').style.display = 'none';
+
+        // 서비스키 체크
+        if (!SERVICE_KEY || SERVICE_KEY === 'YOUR_ENCODED_SERVICE_KEY_HERE'){
+            showError(
+                'SERVICE_KEY가 설정되지 않았습니다.<br>' +
+                '공공데이터포털(한국천문연구원 특일정보 API) 서비스키(인코딩된 형태)를 SERVICE_KEY에 넣어주세요.'
+            );
+            return;
+        }
+
+        showLoading(true);
+        try{
+            const holidayMap = await buildHolidayMap(start, end);
+            const stats = calculateWorkingAndHolidays(start, end, holidayMap);
+            renderResult({
+                totalDays,
+                workingDays: stats.workingDays,
+                holidayDays: stats.holidayDays,
+                weekendCount: stats.weekendCount,
+                nationalHolidayCount: stats.nationalHolidayCount,
+                holidayDetails: stats.holidayDetails
+            });
+        }catch(err){
+            console.error(err);
+            showError('공휴일 데이터를 불러오는 중 오류가 발생했습니다.<br>' + escapeHtml(err.message || String(err)));
+        }finally{
+            showLoading(false);
+        }
+    }
+
+    function onReset(){
+        hideError();
+        document.getElementById('resultCard').style.display = 'none';
+
+        const start = new Date();
+        const end = new Date();
+        end.setMonth(end.getMonth() + 1);
+
+        document.getElementById('startDate').value = toDateInputValue(start);
+        document.getElementById('endDate').value = toDateInputValue(end);
+    }
+
+    // 초기화
+    document.addEventListener('DOMContentLoaded', () => {
+        // 기본값: 오늘 ~ 1달 뒤
+        onReset();
+
+        document.getElementById('calcBtn').addEventListener('click', onCalculate);
+        document.getElementById('resetBtn').addEventListener('click', onReset);
+    });
+</script>
+</body>
+</html>

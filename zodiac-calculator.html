@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Zodiac Calculator | 띠(십이지) 계산기</title>
+    <meta name="description" content="출생 연도를 입력하면 십이지 띠와 간지(갑자년 기준), 주변 연도 띠/간지, 같은 띠 연도를 확인할 수 있습니다." />
+    <style>
+        :root{
+            --bg1:#f5f7fb;
+            --bg2:#eef3ff;
+            --card: rgba(255,255,255,.72);
+            --card2: rgba(255,255,255,.55);
+            --stroke: rgba(44, 90, 160, .22);
+            --stroke2: rgba(44, 90, 160, .14);
+            --text:#111827;
+            --muted:#4b5563;
+            --blue:#2563eb;
+            --blue2:#1e40af;
+            --green:#16a34a;
+            --red:#dc2626;
+            --shadow: 0 18px 45px rgba(17,24,39,.12);
+            --radius: 14px;
+            --radius2: 10px;
+            --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+
+        *{box-sizing:border-box}
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", "Malgun Gothic", Arial, sans-serif;
+            color:var(--text);
+            background: radial-gradient(1200px 800px at 20% 10%, #dbeafe 0%, transparent 55%),
+            radial-gradient(900px 700px at 80% 20%, #e9d5ff 0%, transparent 55%),
+            linear-gradient(180deg, var(--bg1), var(--bg2));
+            min-height:100vh;
+        }
+
+        .wrap{
+            max-width: 980px;
+            margin: 24px auto 60px;
+            padding: 0 14px;
+        }
+
+        .page-title{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            margin: 0 0 10px 0;
+        }
+        .page-title h1{
+            font-size: 22px;
+            margin:0;
+            letter-spacing:-.3px;
+        }
+        .page-title .badge{
+            font-size:12px;
+            padding:4px 10px;
+            border-radius:999px;
+            border:1px solid var(--stroke);
+            background: rgba(255,255,255,.6);
+            color: var(--blue2);
+        }
+
+        .lead{
+            margin: 6px 0 18px 0;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.55;
+        }
+
+        .glass-card{
+            background: var(--card);
+            border: 1px solid var(--stroke);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 16px 16px;
+            margin: 14px 0;
+        }
+
+        .info-box{
+            background: var(--card2);
+            border: 1px dashed var(--stroke);
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            margin: 12px 0 14px;
+        }
+
+        .info-box h5{
+            margin: 0 0 8px 0;
+            color: var(--blue2);
+            font-size: 15px;
+            letter-spacing:-.2px;
+        }
+        .info-box ul{
+            margin: 6px 0 0;
+            padding-left: 18px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .info-box p{
+            margin: 8px 0 0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .form-row{
+            display:flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+
+        label{
+            font-weight: 700;
+            font-size: 13px;
+            display:block;
+            margin-bottom:6px;
+            color:#111827;
+        }
+
+        .form-input{
+            width: 260px;
+            max-width: 100%;
+            padding: 10px 12px;
+            font-size: 14px;
+            border-radius: 12px;
+            border: 2px solid rgba(59,130,246,.25);
+            background: rgba(255,255,255,.7);
+            outline: none;
+            transition: .15s ease;
+        }
+        .form-input:focus{
+            border-color: rgba(37,99,235,.65);
+            box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+        }
+        .form-input.error{
+            border-color: rgba(220,38,38,.65);
+            box-shadow: 0 0 0 4px rgba(220,38,38,.10);
+        }
+        .form-input.success{
+            border-color: rgba(22,163,74,.65);
+            box-shadow: 0 0 0 4px rgba(22,163,74,.10);
+        }
+
+        .help{
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 6px;
+        }
+
+        .btn-row{
+            display:flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .glass-button{
+            border: 1px solid var(--stroke);
+            background: rgba(255,255,255,.7);
+            color: #0f172a;
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: .15s ease;
+            box-shadow: 0 12px 24px rgba(17,24,39,.10);
+            user-select: none;
+        }
+        .glass-button:hover{ transform: translateY(-1px); }
+        .glass-button:active{ transform: translateY(0px); }
+
+        .glass-button.primary{
+            background: linear-gradient(135deg, rgba(37,99,235,.95), rgba(30,64,175,.95));
+            border-color: rgba(37,99,235,.55);
+            color: white;
+        }
+        .glass-button.gray{
+            background: linear-gradient(135deg, rgba(149,165,166,.95), rgba(127,140,141,.95));
+            border-color: rgba(107,114,128,.55);
+            color: white;
+        }
+
+        .error-message{
+            display:none;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(220,38,38,.35);
+            background: rgba(220,38,38,.07);
+            color: #991b1b;
+            font-size: 13px;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        .result-title{
+            margin: 0 0 14px 0;
+            color: var(--blue2);
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing:-.2px;
+        }
+
+        .hero{
+            text-align: center;
+            margin: 18px 0 8px;
+            padding: 22px;
+            border-radius: 14px;
+            border: 3px solid rgba(37,99,235,.22);
+            background: linear-gradient(135deg, rgba(59,130,246,.10), rgba(29,78,216,.10));
+        }
+        .hero .emoji{ font-size: 52px; margin-bottom: 8px; }
+        .hero .main{
+            font-size: 34px;
+            font-weight: 900;
+            color: var(--blue2);
+            margin: 0 0 6px 0;
+            letter-spacing: -.4px;
+        }
+        .hero .ganji{
+            font-size: 18px;
+            font-weight: 900;
+            color: var(--blue);
+            margin: 0 0 6px 0;
+        }
+        .hero .sub{
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        .section{
+            margin: 22px 0 0;
+        }
+        .section h6{
+            margin: 0 0 12px 0;
+            color: var(--blue2);
+            font-size: 15px;
+            font-weight: 900;
+        }
+
+        .grid{
+            display:grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+        }
+
+        .cell{
+            border-radius: 12px;
+            border: 2px solid rgba(37,99,235,.16);
+            background: rgba(255,255,255,.55);
+            padding: 12px 10px;
+            text-align:center;
+            overflow:hidden;
+        }
+        .cell.current{
+            border-color: rgba(37,99,235,.55);
+            background: rgba(37,99,235,.12);
+        }
+        .cell .c-emoji{ font-size: 26px; margin-bottom: 6px; }
+        .cell .c-name{ font-size: 13px; font-weight: 900; margin-bottom: 4px; }
+        .cell .c-ganji{ font-size: 11px; color: var(--blue); font-weight: 700; margin-bottom: 2px; }
+        .cell .c-year{ font-size: 12px; color: var(--muted); }
+
+        .same-grid{
+            display:grid;
+            grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+            gap: 10px;
+        }
+        .same{
+            border-radius: 12px;
+            border: 1px solid rgba(37,99,235,.16);
+            background: rgba(255,255,255,.55);
+            padding: 10px 8px;
+            text-align:center;
+            font-size: 13px;
+            color:#111827;
+        }
+        .same.current{
+            border: 2px solid rgba(37,99,235,.55);
+            background: rgba(37,99,235,.16);
+            font-weight: 900;
+        }
+
+        .note{
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--muted);
+            text-align:center;
+        }
+
+        .tiny{
+            font-family: var(--mono);
+            font-size: 12px;
+            color: #374151;
+            background: rgba(255,255,255,.6);
+            border: 1px solid var(--stroke2);
+            padding: 8px 10px;
+            border-radius: 12px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="page-title">
+        <h1>띠(십이지) 계산기</h1>
+        <span class="badge">양력 · 1월 1일 기준</span>
+    </div>
+    <p class="lead">
+        출생 연도를 입력하면 <b>십이지 띠</b>와 <b>간지(갑자년 기준)</b>, 주변 연도(-6~+6) 및 같은 띠 연도(±60년)를 확인할 수 있습니다.
+    </p>
+
+    <div class="info-box">
+        <h5>📋 사용 방법</h5>
+        <ul>
+            <li>출생 연도를 입력하고 <b>띠 확인</b>을 누르세요.</li>
+            <li>올해 기준(-2~+2), 출생연도 기준(-6~+6), 같은 띠 연도(±60년)를 함께 보여줍니다.</li>
+        </ul>
+        <div style="margin-top:14px; padding-top:14px; border-top:1px solid rgba(44, 90, 160, 0.18);">
+            <h5>🔢 띠 계산 공식</h5>
+            <p>
+                <b>십이지(十二支)는 12년 주기로 순환</b>합니다.<br>
+                • 기준: <b>2008년 = 자(쥐)띠</b><br>
+                • 계산: <span class="tiny">(출생연도 - 2008) % 12</span> 의 나머지로 띠 결정<br>
+                • 예시: 1990년 → (1990-2008)%12 = 10 → 술(개)띠<br>
+                <b style="color:#b91c1c;">※ 음력(입춘) 기준이 아니라, 1월 1일 기준(양력)으로 계산합니다.</b>
+            </p>
+        </div>
+    </div>
+
+    <div class="glass-card">
+        <div class="form-row">
+            <div>
+                <label for="birthYear">출생 연도 (1900~2100) <span style="color:#dc2626;">*</span></label>
+                <input type="number" id="birthYear" class="form-input" placeholder="예: 1990" min="1900" max="2100" />
+                <div class="help">예: 1990, 2008, 2026</div>
+            </div>
+
+            <div style="flex:1; min-width:240px;">
+                <div class="tiny" style="margin-top: 22px;">
+                    • 간지 기준: <b>1984년 = 갑자(甲子)년</b><br>
+                    • 간지 계산: (연도-1984)%10 / %12
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-card">
+        <div class="btn-row">
+            <button class="glass-button primary" type="button" onclick="calculateZodiac()">🔍 띠 확인</button>
+            <button class="glass-button gray" type="button" onclick="clearAllInputs()">🗑️ 초기화</button>
+        </div>
+    </div>
+
+    <div id="error-message" class="error-message"></div>
+
+    <div id="result-container" class="glass-card" style="display:none;">
+        <div class="result-title">📊 띠 분석 결과</div>
+        <div id="result"></div>
+        <div class="note">표시는 참고용이며, 음력(입춘) 기준이 필요하면 별도의 만세력 기준을 사용하세요.</div>
+    </div>
+</div>
+
+<script>
+    // 십이지 띠 데이터
+    const ZODIAC_SIGNS = [
+        { name: "자(쥐)", emoji: "🐭", index: 0, animal: "쥐", hanja: "子", stem: "자" },
+        { name: "축(소)", emoji: "🐮", index: 1, animal: "소", hanja: "丑", stem: "축" },
+        { name: "인(호랑이)", emoji: "🐯", index: 2, animal: "호랑이", hanja: "寅", stem: "인" },
+        { name: "묘(토끼)", emoji: "🐰", index: 3, animal: "토끼", hanja: "卯", stem: "묘" },
+        { name: "진(용)", emoji: "🐲", index: 4, animal: "용", hanja: "辰", stem: "진" },
+        { name: "사(뱀)", emoji: "🐍", index: 5, animal: "뱀", hanja: "巳", stem: "사" },
+        { name: "오(말)", emoji: "🐴", index: 6, animal: "말", hanja: "午", stem: "오" },
+        { name: "미(양)", emoji: "🐑", index: 7, animal: "양", hanja: "未", stem: "미" },
+        { name: "신(원숭이)", emoji: "🐵", index: 8, animal: "원숭이", hanja: "申", stem: "신" },
+        { name: "유(닭)", emoji: "🐔", index: 9, animal: "닭", hanja: "酉", stem: "유" },
+        { name: "술(개)", emoji: "🐶", index: 10, animal: "개", hanja: "戌", stem: "술" },
+        { name: "해(돼지)", emoji: "🐷", index: 11, animal: "돼지", hanja: "亥", stem: "해" }
+    ];
+
+    // 십간(갑을병정무기경신임계)
+    const TEN_STEMS = [
+        { name: "갑", hanja: "甲", index: 0 },
+        { name: "을", hanja: "乙", index: 1 },
+        { name: "병", hanja: "丙", index: 2 },
+        { name: "정", hanja: "丁", index: 3 },
+        { name: "무", hanja: "戊", index: 4 },
+        { name: "기", hanja: "己", index: 5 },
+        { name: "경", hanja: "庚", index: 6 },
+        { name: "신", hanja: "辛", index: 7 },
+        { name: "임", hanja: "壬", index: 8 },
+        { name: "계", hanja: "癸", index: 9 }
+    ];
+
+    // 십이지(간지용)
+    const TWELVE_BRANCHES = [
+        { name: "자", hanja: "子", index: 0 },
+        { name: "축", hanja: "丑", index: 1 },
+        { name: "인", hanja: "寅", index: 2 },
+        { name: "묘", hanja: "卯", index: 3 },
+        { name: "진", hanja: "辰", index: 4 },
+        { name: "사", hanja: "巳", index: 5 },
+        { name: "오", hanja: "午", index: 6 },
+        { name: "미", hanja: "未", index: 7 },
+        { name: "신", hanja: "申", index: 8 },
+        { name: "유", hanja: "酉", index: 9 },
+        { name: "술", hanja: "戌", index: 10 },
+        { name: "해", hanja: "亥", index: 11 }
+    ];
+
+    // 띠 계산(2008=자)
+    function getZodiacSign(year) {
+        const baseYear = 2008;
+        let diff = (year - baseYear) % 12;
+        if (diff < 0) diff += 12;
+        return ZODIAC_SIGNS[diff];
+    }
+
+    // 간지 계산(1984=갑자)
+    function getGanji(year) {
+        const baseYear = 1984; // 갑자
+        const diff = year - baseYear;
+
+        let stemIndex = diff % 10;
+        if (stemIndex < 0) stemIndex += 10;
+
+        let branchIndex = diff % 12;
+        if (branchIndex < 0) branchIndex += 12;
+
+        const stem = TEN_STEMS[stemIndex];
+        const branch = TWELVE_BRANCHES[branchIndex];
+
+        return {
+            name: stem.name + branch.name + "년",
+            hanja: stem.hanja + branch.hanja + "年",
+            full: `${stem.name}${branch.name}년 (${stem.hanja}${branch.hanja}年)`
+        };
+    }
+
+    function validateInputs() {
+        const yearInput = document.getElementById("birthYear");
+        const year = parseInt(yearInput.value, 10);
+        const errors = [];
+
+        if (!yearInput.value.trim() || Number.isNaN(year) || year < 1900 || year > 2100) {
+            yearInput.classList.remove("success");
+            yearInput.classList.add("error");
+            errors.push("출생 연도를 올바르게 입력해주세요. (1900~2100)");
+        } else {
+            yearInput.classList.remove("error");
+            yearInput.classList.add("success");
+        }
+        return errors;
+    }
+
+    function showError(message) {
+        const errorDiv = document.getElementById("error-message");
+        errorDiv.textContent = message;
+        errorDiv.style.display = "block";
+        document.getElementById("result-container").style.display = "none";
+    }
+
+    function hideError() {
+        document.getElementById("error-message").style.display = "none";
+    }
+
+    function calculateZodiac() {
+        hideError();
+        const errors = validateInputs();
+        if (errors.length) {
+            showError(errors.join(" "));
+            return;
+        }
+
+        const year = parseInt(document.getElementById("birthYear").value, 10);
+        const zodiac = getZodiacSign(year);
+        generateZodiacResult(year, zodiac);
+
+        document.getElementById("result-container").style.display = "block";
+        document.getElementById("result-container").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function generateZodiacResult(year, zodiac) {
+        const resultDiv = document.getElementById("result");
+        const ganji = getGanji(year);
+
+        let html = "";
+
+        // 내 띠
+        html += `
+        <div class="hero">
+          <div class="emoji">${zodiac.emoji}</div>
+          <div class="main">${zodiac.animal}띠 (${zodiac.hanja}, ${zodiac.stem})</div>
+          <div class="ganji">${ganji.full}</div>
+          <div class="sub">${year}년생</div>
+        </div>
+      `;
+
+        // 올해(-2~+2)
+        const currentYear = new Date().getFullYear();
+        html += `<div class="section">
+        <h6>🗓️ 올해의 띠 (-2년 ~ +2년)</h6>
+        <div class="grid">
+      `;
+        for (let i = -2; i <= 2; i++) {
+            const y = currentYear + i;
+            const z = getZodiacSign(y);
+            const g = getGanji(y);
+            const isCurrent = i === 0;
+            html += `
+          <div class="cell ${isCurrent ? "current" : ""}">
+            <div class="c-emoji">${z.emoji}</div>
+            <div class="c-name">${z.animal}띠 (${z.hanja}, ${z.stem})</div>
+            <div class="c-ganji">${g.full}</div>
+            <div class="c-year">${y}년</div>
+          </div>
+        `;
+        }
+        html += `</div></div>`;
+
+        // 출생연도 주변(-6~+6)
+        html += `<div class="section">
+        <h6>📅 주변 연도의 띠 (-6년 ~ +6년)</h6>
+        <div class="grid">
+      `;
+        for (let i = -6; i <= 6; i++) {
+            const y = year + i;
+            const z = getZodiacSign(y);
+            const g = getGanji(y);
+            const isCurrent = i === 0;
+            html += `
+          <div class="cell ${isCurrent ? "current" : ""}">
+            <div class="c-emoji">${z.emoji}</div>
+            <div class="c-name">${z.animal}띠 (${z.hanja}, ${z.stem})</div>
+            <div class="c-ganji">${g.full}</div>
+            <div class="c-year">${y}년</div>
+          </div>
+        `;
+        }
+        html += `</div></div>`;
+
+        // 같은 띠(±60년, 12년 주기)
+        const sameYears = [];
+        for (let i = -60; i <= 60; i += 12) sameYears.push(year + i);
+        sameYears.sort((a,b)=>a-b);
+
+        html += `<div class="section">
+        <h6>🔍 같은 띠를 가진 연도 (앞뒤 60년)</h6>
+        <div class="same-grid">
+      `;
+        sameYears.forEach(y => {
+            html += `<div class="same ${y === year ? "current" : ""}">${y}년</div>`;
+        });
+        html += `</div></div>`;
+
+        resultDiv.innerHTML = html;
+    }
+
+    function clearAllInputs() {
+        const el = document.getElementById("birthYear");
+        el.value = "";
+        el.classList.remove("error", "success");
+        hideError();
+        document.getElementById("result-container").style.display = "none";
+    }
+
+    // 실시간 검증 + Enter 지원
+    document.addEventListener("DOMContentLoaded", () => {
+        const el = document.getElementById("birthYear");
+        el.addEventListener("input", () => {
+            const v = parseInt(el.value, 10);
+            if (el.value.trim() && (Number.isNaN(v) || v < 1900 || v > 2100)) {
+                el.classList.remove("success");
+                el.classList.add("error");
+            } else if (el.value.trim()) {
+                el.classList.remove("error");
+                el.classList.add("success");
+            } else {
+                el.classList.remove("error", "success");
+            }
+        });
+
+        el.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") calculateZodiac();
+        });
+    });
+</script>
+</body>
+</html>

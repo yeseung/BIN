@@ -1,0 +1,454 @@
+<!-- File: weight-unit-converter.html -->
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Weight Unit Converter</title>
+    <meta name="description" content="무게 단위(pg~Gt, gr~st, 돈~관, ct) 환산 변환기" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+
+            --line:#e6e8f0;
+            --shadow:0 14px 40px rgba(17,24,39,.10);
+            --radius:18px;
+
+            --btn-a:#7c3aed; /* violet */
+            --btn-b:#2563eb; /* blue */
+
+            --tip-bg:#eaf6f2;
+            --tip-line:#c8eadf;
+
+            --danger:#ef4444;
+            --code-bg:#f3f4f6;
+        }
+
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .wrap{
+            max-width: 940px;
+            margin: 0 auto;
+            padding: 26px 16px 48px;
+        }
+
+        .card{
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .header{
+            padding: 22px 22px 14px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        h1{
+            margin:0 0 8px;
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: -0.3px;
+        }
+
+        .sub{
+            margin:0;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .content{ padding: 18px 22px 22px; }
+
+        .tip{
+            background: var(--tip-bg);
+            border: 1px solid var(--tip-line);
+            border-radius: 14px;
+            padding: 12px 14px;
+            margin-bottom: 14px;
+        }
+        .tip .title{
+            margin:0 0 8px;
+            font-weight: 900;
+            color:#0f766e;
+        }
+        .tip ul{
+            margin:0;
+            padding-left: 18px;
+            color:#134e4a;
+            font-size: 14px;
+        }
+        .tip li{ margin: 6px 0; }
+        .tip code{
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 13px;
+        }
+
+        .panel{
+            border: 1px solid rgba(17,24,39,.08);
+            background: linear-gradient(180deg, rgba(255,255,255,.86), rgba(255,255,255,.70));
+            border-radius: 16px;
+            box-shadow: 0 12px 30px rgba(17,24,39,.06);
+            padding: 14px;
+        }
+
+        .grid{
+            display:grid;
+            grid-template-columns: 1fr 1.1fr;
+            gap: 12px;
+            align-items: start;
+        }
+        @media (max-width: 860px){
+            .grid{ grid-template-columns: 1fr; }
+        }
+
+        .field{
+            display:flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+        .field label{
+            font-size: 13px;
+            font-weight: 900;
+            color:#374151;
+        }
+
+        input[type="number"], select{
+            width:100%;
+            border-radius: 14px;
+            border: 1px solid rgba(17,24,39,.14);
+            background:#fff;
+            padding: 12px 12px;
+            font-size: 14px;
+            outline:none;
+            transition: box-shadow .15s ease, border-color .15s ease;
+        }
+        input[type="number"]:focus, select:focus{
+            border-color: rgba(124,58,237,.35);
+            box-shadow: 0 0 0 4px rgba(124,58,237,.12);
+        }
+
+        .result{
+            border-radius: 16px;
+            border: 1px solid rgba(17,24,39,.10);
+            background: #ffffff;
+            padding: 12px 12px;
+            min-height: 360px;
+            line-height: 1.75;
+            font-size: 14px;
+            overflow:auto;
+        }
+
+        .muted{
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+            margin-top: 8px;
+        }
+
+        .row{
+            display:flex;
+            align-items:center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .badge{
+            display:inline-flex;
+            align-items:center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 800;
+        }
+        .dot{
+            width: 8px; height: 8px; border-radius: 999px;
+            background:#22c55e;
+            box-shadow: 0 0 0 4px rgba(34,197,94,.12);
+        }
+
+        .btn{
+            appearance:none;
+            border-radius: 14px;
+            padding: 10px 14px;
+            font-weight: 900;
+            font-size: 13px;
+            cursor:pointer;
+            border: 1px solid rgba(17,24,39,.10);
+            transition: transform .08s ease, filter .15s ease;
+            user-select: none;
+            background: linear-gradient(135deg, var(--btn-a), var(--btn-b));
+            color:#fff;
+            box-shadow: 0 10px 20px rgba(37,99,235,.14);
+        }
+        .btn:hover{ transform: translateY(-1px); filter: brightness(1.03); }
+        .btn:active{ transform: translateY(0); }
+
+        .btn-ghost{
+            background:#eef2ff;
+            border-color: rgba(124,58,237,.18);
+            color:#3730a3;
+            box-shadow: none;
+        }
+
+        .invalid{
+            border: 3px solid var(--danger) !important;
+            box-shadow: none !important;
+        }
+
+        .kbd{
+            display:inline-block;
+            padding: 1px 8px;
+            border: 1px solid rgba(17,24,39,.14);
+            border-bottom-width: 2px;
+            border-radius: 10px;
+            background:#fff;
+            font-size: 12px;
+            font-weight: 900;
+            color:#374151;
+            margin: 0 4px;
+        }
+
+        b.head{
+            display:inline-block;
+            margin-bottom: 6px;
+            font-weight: 1000;
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="card" id="weightCalc">
+        <div class="header">
+            <h1>단위 환산 변환 [무게]</h1>
+            <p class="sub">입력한 무게를 선택한 단위 기준으로 모든 단위(pg~Gt / gr~st / 돈~관 / ct)로 자동 환산합니다. (기준: g)</p>
+        </div>
+
+        <div class="content">
+            <div class="tip">
+                <div class="title">💡 사용 팁</div>
+                <ul>
+                    <li>값을 입력하거나 단위를 바꾸면 <b>자동 변환</b>됩니다.</li>
+                    <li>큰 수/작은 수는 <code>a × 10ⁿ</code> 형태로 표시됩니다.</li>
+                    <li><span class="kbd">Ctrl</span>+<span class="kbd">F</span>로 결과에서 단위 이름을 빠르게 찾을 수 있어요.</li>
+                </ul>
+            </div>
+
+            <div class="grid">
+                <!-- Inputs -->
+                <div class="panel">
+                    <div class="field">
+                        <label for="weightInput">무게 입력</label>
+                        <input type="number" step="any" id="weightInput" placeholder="예: 10" />
+                    </div>
+
+                    <div class="field">
+                        <label for="weight-select">무게 단위</label>
+                        <select id="weight-select">
+                            <!-- SI (1단위가 몇 g인지) -->
+                            <option value="0.000000000001">pg (피코그램)</option>
+                            <option value="0.000000001">ng (나노그램)</option>
+                            <option value="0.000001">μg (마이크로그램)</option>
+                            <option value="0.001">mg (밀리그램)</option>
+                            <option value="1" selected>g (그램)</option>
+                            <option value="1000">kg (킬로그램)</option>
+                            <option value="1000000">t (톤)</option>
+                            <option value="1000000000">kt (킬로톤)</option>
+                            <option value="1000000000000">Mt (메가톤)</option>
+                            <option value="1000000000000000">Gt (기가톤)</option>
+
+                            <!-- non-SI -->
+                            <option value="0.06479891">gr (그레인)</option>
+                            <option value="28.3495">oz (온스)</option>
+                            <option value="453.592">lb (파운드)</option>
+                            <option value="6350.29">st (스톤)</option>
+
+                            <!-- KR traditional -->
+                            <option value="3.75">돈 (전, 錢)</option>
+                            <option value="37.5">냥 (량, 兩)</option>
+                            <option value="375">근[채소] (斤)</option>
+                            <option value="600">근[고기] (斤)</option>
+                            <option value="3750">관 (貫)</option>
+
+                            <!-- etc -->
+                            <option value="0.2">ct (캐럿)</option>
+                        </select>
+                    </div>
+
+                    <div class="row">
+                        <button class="btn" type="button" id="copyBtn">📋 결과 복사</button>
+                        <button class="btn btn-ghost" type="button" id="resetBtn">🔄 초기화</button>
+                        <span class="badge"><span class="dot"></span> 자동 변환</span>
+                    </div>
+
+                    <div class="muted">
+                        ※ “근[채소] / 근[고기]”는 서로 다른 값으로 별도 표기됩니다. (원하시면 명칭을 더 명확히 분리해 드릴게요)
+                    </div>
+                </div>
+
+                <!-- Result -->
+                <div class="panel">
+                    <div id="weightResult" class="result" contenteditable="true" aria-label="무게 환산 결과">
+                        <b class="head">[ 단위 환산 결과 ]</b><br>
+                        값 입력 시 결과가 표시됩니다.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const weightInput = document.getElementById("weightInput");
+    const weightSelect = document.getElementById("weight-select");
+    const weightResult = document.getElementById("weightResult");
+    const copyBtn = document.getElementById("copyBtn");
+    const resetBtn = document.getElementById("resetBtn");
+
+    // 단위 목록 (1단위가 몇 g인지)
+    const weightUnits = [
+        { name: "pg (피코그램)", value: 0.000000000001 },
+        { name: "ng (나노그램)", value: 0.000000001 },
+        { name: "μg (마이크로그램)", value: 0.000001 },
+        { name: "mg (밀리그램)", value: 0.001 },
+        { name: "g (그램)", value: 1 },
+        { name: "kg (킬로그램)", value: 1000 },
+        { name: "t (톤)", value: 1000000 },
+        { name: "kt (킬로톤)", value: 1000000000 },
+        { name: "Mt (메가톤)", value: 1000000000000 },
+        { name: "Gt (기가톤)", value: 1000000000000000 },
+
+        { name: "gr (그레인)", value: 0.06479891 },
+        { name: "oz (온스)", value: 28.3495 },
+        { name: "lb (파운드)", value: 453.592 },
+        { name: "st (스톤)", value: 6350.29 },
+
+        { name: "돈 (전, 錢)", value: 3.75 },
+        { name: "냥 (량, 兩)", value: 37.5 },
+        { name: "근[채소] (斤)", value: 375 },
+        { name: "근[고기] (斤)", value: 600 },
+        { name: "관 (貫)", value: 3750 },
+
+        { name: "ct (캐럿)", value: 0.2 }
+    ];
+
+    function trimTrailingZeros(str) {
+        return str.replace(/(\.\d*?[1-9])0+$/, '$1').replace(/\.0+$/, '');
+    }
+
+    function formatBigNumber(n) {
+        const abs = Math.abs(n);
+        if (abs >= 1_000_000 || (abs > 0 && abs <= 0.000001)) {
+            const [coeff, expRaw] = n.toExponential(6).split("e");
+            const exp = expRaw.replace("+", "");
+            const supers = exp
+            .replace("-", "⁻")
+            .replace(/\d/g, d => "⁰¹²³⁴⁵⁶⁷⁸⁹"[d]);
+            return `${trimTrailingZeros(Number(coeff).toLocaleString(undefined, { maximumFractionDigits: 6 }))} × 10${supers}`;
+        }
+        return trimTrailingZeros(n.toLocaleString(undefined, { maximumFractionDigits: 12 }));
+    }
+
+    function sanitizeText(html) {
+        const tmp = document.createElement("div");
+        tmp.innerHTML = html.replaceAll("<br>", "\n").replaceAll("<br/>", "\n").replaceAll("<br />", "\n");
+        return tmp.textContent || tmp.innerText || "";
+    }
+
+    function setInvalid(el, isInvalid){
+        el.classList.toggle("invalid", !!isInvalid);
+    }
+
+    function convertWeight() {
+        const inputStr = weightInput.value.trim();
+        const inputVal = parseFloat(inputStr);
+        const selectedUnitValue = parseFloat(weightSelect.value);
+
+        setInvalid(weightInput, false);
+
+        if (inputStr === "") {
+            weightResult.innerHTML = "<b class='head'>[ 단위 환산 결과 ]</b><br>값 입력 시 결과가 표시됩니다.";
+            return;
+        }
+
+        if (!Number.isFinite(inputVal)) {
+            setInvalid(weightInput, true);
+            weightResult.innerHTML = "항목을 입력해 주세요.";
+            return;
+        }
+
+        // 입력값을 g 단위로 변환
+        const gramValue = inputVal * selectedUnitValue;
+
+        const fromUnitText = weightSelect.options[weightSelect.selectedIndex].text;
+
+        let output = "<b class='head'>[ 단위 환산 결과 ]</b><br>";
+        weightUnits.forEach(unit => {
+            const converted = gramValue / unit.value;
+            output += `${trimTrailingZeros(inputVal.toLocaleString(undefined, { maximumFractionDigits: 12 }))} ${fromUnitText} = <b>${formatBigNumber(converted)}</b> ${unit.name}<br>`;
+        });
+
+        weightResult.innerHTML = output;
+    }
+
+    async function copyResult() {
+        const text = sanitizeText(weightResult.innerHTML).trim();
+        if (!text) return;
+
+        try{
+            await navigator.clipboard.writeText(text);
+            copyBtn.textContent = "✅ 복사됨";
+            setTimeout(() => copyBtn.textContent = "📋 결과 복사", 1200);
+        }catch(e){
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            document.body.removeChild(ta);
+            copyBtn.textContent = "✅ 복사됨";
+            setTimeout(() => copyBtn.textContent = "📋 결과 복사", 1200);
+        }
+    }
+
+    function resetAll(){
+        weightInput.value = "";
+        weightSelect.value = "1";
+        weightResult.innerHTML = "<b class='head'>[ 단위 환산 결과 ]</b><br>값 입력 시 결과가 표시됩니다.";
+        setInvalid(weightInput, false);
+        weightInput.focus();
+    }
+
+    // Events
+    weightInput.addEventListener("input", convertWeight);
+    weightSelect.addEventListener("change", convertWeight);
+    copyBtn.addEventListener("click", copyResult);
+    resetBtn.addEventListener("click", resetAll);
+
+    // init
+    convertWeight();
+</script>
+</body>
+</html>

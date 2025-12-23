@@ -1,0 +1,448 @@
+<!-- File: length-unit-converter.html -->
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Length Unit Converter</title>
+    <meta name="description" content="길이 단위(pm~Tm, in~mile, 자~해리) 환산 변환기" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+
+            --line:#e6e8f0;
+            --shadow:0 14px 40px rgba(17,24,39,.10);
+            --radius:18px;
+
+            --btn-a:#7c3aed; /* violet */
+            --btn-b:#2563eb; /* blue */
+
+            --tip-bg:#eaf6f2;
+            --tip-line:#c8eadf;
+
+            --danger:#ef4444;
+            --code-bg:#f3f4f6;
+        }
+
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .wrap{
+            max-width: 940px;
+            margin: 0 auto;
+            padding: 26px 16px 48px;
+        }
+
+        .card{
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .header{
+            padding: 22px 22px 14px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        h1{
+            margin:0 0 8px;
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: -0.3px;
+        }
+
+        .sub{
+            margin:0;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .content{ padding: 18px 22px 22px; }
+
+        .tip{
+            background: var(--tip-bg);
+            border: 1px solid var(--tip-line);
+            border-radius: 14px;
+            padding: 12px 14px;
+            margin-bottom: 14px;
+        }
+        .tip .title{
+            margin:0 0 8px;
+            font-weight: 900;
+            color:#0f766e;
+        }
+        .tip ul{
+            margin:0;
+            padding-left: 18px;
+            color:#134e4a;
+            font-size: 14px;
+        }
+        .tip li{ margin: 6px 0; }
+        .tip code{
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 13px;
+        }
+
+        .panel{
+            border: 1px solid rgba(17,24,39,.08);
+            background: linear-gradient(180deg, rgba(255,255,255,.86), rgba(255,255,255,.70));
+            border-radius: 16px;
+            box-shadow: 0 12px 30px rgba(17,24,39,.06);
+            padding: 14px;
+        }
+
+        .grid{
+            display:grid;
+            grid-template-columns: 1fr 1.1fr;
+            gap: 12px;
+            align-items: start;
+        }
+        @media (max-width: 860px){
+            .grid{ grid-template-columns: 1fr; }
+        }
+
+        .field{
+            display:flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+        .field label{
+            font-size: 13px;
+            font-weight: 900;
+            color:#374151;
+        }
+
+        input[type="number"], select{
+            width:100%;
+            border-radius: 14px;
+            border: 1px solid rgba(17,24,39,.14);
+            background:#fff;
+            padding: 12px 12px;
+            font-size: 14px;
+            outline:none;
+            transition: box-shadow .15s ease, border-color .15s ease;
+        }
+        input[type="number"]:focus, select:focus{
+            border-color: rgba(124,58,237,.35);
+            box-shadow: 0 0 0 4px rgba(124,58,237,.12);
+        }
+
+        .result{
+            border-radius: 16px;
+            border: 1px solid rgba(17,24,39,.10);
+            background: #ffffff;
+            padding: 12px 12px;
+            min-height: 330px;
+            line-height: 1.75;
+            font-size: 14px;
+            overflow:auto;
+        }
+
+        .muted{
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+            margin-top: 8px;
+        }
+
+        .row{
+            display:flex;
+            align-items:center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .badge{
+            display:inline-flex;
+            align-items:center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 800;
+        }
+        .dot{
+            width: 8px; height: 8px; border-radius: 999px;
+            background:#22c55e;
+            box-shadow: 0 0 0 4px rgba(34,197,94,.12);
+        }
+
+        .btn{
+            appearance:none;
+            border-radius: 14px;
+            padding: 10px 14px;
+            font-weight: 900;
+            font-size: 13px;
+            cursor:pointer;
+            border: 1px solid rgba(17,24,39,.10);
+            transition: transform .08s ease, filter .15s ease;
+            user-select: none;
+            background: linear-gradient(135deg, var(--btn-a), var(--btn-b));
+            color:#fff;
+            box-shadow: 0 10px 20px rgba(37,99,235,.14);
+        }
+        .btn:hover{ transform: translateY(-1px); filter: brightness(1.03); }
+        .btn:active{ transform: translateY(0); }
+
+        .btn-ghost{
+            background:#eef2ff;
+            border-color: rgba(124,58,237,.18);
+            color:#3730a3;
+            box-shadow: none;
+        }
+
+        .invalid{
+            border: 3px solid var(--danger) !important;
+            box-shadow: none !important;
+        }
+
+        .kbd{
+            display:inline-block;
+            padding: 1px 8px;
+            border: 1px solid rgba(17,24,39,.14);
+            border-bottom-width: 2px;
+            border-radius: 10px;
+            background:#fff;
+            font-size: 12px;
+            font-weight: 900;
+            color:#374151;
+            margin: 0 4px;
+        }
+
+        b.head{
+            display:inline-block;
+            margin-bottom: 6px;
+            font-weight: 1000;
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="card" id="lengthCalc">
+        <div class="header">
+            <h1>단위 환산 변환 [길이]</h1>
+            <p class="sub">입력한 길이를 선택한 단위 기준으로 모든 단위(pm~Tm / in~mile / 자~해리)로 자동 환산합니다.</p>
+        </div>
+
+        <div class="content">
+            <div class="tip">
+                <div class="title">💡 사용 팁</div>
+                <ul>
+                    <li>값을 입력하거나 단위를 바꾸면 <b>자동 변환</b>됩니다.</li>
+                    <li>큰 수/작은 수는 <code>a × 10ⁿ</code> 형태로 표시됩니다.</li>
+                    <li><span class="kbd">Ctrl</span>+<span class="kbd">F</span>로 결과에서 단위 이름을 빠르게 찾을 수 있어요.</li>
+                </ul>
+            </div>
+
+            <div class="grid">
+                <!-- Inputs -->
+                <div class="panel">
+                    <div class="field">
+                        <label for="lengthInput">길이 입력</label>
+                        <input type="number" step="any" id="lengthInput" placeholder="예: 10" />
+                    </div>
+
+                    <div class="field">
+                        <label for="length-select">길이 단위</label>
+                        <select id="length-select">
+                            <option value="0.000000000001">pm (피코미터)</option>
+                            <option value="0.000000001">nm (나노미터)</option>
+                            <option value="0.000001">μm (마이크로미터)</option>
+                            <option value="0.001">mm (밀리미터)</option>
+                            <option value="0.01">cm (센티미터)</option>
+                            <option value="1" selected>m (미터)</option>
+                            <option value="1000">km (킬로미터)</option>
+                            <option value="1000000">Mm (메가미터)</option>
+                            <option value="1000000000">Gm (기가미터)</option>
+                            <option value="1000000000000">Tm (테라미터)</option>
+
+                            <option value="0.0254">in (인치)</option>
+                            <option value="0.3048">ft (피트)</option>
+                            <option value="0.9144">yd (야드)</option>
+                            <option value="1609.344">mile (마일)</option>
+
+                            <option value="0.30303">자 (척, 尺)</option>
+                            <option value="1.818182">간 (間)</option>
+                            <option value="109.090909">정 (町)</option>
+                            <option value="392.727273">리 (里)</option>
+                            <option value="1852">해리 (海里)</option>
+                        </select>
+                    </div>
+
+                    <div class="row">
+                        <button class="btn" type="button" id="copyBtn">📋 결과 복사</button>
+                        <button class="btn btn-ghost" type="button" id="resetBtn">🔄 초기화</button>
+                        <span class="badge"><span class="dot"></span> 자동 변환</span>
+                    </div>
+
+                    <div class="muted">
+                        ※ 결과 영역은 스크롤이 가능하며, 복사 버튼은 “텍스트만” 복사합니다.
+                    </div>
+                </div>
+
+                <!-- Result -->
+                <div class="panel">
+                    <div id="lengthResult" class="result" contenteditable="true" aria-label="길이 환산 결과">
+                        <b class="head">[ 단위 환산 결과 ]</b><br>
+                        값 입력 시 결과가 표시됩니다.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const lengthInput = document.getElementById("lengthInput");
+    const lengthSelect = document.getElementById("length-select");
+    const lengthResult = document.getElementById("lengthResult");
+    const copyBtn = document.getElementById("copyBtn");
+    const resetBtn = document.getElementById("resetBtn");
+
+    const lengthUnits = [
+        { name: "pm (피코미터)", factor: 0.000000000001 },
+        { name: "nm (나노미터)", factor: 0.000000001 },
+        { name: "μm (마이크로미터)", factor: 0.000001 },
+        { name: "mm (밀리미터)", factor: 0.001 },
+        { name: "cm (센티미터)", factor: 0.01 },
+        { name: "m (미터)", factor: 1 },
+        { name: "km (킬로미터)", factor: 1000 },
+        { name: "Mm (메가미터)", factor: 1000000 },
+        { name: "Gm (기가미터)", factor: 1000000000 },
+        { name: "Tm (테라미터)", factor: 1000000000000 },
+
+        { name: "in (인치)", factor: 0.0254 },
+        { name: "ft (피트)", factor: 0.3048 },
+        { name: "yd (야드)", factor: 0.9144 },
+        { name: "mile (마일)", factor: 1609.344 },
+
+        { name: "자 (척, 尺)", factor: 0.30303 },
+        { name: "간 (間)", factor: 1.818182 },
+        { name: "정 (町)", factor: 109.090909 },
+        { name: "리 (里)", factor: 392.727273 },
+        { name: "해리 (海里)", factor: 1852 }
+    ];
+
+    function trimTrailingZeros(str) {
+        return str.replace(/(\.\d*?[1-9])0+$/, "$1").replace(/\.0+$/, "");
+    }
+
+    function formatBigNumber(n) {
+        const abs = Math.abs(n);
+        if (abs >= 1_000_000 || (abs > 0 && abs <= 0.000001)) {
+            const [coeff, expRaw] = n.toExponential(6).split("e");
+            const exp = expRaw.replace("+", "");
+            const supers = exp
+            .replace("-", "⁻")
+            .replace(/\d/g, d => "⁰¹²³⁴⁵⁶⁷⁸⁹"[d]);
+            return `${trimTrailingZeros(Number(coeff).toLocaleString(undefined, { maximumFractionDigits: 6 }))} × 10${supers}`;
+        }
+        return trimTrailingZeros(n.toLocaleString(undefined, { maximumFractionDigits: 12 }));
+    }
+
+    function sanitizeText(html) {
+        // 결과 복사용: <br> -> \n, 태그 제거
+        const tmp = document.createElement("div");
+        tmp.innerHTML = html.replaceAll("<br>", "\n").replaceAll("<br/>", "\n").replaceAll("<br />", "\n");
+        return tmp.textContent || tmp.innerText || "";
+    }
+
+    function setInvalid(el, isInvalid){
+        el.classList.toggle("invalid", !!isInvalid);
+    }
+
+    function convertLength() {
+        const inputStr = lengthInput.value.trim();
+        const inputVal = parseFloat(inputStr);
+        const selectedFactor = parseFloat(lengthSelect.value);
+
+        setInvalid(lengthInput, false);
+
+        if (inputStr === "") {
+            lengthResult.innerHTML = "<b class='head'>[ 단위 환산 결과 ]</b><br>값 입력 시 결과가 표시됩니다.";
+            return;
+        }
+
+        if (!Number.isFinite(inputVal)) {
+            setInvalid(lengthInput, true);
+            lengthResult.innerHTML = "항목을 입력해 주세요.";
+            return;
+        }
+
+        // 입력값 × (1단위가 몇 m인지) → m
+        const meterValue = inputVal * selectedFactor;
+
+        const fromUnitText = lengthSelect.options[lengthSelect.selectedIndex].text;
+
+        let output = "<b class='head'>[ 단위 환산 결과 ]</b><br>";
+        lengthUnits.forEach(unit => {
+            // m → 각 단위로 변환: m / (1단위가 몇 m인지)
+            const converted = meterValue / unit.factor;
+            output += `${trimTrailingZeros(inputVal.toLocaleString(undefined, { maximumFractionDigits: 12 }))} ${fromUnitText} = <b>${formatBigNumber(converted)}</b> ${unit.name}<br>`;
+        });
+
+        lengthResult.innerHTML = output;
+    }
+
+    async function copyResult() {
+        const text = sanitizeText(lengthResult.innerHTML).trim();
+        if (!text) return;
+
+        try{
+            await navigator.clipboard.writeText(text);
+            copyBtn.textContent = "✅ 복사됨";
+            setTimeout(() => copyBtn.textContent = "📋 결과 복사", 1200);
+        }catch(e){
+            // fallback
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            document.body.removeChild(ta);
+            copyBtn.textContent = "✅ 복사됨";
+            setTimeout(() => copyBtn.textContent = "📋 결과 복사", 1200);
+        }
+    }
+
+    function resetAll(){
+        lengthInput.value = "";
+        lengthSelect.value = "1";
+        lengthResult.innerHTML = "<b class='head'>[ 단위 환산 결과 ]</b><br>값 입력 시 결과가 표시됩니다.";
+        setInvalid(lengthInput, false);
+        lengthInput.focus();
+    }
+
+    // Events
+    lengthInput.addEventListener("input", convertLength);
+    lengthSelect.addEventListener("change", convertLength);
+    copyBtn.addEventListener("click", copyResult);
+    resetBtn.addEventListener("click", resetAll);
+
+    // init
+    convertLength();
+</script>
+</body>
+</html>
