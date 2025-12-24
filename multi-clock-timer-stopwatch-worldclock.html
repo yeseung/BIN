@@ -1,0 +1,926 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Timer · Stopwatch · World Clock</title>
+
+    <style>
+        /* =========================
+           Clean Glass UI CSS
+        ========================= */
+        :root{
+            --bg1:#e8f0ff;
+            --bg2:#fde7ff;
+            --card:rgba(255,255,255,.72);
+            --stroke:rgba(0,0,0,.10);
+            --shadow:0 10px 30px rgba(0,0,0,.08);
+            --radius:14px;
+
+            --blue1:#3b82f6;
+            --blue2:#1d4ed8;
+            --red1:#ef4444;
+            --red2:#b91c1c;
+            --purple1:#8b5cf6;
+            --purple2:#7c3aed;
+            --text:#111827;
+            --muted:#6b7280;
+            --warn:#f59e0b;
+            --danger:#dc2626;
+        }
+        *{box-sizing:border-box}
+        body{
+            margin:0;
+            font-family:system-ui,-apple-system,"Segoe UI","Noto Sans KR",sans-serif;
+            color:var(--text);
+            background:linear-gradient(135deg,var(--bg1),var(--bg2));
+        }
+        .wrap{
+            max-width:980px;
+            margin:24px auto 60px;
+            padding:0 14px;
+        }
+        h4{margin:0 0 10px 0}
+        p{margin:0 0 10px 0; color:var(--muted); font-size:14px; line-height:1.5}
+
+        .glass-card{
+            background:var(--card);
+            border:1px solid rgba(255,255,255,.45);
+            backdrop-filter:blur(12px);
+            -webkit-backdrop-filter:blur(12px);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            padding:18px;
+            margin:14px 0;
+        }
+
+        .glass-button{
+            border:0;
+            cursor:pointer;
+            padding:12px 16px;
+            border-radius:12px;
+            font-weight:800;
+            color:#fff;
+            background:linear-gradient(135deg,var(--blue1),var(--blue2));
+            box-shadow:0 10px 25px rgba(37,99,235,.28);
+            transition:transform .06s ease, filter .2s ease;
+            user-select:none;
+        }
+        .glass-button:hover{filter:brightness(1.03)}
+        .glass-button:active{transform:translateY(1px)}
+        .glass-button.active{outline:3px solid rgba(255,255,255,.75)}
+        .glass-button.danger{background:linear-gradient(135deg,var(--red1),var(--red2))}
+        .glass-button.purple{background:linear-gradient(135deg,var(--purple1),var(--purple2))}
+        .btn-row{
+            display:flex;
+            flex-wrap:wrap;
+            gap:10px;
+            justify-content:center;
+            align-items:center;
+        }
+
+        .time-display{
+            font-size:44px;
+            font-weight:900;
+            text-align:center;
+            margin:18px 0 12px;
+            letter-spacing:1px;
+            color:#0f172a;
+        }
+        .time-display.warning{color:var(--warn)}
+        .time-display.danger{color:var(--danger)}
+
+        .time-input-group{
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            gap:8px;
+            margin:10px 0 6px;
+        }
+        .time-separator{
+            font-weight:900;
+            font-size:20px;
+            color:#334155;
+        }
+
+        .form-input{
+            width:100%;
+            border:1px solid var(--stroke);
+            border-radius:12px;
+            padding:10px 12px;
+            font-size:16px;
+            background:rgba(255,255,255,.9);
+            outline:none;
+        }
+        .form-input:focus{
+            border-color:rgba(37,99,235,.45);
+            box-shadow:0 0 0 4px rgba(37,99,235,.12);
+        }
+        .time-input{
+            width:90px;
+            text-align:center;
+            font-weight:800;
+        }
+
+        .timer-options{
+            margin:16px 0;
+            padding:16px;
+            background:rgba(255,255,255,.22);
+            border:1px solid rgba(255,255,255,.35);
+            border-radius:12px;
+        }
+
+        .error-message{
+            display:none;
+            margin-top:10px;
+            padding:12px 14px;
+            border-radius:12px;
+            background:rgba(239,68,68,.12);
+            border:1px solid rgba(239,68,68,.25);
+            color:#991b1b;
+            font-weight:700;
+        }
+
+        .warning-box{
+            margin-top:14px;
+            padding:14px;
+            border-radius:12px;
+            background:#fff3cd;
+            border:1px solid #ffe69c;
+            color:#856404;
+            font-size:13px;
+            line-height:1.6;
+        }
+
+        /* Stopwatch lap style */
+        .alarm-item{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            padding:10px 12px;
+            border-radius:12px;
+            background:rgba(255,255,255,.85);
+            border:1px solid var(--stroke);
+            margin-bottom:8px;
+            font-weight:700;
+        }
+        .alarm-time{color:#0f172a}
+        .alarm-label{color:#334155; font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace}
+
+        /* World clock */
+        .main-world-clock{
+            text-align:center;
+            padding:18px;
+            border-radius:14px;
+            background:linear-gradient(135deg, rgba(59,130,246,.18), rgba(139,92,246,.14));
+            border:1px solid rgba(255,255,255,.5);
+            margin-bottom:14px;
+        }
+        .main-clock-date{font-weight:800; color:#0f172a; opacity:.9}
+        .main-clock-time{font-size:34px; font-weight:900; margin-top:6px; color:#0f172a}
+        .main-clock-city{margin-top:6px; color:var(--muted); font-weight:800}
+
+        .world-clock-grid{
+            display:grid;
+            grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
+            gap:12px;
+        }
+        .world-clock-item{
+            padding:14px;
+            border-radius:14px;
+            background:rgba(255,255,255,.82);
+            border:2px solid transparent;
+            cursor:pointer;
+            transition:transform .06s ease, border-color .2s ease;
+        }
+        .world-clock-item:hover{transform:translateY(-1px)}
+        .world-clock-item.selected{border-color:rgba(37,99,235,.7)}
+        .world-clock-city{font-weight:900; margin-bottom:4px}
+        .world-clock-country{color:var(--muted); font-size:12px; margin-bottom:8px}
+        .world-clock-time{font-size:20px; font-weight:900; margin-bottom:4px}
+        .world-clock-date{font-size:12px; color:var(--muted)}
+        .world-clock-utc{font-size:12px; color:#475569; margin-top:6px; font-weight:800}
+
+        /* Modal */
+        .timer-completion-message{
+            position:fixed;
+            inset:0;
+            background:rgba(0,0,0,.60);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            z-index:9999;
+        }
+        .completion-content{
+            width:min(420px, calc(100% - 28px));
+            background:rgba(17,24,39,.96);
+            border:1px solid rgba(255,255,255,.12);
+            border-radius:16px;
+            padding:18px;
+            text-align:center;
+            box-shadow:0 25px 60px rgba(0,0,0,.35);
+        }
+        .completion-content h4{margin:0 0 8px 0}
+        .completion-content p{margin:0 0 14px 0; color:rgba(255,255,255,.82)}
+        .completion-content .form-input{max-width:260px; margin:0 auto 14px; display:block}
+
+        @media (max-width:480px){
+            .time-display{font-size:34px}
+            .main-clock-time{font-size:28px}
+            .time-input{width:76px}
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <h4><b>타이머, 스톱워치, 세계시각, 바탕화면 시계</b></h4>
+    <p>바닐라 자바스크립트 + Glass UI. (타이머 비밀번호/소리 알림 포함)</p>
+
+    <!-- 기능 선택 버튼 -->
+    <div class="glass-card">
+        <div class="btn-row">
+            <button onclick="showSection('timer')" id="timer-btn" class="glass-button active">⏲️ 타이머</button>
+            <button onclick="showSection('stopwatch')" id="stopwatch-btn" class="glass-button">⏱️ 스톱워치</button>
+            <button onclick="showSection('worldclock')" id="worldclock-btn" class="glass-button">🌍 세계시각</button>
+            <button onclick="openDesktopClock()" class="glass-button purple">🖥️ 바탕화면 시계</button>
+        </div>
+    </div>
+
+    <!-- 타이머 섹션 -->
+    <div id="timer-section" class="glass-card">
+        <h5 style="color:#2c5aa0; margin:0 0 14px 0; font-size:18px; font-weight:900;">⏲️ 타이머</h5>
+
+        <div class="time-display" id="timer-display">00:00:00</div>
+
+        <div class="time-input-group">
+            <input type="number" id="timer-hours" class="form-input time-input" min="0" max="23" value="0" placeholder="시">
+            <span class="time-separator">:</span>
+            <input type="number" id="timer-minutes" class="form-input time-input" min="0" max="59" value="0" placeholder="분">
+            <span class="time-separator">:</span>
+            <input type="number" id="timer-seconds" class="form-input time-input" min="0" max="59" value="0" placeholder="초">
+        </div>
+
+        <div class="timer-options">
+            <h6 style="color:#2c5aa0; margin:0 0 10px 0; font-size:16px; font-weight:900;">⚙️ 타이머 옵션</h6>
+
+            <div style="margin:10px 0;">
+                <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                    <input type="checkbox" id="sound-alert" checked style="transform:scale(1.15);">
+                    <span style="font-weight:700;">🔊 소리로 알림 (타이머 완료 시 소리 재생)</span>
+                </label>
+            </div>
+
+            <div style="margin:10px 0;">
+                <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                    <input type="checkbox" id="password-protection" style="transform:scale(1.15);">
+                    <span style="font-weight:700;">🔒 비밀번호 설정 (타이머 완료 시 비밀번호 입력 필요)</span>
+                </label>
+            </div>
+
+            <div id="password-input-container" style="margin-top:12px; display:none;">
+                <label for="timer-password" style="display:block; margin-bottom:6px; font-weight:900; color:#2c5aa0;">
+                    비밀번호 설정
+                </label>
+                <input type="password" id="timer-password" class="form-input" placeholder="비밀번호를 입력하세요" style="max-width:320px;">
+                <small style="color:var(--muted); font-size:12px; display:block; margin-top:6px;">
+                    타이머 완료 시 이 비밀번호를 입력해야 타이머가 해제됩니다.
+                </small>
+            </div>
+        </div>
+
+        <div class="btn-row" style="margin-top:10px;">
+            <button onclick="startTimer()" id="timer-start-btn" class="glass-button">Start</button>
+            <button onclick="pauseTimer()" id="timer-pause-btn" class="glass-button" style="display:none;">Pause</button>
+            <button onclick="resetTimer()" class="glass-button danger">Reset</button>
+        </div>
+
+        <div id="error-message" class="error-message"></div>
+    </div>
+
+    <!-- 스톱워치 섹션 -->
+    <div id="stopwatch-section" class="glass-card" style="display:none;">
+        <h5 style="color:#2c5aa0; margin:0 0 14px 0; font-size:18px; font-weight:900;">⏱️ 스톱워치</h5>
+
+        <div class="time-display" id="stopwatch-display">00:00:00.00</div>
+
+        <div class="btn-row" style="margin-top:10px;">
+            <button onclick="startStopwatch()" id="stopwatch-start-btn" class="glass-button">Start</button>
+            <button onclick="pauseStopwatch()" id="stopwatch-pause-btn" class="glass-button" style="display:none;">Pause</button>
+            <button onclick="resetStopwatch()" class="glass-button danger">Reset</button>
+            <button onclick="lapStopwatch()" id="stopwatch-lap-btn" class="glass-button" style="display:none;">Lap</button>
+        </div>
+
+        <div id="lap-times" style="max-height:220px; overflow:auto; margin-top:14px;"></div>
+    </div>
+
+    <!-- 세계시각 섹션 -->
+    <div id="worldclock-section" class="glass-card" style="display:none;">
+        <h5 style="color:#2c5aa0; margin:0 0 14px 0; font-size:18px; font-weight:900;">🌍 세계시각</h5>
+
+        <div id="main-world-clock" class="main-world-clock">
+            <div id="main-clock-date" class="main-clock-date">날짜</div>
+            <div id="main-clock-time" class="main-clock-time">시간</div>
+            <div id="main-clock-city" class="main-clock-city">서울</div>
+        </div>
+
+        <div class="world-clock-grid" id="world-clock-grid"></div>
+
+        <div class="btn-row" style="margin-top:14px;">
+            <button onclick="refreshWorldClock()" class="glass-button">🔄 새로고침</button>
+        </div>
+    </div>
+
+    <div class="warning-box">
+        <strong>⚠️ 주의사항</strong><br>
+        • 브라우저를 닫으면 타이머가 중단됩니다<br>
+        • <strong>모바일 사용 시:</strong> 화면이 꺼지거나 다른 앱으로 전환하면 타이머가 중단됩니다<br>
+        • 중요한 시간 관리는 스마트폰 기본 타이머 앱을 사용하세요
+    </div>
+</div>
+
+<!-- 타이머 완료 알림 -->
+<div id="timer-completion-message" class="timer-completion-message" style="display:none;">
+    <div class="completion-content">
+        <h4 style="color:white;">⏰ 타이머 완료!</h4>
+        <p>타이머가 완료되었습니다.</p>
+        <button onclick="dismissTimerMessage()" class="glass-button">확인</button>
+    </div>
+</div>
+
+<!-- 비밀번호 해제 성공 -->
+<div id="password-success-message" class="timer-completion-message" style="display:none;">
+    <div class="completion-content">
+        <h4 style="color:white;">✅ 비밀번호 해제!</h4>
+        <p>비밀번호가 맞습니다! 타이머가 해제되었습니다.</p>
+        <button onclick="dismissPasswordMessage()" class="glass-button">확인</button>
+    </div>
+</div>
+
+<!-- 비밀번호 오류 -->
+<div id="password-error-message" class="timer-completion-message" style="display:none;">
+    <div class="completion-content">
+        <h4 style="color:white;">❌ 비밀번호 오류!</h4>
+        <p>비밀번호가 틀렸습니다. 다시 시도해주세요.</p>
+        <button onclick="dismissPasswordErrorMessage()" class="glass-button">다시 시도</button>
+    </div>
+</div>
+
+<!-- 비밀번호 입력 모달 -->
+<div id="password-input-modal" class="timer-completion-message" style="display:none;">
+    <div class="completion-content">
+        <h4 style="color:white;">🔒 비밀번호 입력</h4>
+        <p>타이머가 완료되었습니다!<br>비밀번호를 입력하여 타이머를 해제하세요.</p>
+        <input type="password" id="modal-password-input" class="form-input" placeholder="비밀번호를 입력하세요">
+        <button onclick="checkPassword()" class="glass-button">확인</button>
+    </div>
+</div>
+
+<script>
+    /* =========================
+       Global Vars
+    ========================= */
+    let timerInterval = null;
+    let stopwatchInterval = null;
+    let worldClockInterval = null;
+    let mainClockInterval = null;
+
+    let timerSeconds = 0;
+
+    let stopwatchStartTime = 0;
+    let stopwatchPausedTime = 0;
+    let stopwatchLapCount = 0;
+
+    let selectedCity = 'Asia/Seoul';
+    let timerPassword = '';
+    let isTimerLocked = false;
+
+    let soundInterval = null;
+
+    /* =========================
+       World Cities
+    ========================= */
+    const worldCities = [
+        { name:'서울', country:'대한민국', flag:'🇰🇷', timezone:'Asia/Seoul', utcOffset:'+09:00' },
+        { name:'도쿄', country:'일본', flag:'🇯🇵', timezone:'Asia/Tokyo', utcOffset:'+09:00' },
+        { name:'베이징', country:'중국', flag:'🇨🇳', timezone:'Asia/Shanghai', utcOffset:'+08:00' },
+        { name:'홍콩', country:'홍콩', flag:'🇭🇰', timezone:'Asia/Hong_Kong', utcOffset:'+08:00' },
+        { name:'싱가포르', country:'싱가포르', flag:'🇸🇬', timezone:'Asia/Singapore', utcOffset:'+08:00' },
+        { name:'뭄바이', country:'인도', flag:'🇮🇳', timezone:'Asia/Kolkata', utcOffset:'+05:30' },
+        { name:'두바이', country:'UAE', flag:'🇦🇪', timezone:'Asia/Dubai', utcOffset:'+04:00' },
+        { name:'모스크바', country:'러시아', flag:'🇷🇺', timezone:'Europe/Moscow', utcOffset:'+03:00' },
+        { name:'런던', country:'영국', flag:'🇬🇧', timezone:'Europe/London', utcOffset:'+00:00' },
+        { name:'파리', country:'프랑스', flag:'🇫🇷', timezone:'Europe/Paris', utcOffset:'+01:00' },
+        { name:'베를린', country:'독일', flag:'🇩🇪', timezone:'Europe/Berlin', utcOffset:'+01:00' },
+        { name:'로마', country:'이탈리아', flag:'🇮🇹', timezone:'Europe/Rome', utcOffset:'+01:00' },
+        { name:'뉴욕', country:'미국', flag:'🇺🇸', timezone:'America/New_York', utcOffset:'-05:00' },
+        { name:'로스앤젤레스', country:'미국', flag:'🇺🇸', timezone:'America/Los_Angeles', utcOffset:'-08:00' },
+        { name:'시카고', country:'미국', flag:'🇺🇸', timezone:'America/Chicago', utcOffset:'-06:00' },
+        { name:'시드니', country:'호주', flag:'🇦🇺', timezone:'Australia/Sydney', utcOffset:'+10:00' }
+    ];
+
+    /* =========================
+       Section Switch
+    ========================= */
+    function showSection(sectionName){
+        ['timer-section','stopwatch-section','worldclock-section'].forEach(id=>{
+            document.getElementById(id).style.display = 'none';
+        });
+        ['timer-btn','stopwatch-btn','worldclock-btn'].forEach(id=>{
+            document.getElementById(id).classList.remove('active');
+        });
+
+        document.getElementById(sectionName+'-section').style.display = 'block';
+        document.getElementById(sectionName+'-btn').classList.add('active');
+
+        if(sectionName === 'worldclock'){
+            startWorldClock();
+            startMainClock();
+        }else{
+            stopWorldClock();
+            stopMainClock();
+        }
+    }
+
+    /* =========================
+       Helpers
+    ========================= */
+    function showError(message){
+        const errorDiv = document.getElementById('error-message');
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+        setTimeout(()=> errorDiv.style.display='none', 3000);
+    }
+
+    function formatTime(seconds){
+        const h = Math.floor(seconds/3600);
+        const m = Math.floor((seconds%3600)/60);
+        const s = seconds%60;
+        return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+
+    function formatStopwatchTime(ms){
+        const totalSeconds = Math.floor(ms/1000);
+        const h = Math.floor(totalSeconds/3600);
+        const m = Math.floor((totalSeconds%3600)/60);
+        const s = totalSeconds%60;
+        const cs = Math.floor((ms%1000)/10);
+        return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${String(cs).padStart(2,'0')}`;
+    }
+
+    /* =========================
+       TIMER
+    ========================= */
+    function startTimer(){
+        // 이미 돌고 있으면 재시작(중복 interval 방지)
+        if(timerInterval) clearInterval(timerInterval);
+
+        const hours = parseInt(document.getElementById('timer-hours').value,10) || 0;
+        const minutes = parseInt(document.getElementById('timer-minutes').value,10) || 0;
+        const seconds = parseInt(document.getElementById('timer-seconds').value,10) || 0;
+
+        timerSeconds = hours*3600 + minutes*60 + seconds;
+        if(timerSeconds <= 0){
+            showError('시간을 입력해주세요.');
+            return;
+        }
+
+        // 비밀번호 옵션
+        if(document.getElementById('password-protection').checked){
+            const pw = document.getElementById('timer-password').value.trim();
+            if(!pw){
+                showError('비밀번호를 설정해주세요.');
+                return;
+            }
+            timerPassword = pw;
+        }else{
+            timerPassword = '';
+        }
+
+        document.getElementById('timer-start-btn').style.display = 'none';
+        document.getElementById('timer-pause-btn').style.display = 'inline-block';
+
+        updateTimerDisplay();
+
+        timerInterval = setInterval(()=>{
+            timerSeconds--;
+            updateTimerDisplay();
+            if(timerSeconds <= 0){
+                clearInterval(timerInterval);
+                timerInterval = null;
+                timerFinished();
+            }
+        },1000);
+    }
+
+    function pauseTimer(){
+        if(!timerInterval) return;
+        clearInterval(timerInterval);
+        timerInterval = null;
+        document.getElementById('timer-start-btn').style.display = 'inline-block';
+        document.getElementById('timer-pause-btn').style.display = 'none';
+        updateTimerDisplay();
+    }
+
+    function resetTimer(){
+        clearInterval(timerInterval);
+        timerInterval = null;
+        stopTimerSound();
+
+        timerSeconds = 0;
+        isTimerLocked = false;
+        timerPassword = '';
+
+        document.getElementById('timer-hours').value = '0';
+        document.getElementById('timer-minutes').value = '0';
+        document.getElementById('timer-seconds').value = '0';
+
+        document.getElementById('timer-start-btn').style.display = 'inline-block';
+        document.getElementById('timer-pause-btn').style.display = 'none';
+        updateTimerDisplay();
+    }
+
+    function updateTimerDisplay(){
+        const display = document.getElementById('timer-display');
+        display.textContent = formatTime(timerSeconds);
+
+        // 실행 중일 때만 경고 색상
+        if(timerInterval){
+            if(timerSeconds <= 10) display.className = 'time-display danger';
+            else if(timerSeconds <= 60) display.className = 'time-display warning';
+            else display.className = 'time-display';
+        }else{
+            display.className = 'time-display';
+        }
+    }
+
+    function timerFinished(){
+        // 소리 옵션
+        if(document.getElementById('sound-alert').checked){
+            playTimerSound();
+        }
+
+        // 비밀번호 보호
+        if(document.getElementById('password-protection').checked){
+            isTimerLocked = true;
+            showPasswordDialog();
+        }else{
+            showTimerCompletionMessage();
+        }
+    }
+
+    function playTimerSound(){
+        if(soundInterval) return;
+
+        let audioContext = null;
+
+        function beep(){
+            try{
+                if(!audioContext || audioContext.state === 'closed'){
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                const osc1 = audioContext.createOscillator();
+                const osc2 = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+
+                osc1.connect(gain);
+                osc2.connect(gain);
+                gain.connect(audioContext.destination);
+
+                osc1.type = 'sine';
+                osc2.type = 'sine';
+                osc1.frequency.setValueAtTime(440, audioContext.currentTime);
+                osc2.frequency.setValueAtTime(880, audioContext.currentTime);
+
+                gain.gain.setValueAtTime(0.25, audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+                osc1.start();
+                osc2.start();
+                osc1.stop(audioContext.currentTime + 0.5);
+                osc2.stop(audioContext.currentTime + 0.5);
+            }catch(e){
+                console.error(e);
+            }
+        }
+
+        beep();
+        soundInterval = setInterval(beep, 1000);
+    }
+
+    function stopTimerSound(){
+        if(soundInterval){
+            clearInterval(soundInterval);
+            soundInterval = null;
+        }
+    }
+
+    function showTimerCompletionMessage(){
+        document.getElementById('timer-completion-message').style.display = 'flex';
+    }
+
+    function dismissTimerMessage(){
+        stopTimerSound();
+        document.getElementById('timer-completion-message').style.display = 'none';
+        resetTimerUI();
+    }
+
+    function showPasswordDialog(){
+        document.getElementById('modal-password-input').value = '';
+        document.getElementById('password-input-modal').style.display = 'flex';
+        setTimeout(()=> document.getElementById('modal-password-input').focus(), 80);
+    }
+
+    function checkPassword(){
+        const input = document.getElementById('modal-password-input').value;
+        if(input === timerPassword){
+            stopTimerSound();
+            document.getElementById('password-input-modal').style.display = 'none';
+            showPasswordSuccessMessage();
+        }else{
+            document.getElementById('password-input-modal').style.display = 'none';
+            showPasswordErrorMessage();
+        }
+    }
+
+    function showPasswordSuccessMessage(){
+        document.getElementById('password-success-message').style.display = 'flex';
+    }
+    function dismissPasswordMessage(){
+        document.getElementById('password-success-message').style.display = 'none';
+        resetTimerUI();
+    }
+    function showPasswordErrorMessage(){
+        document.getElementById('password-error-message').style.display = 'flex';
+    }
+    function dismissPasswordErrorMessage(){
+        document.getElementById('password-error-message').style.display = 'none';
+        setTimeout(showPasswordDialog, 80);
+    }
+
+    function resetTimerUI(){
+        stopTimerSound();
+        isTimerLocked = false;
+        document.getElementById('timer-start-btn').style.display = 'inline-block';
+        document.getElementById('timer-pause-btn').style.display = 'none';
+        document.getElementById('timer-display').className = 'time-display';
+    }
+
+    /* =========================
+       STOPWATCH
+    ========================= */
+    function startStopwatch(){
+        if(stopwatchInterval) clearInterval(stopwatchInterval);
+
+        stopwatchStartTime = Date.now() - stopwatchPausedTime;
+
+        document.getElementById('stopwatch-start-btn').style.display = 'none';
+        document.getElementById('stopwatch-pause-btn').style.display = 'inline-block';
+        document.getElementById('stopwatch-lap-btn').style.display = 'inline-block';
+
+        stopwatchInterval = setInterval(()=>{
+            const elapsed = Date.now() - stopwatchStartTime;
+            document.getElementById('stopwatch-display').textContent = formatStopwatchTime(elapsed);
+        }, 10);
+    }
+
+    function pauseStopwatch(){
+        if(!stopwatchInterval) return;
+        clearInterval(stopwatchInterval);
+        stopwatchInterval = null;
+
+        stopwatchPausedTime = Date.now() - stopwatchStartTime;
+
+        document.getElementById('stopwatch-start-btn').style.display = 'inline-block';
+        document.getElementById('stopwatch-pause-btn').style.display = 'none';
+    }
+
+    function resetStopwatch(){
+        clearInterval(stopwatchInterval);
+        stopwatchInterval = null;
+
+        stopwatchStartTime = 0;
+        stopwatchPausedTime = 0;
+        stopwatchLapCount = 0;
+
+        document.getElementById('stopwatch-display').textContent = '00:00:00.00';
+        document.getElementById('stopwatch-start-btn').style.display = 'inline-block';
+        document.getElementById('stopwatch-pause-btn').style.display = 'none';
+        document.getElementById('stopwatch-lap-btn').style.display = 'none';
+        document.getElementById('lap-times').innerHTML = '';
+    }
+
+    function lapStopwatch(){
+        if(!stopwatchInterval) return;
+
+        const elapsed = Date.now() - stopwatchStartTime;
+        stopwatchLapCount++;
+
+        const lapDiv = document.createElement('div');
+        lapDiv.className = 'alarm-item';
+        lapDiv.innerHTML = `
+    <span class="alarm-time">랩 ${stopwatchLapCount}</span>
+    <span class="alarm-label">${formatStopwatchTime(elapsed)}</span>
+  `;
+        document.getElementById('lap-times').prepend(lapDiv);
+    }
+
+    /* =========================
+       WORLD CLOCK
+    ========================= */
+    function startWorldClock(){
+        updateWorldClock();
+        if(worldClockInterval) clearInterval(worldClockInterval);
+        worldClockInterval = setInterval(updateWorldClock, 1000);
+    }
+    function stopWorldClock(){
+        clearInterval(worldClockInterval);
+        worldClockInterval = null;
+    }
+    function updateWorldClock(){
+        const grid = document.getElementById('world-clock-grid');
+        grid.innerHTML = '';
+
+        worldCities.forEach(city=>{
+            try{
+                const now = new Date();
+                const cityTime = new Date(now.toLocaleString('en-US', { timeZone: city.timezone }));
+
+                const hh = String(cityTime.getHours()).padStart(2,'0');
+                const mm = String(cityTime.getMinutes()).padStart(2,'0');
+                const ss = String(cityTime.getSeconds()).padStart(2,'0');
+
+                const yyyy = cityTime.getFullYear();
+                const mo = String(cityTime.getMonth()+1).padStart(2,'0');
+                const da = String(cityTime.getDate()).padStart(2,'0');
+
+                const div = document.createElement('div');
+                div.className = `world-clock-item ${city.timezone === selectedCity ? 'selected' : ''}`;
+                div.onclick = ()=> selectCity(city.timezone);
+
+                div.innerHTML = `
+        <div class="world-clock-city">${city.flag} ${city.name}</div>
+        <div class="world-clock-country">${city.country}</div>
+        <div class="world-clock-time">${hh}:${mm}:${ss}</div>
+        <div class="world-clock-date">${yyyy}.${mo}.${da}</div>
+        <div class="world-clock-utc">UTC${city.utcOffset}</div>
+      `;
+                grid.appendChild(div);
+            }catch(e){
+                console.error(e);
+            }
+        });
+    }
+    function refreshWorldClock(){ updateWorldClock(); }
+
+    function startMainClock(){
+        updateMainClock();
+        if(mainClockInterval) clearInterval(mainClockInterval);
+        mainClockInterval = setInterval(updateMainClock, 1000);
+    }
+    function stopMainClock(){
+        clearInterval(mainClockInterval);
+        mainClockInterval = null;
+    }
+    function updateMainClock(){
+        try{
+            const now = new Date();
+            const cityTime = new Date(now.toLocaleString('en-US', { timeZone: selectedCity }));
+
+            const days = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
+            const yyyy = cityTime.getFullYear();
+            const mo = cityTime.getMonth()+1;
+            const da = cityTime.getDate();
+            const day = days[cityTime.getDay()];
+
+            let h = cityTime.getHours();
+            const m = String(cityTime.getMinutes()).padStart(2,'0');
+            const s = String(cityTime.getSeconds()).padStart(2,'0');
+            const ampm = h < 12 ? "AM" : "PM";
+            h = h%12 || 12;
+            const hh = String(h).padStart(2,'0');
+
+            const cityObj = worldCities.find(c=>c.timezone===selectedCity);
+            const cityName = cityObj ? cityObj.name : '서울';
+
+            document.getElementById('main-clock-date').textContent = `${yyyy}-${mo}-${da}-${day}`;
+            document.getElementById('main-clock-time').textContent = `${ampm} ${hh} : ${m} : ${s}`;
+            document.getElementById('main-clock-city').textContent = cityName;
+        }catch(e){
+            console.error(e);
+        }
+    }
+    function selectCity(timezone){
+        selectedCity = timezone;
+        updateMainClock();
+        updateWorldClock();
+    }
+
+    /* =========================
+       Desktop Clock (Popup)
+    ========================= */
+    function openDesktopClock(){
+        const clockHTML = `
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>Desktop Clock</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@700;900&display=swap');
+  body{
+    margin:0;
+    background:black;
+    color:white;
+    font-family:'Noto Sans KR',system-ui,-apple-system,'Segoe UI',sans-serif;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    height:100vh;
+    overflow:hidden;
+  }
+  #date{font-size:16px;color:#cbd5e1;margin-bottom:4px;font-weight:700}
+  #time{font-size:56px;font-weight:900;letter-spacing:2px}
+  .brand{margin-top:8px;font-size:12px;color:#475569}
+  .close-btn{
+    position:absolute;top:10px;right:10px;
+    width:34px;height:34px;border-radius:50%;
+    border:0;cursor:pointer;
+    background:rgba(255,255,255,.18);color:#fff;
+    font-size:16px;font-weight:900;
+  }
+  .close-btn:hover{background:rgba(255,255,255,.26)}
+  @media(max-width:480px){
+    #time{font-size:40px;letter-spacing:1px}
+  }
+</style>
+</head>
+<body>
+<button class="close-btn" onclick="window.close()">×</button>
+<div id="date">날짜</div>
+<div id="time">시간</div>
+<div class="brand"></div>
+
+<script>
+  function updateClock(){
+    const now = new Date();
+    const days=["SUN","MON","TUE","WED","THU","FRI","SAT"];
+    const yyyy=now.getFullYear();
+    const mo=now.getMonth()+1;
+    const da=now.getDate();
+    const day=days[now.getDay()];
+
+    let h=now.getHours();
+    const m=String(now.getMinutes()).padStart(2,'0');
+    const s=String(now.getSeconds()).padStart(2,'0');
+    const ampm=h<12?"AM":"PM";
+    h=h%12||12;
+    const hh=String(h).padStart(2,'0');
+
+    document.getElementById('date').textContent=\`\${yyyy}-\${mo}-\${da}-\${day}\`;
+    document.getElementById('time').textContent=\`\${ampm} \${hh} : \${m} : \${s}\`;
+  }
+  updateClock();
+  setInterval(updateClock,1000);
+<\/script>
+</body>
+</html>`;
+
+        const win = window.open(
+            '',
+            'desktopClock',
+            'width=520,height=230,left=100,top=100,resizable=no,toolbar=no,menubar=no,location=no,status=no,scrollbars=no'
+        );
+
+        if(!win){
+            alert('팝업이 차단되었습니다. 팝업 차단을 해제하고 다시 시도해주세요.');
+            return;
+        }
+        win.document.open();
+        win.document.write(clockHTML);
+        win.document.close();
+    }
+
+    /* =========================
+       Init
+    ========================= */
+    document.addEventListener('DOMContentLoaded', ()=>{
+        updateTimerDisplay();
+        updateWorldClock();
+        updateMainClock();
+
+        document.getElementById('password-protection').addEventListener('change', function(){
+            const box = document.getElementById('password-input-container');
+            box.style.display = this.checked ? 'block' : 'none';
+            if(!this.checked) document.getElementById('timer-password').value = '';
+        });
+
+        document.getElementById('modal-password-input').addEventListener('keydown', (e)=>{
+            if(e.key === 'Enter') checkPassword();
+        });
+    });
+</script>
+</body>
+</html>

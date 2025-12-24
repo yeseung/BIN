@@ -1,0 +1,734 @@
+<!--
+File name example (English): classic_radio_masterpieces.html
+Vanilla JS + clean CSS (glass style)
+-->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>24hr Radio & Masterpieces</title>
+    <style>
+        :root{
+            --bg1:#0b1220;
+            --bg2:#0f172a;
+            --card:rgba(255,255,255,.08);
+            --card2:rgba(255,255,255,.06);
+            --stroke:rgba(255,255,255,.14);
+            --text:#e5e7eb;
+            --muted:#9ca3af;
+            --accent1:#60a5fa;
+            --accent2:#34d399;
+            --danger:#ef4444;
+            --warn:#f59e0b;
+            --shadow:0 18px 60px rgba(0,0,0,.35);
+            --radius:16px;
+        }
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", Arial, sans-serif;
+            color:var(--text);
+            background:
+                    radial-gradient(1200px 800px at 20% 10%, rgba(96,165,250,.25), transparent 55%),
+                    radial-gradient(900px 600px at 80% 20%, rgba(52,211,153,.18), transparent 55%),
+                    linear-gradient(180deg, var(--bg1), var(--bg2));
+            min-height:100vh;
+            padding:18px;
+        }
+        .container{ max-width:980px; margin:0 auto; }
+        .glass-card{
+            background:linear-gradient(180deg, var(--card), var(--card2));
+            border:1px solid var(--stroke);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            padding:18px;
+            margin:14px 0;
+            backdrop-filter: blur(10px);
+        }
+        h4{ margin:0 0 10px 0; font-size:18px; }
+        label{ color:var(--text); }
+        .form-input{
+            width:100%;
+            padding:11px 12px;
+            border-radius:12px;
+            border:1px solid rgba(255,255,255,.16);
+            background:rgba(0,0,0,.25);
+            color:var(--text);
+            outline:none;
+        }
+        .form-input:focus{ border-color: rgba(96,165,250,.65); box-shadow: 0 0 0 3px rgba(96,165,250,.18); }
+        .row{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+        .row > *{ flex:1; }
+        .warning-box{
+            border:1px solid rgba(245,158,11,.35);
+            background:rgba(245,158,11,.10);
+            padding:10px 12px;
+            border-radius:12px;
+        }
+        .warning-text{ margin:0; font-size:13px; color:#fde68a; }
+        .glass-button{
+            appearance:none;
+            border:1px solid rgba(255,255,255,.18);
+            background: linear-gradient(135deg, rgba(96,165,250,.95), rgba(59,130,246,.85));
+            color:white;
+            padding:10px 14px;
+            border-radius:12px;
+            cursor:pointer;
+            font-weight:700;
+            box-shadow: 0 10px 28px rgba(59,130,246,.25);
+            transition: transform .08s ease, filter .15s ease;
+        }
+        .glass-button:hover{ filter:brightness(1.05); }
+        .glass-button:active{ transform: translateY(1px); }
+        .glass-button.secondary{
+            background: linear-gradient(135deg, rgba(149,165,166,.95), rgba(127,140,141,.85));
+            box-shadow: 0 10px 28px rgba(0,0,0,.25);
+        }
+        .glass-button.outline{
+            background: rgba(255,255,255,.08);
+            box-shadow:none;
+        }
+
+        .player-status{ display:flex; justify-content:flex-start; }
+        .status-badge{
+            display:inline-flex; align-items:center; gap:6px;
+            font-size:12px;
+            padding:6px 10px;
+            border-radius:999px;
+            border:1px solid rgba(255,255,255,.18);
+            background: rgba(0,0,0,.22);
+            color:var(--muted);
+            user-select:none;
+        }
+        .status-badge.is-playing{ color:#bbf7d0; border-color: rgba(52,211,153,.35); background: rgba(52,211,153,.10); }
+        .status-badge.is-loading{ color:#bfdbfe; border-color: rgba(96,165,250,.35); background: rgba(96,165,250,.10); }
+        .status-badge.is-stopped{ color:#e5e7eb; }
+        .status-badge.is-error{ color:#fecaca; border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.10); }
+
+        #visualizer{
+            width:100%;
+            height:140px;
+            border-radius:14px;
+            border:1px solid rgba(255,255,255,.12);
+            background: rgba(0,0,0,.25);
+        }
+
+        .player-controls{
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:10px;
+            flex-wrap:wrap;
+            margin-top:14px;
+        }
+        .volume-range{
+            width:220px;
+            accent-color: var(--accent1);
+        }
+
+        /* Masterpiece */
+        .masterpiece-card{ overflow:hidden; }
+        .masterpiece-controls{ display:flex; justify-content:center; }
+        .masterpiece-frame{
+            border-radius:16px;
+            border:1px solid rgba(255,255,255,.12);
+            background: rgba(0,0,0,.22);
+            overflow:hidden;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+        }
+        .masterpiece-stage{
+            position:relative;
+            width:100%;
+            height:420px;
+            background: radial-gradient(600px 300px at 50% 30%, rgba(255,255,255,.10), transparent 60%);
+        }
+        .masterpiece-img{
+            position:absolute; inset:0;
+            width:100%; height:100%;
+            object-fit:contain;
+            opacity:0;
+            transform: scale(1.01);
+            transition: opacity .65s ease;
+            will-change: opacity;
+        }
+        .masterpiece-img.is-active{ opacity:1; }
+        .masterpiece-caption{
+            padding:12px 2px 0 2px;
+            color:var(--muted);
+            font-size:13px;
+            line-height:1.45;
+        }
+        .error-message{
+            margin-top:10px;
+            padding:10px 12px;
+            border-radius:12px;
+            border:1px solid rgba(239,68,68,.35);
+            background: rgba(239,68,68,.10);
+            color:#fecaca;
+            display:none;
+        }
+
+        .small-note{ font-size:12px; color: var(--muted); margin-top:8px; }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="glass-card">
+        <h4><b>24시간 클래식 라디오 (24hr Classic Radio) &#038; 명화 감상</b></h4>
+
+        <div class="warning-box" style="margin-top:12px;">
+            <p class="warning-text">일부 채널은 방송국 사정으로 사전 고지 없이 서비스가 중단될 수 있습니다.</p>
+        </div>
+
+        <div class="row" style="margin-top:14px;">
+            <div>
+                <label style="display:block; margin-bottom:8px;"><b>음악 채널 선택</b></label>
+                <select id="stationSelect" class="form-input">
+                    <optgroup label="Classic">
+                        <option value="classic">Swiss Classic</option>
+                        <option value="wqxr">WQXR</option>
+                        <option value="radioClassique">Radio Classique</option>
+                        <option value="franceMusique">France Musique</option>
+                        <option value="npoKlassiek">NPO Klassiek (NPO Radio 4)</option>
+                    </optgroup>
+                    <optgroup label="Jazz">
+                        <option value="jazz">Swiss Jazz</option>
+                    </optgroup>
+                    <optgroup label="Chillout / Ambient">
+                        <option value="grooveSalad">SomaFM Groove Salad</option>
+                        <option value="droneZone">SomaFM Drone Zone</option>
+                        <option value="spaceStation">SomaFM Space Station Soma</option>
+                    </optgroup>
+                    <optgroup label="Electronic / Chill">
+                        <option value="beatBlender">SomaFM Beat Blender</option>
+                        <option value="nightride">Nightride FM (Synthwave)</option>
+                        <option value="chillSynth">Nightride FM (ChillSynth)</option>
+                    </optgroup>
+                    <optgroup label="Indie / Alternative / Mix">
+                        <option value="radioParadise">Radio Paradise (Main Mix)</option>
+                    </optgroup>
+                    <optgroup label="Lounge / Soft Pop">
+                        <option value="lush">SomaFM Lush</option>
+                        <option value="secretAgent">SomaFM Secret Agent</option>
+                    </optgroup>
+                    <optgroup label="POP">
+                        <option value="poptron">SomaFM PopTron</option>
+                    </optgroup>
+                    <optgroup label="New Age">
+                        <option value="deepSpaceOne">SomaFM Deep Space One</option>
+                        <option value="fluid">SomaFM Fluid</option>
+                    </optgroup>
+                </select>
+                <div class="small-note">※ 스트림 주소는 공개된 라디오 스트림을 사용합니다. (CORS/HTTPS 정책에 따라 일부 브라우저에서 재생이 제한될 수 있습니다.)</div>
+            </div>
+
+            <div style="max-width:320px;">
+                <label for="vizSelect" style="display:block; margin-bottom:8px; font-weight:700;">시각화</label>
+                <select id="vizSelect" class="form-input">
+                    <option value="bars">Bars (Log)</option>
+                    <option value="spectrum">Spectrum (Line)</option>
+                    <option value="waveform">Waveform</option>
+                </select>
+                <div class="small-note">※ 캔버스는 AudioContext가 활성화된 뒤(재생 버튼 클릭) 동작합니다.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-card" style="text-align:center;">
+        <div class="player-status" style="text-align:left; margin-bottom:10px;">
+            <span id="statusBadge" class="status-badge is-stopped">정지</span>
+        </div>
+
+        <canvas id="visualizer" width="900" height="140"></canvas>
+
+        <div class="player-controls">
+            <button id="btnPlayPause" class="glass-button">▶ 재생</button>
+            <button id="btnMute" class="glass-button secondary">🔇 음소거</button>
+
+            <div style="display:flex; align-items:center; gap:10px;">
+                <span style="font-size:12px; color:var(--muted);">볼륨</span>
+                <input id="volumeRange" type="range" min="0" max="1" step="0.01" value="0.8" class="volume-range" />
+            </div>
+        </div>
+
+        <audio id="radioPlayer" crossorigin="anonymous" playsinline></audio>
+
+        <div id="playerError" class="error-message"></div>
+    </div>
+
+    <div class="glass-card masterpiece-card">
+        <div class="masterpiece-controls">
+            <button id="btnMasterpiece" class="glass-button outline">🖼 명화 감상 시작</button>
+        </div>
+
+        <div id="masterpieceSection" style="display:none; margin-top:14px;">
+            <div class="masterpiece-frame">
+                <div class="masterpiece-stage">
+                    <img id="masterpieceImageA" class="masterpiece-img is-active" alt="masterpiece A" />
+                    <img id="masterpieceImageB" class="masterpiece-img" alt="masterpiece B" />
+                </div>
+            </div>
+            <div id="masterpieceCaption" class="masterpiece-caption"></div>
+            <div id="masterpieceError" class="error-message">명화를 불러오지 못했습니다. 잠시 후 다시 시도하세요.</div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    /*********************************************************************
+     * 1) RADIO STREAM LIST (HTTPS)
+     * - 일부 스트림은 방송사/네트워크 정책에 따라 차단될 수 있습니다.
+     * - 스트림 URL은 공개된 라디오 스트림을 사용합니다.
+     *********************************************************************/
+    const STATIONS = {
+        // SRG SSR (Swiss) – 공개 스트림
+        classic: {
+            title: "Swiss Classic",
+            url: "https://stream.srg-ssr.ch/m/rsc_de/mp3_128"
+        },
+        jazz: {
+            title: "Swiss Jazz",
+            url: "https://stream.srg-ssr.ch/m/rsj/mp3_128"
+        },
+
+        // WQXR – 공개 라이브 스트림
+        wqxr: {
+            title: "WQXR",
+            url: "https://stream.wqxr.org/wqxr.aac"
+        },
+
+        // Radio Classique (FR) – 공개 스트림(변경 가능)
+        radioClassique: {
+            title: "Radio Classique",
+            url: "https://radioclassique.ice.infomaniak.ch/radioclassique-high.mp3"
+        },
+
+        // France Musique – 공개 스트림
+        franceMusique: {
+            title: "France Musique",
+            url: "https://icecast.radiofrance.fr/francemusique-hifi.aac"
+        },
+
+        // NPO Klassiek (NPO Radio 4) – 공개 스트림
+        npoKlassiek: {
+            title: "NPO Klassiek (NPO Radio 4)",
+            url: "https://icecast.omroep.nl/radio4-bb-mp3"
+        },
+
+        // SomaFM – 공식 공개 스트림
+        grooveSalad: { title: "SomaFM Groove Salad", url: "https://ice1.somafm.com/groovesalad-128-mp3" },
+        droneZone:  { title: "SomaFM Drone Zone",   url: "https://ice1.somafm.com/dronezone-128-mp3" },
+        spaceStation:{ title:"SomaFM Space Station Soma", url:"https://ice1.somafm.com/spacestation-128-mp3" },
+        beatBlender:{ title: "SomaFM Beat Blender", url: "https://ice1.somafm.com/beatblender-128-mp3" },
+        lush:       { title: "SomaFM Lush",         url: "https://ice1.somafm.com/lush-128-mp3" },
+        secretAgent:{ title: "SomaFM Secret Agent", url: "https://ice1.somafm.com/secretagent-128-mp3" },
+        poptron:    { title: "SomaFM PopTron",      url: "https://ice1.somafm.com/poptron-128-mp3" },
+        deepSpaceOne:{ title:"SomaFM Deep Space One",url:"https://ice1.somafm.com/deepspaceone-128-mp3" },
+        fluid:      { title: "SomaFM Fluid",        url: "https://ice1.somafm.com/fluid-128-mp3" },
+
+        // Radio Paradise – 공식 공개 스트림
+        radioParadise: { title: "Radio Paradise (Main Mix)", url: "https://stream.radioparadise.com/mp3-192" },
+
+        // Nightride FM – 공개 스트림(변경 가능)
+        // 만약 재생이 안 되면, mp3 대신 m3u8/aac를 제공하는 다른 엔드포인트로 교체해야 할 수 있습니다.
+        nightride:   { title: "Nightride FM (Synthwave)", url: "https://stream.nightride.fm/nightride.mp3" },
+        chillSynth:  { title: "Nightride FM (ChillSynth)", url: "https://stream.nightride.fm/chillsynth.mp3" }
+    };
+
+    /*********************************************************************
+     * 2) DOM
+     *********************************************************************/
+    const stationSelect = document.getElementById("stationSelect");
+    const vizSelect = document.getElementById("vizSelect");
+    const btnPlayPause = document.getElementById("btnPlayPause");
+    const btnMute = document.getElementById("btnMute");
+    const volumeRange = document.getElementById("volumeRange");
+    const audio = document.getElementById("radioPlayer");
+    const statusBadge = document.getElementById("statusBadge");
+    const playerError = document.getElementById("playerError");
+
+    const canvas = document.getElementById("visualizer");
+    const ctx = canvas.getContext("2d");
+
+    /*********************************************************************
+     * 3) PLAYER STATE
+     *********************************************************************/
+    let isPlaying = false;
+
+    // WebAudio (Visualizer)
+    let audioCtx = null;
+    let analyser = null;
+    let sourceNode = null;
+    let dataArray = null;
+    let rafId = null;
+
+    // Resize canvas for crisp rendering
+    function resizeCanvas() {
+        const dpr = Math.max(1, window.devicePixelRatio || 1);
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = Math.floor(rect.width * dpr);
+        canvas.height = Math.floor(rect.height * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    function setStatus(type, text) {
+        statusBadge.className = "status-badge " + type;
+        statusBadge.textContent = text;
+    }
+
+    function showPlayerError(msg) {
+        playerError.style.display = "block";
+        playerError.textContent = msg;
+    }
+    function clearPlayerError() {
+        playerError.style.display = "none";
+        playerError.textContent = "";
+    }
+
+    /*********************************************************************
+     * 4) STREAM SETUP
+     *********************************************************************/
+    function applyStation(key) {
+        const st = STATIONS[key];
+        if (!st) return;
+
+        clearPlayerError();
+        setStatus("is-loading", "불러오는 중…");
+
+        // 재생 중이면 끊김 없이 교체를 시도 (브라우저 정책/스트림 특성상 잠깐 끊길 수 있음)
+        audio.src = st.url;
+        audio.load();
+
+        // 이미 재생 중이었다면 자동 재생 시도
+        if (isPlaying) {
+            audio.play().catch(err => {
+                setStatus("is-error", "재생 실패");
+                showPlayerError("재생을 시작할 수 없습니다. (브라우저 자동재생 정책/스트림 오류 가능)\n" + err);
+                isPlaying = false;
+                updatePlayButton();
+            });
+        }
+    }
+
+    function updatePlayButton() {
+        btnPlayPause.textContent = isPlaying ? "⏸ 일시정지" : "▶ 재생";
+    }
+
+    // select change
+    stationSelect.addEventListener("change", () => {
+        applyStation(stationSelect.value);
+    });
+
+    /*********************************************************************
+     * 5) VISUALIZER (Web Audio API)
+     *********************************************************************/
+    function ensureAudioGraph() {
+        if (audioCtx) return;
+
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 2048;
+        analyser.smoothingTimeConstant = 0.85;
+
+        // IMPORTANT: createMediaElementSource는 1번만 생성 가능
+        sourceNode = audioCtx.createMediaElementSource(audio);
+
+        sourceNode.connect(analyser);
+        analyser.connect(audioCtx.destination);
+
+        dataArray = new Uint8Array(analyser.frequencyBinCount);
+    }
+
+    function startVisualizer() {
+        stopVisualizer();
+        ensureAudioGraph();
+
+        const mode = () => vizSelect.value;
+
+        const draw = () => {
+            const w = canvas.getBoundingClientRect().width;
+            const h = canvas.getBoundingClientRect().height;
+
+            // background
+            ctx.clearRect(0, 0, w, h);
+            ctx.fillStyle = "rgba(0,0,0,0.20)";
+            ctx.fillRect(0, 0, w, h);
+
+            // grid
+            ctx.strokeStyle = "rgba(255,255,255,0.06)";
+            ctx.lineWidth = 1;
+            for (let i = 1; i <= 6; i++) {
+                const y = (h / 7) * i;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(w, y);
+                ctx.stroke();
+            }
+
+            const m = mode();
+
+            if (m === "waveform") {
+                analyser.getByteTimeDomainData(dataArray);
+
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = "rgba(96,165,250,0.95)";
+                ctx.beginPath();
+
+                const slice = w / dataArray.length;
+                let x = 0;
+
+                for (let i = 0; i < dataArray.length; i++) {
+                    const v = dataArray[i] / 128.0;
+                    const y = (v * h) / 2;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                    x += slice;
+                }
+                ctx.stroke();
+
+            } else {
+                analyser.getByteFrequencyData(dataArray);
+
+                if (m === "bars") {
+                    const barCount = 64;
+                    const step = Math.floor(dataArray.length / barCount);
+                    const barW = w / barCount;
+
+                    for (let i = 0; i < barCount; i++) {
+                        // log-ish weighting
+                        const idx = i * step;
+                        const raw = dataArray[idx] / 255;
+                        const v = Math.pow(raw, 0.60);
+
+                        const barH = v * (h - 10);
+                        const x = i * barW;
+                        const y = h - barH;
+
+                        // gradient-ish by alpha only (no hard-coded colors beyond 1)
+                        ctx.fillStyle = `rgba(52,211,153,${0.15 + v * 0.85})`;
+                        ctx.fillRect(x + 2, y, Math.max(2, barW - 4), barH);
+                    }
+
+                } else if (m === "spectrum") {
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = "rgba(52,211,153,0.95)";
+                    ctx.beginPath();
+
+                    const n = 256;
+                    const step = Math.floor(dataArray.length / n);
+                    for (let i = 0; i < n; i++) {
+                        const v = (dataArray[i * step] / 255);
+                        const y = h - (v * (h - 10)) - 5;
+                        const x = (i / (n - 1)) * w;
+                        if (i === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                    ctx.stroke();
+                }
+            }
+
+            rafId = requestAnimationFrame(draw);
+        };
+
+        rafId = requestAnimationFrame(draw);
+    }
+
+    function stopVisualizer() {
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = null;
+    }
+
+    vizSelect.addEventListener("change", () => {
+        if (isPlaying) startVisualizer();
+    });
+
+    /*********************************************************************
+     * 6) CONTROLS
+     *********************************************************************/
+    btnPlayPause.addEventListener("click", async () => {
+        clearPlayerError();
+
+        try {
+            // iOS/Safari/autoplay policy: must resume context on user gesture
+            ensureAudioGraph();
+            if (audioCtx.state === "suspended") await audioCtx.resume();
+
+            if (!audio.src) {
+                applyStation(stationSelect.value);
+            }
+
+            if (!isPlaying) {
+                setStatus("is-loading", "불러오는 중…");
+                await audio.play();
+                isPlaying = true;
+                setStatus("is-playing", "재생 중");
+                startVisualizer();
+            } else {
+                audio.pause();
+                isPlaying = false;
+                setStatus("is-stopped", "일시정지");
+                stopVisualizer();
+            }
+            updatePlayButton();
+        } catch (err) {
+            isPlaying = false;
+            updatePlayButton();
+            setStatus("is-error", "재생 실패");
+            showPlayerError("재생을 시작할 수 없습니다. (브라우저 정책/스트림 오류 가능)\n" + err);
+        }
+    });
+
+    btnMute.addEventListener("click", () => {
+        audio.muted = !audio.muted;
+        btnMute.textContent = audio.muted ? "🔈 음소거 해제" : "🔇 음소거";
+    });
+
+    volumeRange.addEventListener("input", () => {
+        audio.volume = Math.max(0, Math.min(1, parseFloat(volumeRange.value)));
+    });
+
+    // audio events
+    audio.addEventListener("playing", () => {
+        if (isPlaying) setStatus("is-playing", "재생 중");
+    });
+    audio.addEventListener("waiting", () => {
+        if (isPlaying) setStatus("is-loading", "버퍼링…");
+    });
+    audio.addEventListener("pause", () => {
+        if (!audio.ended && isPlaying === false) setStatus("is-stopped", "일시정지");
+    });
+    audio.addEventListener("error", () => {
+        setStatus("is-error", "오류");
+        showPlayerError("오디오 스트림 오류가 발생했습니다. 다른 채널을 선택해 보세요.");
+        isPlaying = false;
+        updatePlayButton();
+        stopVisualizer();
+    });
+
+    // 초기값
+    audio.volume = parseFloat(volumeRange.value);
+    updatePlayButton();
+    setStatus("is-stopped", "정지");
+    applyStation(stationSelect.value);
+
+    /*********************************************************************
+     * 7) MASTERPIECE (Wikimedia Commons Random File)
+     * - MediaWiki API: CORS 지원( origin=* )
+     * - 파일(namespace=6)에서 랜덤 1개 가져와 이미지 URL + 설명 구성
+     *********************************************************************/
+    const btnMasterpiece = document.getElementById("btnMasterpiece");
+    const masterpieceSection = document.getElementById("masterpieceSection");
+    const imgA = document.getElementById("masterpieceImageA");
+    const imgB = document.getElementById("masterpieceImageB");
+    const cap = document.getElementById("masterpieceCaption");
+    const masterpieceError = document.getElementById("masterpieceError");
+
+    let masterpieceRunning = false;
+    let masterpieceTimer = null;
+    let activeIsA = true;
+
+    async function fetchRandomArtwork() {
+        // 1) random file title
+        const r1 = await fetch("https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&list=random&rnnamespace=6&rnlimit=1");
+        const j1 = await r1.json();
+        const title = j1?.query?.random?.[0]?.title;
+        if (!title) throw new Error("No random file");
+
+        // 2) imageinfo (url + descriptionurl + extmetadata)
+        const url = "https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&prop=imageinfo&iiprop=url|extmetadata&titles=" + encodeURIComponent(title);
+        const r2 = await fetch(url);
+        const j2 = await r2.json();
+        const pages = j2?.query?.pages;
+        const page = pages ? pages[Object.keys(pages)[0]] : null;
+        const info = page?.imageinfo?.[0];
+        if (!info?.url) throw new Error("No image url");
+
+        const meta = info.extmetadata || {};
+        const artist = meta.Artist?.value ? stripHtml(meta.Artist.value) : "";
+        const artTitle = meta.ObjectName?.value ? stripHtml(meta.ObjectName.value) : stripHtml(title.replace(/^File:/, ""));
+        const date = meta.DateTimeOriginal?.value || meta.Date?.value ? stripHtml((meta.DateTimeOriginal?.value || meta.Date?.value)) : "";
+        const license = meta.LicenseShortName?.value ? stripHtml(meta.LicenseShortName.value) : "";
+        const credit = meta.Credit?.value ? stripHtml(meta.Credit.value) : "";
+        const source = meta.ImageDescription?.value ? stripHtml(meta.ImageDescription.value) : "";
+
+        return {
+            imgUrl: info.url,
+            caption: [
+                `<b>${escapeHtml(artTitle)}</b>`,
+                artist ? `작가: ${escapeHtml(artist)}` : "",
+                date ? `연도: ${escapeHtml(date)}` : "",
+                credit ? `출처: ${escapeHtml(credit)}` : "",
+                license ? `라이선스: ${escapeHtml(license)}` : "",
+                `<span style="opacity:.85;">(Wikimedia Commons)</span>`
+            ].filter(Boolean).join(" · ")
+        };
+    }
+
+    function stripHtml(s){
+        return String(s).replace(/<[^>]*>/g, "").replace(/\s+/g," ").trim();
+    }
+    function escapeHtml(s){
+        return String(s)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    async function showNextMasterpiece() {
+        masterpieceError.style.display = "none";
+        try {
+            const art = await fetchRandomArtwork();
+
+            const nextImg = activeIsA ? imgB : imgA;
+            const prevImg = activeIsA ? imgA : imgB;
+
+            // preload
+            await new Promise((resolve, reject) => {
+                nextImg.onload = () => resolve();
+                nextImg.onerror = () => reject(new Error("Image load failed"));
+                nextImg.src = art.imgUrl;
+            });
+
+            // crossfade
+            nextImg.classList.add("is-active");
+            prevImg.classList.remove("is-active");
+            activeIsA = !activeIsA;
+
+            cap.innerHTML = art.caption;
+        } catch (e) {
+            masterpieceError.style.display = "block";
+        }
+    }
+
+    function startMasterpiece() {
+        if (masterpieceRunning) return;
+        masterpieceRunning = true;
+        masterpieceSection.style.display = "block";
+        btnMasterpiece.textContent = "⏹ 명화 감상 중지";
+
+        showNextMasterpiece();
+        masterpieceTimer = setInterval(showNextMasterpiece, 20000); // 20초마다 교체
+    }
+
+    function stopMasterpiece() {
+        masterpieceRunning = false;
+        btnMasterpiece.textContent = "🖼 명화 감상 시작";
+        clearInterval(masterpieceTimer);
+        masterpieceTimer = null;
+        masterpieceSection.style.display = "none";
+    }
+
+    btnMasterpiece.addEventListener("click", () => {
+        if (!masterpieceRunning) startMasterpiece();
+        else stopMasterpiece();
+    });
+</script>
+</body>
+</html>

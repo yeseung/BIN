@@ -1,0 +1,517 @@
+<!--
+File name example (English): text_compare_tool.html
+Vanilla JavaScript + clean CSS
+- Two textareas (A/B)
+- Diff highlight (line-based) + summary counts
+- Copy / Swap / Clear
+-->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>텍스트 비교</title>
+    <style>
+        :root{
+            --bg:#f3f4f6;
+            --card:#ffffff;
+            --stroke:#e5e7eb;
+            --text:#111827;
+            --muted:#6b7280;
+            --accent:#2563eb;
+            --accent2:#60a5fa;
+            --shadow: 0 18px 40px rgba(17,24,39,.10);
+            --radius:14px;
+
+            --add-bg:#e8fff1;
+            --add-bd:#10b981;
+            --del-bg:#fff1f2;
+            --del-bd:#ef4444;
+            --chg-bg:#fff7ed;
+            --chg-bd:#f59e0b;
+        }
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+        .wrap{
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 26px 16px 40px;
+        }
+
+        /* Title */
+        .title{
+            text-align:center;
+            font-weight: 900;
+            letter-spacing: -0.3px;
+            margin: 6px 0 18px;
+            font-size: 40px;
+        }
+        .divider{
+            height:1px;
+            background: var(--stroke);
+            margin: 0 0 26px 0;
+        }
+
+        /* Toolbar */
+        .toolbar{
+            display:flex;
+            flex-wrap:wrap;
+            gap:10px;
+            align-items:center;
+            justify-content:center;
+            margin-bottom: 16px;
+        }
+        .btn{
+            appearance:none;
+            border:1px solid var(--stroke);
+            background: white;
+            color: var(--text);
+            padding: 10px 14px;
+            border-radius: 12px;
+            cursor:pointer;
+            font-weight: 800;
+            box-shadow: 0 10px 20px rgba(0,0,0,.05);
+            transition: transform .06s ease, filter .15s ease, border-color .15s ease;
+        }
+        .btn:hover{ filter: brightness(1.02); border-color:#d1d5db; }
+        .btn:active{ transform: translateY(1px); }
+
+        .btn.primary{
+            background: linear-gradient(135deg, var(--accent), #1d4ed8);
+            border-color: rgba(37,99,235,.25);
+            color: white;
+        }
+        .btn.soft{
+            background: linear-gradient(135deg, #eef2ff, #eff6ff);
+            border-color:#dbeafe;
+            color:#1e3a8a;
+        }
+        .btn.gray{
+            background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+            border-color:#e5e7eb;
+            color:#374151;
+        }
+
+        .summary{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .pill{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            padding: 8px 10px;
+            background: #fff;
+            border:1px solid var(--stroke);
+            border-radius: 999px;
+            box-shadow: 0 10px 20px rgba(0,0,0,.05);
+        }
+        .dot{
+            width:10px; height:10px; border-radius: 999px;
+            background: #9ca3af;
+        }
+        .dot.add{ background: var(--add-bd); }
+        .dot.del{ background: var(--del-bd); }
+        .dot.chg{ background: var(--chg-bd); }
+
+        /* Editors */
+        .grid{
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-top: 10px;
+        }
+        .card{
+            background: var(--card);
+            border: 1px solid var(--stroke);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow:hidden;
+        }
+        .card .head{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--stroke);
+            background: #fafafa;
+        }
+        .card .head b{ font-size: 14px; }
+        .card .head small{ color: var(--muted); font-weight: 700; }
+        textarea{
+            width:100%;
+            height: 420px;
+            border:0;
+            outline:none;
+            padding: 16px 16px;
+            font-size: 16px;
+            line-height: 1.6;
+            resize: vertical;
+            color: var(--text);
+            background: #fff;
+        }
+        textarea::placeholder{ color:#9ca3af; }
+
+        /* Results (diff) */
+        .result-wrap{
+            margin-top: 18px;
+            display:none;
+        }
+        .result-title{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            margin-bottom:10px;
+        }
+        .result-title h3{
+            margin:0;
+            font-size: 18px;
+            font-weight: 900;
+        }
+        .result{
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+        .diffbox{
+            background:#fff;
+            border:1px solid var(--stroke);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow:hidden;
+        }
+        .diffbox .head{
+            padding: 12px 14px;
+            border-bottom:1px solid var(--stroke);
+            background:#fafafa;
+            font-weight: 900;
+            font-size: 14px;
+        }
+        .diff{
+            margin:0;
+            padding: 10px 0;
+            max-height: 420px;
+            overflow:auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .line{
+            display:grid;
+            grid-template-columns: 58px 1fr;
+            gap:10px;
+            padding: 4px 14px;
+            border-left: 4px solid transparent;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .ln{
+            color:#9ca3af;
+            text-align:right;
+            user-select:none;
+        }
+        .txt{ color:#111827; }
+
+        .line.add{ background: var(--add-bg); border-left-color: var(--add-bd); }
+        .line.del{ background: var(--del-bg); border-left-color: var(--del-bd); }
+        .line.chg{ background: var(--chg-bg); border-left-color: var(--chg-bd); }
+
+        /* tiny help */
+        .hint{
+            text-align:center;
+            color: var(--muted);
+            margin-top: 10px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 920px){
+            .grid, .result{ grid-template-columns: 1fr; }
+            textarea{ height: 320px; }
+            .title{ font-size: 34px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="title">텍스트 비교</div>
+    <div class="divider"></div>
+
+    <div class="toolbar">
+        <button class="btn primary" id="btnCompare">🔍 비교하기</button>
+        <button class="btn soft" id="btnSwap">🔁 좌↔우 바꾸기</button>
+        <button class="btn gray" id="btnCopyA">📋 왼쪽 복사</button>
+        <button class="btn gray" id="btnCopyB">📋 오른쪽 복사</button>
+        <button class="btn gray" id="btnClear">🗑️ 모두 지우기</button>
+
+        <div class="summary">
+            <span class="pill"><span class="dot add"></span>추가 <span id="cntAdd">0</span></span>
+            <span class="pill"><span class="dot del"></span>삭제 <span id="cntDel">0</span></span>
+            <span class="pill"><span class="dot chg"></span>변경 <span id="cntChg">0</span></span>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <div class="head">
+                <b>버전 A</b>
+                <small id="metaA">0 글자</small>
+            </div>
+            <textarea id="textA" placeholder="여기에 텍스트의 하나의 버전을 붙여넣기 해 주세요..."></textarea>
+        </div>
+
+        <div class="card">
+            <div class="head">
+                <b>버전 B</b>
+                <small id="metaB">0 글자</small>
+            </div>
+            <textarea id="textB" placeholder="여기에 텍스트의 다른 버전을 붙여넣기 해 주세요..."></textarea>
+        </div>
+    </div>
+
+    <div class="hint">팁: 줄 단위(Line-based)로 비교합니다. (문장/단어 단위가 필요하면 말씀해 주세요.)</div>
+
+    <div class="result-wrap" id="resultWrap">
+        <div class="result-title">
+            <h3>비교 결과</h3>
+            <div class="summary" style="justify-content:flex-end;">
+                <span class="pill">총 라인 A <span id="linesA">0</span></span>
+                <span class="pill">총 라인 B <span id="linesB">0</span></span>
+            </div>
+        </div>
+
+        <div class="result">
+            <div class="diffbox">
+                <div class="head">A (기준)</div>
+                <pre class="diff" id="diffA"></pre>
+            </div>
+            <div class="diffbox">
+                <div class="head">B (비교)</div>
+                <pre class="diff" id="diffB"></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const $ = (s) => document.querySelector(s);
+
+    const textA = $("#textA");
+    const textB = $("#textB");
+    const metaA = $("#metaA");
+    const metaB = $("#metaB");
+
+    const cntAdd = $("#cntAdd");
+    const cntDel = $("#cntDel");
+    const cntChg = $("#cntChg");
+
+    const resultWrap = $("#resultWrap");
+    const diffA = $("#diffA");
+    const diffB = $("#diffB");
+    const linesA = $("#linesA");
+    const linesB = $("#linesB");
+
+    function updateMeta(){
+        metaA.textContent = `${textA.value.length.toLocaleString()} 글자`;
+        metaB.textContent = `${textB.value.length.toLocaleString()} 글자`;
+    }
+
+    textA.addEventListener("input", updateMeta);
+    textB.addEventListener("input", updateMeta);
+    updateMeta();
+
+    // --- Diff helpers (LCS based, line-level) ---
+    function splitLines(str){
+        // keep empty lines too
+        return str.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
+    }
+
+    function lcsMatrix(a, b){
+        const n = a.length, m = b.length;
+        const dp = Array.from({length: n+1}, () => new Array(m+1).fill(0));
+        for (let i=1; i<=n; i++){
+            for (let j=1; j<=m; j++){
+                if (a[i-1] === b[j-1]) dp[i][j] = dp[i-1][j-1] + 1;
+                else dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]);
+            }
+        }
+        return dp;
+    }
+
+    function buildOps(a, b){
+        const dp = lcsMatrix(a, b);
+        let i = a.length, j = b.length;
+        const ops = []; // {type: 'equal'|'del'|'add', aLine?, bLine?}
+
+        while (i > 0 || j > 0){
+            if (i > 0 && j > 0 && a[i-1] === b[j-1]){
+                ops.push({ type:"equal", aLine: a[i-1], bLine: b[j-1] });
+                i--; j--;
+            } else if (j > 0 && (i === 0 || dp[i][j-1] >= dp[i-1][j])){
+                ops.push({ type:"add", bLine: b[j-1] });
+                j--;
+            } else {
+                ops.push({ type:"del", aLine: a[i-1] });
+                i--;
+            }
+        }
+        ops.reverse();
+
+        // Pair del+add as "chg" where possible (visual grouping)
+        const paired = [];
+        for (let k=0; k<ops.length; k++){
+            const cur = ops[k];
+            const next = ops[k+1];
+
+            if (cur.type === "del" && next && next.type === "add"){
+                paired.push({ type:"chg", aLine: cur.aLine, bLine: next.bLine });
+                k++; // skip next
+            } else {
+                paired.push(cur);
+            }
+        }
+        return paired;
+    }
+
+    function esc(s){
+        return String(s)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function renderDiff(ops){
+        let aNo = 0, bNo = 0;
+        let add=0, del=0, chg=0;
+
+        const aHtml = [];
+        const bHtml = [];
+
+        ops.forEach(op => {
+            if (op.type === "equal"){
+                aNo++; bNo++;
+                aHtml.push(lineHtml(aNo, op.aLine, ""));
+                bHtml.push(lineHtml(bNo, op.bLine, ""));
+            }
+            else if (op.type === "del"){
+                aNo++; del++;
+                aHtml.push(lineHtml(aNo, op.aLine, "del"));
+                bHtml.push(lineHtml("", "", "del")); // empty placeholder
+            }
+            else if (op.type === "add"){
+                bNo++; add++;
+                aHtml.push(lineHtml("", "", "add"));
+                bHtml.push(lineHtml(bNo, op.bLine, "add"));
+            }
+            else if (op.type === "chg"){
+                aNo++; bNo++; chg++;
+                aHtml.push(lineHtml(aNo, op.aLine, "chg"));
+                bHtml.push(lineHtml(bNo, op.bLine, "chg"));
+            }
+        });
+
+        return { aHtml: aHtml.join(""), bHtml: bHtml.join(""), add, del, chg, aNo, bNo };
+    }
+
+    function lineHtml(ln, text, cls){
+        const safeLn = ln === "" ? "" : String(ln).padStart(4, " ");
+        const safeText = text === "" ? "\u00A0" : esc(text); // keep height for empty
+        const className = cls ? `line ${cls}` : "line";
+        return `
+        <div class="${className}">
+          <div class="ln">${safeLn}</div>
+          <div class="txt">${safeText}</div>
+        </div>
+      `;
+    }
+
+    function compare(){
+        const aLines = splitLines(textA.value);
+        const bLines = splitLines(textB.value);
+
+        linesA.textContent = aLines.length.toLocaleString();
+        linesB.textContent = bLines.length.toLocaleString();
+
+        const ops = buildOps(aLines, bLines);
+        const out = renderDiff(ops);
+
+        diffA.innerHTML = out.aHtml;
+        diffB.innerHTML = out.bHtml;
+
+        cntAdd.textContent = out.add.toLocaleString();
+        cntDel.textContent = out.del.toLocaleString();
+        cntChg.textContent = out.chg.toLocaleString();
+
+        resultWrap.style.display = "block";
+        // scroll results into view (nice UX)
+        resultWrap.scrollIntoView({ behavior:"smooth", block:"start" });
+    }
+
+    // --- Buttons ---
+    $("#btnCompare").addEventListener("click", compare);
+
+    $("#btnSwap").addEventListener("click", () => {
+        const tmp = textA.value;
+        textA.value = textB.value;
+        textB.value = tmp;
+        updateMeta();
+    });
+
+    async function copyText(str){
+        const t = str.trim();
+        if (!t) return alert("복사할 내용이 없습니다.");
+        try{
+            await navigator.clipboard.writeText(t);
+        }catch{
+            // fallback
+            const ta = document.createElement("textarea");
+            ta.value = t;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            ta.remove();
+        }
+        alert("복사되었습니다!");
+    }
+
+    $("#btnCopyA").addEventListener("click", () => copyText(textA.value));
+    $("#btnCopyB").addEventListener("click", () => copyText(textB.value));
+
+    $("#btnClear").addEventListener("click", () => {
+        if (!confirm("모두 지울까요?")) return;
+        textA.value = "";
+        textB.value = "";
+        updateMeta();
+
+        diffA.innerHTML = "";
+        diffB.innerHTML = "";
+        cntAdd.textContent = "0";
+        cntDel.textContent = "0";
+        cntChg.textContent = "0";
+        linesA.textContent = "0";
+        linesB.textContent = "0";
+        resultWrap.style.display = "none";
+    });
+
+    // Optional: Ctrl/Cmd + Enter to compare quickly
+    document.addEventListener("keydown", (e) => {
+        const isMac = /Mac|iPhone|iPad|iPod/i.test(navigator.platform);
+        const hotkey = (isMac ? e.metaKey : e.ctrlKey) && e.key === "Enter";
+        if (hotkey) compare();
+    });
+</script>
+</body>
+</html>

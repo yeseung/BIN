@@ -1,0 +1,456 @@
+<!--
+File name example (English): english_word_maker.html
+Vanilla JS + clean CSS (glass style)
+-->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Word Maker</title>
+    <style>
+        :root{
+            --bg1:#0b1220;
+            --bg2:#0f172a;
+            --card:rgba(255,255,255,.08);
+            --card2:rgba(255,255,255,.06);
+            --stroke:rgba(255,255,255,.14);
+            --text:#e5e7eb;
+            --muted:#9ca3af;
+            --accent1:#60a5fa;
+            --accent2:#34d399;
+            --warn:#f59e0b;
+            --shadow:0 18px 60px rgba(0,0,0,.35);
+            --radius:16px;
+        }
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", Arial, sans-serif;
+            color:var(--text);
+            background:
+                    radial-gradient(1200px 800px at 20% 10%, rgba(96,165,250,.25), transparent 55%),
+                    radial-gradient(900px 600px at 80% 20%, rgba(52,211,153,.18), transparent 55%),
+                    linear-gradient(180deg, var(--bg1), var(--bg2));
+            min-height:100vh;
+            padding:18px;
+        }
+        .container{ max-width:980px; margin:0 auto; }
+        .glass-card{
+            background:linear-gradient(180deg, var(--card), var(--card2));
+            border:1px solid var(--stroke);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            padding:18px;
+            margin:14px 0;
+            backdrop-filter: blur(10px);
+        }
+        h4{ margin:0 0 10px 0; font-size:18px; }
+        p{ margin:8px 0; color:var(--muted); }
+        .info-box{
+            border:1px solid rgba(96,165,250,.28);
+            background: rgba(96,165,250,.10);
+            padding:10px 12px;
+            border-radius:12px;
+            color:#bfdbfe;
+            font-size:13px;
+            margin:10px 0 6px 0;
+        }
+        .form-input{
+            width:100%;
+            padding:11px 12px;
+            border-radius:12px;
+            border:1px solid rgba(255,255,255,.16);
+            background:rgba(0,0,0,.25);
+            color:var(--text);
+            outline:none;
+        }
+        .form-input:focus{
+            border-color: rgba(96,165,250,.65);
+            box-shadow: 0 0 0 3px rgba(96,165,250,.18);
+        }
+
+        /* segmented */
+        .segmented{
+            display:inline-flex;
+            gap:6px;
+            padding:6px;
+            border-radius:14px;
+            border:1px solid rgba(255,255,255,.14);
+            background: rgba(0,0,0,.18);
+        }
+        .seg-btn{
+            border:1px solid rgba(255,255,255,.14);
+            background: rgba(255,255,255,.06);
+            color: var(--text);
+            padding:8px 12px;
+            border-radius:12px;
+            cursor:pointer;
+            font-weight:700;
+            font-size:13px;
+            transition: filter .15s ease, transform .08s ease;
+        }
+        .seg-btn:hover{ filter:brightness(1.05); }
+        .seg-btn:active{ transform: translateY(1px); }
+        .seg-btn.active{
+            background: linear-gradient(135deg, rgba(96,165,250,.95), rgba(59,130,246,.85));
+            border-color: rgba(96,165,250,.35);
+            box-shadow: 0 10px 28px rgba(59,130,246,.20);
+        }
+
+        .glass-button{
+            appearance:none;
+            border:1px solid rgba(255,255,255,.18);
+            background: linear-gradient(135deg, rgba(96,165,250,.95), rgba(59,130,246,.85));
+            color:white;
+            padding:10px 14px;
+            border-radius:12px;
+            cursor:pointer;
+            font-weight:800;
+            box-shadow: 0 10px 28px rgba(59,130,246,.25);
+            transition: transform .08s ease, filter .15s ease;
+            margin: 6px 6px 6px 0;
+        }
+        .glass-button:hover{ filter:brightness(1.05); }
+        .glass-button:active{ transform: translateY(1px); }
+        .glass-button.green{ background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 10px 28px rgba(16,185,129,.22); }
+        .glass-button.gray{ background: linear-gradient(135deg, #95a5a6, #7f8c8d); box-shadow: 0 10px 28px rgba(0,0,0,.22); }
+        .glass-button.orange{ background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 10px 28px rgba(245,158,11,.18); }
+
+        .result-textarea{
+            width:100%;
+            height:320px;
+            resize: vertical;
+            padding:12px;
+            border-radius:14px;
+            border:1px solid rgba(255,255,255,.14);
+            background: rgba(0,0,0,.24);
+            color: var(--text);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            line-height:1.55;
+        }
+
+        .toolbar{
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            flex-wrap:wrap;
+            gap:6px;
+        }
+
+        .status{
+            margin-top:10px;
+            font-size:13px;
+            color: var(--muted);
+            text-align:center;
+            min-height: 18px;
+        }
+
+        .spinner{
+            display:inline-block;
+            width:14px; height:14px;
+            border:2px solid rgba(255,255,255,.22);
+            border-top-color: rgba(96,165,250,.95);
+            border-radius:999px;
+            animation: spin .85s linear infinite;
+            vertical-align:-2px;
+            margin-right:8px;
+        }
+        @keyframes spin{ to{ transform: rotate(360deg);} }
+
+        @media (max-width: 520px){
+            .toolbar{ justify-content:flex-start; }
+            .segmented{ width:100%; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="glass-card">
+        <h4><b>영어단어 생성기 (Word maker)</b></h4>
+        <p style="font-size:14px;">
+            무작위 영어 단어 10개를 생성합니다.
+        </p>
+        <div class="info-box">
+            단어 생성에 약간의 시간이 필요합니다.
+        </div>
+
+        <p><b>단어길이 선택</b></p>
+        <div class="segmented" id="level-segment" role="tablist" aria-label="단어길이 선택" style="margin-top:8px;">
+            <button type="button" class="seg-btn active" data-level="easy" aria-pressed="true">Short</button>
+            <button type="button" class="seg-btn" data-level="medium" aria-pressed="false">Medium</button>
+            <button type="button" class="seg-btn" data-level="hard" aria-pressed="false">Long</button>
+        </div>
+        <input type="hidden" id="level" value="easy">
+
+        <div class="status" id="statusText"></div>
+    </div>
+
+    <div class="glass-card">
+        <div class="toolbar">
+            <button class="glass-button" id="btnGenerate">🔄 Generate</button>
+            <button class="glass-button green" id="btnCopy">📋 Copy</button>
+            <button class="glass-button gray" id="btnClear">🗑️ Clear</button>
+            <button class="glass-button orange" id="btnLucky">🍀 Today&#8217;s lucky word</button>
+        </div>
+    </div>
+
+    <div class="glass-card">
+        <h5 style="color:#bfdbfe; margin:0 0 10px 0; font-size:18px; font-weight:900;">📄 단어 생성 결과</h5>
+        <textarea id="output" class="result-textarea" readonly placeholder="여기에 결과가 표시됩니다."></textarea>
+    </div>
+
+</div>
+
+<script>
+    // =========================
+    // Settings
+    // =========================
+    const difficultyRanges = {
+        easy:   [3, 5],
+        medium: [6, 8],
+        hard:   [9, 20]
+    };
+
+    // Datamuse: 단어 후보
+    // DictionaryAPI: 뜻
+    // Google Translate (gtx): 번역(비공식)
+    const API = {
+        datamuse: (letter) => `https://api.datamuse.com/words?sp=${encodeURIComponent(letter)}*&max=100`,
+        dict: (word) => `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`,
+        gtx: (word) => `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ko&dt=t&q=${encodeURIComponent(word)}`
+    };
+
+    // =========================
+    // DOM
+    // =========================
+    const output = document.getElementById("output");
+    const statusText = document.getElementById("statusText");
+    const levelInput = document.getElementById("level");
+    const levelSegment = document.getElementById("level-segment");
+
+    const btnGenerate = document.getElementById("btnGenerate");
+    const btnCopy = document.getElementById("btnCopy");
+    const btnClear = document.getElementById("btnClear");
+    const btnLucky = document.getElementById("btnLucky");
+
+    let isBusy = false;
+
+    function setBusy(on, msg="") {
+        isBusy = on;
+        btnGenerate.disabled = on;
+        btnLucky.disabled = on;
+        if (on) {
+            statusText.innerHTML = `<span class="spinner"></span>${escapeHtml(msg || "생성 중...")}`;
+        } else {
+            statusText.textContent = msg || "";
+        }
+    }
+
+    function escapeHtml(s){
+        return String(s)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    // =========================
+    // Level (Segmented buttons)
+    // =========================
+    levelSegment.addEventListener("click", (e) => {
+        const btn = e.target.closest(".seg-btn");
+        if (!btn) return;
+        setLevel(btn.dataset.level, btn);
+    });
+
+    function setLevel(level, el) {
+        if (levelInput) levelInput.value = level;
+
+        const buttons = levelSegment.querySelectorAll(".seg-btn");
+        buttons.forEach(b => {
+            const isActive = (b === el);
+            b.classList.toggle("active", isActive);
+            b.setAttribute("aria-pressed", isActive ? "true" : "false");
+        });
+    }
+
+    function getLevel() {
+        return levelInput?.value || "easy";
+    }
+
+    // =========================
+    // Helpers
+    // =========================
+    function getRandomLettersUnique(max = 20) {
+        const alphabet = "abcdefghijklmnopqrstuvwxyz";
+        const letters = [];
+        while (letters.length < max) {
+            const ch = alphabet[Math.floor(Math.random() * alphabet.length)];
+            if (!letters.includes(ch)) letters.push(ch);
+        }
+        return letters;
+    }
+
+    async function safeJsonFetch(url, timeoutMs = 8000) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+            const res = await fetch(url, { signal: controller.signal });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return await res.json();
+        } finally {
+            clearTimeout(timer);
+        }
+    }
+
+    async function fetchWord(letter, minLength, maxLength) {
+        const data = await safeJsonFetch(API.datamuse(letter));
+        const words = (data || [])
+        .map(w => (w && w.word ? String(w.word) : ""))
+        .filter(Boolean)
+        .filter(word => word.length >= minLength && word.length <= maxLength)
+        .filter(word => /^[a-z]+$/i.test(word)); // 영문만
+
+        if (words.length) return words[Math.floor(Math.random() * words.length)];
+        return null;
+    }
+
+    async function fetchDefinition(word) {
+        try {
+            const data = await safeJsonFetch(API.dict(word));
+            const def =
+                      data?.[0]?.meanings?.[0]?.definitions?.[0]?.definition ||
+                      data?.[0]?.meanings?.[0]?.definitions?.[0]?.example ||
+                      "";
+            return String(def || "").trim();
+        } catch {
+            return "";
+        }
+    }
+
+    async function translateToKorean(word) {
+        try {
+            const data = await safeJsonFetch(API.gtx(word));
+            return (data && data[0] && data[0][0] && data[0][0][0]) ? String(data[0][0][0]) : "";
+        } catch {
+            return "";
+        }
+    }
+
+    // =========================
+    // Main: Generate 10 words
+    // =========================
+    async function generateWords() {
+        if (isBusy) return;
+        setBusy(true, "단어 10개를 생성하는 중…");
+        output.value = "";
+
+        const level = getLevel();
+        const [minLength, maxLength] = difficultyRanges[level] || difficultyRanges.easy;
+
+        const letters = getRandomLettersUnique(20);
+        let wordCount = 0;
+
+        try {
+            for (const letter of letters) {
+                if (wordCount >= 10) break;
+
+                const word = await fetchWord(letter, minLength, maxLength);
+                if (!word) continue;
+
+                // 뜻/번역은 병렬로
+                const [definition, korean] = await Promise.all([
+                    fetchDefinition(word),
+                    translateToKorean(word)
+                ]);
+
+                output.value += `${word} : ${definition || ""}${korean ? ` (${korean})` : ""}\n\n`;
+                wordCount++;
+                statusText.innerHTML = `<span class="spinner"></span>${wordCount}/10 생성 중…`;
+            }
+
+            if (wordCount === 0) {
+                output.value = "단어를 찾지 못했습니다. 다시 시도해 주세요.";
+            }
+            setBusy(false, wordCount ? "완료!" : "");
+        } catch (e) {
+            setBusy(false, "");
+            output.value = "오류가 발생했습니다. 네트워크 상태를 확인하고 다시 시도해 주세요.";
+        }
+    }
+
+    // =========================
+    // Lucky word (1 word)
+    // =========================
+    async function luckyWord() {
+        if (isBusy) return;
+        setBusy(true, "오늘의 행운의 단어를 찾는 중…");
+        output.value = "";
+
+        const letters = getRandomLettersUnique(20);
+
+        try {
+            for (const letter of letters) {
+                const word = await fetchWord(letter, 1, 100);
+                if (!word) continue;
+
+                const [definition, korean] = await Promise.all([
+                    fetchDefinition(word),
+                    translateToKorean(word)
+                ]);
+
+                output.value = `${word} : ${definition || ""}${korean ? ` (${korean})` : ""}\n`;
+                setBusy(false, "행운의 단어!");
+                return;
+            }
+
+            output.value = "단어를 찾지 못했습니다. 다시 시도해 주세요.";
+            setBusy(false, "");
+        } catch {
+            output.value = "오류가 발생했습니다. 네트워크 상태를 확인하고 다시 시도해 주세요.";
+            setBusy(false, "");
+        }
+    }
+
+    // =========================
+    // Copy / Clear
+    // =========================
+    async function copyToClipboard() {
+        const text = output.value.trim();
+        if (!text) {
+            statusText.textContent = "복사할 내용이 없습니다.";
+            return;
+        }
+
+        try {
+            // 최신 방식
+            await navigator.clipboard.writeText(text);
+            statusText.textContent = "복사되었습니다!";
+        } catch {
+            // fallback
+            output.focus();
+            output.select();
+            document.execCommand("copy");
+            statusText.textContent = "복사되었습니다!";
+        }
+        setTimeout(() => { if (!isBusy) statusText.textContent = ""; }, 1500);
+    }
+
+    function clearWords() {
+        output.value = "";
+        statusText.textContent = "";
+    }
+
+    // =========================
+    // Wire buttons
+    // =========================
+    btnGenerate.addEventListener("click", generateWords);
+    btnLucky.addEventListener("click", luckyWord);
+    btnCopy.addEventListener("click", copyToClipboard);
+    btnClear.addEventListener("click", clearWords);
+</script>
+</body>
+</html>
