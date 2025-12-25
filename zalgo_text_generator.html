@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>잘고(Zalgo) 텍스트 생성기</title>
+    <style>
+        :root{
+            --bg:#f4f5f7;
+            --card:#ffffff;
+            --stroke:#e5e7eb;
+            --text:#111827;
+            --muted:#6b7280;
+            --blue:#2563eb;
+            --blue2:#1d4ed8;
+            --radius:14px;
+            --shadow: 0 18px 40px rgba(17,24,39,.08);
+        }
+        *{box-sizing:border-box}
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+        .wrap{ max-width:1100px; margin:0 auto; padding:26px 16px 56px; }
+        h1{ margin:6px 0 18px; font-size:34px; font-weight:900; letter-spacing:-.3px; }
+        .card{
+            background:var(--card);
+            border:1px solid var(--stroke);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            padding:16px;
+            margin-top:14px;
+        }
+        label{ display:block; font-weight:900; margin:0 0 8px; }
+        textarea{
+            width:100%;
+            min-height:240px;
+            resize:vertical;
+            border:1px solid var(--stroke);
+            border-radius:12px;
+            padding:14px;
+            outline:none;
+            font-size:15px;
+            line-height:2.0; /* 겹침 방지: 넉넉하게 */
+            background:#fbfbfc;
+        }
+        textarea:focus{
+            border-color: rgba(37,99,235,.55);
+            box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+            background:#fff;
+        }
+        .row{ display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end; }
+        .col{ flex:1; min-width:260px; }
+        .btn{
+            border:0; border-radius:12px;
+            padding:11px 14px;
+            font-weight:900;
+            cursor:pointer;
+            transition:transform .04s ease;
+            display:inline-flex; align-items:center; gap:8px;
+            white-space:nowrap;
+        }
+        .btn:active{ transform:translateY(1px); }
+        .btn.primary{ background:linear-gradient(135deg,var(--blue),var(--blue2)); color:#fff; }
+        .btn.gray{ background:linear-gradient(135deg,#9ca3af,#6b7280); color:#fff; }
+        .btn.green{ background:linear-gradient(135deg,#10b981,#059669); color:#fff; }
+
+        .help{ margin-top:10px; color:var(--muted); font-size:13px; line-height:1.6; }
+        .control{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:10px; }
+        .control .pill{
+            border:1px solid var(--stroke);
+            background:#fff;
+            border-radius:999px;
+            padding:8px 10px;
+            display:flex; align-items:center; gap:10px;
+            font-weight:900;
+        }
+        input[type="range"]{ width:280px; }
+        .check{
+            display:flex; align-items:center; gap:8px;
+            margin-top:10px;
+            color:#374151;
+            font-weight:800;
+        }
+
+        .toast{
+            position:fixed; left:50%; bottom:22px;
+            transform:translateX(-50%);
+            padding:10px 12px;
+            border-radius:12px;
+            background:rgba(17,24,39,.92);
+            color:#fff;
+            font-weight:900;
+            box-shadow:0 12px 30px rgba(0,0,0,.20);
+            opacity:0;
+            pointer-events:none;
+            transition:opacity .15s ease;
+            z-index:9999;
+        }
+        .toast.show{ opacity:1; }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <h1>잘고(Zalgo) 텍스트 생성기</h1>
+
+    <div class="card">
+        <label for="inText">텍스트 입력:</label>
+        <textarea id="inText" placeholder="여기에 텍스트를 붙여넣으세요...&#10;예) URL 목록, 문장 등"></textarea>
+
+        <div class="row" style="margin-top:12px;">
+            <div class="col">
+                <div class="control">
+                    <div class="pill">
+                        <span>변환 강도</span>
+                        <input id="strength" type="range" min="1" max="40" step="1" value="10" />
+                        <span id="strengthLabel">10</span>
+                    </div>
+
+                    <div class="pill">
+                        <span>랜덤도</span>
+                        <input id="randomness" type="range" min="0" max="100" step="1" value="70" />
+                        <span id="randomnessLabel">70%</span>
+                    </div>
+                </div>
+
+                <label class="check">
+                    <input id="preservePunct" type="checkbox" checked />
+                    기호/숫자(:// . ? & 등)는 그대로 두기 (URL 가독성 유지)
+                </label>
+
+                <label class="check">
+                    <input id="useLRM" type="checkbox" />
+                    문자 사이에 LRM(\u200E) 삽입 (권장 X, 일부 환경에서 더 어지러움)
+                </label>
+
+                <div class="help">
+                    • 입력하면 자동 변환됩니다. (CPU 부담 줄이려면 텍스트가 매우 길 때는 버튼으로만 실행해도 됩니다)<br>
+                    • 줄 겹침이 보이면: 강도를 낮추고(line-height는 이미 넉넉), 랜덤도를 줄여보세요.
+                </div>
+            </div>
+
+            <div class="col" style="text-align:right;">
+                <button class="btn primary" id="btnMake">⚡ 생성</button>
+                <button class="btn green" id="btnCopy">📋 복사</button>
+                <button class="btn gray" id="btnClear">🗑️ 비우기</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <label for="outText">잘고 텍스트:</label>
+        <textarea id="outText" readonly placeholder="생성 결과가 여기에 표시됩니다."></textarea>
+        <div class="help">
+            잘고 텍스트는 유니코드 결합문자(Combining marks)를 사용합니다. 앱/폰트에 따라 모양이 달라질 수 있어요.
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast">복사했습니다!</div>
+
+<script>
+    // =========================
+    // Combining marks (정상 범위)
+    // =========================
+    // (기존 코드의 7616~ 같은 특수 범위는 폰트/환경에 따라 더 깨져 보일 수 있어 제외)
+    const ZALGO_TOP = [
+        768,769,770,771,772,773,774,775,776,777,778,779,780,781,782,783,784,785,786,787,788,789,
+        794,795,830,831,832,833,834,835,836,838,842,843,844,848,849,850,855,857,858,859,861,862,864,865
+    ];
+    const ZALGO_MID = [820,821,822,823,824];
+    const ZALGO_BOTTOM = [
+        825,826,827,828,829,837,839,840,841,845,846,851,852,853,854,860,863,866,
+        800,801,802,803,804,805,806,807,808,809,810,811,812,813,814,815,816,817,818,819,
+        790,791,792,793,796,797,798,799
+    ];
+
+    // =========================
+    // Utils
+    // =========================
+    const $ = (id) => document.getElementById(id);
+
+    function randInt(min, max){
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+    function pickCode(arr){
+        return arr[Math.floor(Math.random() * arr.length)];
+    }
+    function shouldApply(randomness){
+        return Math.random() * 100 < randomness;
+    }
+
+    // "기호/숫자 보존"일 때는 한글/영문만 변환
+    function isTargetChar(ch, preservePunct){
+        if (ch === "\n" || ch === "\r" || ch === "\t" || ch === " ") return false;
+        const code = ch.codePointAt(0);
+
+        const isHangul = (code >= 0xAC00 && code <= 0xD7A3);
+        const isLatin  = ((code >= 0x41 && code <= 0x5A) || (code >= 0x61 && code <= 0x7A));
+
+        if (preservePunct) return isHangul || isLatin;
+
+        // preservePunct 해제 시: 제어문자만 제외하고 대부분 허용
+        if (code < 0x20) return false;
+        return true;
+    }
+
+    function makeMarks(arr, count){
+        let s = "";
+        for (let i=0; i<count; i++){
+            s += String.fromCharCode(pickCode(arr));
+        }
+        return s;
+    }
+
+    function zalgoify(text, strength, randomness, preservePunct, useLRM){
+        let out = "";
+
+        // strength(1~40)를 "최대 결합문자 수"로 사용
+        // 너무 과한 겹침 줄이려고 top/bottom은 strength의 60% 정도만 사용
+        const topMax = Math.max(1, Math.round(strength * 0.6));
+        const botMax = Math.max(1, Math.round(strength * 0.6));
+        const midMax = Math.max(0, Math.round(strength * 0.15));
+
+        for (const ch of text){
+            if (!isTargetChar(ch, preservePunct) || !shouldApply(randomness)){
+                out += ch;
+                continue;
+            }
+
+            const t = randInt(1, topMax);
+            const b = randInt(1, botMax);
+            const m = midMax ? randInt(0, midMax) : 0;
+
+            const top = makeMarks(ZALGO_TOP, t);
+            const mid = makeMarks(ZALGO_MID, m);
+            const bot = makeMarks(ZALGO_BOTTOM, b);
+
+            // LRM(\u200E)는 옵션으로만 (기본 OFF)
+            out += top + ch + (useLRM ? "\u200E" : "") + mid + bot;
+        }
+        return out;
+    }
+
+    // =========================
+    // UI
+    // =========================
+    let toastTimer = null;
+    function toast(msg){
+        const el = $("toast");
+        el.textContent = msg;
+        el.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(()=> el.classList.remove("show"), 1200);
+    }
+
+    function run(){
+        const input = $("inText").value || "";
+        const strength = Number($("strength").value || 10);
+        const randomness = Number($("randomness").value || 70);
+        const preservePunct = $("preservePunct").checked;
+        const useLRM = $("useLRM").checked;
+
+        $("strengthLabel").textContent = String(strength);
+        $("randomnessLabel").textContent = String(randomness) + "%";
+
+        if (!input){
+            $("outText").value = "";
+            return;
+        }
+        $("outText").value = zalgoify(input, strength, randomness, preservePunct, useLRM);
+    }
+
+    async function copyOut(){
+        const v = $("outText").value;
+        if (!v) return;
+        try{
+            await navigator.clipboard.writeText(v);
+            toast("복사했습니다!");
+        }catch(e){
+            $("outText").focus();
+            $("outText").select();
+            document.execCommand("copy");
+            toast("복사했습니다!");
+        }
+    }
+
+    function clearAll(){
+        $("inText").value = "";
+        $("outText").value = "";
+    }
+
+    // =========================
+    // Events
+    // =========================
+    document.addEventListener("DOMContentLoaded", () => {
+        // 기본 즉시 변환
+        ["input","change"].forEach(evt => {
+            $("inText").addEventListener(evt, run);
+            $("strength").addEventListener(evt, run);
+            $("randomness").addEventListener(evt, run);
+            $("preservePunct").addEventListener(evt, run);
+            $("useLRM").addEventListener(evt, run);
+        });
+
+        $("btnMake").addEventListener("click", run);
+        $("btnCopy").addEventListener("click", copyOut);
+        $("btnClear").addEventListener("click", clearAll);
+
+        // 초기 한 번
+        run();
+    });
+</script>
+</body>
+</html>

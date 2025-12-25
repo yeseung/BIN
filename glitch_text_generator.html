@@ -1,0 +1,456 @@
+<!--
+File name example (English): glitch_text_generator.html
+잘고(Zalgo) 텍스트 생성기 - Vanilla JS + 깔끔한 CSS
+- URL 같은 텍스트가 "깨져보이면서도" 읽히게 하려고: 영문/한글 글자에만 결합문자(Combining mark)를 붙이고,
+  숫자/기호(:// . ? & 등)는 기본적으로 건드리지 않습니다.
+- 출력이 겹쳐 보이는 문제를 줄이기 위해 line-height를 넉넉히 잡았습니다.
+-->
+
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>잘고 텍스트 생성기</title>
+    <style>
+        :root{
+            --bg:#f4f5f7;
+            --card:#ffffff;
+            --stroke:#e5e7eb;
+            --text:#111827;
+            --muted:#6b7280;
+            --blue:#2563eb;
+            --blue2:#1d4ed8;
+            --radius:14px;
+            --shadow: 0 18px 40px rgba(17,24,39,.08);
+        }
+        *{box-sizing:border-box}
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+        .wrap{
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 26px 16px 56px;
+        }
+        h1{
+            margin: 6px 0 18px;
+            font-size: 34px;
+            font-weight: 900;
+            letter-spacing: -.3px;
+        }
+        .card{
+            background: var(--card);
+            border:1px solid var(--stroke);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 16px;
+            margin-top: 14px;
+        }
+        .row{
+            display:flex;
+            gap:14px;
+            flex-wrap:wrap;
+            align-items:flex-end;
+        }
+        .col{
+            flex:1;
+            min-width:260px;
+        }
+        label{
+            display:block;
+            font-weight: 900;
+            margin: 0 0 8px;
+            color:#111827;
+        }
+        textarea{
+            width:100%;
+            min-height: 240px;
+            resize: vertical;
+            border:1px solid var(--stroke);
+            border-radius: 12px;
+            padding: 14px;
+            outline:none;
+            font-size: 15px;
+            line-height: 1.85; /* 겹침 방지 포인트 */
+            color: var(--text);
+            background: #fbfbfc;
+        }
+        textarea:focus{
+            border-color: rgba(37,99,235,.55);
+            box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+            background:#fff;
+        }
+        .btn{
+            border:0;
+            border-radius: 12px;
+            padding: 11px 14px;
+            font-weight: 900;
+            cursor:pointer;
+            transition: transform .04s ease, filter .12s ease;
+            user-select:none;
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            white-space:nowrap;
+        }
+        .btn:active{ transform: translateY(1px); }
+        .btn.primary{
+            background: linear-gradient(135deg, var(--blue), var(--blue2));
+            color:#fff;
+        }
+        .btn.gray{
+            background: linear-gradient(135deg, #9ca3af, #6b7280);
+            color:#fff;
+        }
+        .btn.green{
+            background: linear-gradient(135deg, #10b981, #059669);
+            color:#fff;
+        }
+        .btn.orange{
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color:#fff;
+        }
+        .help{
+            margin-top:10px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .segmented{
+            display:inline-flex;
+            border:1px solid var(--stroke);
+            border-radius: 12px;
+            overflow:hidden;
+            background:#fff;
+        }
+        .segmented button{
+            border:0;
+            background:transparent;
+            padding: 10px 12px;
+            font-weight: 900;
+            cursor:pointer;
+            color:#374151;
+        }
+        .segmented button.active{
+            background: rgba(37,99,235,.10);
+            color:#1d4ed8;
+        }
+        .control{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            flex-wrap:wrap;
+            margin-top: 8px;
+        }
+        .control small{ color:var(--muted); }
+        input[type="range"]{ width: 240px; }
+        .check{
+            display:flex;
+            align-items:center;
+            gap:8px;
+            margin-top: 10px;
+            color:#374151;
+            font-weight: 800;
+        }
+        .footerNote{
+            margin-top: 12px;
+            color:#6b7280;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <h1>잘고 텍스트 생성기</h1>
+
+    <div class="card">
+        <label for="inputText">텍스트 입력:</label>
+        <textarea id="inputText" placeholder="여기에 텍스트를 붙여넣으세요...&#10;예) URL 목록, 문장 등"></textarea>
+
+        <div class="row" style="margin-top:12px;">
+            <div class="col">
+                <label style="margin-bottom:6px;">강도</label>
+                <div class="segmented" id="levelSeg" role="tablist" aria-label="강도 선택">
+                    <button type="button" class="active" data-level="light">Light</button>
+                    <button type="button" data-level="medium">Medium</button>
+                    <button type="button" data-level="heavy">Heavy</button>
+                </div>
+
+                <div class="control">
+                    <span style="font-weight:900;">랜덤도</span>
+                    <input id="randomness" type="range" min="0" max="100" value="60" />
+                    <small id="randomnessLabel">60%</small>
+                </div>
+
+                <label class="check">
+                    <input id="preservePunct" type="checkbox" checked />
+                    기호/숫자(:// . ? & 등)는 그대로 두기 (URL 가독성 유지)
+                </label>
+
+                <label class="check">
+                    <input id="oneLine" type="checkbox" />
+                    한 줄로 합치기 (줄바꿈 제거)
+                </label>
+            </div>
+
+            <div class="col" style="text-align:right;">
+                <button class="btn primary" id="btnGenerate">⚡ 생성</button>
+                <button class="btn green" id="btnCopy">📋 복사</button>
+                <button class="btn gray" id="btnClear">🗑️ 비우기</button>
+                <button class="btn orange" id="btnRegenerate">🎲 다시 생성</button>
+
+                <div class="help" style="text-align:left;">
+                    • “다시 생성”은 같은 입력으로 글리치만 다시 랜덤하게 뽑습니다.<br>
+                    • 출력이 너무 난잡하면 강도를 Light로 낮추거나 랜덤도를 줄여보세요.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <label for="outputText">잘고 텍스트:</label>
+        <textarea id="outputText" readonly placeholder="생성 결과가 여기에 표시됩니다."></textarea>
+
+        <div class="footerNote">
+            잘고(Zalgo) 텍스트는 유니코드 “결합 문자(Combining Marks)”를 활용합니다. 일부 앱/폰트에서 줄 간격이 달라 보일 수 있어요.
+        </div>
+    </div>
+</div>
+
+<script>
+    // -----------------------------
+    // Zalgo combining mark pools
+    // (너무 과하게 넣으면 겹치고 느려져서, 적당한 범위만 사용)
+    // -----------------------------
+    const COMBINING_UP = [
+        "\u030d","\u030e","\u0304","\u0305","\u033f","\u0311","\u0306","\u0310",
+        "\u0352","\u0357","\u0351","\u0307","\u0308","\u030a","\u0342","\u0343",
+        "\u0344","\u034a","\u034b","\u034c","\u0303","\u0302","\u030c","\u0350",
+        "\u0300","\u0301","\u030b","\u030f","\u0312","\u0313","\u0314","\u033d",
+        "\u0309","\u0363","\u0364","\u0365","\u0366","\u0367","\u0368","\u0369",
+        "\u036a","\u036b","\u036c","\u036d","\u036e","\u036f"
+    ];
+    const COMBINING_MID = [
+        "\u0334","\u0335","\u0336","\u0337","\u0338","\u034f","\u035c","\u035d",
+        "\u035e","\u035f","\u0360","\u0362"
+    ];
+    const COMBINING_DOWN = [
+        "\u0316","\u0317","\u0318","\u0319","\u031c","\u031d","\u031e","\u031f",
+        "\u0320","\u0324","\u0325","\u0326","\u0329","\u032a","\u032b","\u032c",
+        "\u032d","\u032e","\u032f","\u0330","\u0331","\u0332","\u0333","\u0339",
+        "\u033a","\u033b","\u033c","\u0345","\u0347","\u0348","\u0349","\u034d",
+        "\u034e","\u0353","\u0354","\u0355","\u0356","\u0359","\u035a","\u0323"
+    ];
+
+    // 강도별 최대 결합문자 개수(대략)
+    const LEVELS = {
+        light:  { up: 2, mid: 1, down: 2 },
+        medium: { up: 6, mid: 2, down: 6 },
+        heavy:  { up: 12, mid: 4, down: 12 }
+    };
+
+    // -----------------------------
+    // Helpers
+    // -----------------------------
+    const $ = (id) => document.getElementById(id);
+
+    function randInt(min, max){
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+    function pick(arr){
+        return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    // 글리치 적용 대상 문자 판정:
+    // - 기본: 영문/한글/기본 라틴(가독성 유지)
+    // - preservePunct 체크 시 숫자/기호에는 적용 안 함
+    function isGlitchTarget(ch, preservePunct){
+        if (ch === "\n" || ch === "\r" || ch === "\t" || ch === " ") return false;
+
+        // 한글/영문
+        const code = ch.codePointAt(0);
+
+        const isHangul = (code >= 0xAC00 && code <= 0xD7A3);
+        const isLatin  = (
+            (code >= 0x41 && code <= 0x5A) || // A-Z
+            (code >= 0x61 && code <= 0x7A)    // a-z
+        );
+
+        if (preservePunct){
+            // 숫자/기호 제외 → 글자(한글/영문)만
+            return isHangul || isLatin;
+        }
+
+        // preservePunct 해제: 웬만한 문자에 적용(너무 무서워서 제어문자는 제외)
+        if (code < 0x20) return false;
+        return true;
+    }
+
+    // randomness(0~100) 비율만큼만 글리치 적용
+    function shouldGlitch(randomness){
+        return Math.random() * 100 < randomness;
+    }
+
+    function zalgoChar(ch, level, randomness, preservePunct){
+        if (!isGlitchTarget(ch, preservePunct)) return ch;
+        if (!shouldGlitch(randomness)) return ch;
+
+        const lim = LEVELS[level] || LEVELS.light;
+
+        const upCount   = randInt(0, lim.up);
+        const midCount  = randInt(0, lim.mid);
+        const downCount = randInt(0, lim.down);
+
+        let out = ch;
+
+        for (let i=0; i<upCount; i++) out += pick(COMBINING_UP);
+        for (let i=0; i<midCount; i++) out += pick(COMBINING_MID);
+        for (let i=0; i<downCount; i++) out += pick(COMBINING_DOWN);
+
+        return out;
+    }
+
+    function zalgoText(text, level, randomness, preservePunct){
+        let result = "";
+        // for..of는 유니코드 코드포인트 단위로 순회
+        for (const ch of text){
+            result += zalgoChar(ch, level, randomness, preservePunct);
+        }
+        return result;
+    }
+
+    // -----------------------------
+    // UI State
+    // -----------------------------
+    let currentLevel = "light";
+    let lastInput = "";
+    let lastOutput = "";
+
+    function setLevel(level){
+        currentLevel = level;
+        const buttons = $("levelSeg").querySelectorAll("button");
+        buttons.forEach(b => b.classList.toggle("active", b.dataset.level === level));
+    }
+
+    // -----------------------------
+    // Actions
+    // -----------------------------
+    function generate(){
+        const input = $("inputText").value || "";
+        const preservePunct = $("preservePunct").checked;
+        const oneLine = $("oneLine").checked;
+        const randomness = Number($("randomness").value || 0);
+
+        if (!input.trim()){
+            $("outputText").value = "";
+            lastInput = "";
+            lastOutput = "";
+            return;
+        }
+
+        let src = input;
+        if (oneLine){
+            src = src.replace(/\r?\n+/g, " ").replace(/\s{2,}/g, " ").trim();
+        }
+
+        const out = zalgoText(src, currentLevel, randomness, preservePunct);
+
+        $("outputText").value = out;
+        lastInput = input;
+        lastOutput = out;
+    }
+
+    function regenerate(){
+        // 같은 입력으로 랜덤만 다시
+        if (!$("inputText").value.trim()) return;
+        generate();
+    }
+
+    async function copyOutput(){
+        const out = $("outputText").value;
+        if (!out) return;
+        try{
+            await navigator.clipboard.writeText(out);
+            toast("복사했습니다!");
+        }catch(e){
+            // fallback
+            $("outputText").focus();
+            $("outputText").select();
+            document.execCommand("copy");
+            toast("복사했습니다!");
+        }
+    }
+
+    function clearAll(){
+        $("inputText").value = "";
+        $("outputText").value = "";
+        lastInput = "";
+        lastOutput = "";
+    }
+
+    // 미니 토스트
+    let toastTimer = null;
+    function toast(msg){
+        let el = document.getElementById("toast");
+        if (!el){
+            el = document.createElement("div");
+            el.id = "toast";
+            el.style.position = "fixed";
+            el.style.left = "50%";
+            el.style.bottom = "22px";
+            el.style.transform = "translateX(-50%)";
+            el.style.padding = "10px 12px";
+            el.style.borderRadius = "12px";
+            el.style.background = "rgba(17,24,39,.92)";
+            el.style.color = "#fff";
+            el.style.fontWeight = "900";
+            el.style.boxShadow = "0 12px 30px rgba(0,0,0,.20)";
+            el.style.zIndex = 9999;
+            el.style.opacity = "0";
+            el.style.transition = "opacity .15s ease";
+            document.body.appendChild(el);
+        }
+        el.textContent = msg;
+        el.style.opacity = "1";
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(()=> el.style.opacity="0", 1400);
+    }
+
+    // -----------------------------
+    // Events
+    // -----------------------------
+    document.addEventListener("DOMContentLoaded", () => {
+        // segmented
+        $("levelSeg").addEventListener("click", (e) => {
+            const btn = e.target.closest("button");
+            if (!btn) return;
+            setLevel(btn.dataset.level);
+        });
+
+        $("randomness").addEventListener("input", () => {
+            $("randomnessLabel").textContent = $("randomness").value + "%";
+        });
+
+        $("btnGenerate").addEventListener("click", generate);
+        $("btnRegenerate").addEventListener("click", regenerate);
+        $("btnCopy").addEventListener("click", copyOutput);
+        $("btnClear").addEventListener("click", clearAll);
+
+        // Ctrl/Cmd + Enter = 생성
+        $("inputText").addEventListener("keydown", (e) => {
+            const isMac = navigator.platform.toUpperCase().includes("MAC");
+            if ((isMac ? e.metaKey : e.ctrlKey) && e.key === "Enter"){
+                e.preventDefault();
+                generate();
+            }
+        });
+    });
+</script>
+</body>
+</html>

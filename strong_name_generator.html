@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>쎈이름 생성기</title>
+    <style>
+        :root{
+            --bg:#f4f5f7;
+            --card:#ffffff;
+            --stroke:#e5e7eb;
+            --text:#111827;
+            --muted:#6b7280;
+            --bar:#4a4a4a;
+            --shadow: 0 18px 45px rgba(17,24,39,.14);
+            --radius:18px;
+
+            --name:#7a2b10;           /* 이름 컬러(브라운/와인) */
+            --btn1:#2fb59e;           /* 생성 버튼 */
+            --btn1b:#1b9f89;
+            --btn2:#ffffff;           /* 복사 버튼 */
+        }
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", Arial, sans-serif;
+            background:var(--bg);
+            color:var(--text);
+        }
+        .wrap{ max-width:1080px; margin:0 auto; padding:22px 16px 60px; }
+
+        /* Top bar */
+        .topbar{
+            background:var(--bar);
+            color:#fff;
+            border-radius:999px;
+            box-shadow: 0 16px 30px rgba(0,0,0,.18);
+            padding:14px 16px;
+            display:flex;
+            align-items:center;
+            gap:12px;
+            position:sticky;
+            top:14px;
+            z-index:10;
+        }
+        .back-btn{
+            width:40px; height:40px;
+            border-radius:999px;
+            border:0;
+            background:rgba(255,255,255,.14);
+            color:#fff;
+            display:grid;
+            place-items:center;
+            cursor:pointer;
+            transition:transform .05s ease, background .15s ease;
+            flex:0 0 auto;
+        }
+        .back-btn:hover{ background:rgba(255,255,255,.20); }
+        .back-btn:active{ transform:translateY(1px); }
+        .title{
+            flex:1;
+            text-align:center;
+            font-weight:900;
+            letter-spacing:-.3px;
+            font-size:22px;
+            padding-right:40px; /* 좌우 균형 맞추기 */
+        }
+
+        /* Description */
+        .desc{
+            margin:18px 8px 0;
+            color:#333;
+            line-height:1.75;
+            font-size:17px;
+        }
+
+        /* Card */
+        .card{
+            margin-top:18px;
+            background:var(--card);
+            border:1px solid var(--stroke);
+            border-radius:24px;
+            box-shadow: var(--shadow);
+            padding:26px 18px;
+        }
+        .stage{
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            gap:16px;
+            min-height:220px;
+        }
+        .name{
+            font-size:72px;
+            font-weight:1000;
+            letter-spacing:-2px;
+            color:var(--name);
+            margin:0;
+            text-align:center;
+            line-height:1.1;
+            word-break:keep-all;
+        }
+
+        /* Controls */
+        .controls{
+            display:flex;
+            gap:12px;
+            flex-wrap:wrap;
+            align-items:center;
+            justify-content:center;
+        }
+        .btn{
+            border:0;
+            border-radius:999px;
+            padding:12px 18px;
+            font-weight:900;
+            cursor:pointer;
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            box-shadow: 0 10px 22px rgba(17,24,39,.10);
+            transition: transform .05s ease, filter .15s ease;
+            white-space:nowrap;
+        }
+        .btn:active{ transform:translateY(1px); }
+        .btn.primary{
+            color:#fff;
+            background:linear-gradient(135deg,var(--btn1),var(--btn1b));
+        }
+        .btn.ghost{
+            background:var(--btn2);
+            border:1px solid var(--stroke);
+            color:#111;
+        }
+        .btn svg{ width:18px; height:18px; }
+
+        /* Footer small hint */
+        .hint{
+            margin-top:14px;
+            text-align:center;
+            color:var(--muted);
+            font-size:13px;
+            line-height:1.6;
+        }
+
+        /* Toast */
+        .toast{
+            position:fixed;
+            left:50%;
+            bottom:22px;
+            transform:translateX(-50%);
+            background:rgba(17,24,39,.92);
+            color:#fff;
+            padding:10px 14px;
+            border-radius:12px;
+            font-weight:900;
+            opacity:0;
+            pointer-events:none;
+            transition:opacity .15s ease;
+            box-shadow: 0 12px 30px rgba(0,0,0,.20);
+            z-index:9999;
+        }
+        .toast.show{ opacity:1; }
+
+        /* Responsive */
+        @media (max-width: 680px){
+            .title{ font-size:18px; }
+            .desc{ font-size:15px; }
+            .name{ font-size:46px; }
+            .stage{ min-height:180px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+
+    <div class="topbar">
+        <button class="back-btn" id="btnBack" aria-label="뒤로가기" title="뒤로가기">
+            <!-- left arrow -->
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </button>
+        <div class="title">쎈이름 생성기</div>
+    </div>
+
+    <div class="desc">
+        택배 송장이나 일회성 이름을 작성할 때 사용할 강렬하고 강해 보이는 이름을 자동으로 생성해 드립니다.<br>
+        독창적이면서도 강렬한 인상을 주는 이름으로 필요에 따라 간편하게 활용할 수 있습니다.
+    </div>
+
+    <div class="card">
+        <div class="stage">
+            <h2 class="name" id="nameText">홍혁궁</h2>
+
+            <div class="controls">
+                <button class="btn primary" id="btnGenerate">
+                    <!-- play icon -->
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M8 6l12 6-12 6V6z" fill="currentColor" opacity=".95"/>
+                    </svg>
+                    쎈이름 생성하기
+                </button>
+
+                <button class="btn ghost" id="btnCopy" title="복사">
+                    <!-- copy icon -->
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M8 8h10v12H8V8z" stroke="currentColor" stroke-width="2" />
+                        <path d="M6 16H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" stroke="currentColor" stroke-width="2" />
+                    </svg>
+                    복사
+                </button>
+            </div>
+
+            <div class="hint">
+                ※ 재미용 생성기입니다. (실명/특정인과 무관)<br>
+                버튼을 여러 번 눌러 원하는 느낌의 조합을 골라보세요.
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="toast" id="toast">복사했습니다!</div>
+
+<script>
+    // -------------------------
+    // 쎈이름 생성 로직 (한글 2~3음절 느낌)
+    // -------------------------
+    const A = [
+        "강","철","흑","홍","백","청","적","맹","독","용","호","검","폭","광","진","염","빙","천","명","태","원","현","준","혁","무","전"
+    ];
+    const B = [
+        "혁","진","강","철","호","무","천","룡","용","검","산","성","벽","폭","광","명","태","준","현","원","득","현","윤","재","곤","궁"
+    ];
+    const C = [
+        "궁","성","산","룡","용","검","호","벽","문","창","검","봉","린","현","태","준","명","광","천","강","철"
+    ];
+
+    // 예: 홍혁궁 같은 3음절 / 또는 2음절도 랜덤 섞기
+    function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
+
+    function generateStrongName(){
+        const useThree = Math.random() < 0.78; // 78%는 3음절
+        let name = "";
+
+        if (useThree){
+            name = pick(A) + pick(B) + pick(C);
+        } else {
+            name = pick(A) + pick(B);
+        }
+
+        // 너무 똑같은 글자 반복(예: 강강강) 간단 방지
+        if (/(.)\1\1/.test(name)) return generateStrongName();
+        if (name.length === 3 && name[0] === name[1]) return generateStrongName();
+        return name;
+    }
+
+    // -------------------------
+    // UI
+    // -------------------------
+    const $ = (id) => document.getElementById(id);
+    let toastTimer = null;
+
+    function toast(msg){
+        const t = $("toast");
+        t.textContent = msg;
+        t.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => t.classList.remove("show"), 1200);
+    }
+
+    function setName(n){
+        $("nameText").textContent = n;
+    }
+
+    async function copyText(text){
+        try{
+            await navigator.clipboard.writeText(text);
+            toast("복사했습니다!");
+        }catch(e){
+            // fallback
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            ta.style.position = "fixed";
+            ta.style.left = "-9999px";
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            document.execCommand("copy");
+            document.body.removeChild(ta);
+            toast("복사했습니다!");
+        }
+    }
+
+    $("btnGenerate").addEventListener("click", () => {
+        setName(generateStrongName());
+    });
+
+    $("btnCopy").addEventListener("click", () => {
+        copyText($("nameText").textContent.trim());
+    });
+
+    // 뒤로가기 버튼: 이전 페이지가 있으면 back, 없으면 홈으로(원하면 URL 바꿔주세요)
+    $("btnBack").addEventListener("click", () => {
+        if (history.length > 1) history.back();
+        else location.href = "/";
+    });
+
+    // 첫 로드 시 한 번 생성 (원하면 주석 해제)
+    // setName(generateStrongName());
+</script>
+</body>
+</html>
