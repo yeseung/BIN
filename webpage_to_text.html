@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Webpage to Text</title>
+    <style>
+        :root{
+            --bg:#f6f7f9;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --border:#e5e7eb;
+            --primary:#16a34a;
+            --primary2:#0ea5e9;
+            --danger:#ef4444;
+            --shadow: 0 10px 30px rgba(0,0,0,.08);
+            --radius:18px;
+            --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+            --sans: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
+        }
+        *{box-sizing:border-box}
+        body{
+            margin:0; font-family:var(--sans);
+            background:linear-gradient(180deg,#fbfbfc, #f2f5f8);
+            color:var(--text);
+        }
+        .wrap{max-width:980px;margin:0 auto;padding:28px 16px 40px}
+        .title{
+            text-align:center; margin:10px 0 18px;
+            letter-spacing:-.02em;
+            font-size: clamp(32px, 4vw, 52px);
+            font-weight: 900;
+            line-height:1.08;
+        }
+        .title .accent{color:var(--primary)}
+        .subtitle{
+            text-align:center;color:var(--muted);
+            margin:0 auto 20px;max-width:720px;
+            line-height:1.6;font-size:14px;
+        }
+        .card{
+            background:var(--card);
+            border:1px solid var(--border);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            padding:16px;
+        }
+        .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+        .row > *{flex:1}
+        .input{
+            width:100%;
+            height:52px;
+            border:1px solid var(--border);
+            border-radius:14px;
+            padding:0 14px;
+            font-size:16px;
+            outline:none;
+            transition:.15s;
+            background:#fff;
+        }
+        .input:focus{border-color:#93c5fd; box-shadow:0 0 0 4px rgba(59,130,246,.12)}
+        .btn{
+            height:52px;
+            border:0;
+            border-radius:14px;
+            padding:0 14px;
+            font-weight:800;
+            cursor:pointer;
+            transition: .15s;
+            display:inline-flex; align-items:center; justify-content:center; gap:8px;
+            white-space:nowrap;
+            user-select:none;
+        }
+        .btn:active{transform:translateY(1px)}
+        .btn-primary{background:var(--primary); color:#fff}
+        .btn-primary:hover{filter:brightness(0.97)}
+        .btn-sky{background:var(--primary2); color:#fff}
+        .btn-sky:hover{filter:brightness(0.97)}
+        .btn-ghost{
+            background:#f3f4f6; color:#111827;
+            border:1px solid var(--border);
+        }
+        .btn-ghost:hover{background:#eceff3}
+        .btn-danger{
+            background:#fee2e2; color:#991b1b;
+            border:1px solid #fecaca;
+        }
+        .btn-danger:hover{background:#fecaca}
+        .small{
+            font-size:12px;color:var(--muted);
+            line-height:1.4;
+        }
+        .meta{
+            display:flex; gap:10px; flex-wrap:wrap;
+            padding:10px 2px 0;
+            color:var(--muted);
+            font-size:13px;
+        }
+        .pill{
+            display:inline-flex; align-items:center; gap:6px;
+            padding:6px 10px; border-radius:999px;
+            background:#f3f4f6; border:1px solid var(--border);
+            font-weight:700;
+        }
+        .pill b{color:#111827}
+        .grid{
+            display:grid; gap:14px;
+            grid-template-columns: 1fr;
+            margin-top:14px;
+        }
+        @media (min-width: 960px){
+            .grid{grid-template-columns: 1fr 1fr}
+        }
+        textarea{
+            width:100%;
+            min-height: 360px;
+            border:1px solid var(--border);
+            border-radius:14px;
+            padding:14px;
+            font-size:14px;
+            line-height:1.55;
+            outline:none;
+            resize:vertical;
+            background:#fff;
+            font-family: var(--mono);
+        }
+        textarea:focus{border-color:#93c5fd; box-shadow:0 0 0 4px rgba(59,130,246,.12)}
+        .label{
+            display:flex; align-items:center; justify-content:space-between;
+            margin:2px 4px 8px;
+            font-weight:900;
+            letter-spacing:-.01em;
+        }
+        .status{
+            font-size:12px;
+            font-weight:800;
+            color:#0f172a;
+            background:#e5e7eb;
+            border:1px solid var(--border);
+            padding:6px 10px;
+            border-radius:999px;
+        }
+        .status.ok{background:#dcfce7;border-color:#bbf7d0;color:#166534}
+        .status.err{background:#fee2e2;border-color:#fecaca;color:#991b1b}
+        .status.run{background:#dbeafe;border-color:#bfdbfe;color:#1e40af}
+        .toast{
+            position:fixed;
+            left:50%; bottom:18px; transform:translateX(-50%);
+            background:#111827; color:#fff;
+            padding:10px 14px;
+            border-radius:999px;
+            font-weight:800;
+            font-size:13px;
+            opacity:0; pointer-events:none;
+            transition:.18s;
+        }
+        .toast.show{opacity:1}
+        .help{
+            margin-top:14px;
+            color:var(--muted);
+            font-size:13px;
+            line-height:1.6;
+        }
+        code.k{font-family:var(--mono);background:#f3f4f6;border:1px solid var(--border);padding:2px 6px;border-radius:8px}
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="title"><span class="accent">웹</span> 페이지를 일반 텍스트로</div>
+    <div class="subtitle">
+        URL을 입력하면 <code class="k">proxy.php</code>를 통해 HTML을 가져와서, 불필요한 요소(스크립트/스타일 등)를 제거하고
+        사람이 읽기 좋은 텍스트로 정리해 줍니다.
+    </div>
+
+    <div class="card">
+        <div class="row">
+            <input id="urlInput" class="input" type="url" placeholder="https://kimtaja.com" value="https://kimtaja.com" />
+            <button id="btnConvert" class="btn btn-primary">텍스트로 변환</button>
+            <button id="btnCopy" class="btn btn-sky" title="결과 복사">복사</button>
+            <button id="btnClear" class="btn btn-danger" title="초기화">지우기</button>
+        </div>
+        <div class="meta">
+            <span class="pill">단어 <b id="metaWords">0</b></span>
+            <span class="pill">글자 <b id="metaChars">0</b></span>
+            <span class="pill">공백 제외 <b id="metaCharsNoSpace">0</b></span>
+            <span class="pill">줄 <b id="metaLines">0</b></span>
+            <span class="pill">리딩 <b id="metaReading">0</b></span>
+        </div>
+        <div class="small" style="margin-top:10px;">
+            ※ 일부 사이트는 차단/보안 설정 때문에 가져오지 못할 수 있습니다. 그 경우 프록시의 허용 도메인/헤더를 조정하세요.
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <div class="label">
+                <div>가져온 원문(HTML)</div>
+                <div id="statusHtml" class="status">대기</div>
+            </div>
+            <textarea id="htmlOut" spellcheck="false" placeholder="여기에 가져온 HTML이 표시됩니다."></textarea>
+        </div>
+
+        <div class="card">
+            <div class="label">
+                <div>변환 결과(텍스트)</div>
+                <div id="statusText" class="status">대기</div>
+            </div>
+            <textarea id="textOut" spellcheck="false" placeholder="여기에 텍스트 결과가 표시됩니다."></textarea>
+        </div>
+    </div>
+
+    <div class="help">
+        <div>• 프록시 호출: <code class="k">proxy.php?url=...</code></div>
+        <div>• 변환 방식: HTML 파싱 → script/style/noscript 제거 → 블록태그 기준 줄바꿈 보정 → 공백 정리</div>
+    </div>
+</div>
+
+<div id="toast" class="toast">복사 완료</div>
+
+<script>
+    const $ = (id) => document.getElementById(id);
+
+    const urlInput = $("urlInput");
+    const btnConvert = $("btnConvert");
+    const btnCopy = $("btnCopy");
+    const btnClear = $("btnClear");
+
+    const htmlOut = $("htmlOut");
+    const textOut = $("textOut");
+
+    const statusHtml = $("statusHtml");
+    const statusText = $("statusText");
+
+    const metaWords = $("metaWords");
+    const metaChars = $("metaChars");
+    const metaCharsNoSpace = $("metaCharsNoSpace");
+    const metaLines = $("metaLines");
+    const metaReading = $("metaReading");
+
+    const toast = $("toast");
+
+    function setStatus(el, type, label){
+        el.className = "status" + (type ? (" " + type) : "");
+        el.textContent = label;
+    }
+
+    function showToast(msg){
+        toast.textContent = msg;
+        toast.classList.add("show");
+        setTimeout(()=>toast.classList.remove("show"), 1400);
+    }
+
+    function normalizeText(s){
+        // 줄바꿈 정리 + 과한 공백 제거
+        s = s.replace(/\r/g, "");
+        // 연속 공백/탭 정리(단, 줄바꿈은 유지)
+        s = s.replace(/[ \t]+\n/g, "\n");
+        s = s.replace(/\n[ \t]+/g, "\n");
+        // 너무 많은 빈줄 제한
+        s = s.replace(/\n{3,}/g, "\n\n");
+        // 앞뒤 공백 제거
+        return s.trim();
+    }
+
+    function htmlToText(html){
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+
+        // 제거
+        doc.querySelectorAll("script, style, noscript, svg, canvas, iframe, header, footer, nav").forEach(n => n.remove());
+
+        // <br> 를 줄바꿈으로
+        doc.querySelectorAll("br").forEach(br => br.replaceWith(doc.createTextNode("\n")));
+
+        // 블록 요소 뒤에 줄바꿈 넣기
+        const blockTags = [
+            "p","div","section","article","main","aside",
+            "h1","h2","h3","h4","h5","h6",
+            "ul","ol","li","table","tr","td","th",
+            "blockquote","pre","figure","figcaption",
+            "hr"
+        ];
+        blockTags.forEach(tag=>{
+            doc.querySelectorAll(tag).forEach(el=>{
+                el.appendChild(doc.createTextNode("\n"));
+            });
+        });
+
+        const raw = (doc.body ? doc.body.textContent : "") || "";
+        return normalizeText(raw);
+    }
+
+    function updateMeta(text){
+        const chars = text.length;
+        const charsNoSpace = text.replace(/\s/g, "").length;
+        const words = (text.trim().match(/\S+/g) || []).length;
+        const lines = text ? text.split("\n").length : 0;
+
+        // 리딩 타임(분당 200단어 기준)
+        const minutes = words / 200;
+        const sec = Math.max(0, Math.round(minutes * 60));
+        const mm = Math.floor(sec / 60);
+        const ss = sec % 60;
+        const reading = (words === 0) ? "0s" : (mm > 0 ? `${mm}m ${ss}s` : `${ss}s`);
+
+        metaChars.textContent = String(chars);
+        metaCharsNoSpace.textContent = String(charsNoSpace);
+        metaWords.textContent = String(words);
+        metaLines.textContent = String(lines);
+        metaReading.textContent = reading;
+    }
+
+    async function convert(){
+        const url = urlInput.value.trim();
+        if(!url){
+            showToast("URL을 입력하세요");
+            urlInput.focus();
+            return;
+        }
+
+        setStatus(statusHtml, "run", "가져오는 중…");
+        setStatus(statusText, "run", "변환 대기…");
+
+        btnConvert.disabled = true;
+        btnConvert.style.opacity = "0.7";
+        btnConvert.textContent = "변환 중…";
+
+        try{
+            const proxyUrl = "http://b973456356743434.cafe24.com/webpage-to-text/proxy.php?url=" + encodeURIComponent(url);
+            const res = await fetch(proxyUrl, { method: "GET" });
+
+            if(!res.ok){
+                throw new Error("HTTP " + res.status);
+            }
+
+            const html = await res.text();
+            htmlOut.value = html;
+            setStatus(statusHtml, "ok", "성공");
+
+            const text = htmlToText(html);
+            textOut.value = text;
+            setStatus(statusText, "ok", "완료");
+            updateMeta(text);
+
+        }catch(err){
+            console.error(err);
+            setStatus(statusHtml, "err", "실패");
+            setStatus(statusText, "err", "실패");
+            showToast("가져오기 실패: " + (err?.message || "error"));
+        }finally{
+            btnConvert.disabled = false;
+            btnConvert.style.opacity = "1";
+            btnConvert.textContent = "텍스트로 변환";
+        }
+    }
+
+    async function copyResult(){
+        const text = textOut.value || "";
+        if(!text){
+            showToast("복사할 내용이 없습니다");
+            return;
+        }
+        try{
+            await navigator.clipboard.writeText(text);
+            showToast("복사 완료");
+        }catch(e){
+            // 폴백
+            textOut.focus();
+            textOut.select();
+            document.execCommand("copy");
+            showToast("복사 완료");
+        }
+    }
+
+    function clearAll(){
+        urlInput.value = "";
+        htmlOut.value = "";
+        textOut.value = "";
+        updateMeta("");
+        setStatus(statusHtml, "", "대기");
+        setStatus(statusText, "", "대기");
+        urlInput.focus();
+    }
+
+    btnConvert.addEventListener("click", convert);
+    btnCopy.addEventListener("click", copyResult);
+    btnClear.addEventListener("click", clearAll);
+
+    urlInput.addEventListener("keydown", (e)=>{
+        if(e.key === "Enter") convert();
+    });
+
+    // 초기 메타
+    updateMeta("");
+</script>
+</body>
+</html>

@@ -1,0 +1,603 @@
+<!-- 파일명(영어) 예시: analog-clock.html -->
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>아날로그 시계</title>
+
+    <style>
+        :root{
+            --bg:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --line:#e5e7eb;
+
+            --card:#ffffff;
+            --shadow: 0 18px 40px rgba(0,0,0,.08);
+
+            --clock-bg:#f7f7f7;
+            --clock-ring:#0f172a;
+            --clock-face:#f9fafb;
+
+            --h:#0f172a;
+            --m:#0f172a;
+            --s:#ef4444;
+
+            --btn:#ffffff;
+            --btn-border:#cbd5e1;
+            --btn-text:#111827;
+
+            --radius:16px;
+            --w: 980px;
+
+            --clock-size: 520px;
+        }
+
+        *{box-sizing:border-box}
+        body{
+            margin:0;
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR",
+            Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+            color:var(--text);
+            background: var(--bg);
+        }
+
+        .wrap{
+            max-width: var(--w);
+            margin: 22px auto 70px;
+            padding: 0 14px;
+            text-align:center;
+        }
+
+        .card{
+            background: var(--card);
+            border: 1px solid rgba(15, 23, 42, .10);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 22px 18px 20px;
+        }
+
+        /* ===== Clock ===== */
+        .clock-wrap{
+            display:flex;
+            justify-content:center;
+            padding: 8px 0 16px;
+        }
+
+        .analog{
+            width: var(--clock-size);
+            height: var(--clock-size);
+            border-radius: 50%;
+            position: relative;
+            background: radial-gradient(circle at 30% 25%, #ffffff 0%, var(--clock-face) 55%, var(--clock-bg) 100%);
+            box-shadow:
+                    inset 0 10px 30px rgba(255,255,255,.70),
+                    inset 0 -18px 32px rgba(0,0,0,.10);
+            border: 18px solid rgba(15, 23, 42, .75);
+            outline: 10px solid rgba(15, 23, 42, .20);
+            outline-offset: -18px;
+            user-select:none;
+        }
+
+        .brand{
+            position:absolute;
+            top: 33%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: 900;
+            color: rgba(15,23,42,.55);
+            letter-spacing: .03em;
+            font-size: 22px;
+        }
+
+        /* Center pin */
+        .pin{
+            position:absolute;
+            left: 50%;
+            top: 50%;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            transform: translate(-50%,-50%);
+            background: #0f172a;
+            box-shadow: 0 2px 0 rgba(255,255,255,.35), 0 8px 16px rgba(0,0,0,.18);
+            z-index: 15;
+        }
+        .pin::after{
+            content:"";
+            position:absolute;
+            inset: 4px;
+            border-radius:50%;
+            background: rgba(255,255,255,.35);
+            opacity:.35;
+        }
+
+        /* Tick marks */
+        .ticks{
+            position:absolute;
+            inset: 16px;
+            border-radius: 50%;
+            z-index: 2;
+        }
+        .tick{
+            position:absolute;
+            left: 50%;
+            top: 50%;
+            transform-origin: 0 0;
+        }
+        .tick i{
+            display:block;
+            width: 4px;
+            height: 12px;
+            background: rgba(15,23,42,.20);
+            transform: translate(-50%, calc(-1 * (var(--clock-size) / 2 - 42px)));
+            border-radius: 2px;
+        }
+        .tick.major i{
+            width: 8px;
+            height: 22px;
+            background: rgba(15,23,42,.55);
+            transform: translate(-50%, calc(-1 * (var(--clock-size) / 2 - 44px)));
+        }
+
+        /* Numbers */
+        .nums{
+            position:absolute;
+            inset: 0;
+            border-radius:50%;
+            z-index: 3;
+        }
+        .num{
+            position:absolute;
+            left: 50%;
+            top: 50%;
+            transform-origin: 0 0;
+            font-weight: 900;
+            color: rgba(255,255,255,.92);
+            text-shadow: 0 2px 0 rgba(0,0,0,.25);
+            font-size: 54px;
+        }
+        .num span{
+            display:block;
+            transform: translate(-50%, calc(-1 * (var(--clock-size) / 2 - 50px)));
+        }
+
+        /* Hands */
+        .hand{
+            position:absolute;
+            left:50%;
+            top:50%;
+            transform-origin: 50% calc(100% - 10px);
+            transform: translate(-50%,-100%) rotate(0deg);
+            border-radius: 10px;
+            z-index: 10;
+            will-change: transform;
+        }
+        .hand.hour{
+            width: 18px;
+            height: 170px;
+            background: rgba(255,255,255,.70);
+            box-shadow: 0 6px 14px rgba(0,0,0,.22);
+            border-radius: 14px;
+        }
+        .hand.minute{
+            width: 14px;
+            height: 230px;
+            background: rgba(255,255,255,.78);
+            box-shadow: 0 6px 14px rgba(0,0,0,.22);
+            border-radius: 14px;
+        }
+        .hand.second{
+            width: 4px;
+            height: 250px;
+            background: var(--s);
+            box-shadow: 0 6px 14px rgba(0,0,0,.18);
+            border-radius: 6px;
+            z-index: 12;
+        }
+        .hand.second::after{
+            content:"";
+            position:absolute;
+            left: 50%;
+            top: calc(100% - 12px);
+            transform: translateX(-50%);
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--s);
+            box-shadow: 0 4px 10px rgba(0,0,0,.18);
+        }
+
+        /* ===== UI ===== */
+        .date-str{
+            margin: 16px 0 10px;
+            font-size: 22px;
+            font-weight: 900;
+            color: rgba(15,23,42,.70);
+        }
+
+        .row{
+            display:flex;
+            justify-content:center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        select, button, a.btn{
+            height: 44px;
+            border-radius: 12px;
+            border: 1px solid var(--btn-border);
+            background: var(--btn);
+            color: var(--btn-text);
+            font-weight: 800;
+            padding: 0 14px;
+            font-size: 15px;
+            outline: none;
+        }
+        select{
+            width: min(520px, 100%);
+            padding-left: 12px;
+        }
+        button, a.btn{
+            cursor:pointer;
+            box-shadow: 0 8px 18px rgba(0,0,0,.06);
+            transition: transform .06s ease, filter .12s ease;
+        }
+        button:hover, a.btn:hover{ filter: brightness(.98); }
+        button:active, a.btn:active{ transform: translateY(1px); }
+
+        a.btn{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            text-decoration:none;
+        }
+
+        .desc{
+            margin-top: 18px;
+            text-align:left;
+            padding: 18px 10px 4px;
+        }
+        .desc ul{
+            margin:0;
+            padding-left: 18px;
+            line-height: 1.9;
+            color: rgba(15,23,42,.70);
+            font-weight: 650;
+        }
+        .desc strong{ color: rgba(15,23,42,.85); }
+
+        /* Dark mode */
+        body.dark{
+            --bg:#1f2327;
+            --text:#e5e7eb;
+            --muted:#cbd5e1;
+            --card:#1b1f23;
+            --btn:#1b1f23;
+            --btn-text:#e5e7eb;
+            --btn-border:#334155;
+            --shadow: 0 18px 40px rgba(0,0,0,.35);
+        }
+        body.dark .date-str{ color: rgba(229,231,235,.85); }
+        body.dark .desc ul{ color: rgba(229,231,235,.80); }
+
+        /* Fullscreen helper */
+        .fs-hide.fs-on{ display:none !important; }
+
+        /* Responsive */
+        @media (max-width: 700px){
+            :root{ --clock-size: 380px; }
+            .num{ font-size: 42px; }
+            .hand.hour{ height: 125px; }
+            .hand.minute{ height: 175px; }
+            .hand.second{ height: 188px; }
+            .date-str{ font-size: 18px; }
+        }
+        @media (max-width: 420px){
+            :root{ --clock-size: 320px; }
+            .num{ font-size: 36px; }
+            .hand.hour{ height: 110px; }
+            .hand.minute{ height: 150px; }
+            .hand.second{ height: 164px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="card">
+
+        <div class="clock-wrap">
+            <div class="analog" aria-label="아날로그 시계" role="img">
+                <div class="ticks" aria-hidden="true" id="ticks"></div>
+                <div class="nums" aria-hidden="true" id="nums"></div>
+
+                <div class="brand">Utilpak</div>
+
+                <div class="hand hour" id="handH"></div>
+                <div class="hand minute" id="handM"></div>
+                <div class="hand second" id="handS"></div>
+
+                <span class="pin"></span>
+            </div>
+        </div>
+
+        <div class="date-str" id="dateStr">-</div>
+
+        <form class="fs-hide" id="tzForm">
+            <select name="timezone" class="timezone" id="tzSelect">
+                <option value="">(자동) 시스템 시간대</option>
+                <option value="Asia/Seoul" data-city="서울">(GMT+9) 한국 표준시 (서울)</option>
+                <option value="Asia/Tokyo" data-city="도쿄">(GMT+9) 일본 표준시 (도쿄)</option>
+                <option value="America/New_York" data-city="뉴욕">미국 동부 (뉴욕)</option>
+                <option value="America/Los_Angeles" data-city="로스앤젤레스">미국 서부 (로스앤젤레스)</option>
+                <option value="Europe/London" data-city="런던">영국 (런던)</option>
+                <option value="Europe/Paris" data-city="파리">프랑스 (파리)</option>
+
+                <option value='Pacific/Majuro' data-city="마주로">마주로</option>
+                <option value='Pacific/Midway' data-city="미드웨이">마주로</option>
+                <option value='Pacific/Honolulu' data-city="호놀룰루">호놀룰루</option>
+                <option value='America/Anchorage' data-city="앵커리지">앵커리지</option>
+                <option value='America/Los_Angeles' data-city="로스앤젤레스"></option>
+                <option value='America/Tijuana' data-city="티후아나"></option>
+                <option value='America/Phoenix' data-city="피닉스"></option>
+                <option value='America/Chihuahua' data-city="치와와"></option>
+                <option value='America/Denver' data-city="덴버"></option>
+                <option value='America/Costa_Rica' data-city="코스타리카"></option>
+                <option value='America/Chicago' data-city="시카고"></option>
+                <option value='America/Mexico_City' data-city="멕시코시티"></option>
+                <option value='America/Regina' data-city="리자이나"></option>
+                <option value='America/Bogota' data-city="보고타"></option>
+                <option value='America/New_York' data-city="뉴욕"></option>
+                <option value='America/Caracas' data-city="카라카스"></option>
+                <option value='America/Barbados' data-city="바베이도스"></option>
+                <option value='America/Halifax' data-city="할리팩스"></option>
+                <option value='America/Manaus' data-city="마나우스"></option>
+                <option value='America/Santiago' data-city="산티아고"></option>
+                <option value='America/St_Johns' data-city="세인트 존스"></option>
+                <option value='America/Sao_Paulo' data-city="상파울루"></option>
+                <option value='America/Argentina/Buenos_Aires' data-city="부에노스아이레스"></option>
+                <option value='America/Godthab' data-city="누크"></option>
+                <option value='America/Montevideo' data-city="몬테비데오"></option>
+                <option value='Atlantic/South_Georgia' data-city="사우스조지아"></option>
+                <option value='Atlantic/Azores' data-city="아조레스 제도"></option>
+                <option value='Atlantic/Cape_Verde' data-city="카보베르데"></option>
+                <option value='Africa/Casablanca' data-city="카사블랑카"></option>
+                <option value='Europe/London' data-city="런던"></option>
+                <option value='Europe/Amsterdam' data-city="암스테르담"></option>
+                <option value='Europe/Belgrade' data-city="베오그라드"></option>
+                <option value='Europe/Brussels' data-city="브뤼셀"></option>
+                <option value='Europe/Sarajevo' data-city="사라예보"></option>
+                <option value='Africa/Windhoek' data-city="빈트후크"></option>
+                <option value='Africa/Brazzaville' data-city="브라자빌"></option>
+                <option value='Asia/Amman' data-city="암만"></option>
+                <option value='Europe/Athens' data-city="아테네"></option>
+                <option value='Asia/Beirut' data-city="베이루트"></option>
+                <option value='Africa/Cairo' data-city="카이로"></option>
+                <option value='Europe/Helsinki' data-city="헬싱키"></option>
+                <option value='Asia/Jerusalem' data-city="예루살렘"></option>
+                <option value='Europe/Minsk' data-city="민스크"></option>
+                <option value='Africa/Harare' data-city="하라레"></option>
+                <option value='Asia/Baghdad' data-city="바그다드"></option>
+                <option value='Europe/Moscow' data-city="모스크바"></option>
+                <option value='Asia/Kuwait' data-city="쿠웨이트"></option>
+                <option value='Africa/Nairobi' data-city="나이로비"></option>
+                <option value='Asia/Tehran' data-city="테헤란"></option>
+                <option value='Asia/Baku' data-city="바쿠"></option>
+                <option value='Asia/Tbilisi' data-city="트빌리시"></option>
+                <option value='Asia/Yerevan' data-city="예레반"></option>
+                <option value='Asia/Dubai' data-city="두바이"></option>
+                <option value='Asia/Kabul' data-city="카불"></option>
+                <option value='Asia/Karachi' data-city="카라치"></option>
+                <option value='Asia/Oral' data-city="오랄"></option>
+                <option value='Asia/Yekaterinburg' data-city="예카테린부르크"></option>
+                <option value='Asia/Calcutta' data-city="콜카타"></option>
+                <option value='Asia/Colombo' data-city="콜롬보"></option>
+                <option value='Asia/Katmandu' data-city="카트만두"></option>
+                <option value='Asia/Almaty' data-city="알마티"></option>
+                <option value='Asia/Rangoon' data-city="양곤"></option>
+                <option value='Asia/Krasnoyarsk' data-city="크라스노야르스크"></option>
+                <option value='Asia/Bangkok' data-city="방콕"></option>
+                <option value='Asia/Shanghai' data-city="상하이"></option>
+                <option value='Asia/Hong_Kong' data-city="홍콩"></option>
+                <option value='Asia/Irkutsk' data-city="이르쿠츠크"></option>
+                <option value='Asia/Kuala_Lumpur' data-city="쿠알라룸푸르"></option>
+                <option value='Australia/Perth' data-city="퍼스"></option>
+                <option value='Asia/Taipei' data-city="타이베이"></option>
+                <option value='Asia/Seoul' data-city="서울"></option>
+                <option value='Asia/Tokyo' data-city="도쿄"></option>
+                <option value='Asia/Yakutsk' data-city="야쿠츠크"></option>
+                <option value='Australia/Adelaide' data-city="애들레이드"></option>
+                <option value='Australia/Darwin' data-city="다윈"></option>
+                <option value='Australia/Brisbane' data-city="브리즈번"></option>
+                <option value='Australia/Hobart' data-city="호바트"></option>
+                <option value='Australia/Sydney' data-city="시드니"></option>
+                <option value='Asia/Vladivostok' data-city="블라디보스토크"></option>
+                <option value='Pacific/Guam' data-city="괌"></option>
+                <option value='Asia/Magadan' data-city="마가단"></option>
+                <option value='Pacific/Auckland' data-city="오클랜드"></option>
+                <option value='Pacific/Fiji' data-city="피지"></option>
+                <option value='Pacific/Tongatapu' data-city="통가타푸"></option>
+                <option value='Asia/Jakarta' data-city="자카르타"></option>
+            </select>
+        </form>
+
+        <div class="row fs-hide" id="actions">
+            <button type="button" id="btnFullscreen">전체화면</button>
+            <button type="button" id="btnDark">어두운 모드</button>
+            <a class="btn" href="#" id="btnDigital" rel="nofollow">디지털 시계</a>
+        </div>
+
+        <div class="desc fs-hide" id="desc">
+            <ul>
+                <li><strong>전체 화면 아날로그 시계 웹 앱</strong> - 어떤 공간에서도 잘 보이는 크고 선명한 화면</li>
+                <li><strong>초침 포함</strong> - 시·분·초까지 정확히 표시</li>
+                <li><strong>전체 화면 광고 없음</strong> - 깔끔하고 방해 없는 화면</li>
+                <li><strong>화면 꺼짐 방지</strong> - 자동 화면 꺼짐을 막아 계속 표시</li>
+                <li><strong>다크 모드 지원</strong> - 밤에도 눈에 편안</li>
+                <li><strong>세계 시간대 지원</strong> - 전 세계 국가·도시 시간 표시</li>
+                <li><strong>온라인 웹 앱</strong> - 설치/다운로드 없이 모든 브라우저에서 작동</li>
+                <li><strong>시간 서버 동기화</strong> - 인터넷에서 정확한 시간을 받아 항상 정확</li>
+            </ul>
+        </div>
+
+    </div>
+</div>
+
+<script>
+
+
+    document.querySelectorAll('#tzSelect option[data-city]').forEach(opt => {
+        if (!opt.textContent.trim()) opt.textContent = opt.dataset.city;
+    });
+
+
+
+
+
+
+    // ===== Build ticks & numbers =====
+    const ticksEl = document.getElementById("ticks");
+    const numsEl  = document.getElementById("nums");
+
+    function buildDial(){
+        // 60 ticks
+        for(let i=1;i<=60;i++){
+            const t = document.createElement("div");
+            t.className = "tick" + (i % 5 === 0 ? " major" : "");
+            t.style.transform = `rotate(${i*6}deg)`;
+            const ii = document.createElement("i");
+            t.appendChild(ii);
+            ticksEl.appendChild(t);
+        }
+        // 12 numbers
+        for(let i=1;i<=12;i++){
+            const n = document.createElement("div");
+            n.className = "num";
+            n.style.transform = `rotate(${i*30}deg)`;
+            const sp = document.createElement("span");
+            sp.textContent = i;
+            n.appendChild(sp);
+            numsEl.appendChild(n);
+        }
+    }
+    buildDial();
+
+    // ===== Time / Timezone =====
+    const handH = document.getElementById("handH");
+    const handM = document.getElementById("handM");
+    const handS = document.getElementById("handS");
+    const dateStr = document.getElementById("dateStr");
+    const tzSelect = document.getElementById("tzSelect");
+
+    function formatKoreanDateParts(d, tz){
+        const opt = { timeZone: tz || undefined, weekday:"long", year:"numeric", month:"long", day:"numeric" };
+        const s = new Intl.DateTimeFormat("ko-KR", opt).format(d);
+        // "2025년 12월 26일 금요일"
+        const h = new Intl.DateTimeFormat("ko-KR", { timeZone: tz || undefined, hour:"numeric", hour12:true }).format(d);
+        return `${s} (${h.includes("오전") ? "오전" : "오후"})`;
+    }
+
+    function getTimeParts(tz){
+        const d = new Date();
+        const fmt = new Intl.DateTimeFormat("en-US", {
+            timeZone: tz || undefined,
+            hour12:false,
+            hour:"2-digit",
+            minute:"2-digit",
+            second:"2-digit"
+        });
+        const parts = fmt.formatToParts(d);
+        const map = {};
+        for(const p of parts) map[p.type] = p.value;
+        return {
+            d,
+            h: parseInt(map.hour,10),
+            m: parseInt(map.minute,10),
+            s: parseInt(map.second,10)
+        };
+    }
+
+    // Smooth second hand: use milliseconds
+    function tick(){
+        const tz = tzSelect.value || undefined;
+        const now = new Date();
+
+        let h,m,s,ms;
+        if (tz){
+            // timezone conversion for hour/min/sec (ms는 local 기반이지만 시각적 부드러움용)
+            const p = getTimeParts(tz);
+            h = p.h; m = p.m; s = p.s;
+            ms = now.getMilliseconds();
+            dateStr.textContent = formatKoreanDateParts(p.d, tz);
+        } else {
+            h = now.getHours(); m = now.getMinutes(); s = now.getSeconds();
+            ms = now.getMilliseconds();
+            dateStr.textContent = formatKoreanDateParts(now, undefined);
+        }
+
+        const sec = s + ms/1000;
+        const min = m + sec/60;
+        const hr  = (h % 12) + min/60;
+
+        const aS = sec * 6;      // 360/60
+        const aM = min * 6;
+        const aH = hr  * 30;     // 360/12
+
+        // Hands use translate(-50%,-100%) baseline in CSS.
+        handS.style.transform = `translate(-50%,-100%) rotate(${aS}deg)`;
+        handM.style.transform = `translate(-50%,-100%) rotate(${aM}deg)`;
+        handH.style.transform = `translate(-50%,-100%) rotate(${aH}deg)`;
+
+        requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+
+    // ===== Dark mode / Fullscreen / Digital toggle =====
+    const btnDark = document.getElementById("btnDark");
+    const btnFullscreen = document.getElementById("btnFullscreen");
+    const btnDigital = document.getElementById("btnDigital");
+    const fsHideEls = document.querySelectorAll(".fs-hide");
+
+    // dark mode persist
+    const savedDark = localStorage.getItem("clock_dark") === "1";
+    if (savedDark) document.body.classList.add("dark");
+    btnDark.value = ""; // safety for inputs
+
+    btnDark.addEventListener("click", () => {
+        document.body.classList.toggle("dark");
+        localStorage.setItem("clock_dark", document.body.classList.contains("dark") ? "1" : "0");
+        btnDark.textContent = document.body.classList.contains("dark") ? "밝은 모드" : "어두운 모드";
+    });
+    btnDark.textContent = document.body.classList.contains("dark") ? "밝은 모드" : "어두운 모드";
+
+    // fullscreen
+    function setFsUI(on){
+        fsHideEls.forEach(el => el.classList.toggle("fs-on", on));
+        btnFullscreen.textContent = on ? "전체화면 종료" : "전체화면";
+    }
+    document.addEventListener("fullscreenchange", () => setFsUI(!!document.fullscreenElement));
+    btnFullscreen.addEventListener("click", async () => {
+        try{
+            if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
+            else await document.exitFullscreen();
+        }catch(e){}
+    });
+
+    // digital toggle (demo)
+    btnDigital.addEventListener("click", (e) => {
+        e.preventDefault();
+        alert("디지털 시계 페이지로 이동 링크를 연결하세요.");
+    });
+
+    // timezone persist
+    const savedTz = localStorage.getItem("clock_tz") || "";
+    if (savedTz) tzSelect.value = savedTz;
+    tzSelect.addEventListener("change", () => {
+        localStorage.setItem("clock_tz", tzSelect.value || "");
+    });
+</script>
+</body>
+</html>

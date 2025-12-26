@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+
+</body>
+</html><!-- 파일명(영어) 예시: percent-calculator.html -->
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>백분율 계산기</title>
+  <style>
+    :root{
+      --bg:#fbfbfb;
+      --card:#ffffff;
+      --text:#111827;
+      --muted:#6b7280;
+      --line:#e5e7eb;
+      --focus:#2563eb;
+      --shadow:0 10px 30px rgba(0,0,0,.06);
+      --radius:14px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      color:var(--text);
+      background:var(--bg);
+    }
+    .wrap{
+      max-width: 860px;
+      margin: 28px auto 60px;
+      padding: 0 14px;
+    }
+    header{
+      text-align:center;
+      margin-bottom: 14px;
+    }
+    h1{
+      font-size: 26px;
+      margin: 10px 0 8px;
+      letter-spacing: -0.02em;
+    }
+    .sub{
+      color:var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    /* Tabs */
+    .tabs{
+      margin-top: 18px;
+      background: var(--card);
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .tabbar{
+      display:flex;
+      gap:6px;
+      padding:10px 10px 0;
+      background: linear-gradient(#fff, #fff);
+      border-bottom:1px solid var(--line);
+    }
+    .tab{
+      appearance:none;
+      border:1px solid var(--line);
+      border-bottom: none;
+      background:#f8fafc;
+      color:#374151;
+      padding:10px 14px;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+      font-weight:600;
+      cursor:pointer;
+      letter-spacing:-0.01em;
+    }
+    .tab[aria-selected="true"]{
+      background:#fff;
+      color:var(--text);
+      border-color: var(--line);
+      position: relative;
+      top:1px;
+    }
+    .tab:focus-visible{
+      outline:3px solid rgba(37,99,235,.25);
+      outline-offset:2px;
+    }
+
+    .panel{
+      display:none;
+      padding: 14px;
+    }
+    .panel.active{ display:block; }
+
+    /* Blocks */
+    .block{
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+    }
+    .block + .block{ margin-top: 12px; }
+    .divider{
+      height:1px;
+      background: var(--line);
+      margin: 12px 0;
+    }
+
+    .q-row{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap: wrap;
+      line-height: 1.6;
+      font-size: 18px;
+      letter-spacing:-0.01em;
+    }
+    .q-row .label{
+      white-space:nowrap;
+    }
+    .ans{
+      margin-left:auto;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      white-space:nowrap;
+    }
+    .ans .ans-label{
+      color:var(--muted);
+      font-size: 13px;
+    }
+
+    input[type="number"], input[readonly]{
+      width: 120px;
+      height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0 12px;
+      font-size: 18px;
+      background:#fff;
+      color:var(--text);
+    }
+    input[type="number"]{
+      appearance: textfield;
+    }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+
+    input[readonly]{
+      background:#f3f4f6;
+      color:#111827;
+      font-weight:700;
+      text-align:right;
+    }
+    input:focus{
+      outline:none;
+      border-color: rgba(37,99,235,.55);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+    }
+
+    /* Formula view */
+    .formula{
+      font-size: 16px;
+      color:#111827;
+      line-height: 1.9;
+    }
+    .formula code{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      background:#f8fafc;
+      border:1px solid var(--line);
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+    .formula .muted{ color:var(--muted); }
+
+    /* Footer actions */
+    .actions{
+      display:flex;
+      justify-content:center;
+      margin-top: 14px;
+    }
+    .btn{
+      appearance:none;
+      border:1px solid var(--line);
+      background:#fff;
+      color:#374151;
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor:pointer;
+      font-weight:600;
+    }
+    .btn:hover{ background:#f8fafc; }
+    .btn:active{ transform: translateY(1px); }
+    .btn:focus-visible{
+      outline:3px solid rgba(37,99,235,.25);
+      outline-offset:2px;
+    }
+
+    /* Responsive */
+    @media (max-width: 560px){
+      .q-row{ font-size: 16px; }
+      input[type="number"], input[readonly]{ width: 110px; font-size: 16px; height: 40px; }
+      .ans{ width:100%; margin-left:0; justify-content:flex-end; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>백분율 계산기</h1>
+    <p class="sub">비율, 할인, 변동률 등 자주 쓰는 백분율 계산을 빠르게 확인하세요.</p>
+  </header>
+
+  <section class="tabs" aria-label="백분율 계산 탭">
+    <div class="tabbar" role="tablist" aria-label="탭">
+      <button class="tab" id="tab-question" role="tab" aria-controls="panel-question" aria-selected="true" type="button">의문</button>
+      <button class="tab" id="tab-formula" role="tab" aria-controls="panel-formula" aria-selected="false" type="button">수학 공식</button>
+    </div>
+
+    <!-- 의문 -->
+    <div class="panel active" id="panel-question" role="tabpanel" aria-labelledby="tab-question">
+
+      <!-- Q1 -->
+      <div class="block" data-q="q1">
+        <div class="q-row">
+          <input type="number" inputmode="decimal" class="in q1-b" placeholder="1000" aria-label="기준값" />
+          <span class="label">의</span>
+          <input type="number" inputmode="decimal" class="in q1-a" placeholder="10" aria-label="퍼센트" />
+          <span class="label">퍼센트는 얼마?</span>
+          <div class="ans">
+            <span class="ans-label">답변</span>
+            <input type="text" class="out q1-c" readonly aria-label="답변" />
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Q2 -->
+      <div class="block" data-q="q2">
+        <div class="q-row">
+          <input type="number" inputmode="decimal" class="in q2-b" placeholder="전체" aria-label="전체값" />
+          <span class="label">에서</span>
+          <input type="number" inputmode="decimal" class="in q2-a" placeholder="부분" aria-label="부분값" />
+          <span class="label">은(는) 몇 퍼센트?</span>
+          <div class="ans">
+            <span class="ans-label">답변</span>
+            <input type="text" class="out q2-c" readonly aria-label="답변" />
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Q3 -->
+      <div class="block" data-q="q3">
+        <div class="q-row">
+          <input type="number" inputmode="decimal" class="in q3-b" placeholder="%" aria-label="퍼센트" />
+          <span class="label">% 가</span>
+          <input type="number" inputmode="decimal" class="in q3-a" placeholder="값" aria-label="값" />
+          <span class="label">과 같으면</span>
+          <div class="ans">
+            <input type="text" class="out q3-c" readonly aria-label="답변" />
+            <span class="label">입니다.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Q6 -->
+      <div class="block" data-q="q6">
+        <div class="q-row">
+          <input type="number" inputmode="decimal" class="in q6-a" placeholder="이전값" aria-label="이전값" />
+          <span class="label">이(가)</span>
+          <input type="number" inputmode="decimal" class="in q6-b" placeholder="변경값" aria-label="변경값" />
+          <span class="label">로 바뀌면</span>
+          <div class="ans">
+            <input type="text" class="out q6-c" readonly aria-label="증가율" />
+            <span class="label">% 증가입니다.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Q7 -->
+      <div class="block" data-q="q7">
+        <div class="q-row">
+          <input type="number" inputmode="decimal" class="in q7-a" placeholder="원래값" aria-label="원래값" />
+          <span class="label">이(가)</span>
+          <input type="number" inputmode="decimal" class="in q7-b" placeholder="증가%" aria-label="증가 퍼센트" />
+          <span class="label">% 증가 하면</span>
+          <div class="ans">
+            <input type="text" class="out q7-c" readonly aria-label="결과값" />
+            <span class="label">입니다.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Q8 -->
+      <div class="block" data-q="q8">
+        <div class="q-row">
+          <input type="number" inputmode="decimal" class="in q8-a" placeholder="원래값" aria-label="원래값" />
+          <span class="label">이(가)</span>
+          <input type="number" inputmode="decimal" class="in q8-b" placeholder="감소%" aria-label="감소 퍼센트" />
+          <span class="label">% 감소 하면</span>
+          <div class="ans">
+            <input type="text" class="out q8-c" readonly aria-label="결과값" />
+            <span class="label">입니다.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="erase-all" type="button" data-confirm="모든 데이터를 삭제하시겠습니까?">모든 데이터 삭제</button>
+      </div>
+    </div>
+
+    <!-- 수학 공식 -->
+    <div class="panel" id="panel-formula" role="tabpanel" aria-labelledby="tab-formula">
+      <div class="block formula">
+        <div><strong>1)</strong> <span class="muted">A% × B</span></div>
+        <div style="margin-top:8px">
+          <code id="f1">A% × B = (A/100) × B = 결과</code>
+        </div>
+      </div>
+
+      <div class="block formula" style="margin-top:12px">
+        <div><strong>2)</strong> <span class="muted">부분/전체</span></div>
+        <div style="margin-top:8px">
+          <code id="f2">A / B = 비율 = %</code>
+        </div>
+      </div>
+
+      <div class="block formula" style="margin-top:12px">
+        <div><strong>3)</strong> <span class="muted">X의 P% 값</span></div>
+        <div style="margin-top:8px">
+          <code id="f3">P%가 X와 같을 때 기준값 = X / (P/100)</code>
+        </div>
+      </div>
+
+      <div class="block formula" style="margin-top:12px">
+        <div><strong>4)</strong> <span class="muted">변동률</span></div>
+        <div style="margin-top:8px">
+          <code id="f6">(변경값/이전값 - 1) = 증가율</code>
+        </div>
+      </div>
+
+      <div class="block formula" style="margin-top:12px">
+        <div><strong>5)</strong> <span class="muted">증가 후 값</span></div>
+        <div style="margin-top:8px">
+          <code id="f7">원래값 × (1 + p/100) = 결과</code>
+        </div>
+      </div>
+
+      <div class="block formula" style="margin-top:12px">
+        <div><strong>6)</strong> <span class="muted">감소 후 값</span></div>
+        <div style="margin-top:8px">
+          <code id="f8">원래값 × (1 - p/100) = 결과</code>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="erase-all-2" type="button" data-confirm="모든 데이터를 삭제하시겠습니까?">모든 데이터 삭제</button>
+      </div>
+    </div>
+  </section>
+
+  <div style="max-width: 720px; margin: 18px auto 0; color:#374151;">
+    <p style="margin:0; font-size:14px; line-height:1.7;">
+      우리는 종종 인생, 비즈니스 및 투자에서 백분율 계산을 사용합니다.
+      비율계산, 할인계산, 주가변동율, 부가세 포함계산, 비과세계산 등에 사용할 수 있습니다.
+    </p>
+  </div>
+</div>
+
+<script>
+  (() => {
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+    // ---------- utils ----------
+    const toNum = (v) => {
+      if (v === null || v === undefined) return null;
+      const s = String(v).trim();
+      if (s === "") return null;
+      const n = Number(s);
+      return Number.isFinite(n) ? n : null;
+    };
+
+    const fmt = (n, opt={}) => {
+      // opt.max: 최대 소수점
+      // opt.suffix: 문자열 접미사
+      if (n === null || n === undefined || !Number.isFinite(n)) return "";
+      const max = (opt.max ?? 6);
+      // 소수점 너무 길어지지 않게
+      let s = n.toFixed(max);
+      // 뒤 0 제거
+      s = s.replace(/\.?0+$/,'');
+      return opt.suffix ? (s + opt.suffix) : s;
+    };
+
+    const setOut = (selector, value) => {
+      const el = $(selector);
+      if (!el) return;
+      el.value = value;
+    };
+
+    // ---------- calculations ----------
+    function calcAll() {
+      // Q1: B의 A% = C
+      {
+        const b = toNum($('.q1-b')?.value);
+        const a = toNum($('.q1-a')?.value);
+        const c = (a !== null && b !== null) ? (b * (a/100)) : null;
+        setOut('.q1-c', fmt(c));
+        // formula text
+        $('#f1').textContent =
+                (a !== null && b !== null)
+                        ? `${fmt(a)}% × ${fmt(b)} = (${fmt(a)}/100) × ${fmt(b)} = ${fmt(c)}`
+                        : `A% × B = (A/100) × B = 결과`;
+      }
+
+      // Q2: B에서 A는 몇% = (A/B)*100
+      {
+        const b = toNum($('.q2-b')?.value);
+        const a = toNum($('.q2-a')?.value);
+        const c = (a !== null && b !== null && b !== 0) ? ((a / b) * 100) : null;
+        setOut('.q2-c', c === null ? "" : fmt(c, {max: 6, suffix: "%" }));
+        $('#f2').textContent =
+                (a !== null && b !== null)
+                        ? (b === 0 ? `${fmt(a)} / 0 = 정의되지 않음` : `${fmt(a)} / ${fmt(b)} = ${fmt(a/b, {max: 8})} = ${fmt(c, {max: 6})}%`)
+                        : `A / B = 비율 = %`;
+      }
+
+      // Q3: B%가 A와 같으면 기준값 C = A / (B/100)
+      {
+        const p = toNum($('.q3-b')?.value);
+        const a = toNum($('.q3-a')?.value);
+        const c = (a !== null && p !== null && p !== 0) ? (a / (p/100)) : null;
+        setOut('.q3-c', fmt(c));
+        $('#f3').textContent =
+                (a !== null && p !== null)
+                        ? (p === 0 ? `0%는 어떤 값도 만들 수 없음` : `${fmt(p)}%가 ${fmt(a)}와 같으면 기준값 = ${fmt(a)} / (${fmt(p)}/100) = ${fmt(c)}`)
+                        : `P%가 X와 같을 때 기준값 = X / (P/100)`;
+      }
+
+      // Q6: A -> B 변동률(%) = (B/A - 1)*100
+      {
+        const a = toNum($('.q6-a')?.value);
+        const b = toNum($('.q6-b')?.value);
+        const c = (a !== null && b !== null && a !== 0) ? ((b / a - 1) * 100) : null;
+        setOut('.q6-c', c === null ? "" : fmt(c, {max: 6}));
+        $('#f6').textContent =
+                (a !== null && b !== null)
+                        ? (a === 0 ? `0에서 변동률은 정의되지 않음` : `(${fmt(b)}/${fmt(a)} - 1) × 100 = ${fmt(c, {max: 6})}%`)
+                        : `(변경값/이전값 - 1) = 증가율`;
+      }
+
+      // Q7: A가 B% 증가 -> C = A*(1 + B/100)
+      {
+        const a = toNum($('.q7-a')?.value);
+        const p = toNum($('.q7-b')?.value);
+        const c = (a !== null && p !== null) ? (a * (1 + p/100)) : null;
+        setOut('.q7-c', fmt(c));
+        $('#f7').textContent =
+                (a !== null && p !== null)
+                        ? `${fmt(a)} × (1 + ${fmt(p)}/100) = ${fmt(a)} × ${fmt(1 + p/100, {max: 8})} = ${fmt(c)}`
+                        : `원래값 × (1 + p/100) = 결과`;
+      }
+
+      // Q8: A가 B% 감소 -> C = A*(1 - B/100)
+      {
+        const a = toNum($('.q8-a')?.value);
+        const p = toNum($('.q8-b')?.value);
+        const c = (a !== null && p !== null) ? (a * (1 - p/100)) : null;
+        setOut('.q8-c', fmt(c));
+        $('#f8').textContent =
+                (a !== null && p !== null)
+                        ? `${fmt(a)} × (1 - ${fmt(p)}/100) = ${fmt(a)} × ${fmt(1 - p/100, {max: 8})} = ${fmt(c)}`
+                        : `원래값 × (1 - p/100) = 결과`;
+      }
+    }
+
+    // ---------- tabs ----------
+    function setTab(which) {
+      const isQ = which === "question";
+      $('#tab-question').setAttribute('aria-selected', isQ ? 'true' : 'false');
+      $('#tab-formula').setAttribute('aria-selected', isQ ? 'false' : 'true');
+      $('#panel-question').classList.toggle('active', isQ);
+      $('#panel-formula').classList.toggle('active', !isQ);
+    }
+
+    $('#tab-question').addEventListener('click', () => setTab("question"));
+    $('#tab-formula').addEventListener('click', () => setTab("formula"));
+
+    // ---------- localStorage (옵션: 자동 저장/복구) ----------
+    const LS_KEY = "percent_calc_v1";
+
+    function saveState() {
+      const data = {};
+      $$('.in').forEach(inp => data[inp.className] = inp.value);
+      localStorage.setItem(LS_KEY, JSON.stringify(data));
+    }
+
+    function loadState() {
+      const raw = localStorage.getItem(LS_KEY);
+      if (!raw) return;
+      try{
+        const data = JSON.parse(raw);
+        $$('.in').forEach(inp => {
+          const key = inp.className;
+          if (Object.prototype.hasOwnProperty.call(data, key)) inp.value = data[key];
+        });
+      }catch(e){}
+    }
+
+    function clearAll() {
+      $$('.in').forEach(inp => inp.value = "");
+      $$('.out').forEach(out => out.value = "");
+      localStorage.removeItem(LS_KEY);
+      calcAll();
+    }
+
+    function bindErase(btnId) {
+      const btn = $(btnId);
+      if (!btn) return;
+      btn.addEventListener('click', () => {
+        const msg = btn.getAttribute('data-confirm') || "모든 데이터를 삭제하시겠습니까?";
+        if (confirm(msg)) clearAll();
+      });
+    }
+
+    // bind inputs
+    $$('.in').forEach(inp => {
+      inp.addEventListener('input', () => {
+        saveState();
+        calcAll();
+      });
+    });
+
+    bindErase('#erase-all');
+    bindErase('#erase-all-2');
+
+    // init
+    loadState();
+    calcAll();
+  })();
+</script>
+</body>
+</html>

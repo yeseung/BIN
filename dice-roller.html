@@ -1,0 +1,454 @@
+<!-- File name example: dice-roller.html -->
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Dice Roller (3D)</title>
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --border:#e5e7eb;
+            --brand:#2f8ea0;
+            --brand2:#257585;
+
+            --die:120px;          /* dice size */
+            --radius:16px;        /* rounded corner */
+            --pip:14px;           /* pip size */
+            --gap:16px;           /* grid gap */
+            --shadow: 0 12px 30px rgba(0,0,0,.08);
+        }
+
+        *{box-sizing:border-box}
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .wrap{
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 28px 16px 60px;
+        }
+
+        .card{
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            padding: 24px;
+        }
+
+        .top{
+            display:flex;
+            align-items:flex-start;
+            justify-content:space-between;
+            gap:16px;
+            flex-wrap:wrap;
+        }
+
+        h1{
+            margin:0 0 6px;
+            font-size: 22px;
+            letter-spacing:-.2px;
+        }
+        .sub{
+            margin:0;
+            color:var(--muted);
+            line-height:1.45;
+            font-size: 14px;
+        }
+
+        .controls{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            flex-wrap:wrap;
+        }
+
+        .btn{
+            border:0;
+            background: linear-gradient(180deg, var(--brand), var(--brand2));
+            color:#fff;
+            font-weight:700;
+            padding: 12px 16px;
+            border-radius: 12px;
+            cursor:pointer;
+            box-shadow: 0 8px 18px rgba(47,142,160,.25);
+            transition: transform .08s ease, filter .15s ease;
+            user-select:none;
+        }
+        .btn:active{ transform: translateY(1px) }
+        .btn:disabled{
+            opacity:.55;
+            cursor:not-allowed;
+            box-shadow:none;
+        }
+
+        .select{
+            display:flex;
+            align-items:center;
+            gap:8px;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background:#fff;
+        }
+        select{
+            border:0;
+            outline:none;
+            font-size:14px;
+            background:transparent;
+            cursor:pointer;
+        }
+        .badge{
+            font-size:12px;
+            color:var(--muted);
+        }
+
+        .dice-area{
+            margin-top: 22px;
+            display:grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: var(--gap);
+            justify-items:center;
+            align-items:center;
+        }
+
+        @media (max-width: 840px){
+            .dice-area{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 520px){
+            :root{ --die: 104px; }
+            .dice-area{ grid-template-columns: repeat(1, minmax(0, 1fr)); }
+        }
+
+        /* ========= 3D DICE ========= */
+        .scene{
+            width: var(--die);
+            height: var(--die);
+            perspective: 700px;
+        }
+
+        .die{
+            width:100%;
+            height:100%;
+            position:relative;
+            transform-style: preserve-3d;
+            transition: transform 900ms cubic-bezier(.2,.9,.2,1);
+        }
+
+        .face{
+            position:absolute;
+            width:100%;
+            height:100%;
+            background: #fafafa;
+            border: 1px solid rgba(0,0,0,.10);
+            border-radius: var(--radius);
+            box-shadow: inset 0 0 0 2px rgba(0,0,0,.03);
+            display:grid;
+            place-items:center;
+            backface-visibility:hidden;
+        }
+
+        /* move faces */
+        .f1{ transform: rotateY(  0deg) translateZ(calc(var(--die) / 2)); }
+        .f2{ transform: rotateY( 90deg) translateZ(calc(var(--die) / 2)); }
+        .f3{ transform: rotateY(180deg) translateZ(calc(var(--die) / 2)); }
+        .f4{ transform: rotateY(-90deg) translateZ(calc(var(--die) / 2)); }
+        .f5{ transform: rotateX( 90deg) translateZ(calc(var(--die) / 2)); }
+        .f6{ transform: rotateX(-90deg) translateZ(calc(var(--die) / 2)); }
+
+        /* pips layout */
+        .pips{
+            width: 78%;
+            height: 78%;
+            display:grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 6px;
+            align-items:center;
+            justify-items:center;
+        }
+
+        .pip{
+            width: var(--pip);
+            height: var(--pip);
+            border-radius: 999px;
+            background:#111;
+            opacity:0;
+        }
+
+        /* helper: show pip */
+        .on{ opacity:1; }
+
+        /* results row */
+        .resultbar{
+            margin-top: 18px;
+            padding: 14px 16px;
+            border: 1px dashed var(--border);
+            border-radius: 14px;
+            background: #fbfbfd;
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            align-items:center;
+            justify-content:space-between;
+        }
+        .result-left{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            align-items:center;
+        }
+        .result-title{
+            font-weight:800;
+            letter-spacing:-.2px;
+        }
+        .result-text{
+            color:var(--muted);
+            font-size:14px;
+        }
+        .sum{
+            font-weight:800;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background:#fff;
+        }
+
+        /* roll animation (extra spin) */
+        .rolling{
+            animation: wobble 900ms ease;
+        }
+        @keyframes wobble{
+            0%   { transform: translateY(0) }
+            35%  { transform: translateY(-6px) }
+            100% { transform: translateY(0) }
+        }
+
+        .help{
+            margin-top: 18px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.55;
+        }
+
+        .symbols{
+            margin-top: 16px;
+            border-top: 1px solid var(--border);
+            padding-top: 14px;
+            display:grid;
+            gap:10px;
+        }
+        .symbols .row{
+            display:flex;
+            gap:12px;
+            flex-wrap:wrap;
+            align-items:center;
+        }
+        .k{
+            width:160px;
+            font-weight:700;
+            color:#374151;
+        }
+        .v{
+            color:#111827;
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="card">
+        <div class="top">
+            <div>
+                <h1>주사위 롤러 (3D)</h1>
+                <p class="sub">
+                    주사위 개수를 선택하고 “주사위 던지기”를 누르세요. (난수 생성 후 3D 회전으로 표시)
+                </p>
+            </div>
+
+            <div class="controls">
+                <div class="select" title="주사위 개수">
+                    <span class="badge">🎲 ×</span>
+                    <select id="count" aria-label="주사위 개수">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3" selected>3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                    </select>
+                </div>
+                <button id="roll" class="btn" type="button">주사위 던지기 ↻</button>
+            </div>
+        </div>
+
+        <div id="diceArea" class="dice-area" aria-live="polite"></div>
+
+        <div class="resultbar">
+            <div class="result-left">
+                <span class="result-title">결과</span>
+                <span id="resultText" class="result-text">-</span>
+            </div>
+            <div class="sum">합계: <span id="sum">0</span></div>
+        </div>
+
+        <div class="help">
+            • 3D 애니메이션은 표시용이며, 실제 결과는 JS 난수로 먼저 확정됩니다.<br/>
+            • 최신 브라우저(Chrome/Edge/Firefox 등)에서 3D가 자연스럽게 보입니다.
+        </div>
+
+        <div class="symbols">
+            <div class="row">
+                <div class="k">텍스트 심볼</div>
+                <div class="v">⚀ ⚁ ⚂ ⚃ ⚄ ⚅</div>
+            </div>
+            <div class="row">
+                <div class="k">이모티콘</div>
+                <div class="v">🎲</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ===== Utilities =====
+    const rand1to6 = () => (Math.floor(Math.random() * 6) + 1);
+
+    // For each final face number, map to a stable cube orientation
+    // We rotate the cube so that the desired face points front.
+    // Faces are placed as:
+    // f1: +Z (front), f2: +X (right), f3: -Z (back), f4: -X (left), f5: +Y (top), f6: -Y (bottom)
+    const faceToRotation = (n) => {
+        switch (n) {
+            case 1: return { x:   0, y:   0 };
+            case 2: return { x:   0, y: -90 };
+            case 3: return { x:   0, y: 180 };
+            case 4: return { x:   0, y:  90 };
+            case 5: return { x: -90, y:   0 };
+            case 6: return { x:  90, y:   0 };
+            default: return { x: 0, y: 0 };
+        }
+    };
+
+    // Add some extra spins so it feels like rolling
+    const withSpin = (rot) => {
+        const extraX = 360 * (2 + Math.floor(Math.random() * 2)); // 720 or 1080
+        const extraY = 360 * (2 + Math.floor(Math.random() * 2));
+        return { x: rot.x + extraX, y: rot.y + extraY };
+    };
+
+    // ===== Dice Face Pips =====
+    // 3x3 grid indices: 0..8
+    const pipMap = {
+        1: [4],
+        2: [0, 8],
+        3: [0, 4, 8],
+        4: [0, 2, 6, 8],
+        5: [0, 2, 4, 6, 8],
+        6: [0, 2, 3, 5, 6, 8]
+    };
+
+    const makeFace = (faceNumber) => {
+        const face = document.createElement("div");
+        face.className = `face f${faceNumber}`;
+
+        const pips = document.createElement("div");
+        pips.className = "pips";
+
+        for (let i = 0; i < 9; i++) {
+            const pip = document.createElement("span");
+            pip.className = "pip";
+            if (pipMap[faceNumber].includes(i)) pip.classList.add("on");
+            pips.appendChild(pip);
+        }
+
+        face.appendChild(pips);
+        return face;
+    };
+
+    const makeDie = () => {
+        const scene = document.createElement("div");
+        scene.className = "scene";
+
+        const die = document.createElement("div");
+        die.className = "die";
+        die.setAttribute("data-value", "1");
+        die.style.transform = `rotateX(0deg) rotateY(0deg)`;
+
+        // build 6 faces (f1..f6)
+        for (let i = 1; i <= 6; i++) {
+            die.appendChild(makeFace(i));
+        }
+
+        scene.appendChild(die);
+        return { scene, die };
+    };
+
+    // ===== App =====
+    const diceArea = document.getElementById("diceArea");
+    const countEl = document.getElementById("count");
+    const rollBtn  = document.getElementById("roll");
+    const resultText = document.getElementById("resultText");
+    const sumEl = document.getElementById("sum");
+
+    let dice = []; // { scene, die }
+
+    const renderDice = (count) => {
+        diceArea.innerHTML = "";
+        dice = [];
+        for (let i = 0; i < count; i++) {
+            const d = makeDie();
+            dice.push(d);
+            diceArea.appendChild(d.scene);
+        }
+        // reset output
+        resultText.textContent = "-";
+        sumEl.textContent = "0";
+    };
+
+    const setDieTo = (dieEl, value) => {
+        const baseRot = faceToRotation(value);
+        const spinRot = withSpin(baseRot);
+
+        dieEl.classList.remove("rolling");
+        // force reflow so animation restarts cleanly
+        void dieEl.offsetWidth;
+        dieEl.classList.add("rolling");
+
+        dieEl.style.transform = `rotateX(${spinRot.x}deg) rotateY(${spinRot.y}deg)`;
+        dieEl.setAttribute("data-value", String(value));
+    };
+
+    const roll = () => {
+        rollBtn.disabled = true;
+
+        const values = dice.map(() => rand1to6());
+        values.forEach((v, idx) => setDieTo(dice[idx].die, v));
+
+        const sum = values.reduce((a, b) => a + b, 0);
+        resultText.textContent = values.join(" , ");
+        sumEl.textContent = String(sum);
+
+        // re-enable after transition finishes
+        setTimeout(() => { rollBtn.disabled = false; }, 950);
+    };
+
+    countEl.addEventListener("change", () => {
+        const count = Math.max(1, Math.min(6, parseInt(countEl.value, 10) || 1));
+        renderDice(count);
+    });
+
+    rollBtn.addEventListener("click", roll);
+
+    // initial
+    renderDice(parseInt(countEl.value, 10) || 3);
+</script>
+</body>
+</html>

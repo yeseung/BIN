@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <title>한글 로렘 입숨 생성기</title>
+    <style>
+        :root{
+            --bg:#f6f8fb;
+            --panel:#fff;
+            --text:#0f172a;
+            --muted:#64748b;
+            --line:#e5e7eb;
+            --primary:#2563eb;
+            --shadow:0 18px 55px rgba(15,23,42,.12);
+            --shadow2:0 10px 30px rgba(15,23,42,.10);
+            --radius:18px;
+        }
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans KR",Arial,sans-serif;
+            background:var(--bg);
+            color:var(--text);
+        }
+        .wrap{ width:min(980px, calc(100% - 28px)); margin:18px auto 48px; }
+
+        .quiz_title_box{
+            display:flex; align-items:center; gap:10px;
+            padding:14px 16px; background:var(--panel);
+            border:1px solid var(--line);
+            border-radius:999px; box-shadow:var(--shadow2);
+        }
+        .backlist{
+            display:inline-grid; place-items:center;
+            width:38px; height:38px; border-radius:999px;
+            border:1px solid var(--line); background:#fff;
+            cursor:pointer; user-select:none;
+        }
+        .backlist:active{ transform: translateY(1px); }
+        .quiz_title{ font-size:20px; font-weight:1000; letter-spacing:-.2px; }
+        .quiz_doc{ margin:14px 2px; color:var(--muted); line-height:1.6; font-weight:600; }
+
+        .card{
+            background:var(--panel);
+            border:1px solid var(--line);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            padding:16px;
+            margin-top:12px;
+        }
+
+        .grid{
+            display:grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap:12px;
+        }
+        @media (max-width: 760px){
+            .grid{ grid-template-columns: 1fr; }
+        }
+
+        label{ display:block; font-weight:900; margin-bottom:6px; }
+        select{
+            width:100%;
+            padding:12px 12px;
+            border-radius:14px;
+            border:1px solid var(--line);
+            background:#fff;
+            font-weight:800;
+            outline:none;
+        }
+        select:focus{ border-color:#cbd5e1; box-shadow:0 0 0 4px rgba(37,99,235,.10); }
+
+        .btnrow{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:10px; }
+        .btn{
+            border:0;
+            padding:10px 14px;
+            border-radius:999px;
+            font-weight:1000;
+            cursor:pointer;
+            box-shadow:0 10px 22px rgba(15,23,42,.14);
+            display:inline-flex; align-items:center; gap:8px;
+        }
+        .btn.primary{ background:var(--primary); color:#fff; }
+        .btn.gray{ background:#0f172a; color:#fff; }
+        .btn.soft{ background:#f1f5f9; color:#0f172a; box-shadow:none; border:1px solid var(--line); }
+        .btn:active{ transform: translateY(1px); }
+
+        .status{
+            margin-left:auto;
+            color:var(--muted);
+            font-weight:900;
+            display:flex; align-items:center; gap:8px;
+        }
+        .dot{
+            width:10px; height:10px; border-radius:999px; background:#cbd5e1;
+        }
+        .dot.loading{ background:#f59e0b; box-shadow:0 0 0 4px rgba(245,158,11,.15); }
+
+        .resultWrap{ margin-top:12px; }
+        .result{
+            border:1px solid var(--line);
+            border-radius:16px;
+            background:#fff;
+            padding:14px;
+            line-height:1.8;
+            font-weight:700;
+            color:#111827;
+            white-space: pre-wrap;
+            word-break: break-word;
+            min-height: 140px;
+        }
+        .hint{
+            margin-top:10px;
+            color:var(--muted);
+            font-weight:700;
+        }
+        .help_title{ margin-top:22px; font-weight:1000; }
+        .help_doc{
+            margin-top:6px;
+            background:#f8fafc;
+            border:1px solid var(--line);
+            border-radius:14px;
+            padding:12px;
+            color:var(--muted);
+            font-weight:700;
+            line-height:1.7;
+        }
+
+        /* 결과 영역에 한글 로렘 느낌을 주고 싶다면 */
+        .hangul_ipsum{ letter-spacing: .1px; }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+
+    <div class="quiz_title_box">
+        <span class="backlist" id="btnBack" title="뒤로">←</span>
+        <div class="quiz_title">한글 로렘 입숨 생성기</div>
+    </div>
+
+    <div class="quiz_doc">
+        로렘 입숨은 출판, 디자인, 또는 웹 작업에서 시각적 연출을 위해 사용하는 의미 없는 채우기용 텍스트입니다.
+        이제 한글로도 로렘 입숨을 생성하여 자연스러운 레이아웃 시뮬레이션이 가능합니다.
+    </div>
+
+    <div class="card">
+        <form id="ipsumForm" autocomplete="off">
+            <div class="grid">
+                <div>
+                    <label for="text_line_count">문단 수</label>
+                    <select id="text_line_count" name="text_line_count">
+                        <!-- 1~30 -->
+                    </select>
+                </div>
+
+                <div>
+                    <label for="text_len">글자 길이</label>
+                    <select id="text_len" name="text_len">
+                        <option value="shorter">더짧게</option>
+                        <option value="shot">짧게</option>
+                        <option value="middle">중간</option>
+                        <option value="long">길게</option>
+                        <option value="louder">더길게</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="text_source">소스 선택</label>
+                    <select id="text_source" name="text_source">
+                        <option value="모밀꽃">모밀꽃 필 무렵</option>
+                        <option value="태조1권">조선왕조실록 태조실록1권(한글)</option>
+                        <option value="태조1권한자">조선왕조실록 태조실록1권(한자)</option>
+                        <option value="Prejudice">Pride and Prejudice(영문)</option>
+                        <option value="운수좋은날">운수 좋은 날</option>
+                        <option value="봄봄">봄봄 조광</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="btnrow">
+                <button type="button" class="btn primary" id="btnGenerate">↻ 한글 로렘 입숨 생성</button>
+                <button type="button" class="btn soft" id="btnCopy">📋 복사</button>
+                <button type="button" class="btn gray" id="btnReload">🔄 다시</button>
+
+                <div class="status">
+                    <span class="dot" id="loadingDot"></span>
+                    <span id="loadingText">대기</span>
+                </div>
+            </div>
+        </form>
+
+        <div class="resultWrap">
+            <div style="margin:12px 0 8px; font-weight:1000;">결과</div>
+            <div id="result" class="result hangul_ipsum"></div>
+            <div class="hint">※ 생성에 약간의 시간이 필요할 수 있습니다.</div>
+        </div>
+    </div>
+
+    <div style="margin-top:14px; color:var(--muted); font-weight:800;">한글 더미값 생성하기 (로렘 입숨)</div>
+
+    <!-- 광고 영역은 원하시면 그대로 넣으셔도 됩니다(생략 가능) -->
+
+    <div style="margin-top:30px">
+        <div class="help_title">주요 기능</div>
+        <div class="help_doc">자연스러운 한글 스타일의 로렘 입숨 생성, 다양한 길이와 문단 옵션 제공, 텍스트 채우기로 레이아웃 디자인 완성</div>
+
+        <div class="help_title">활용 예시</div>
+        <div class="help_doc">
+            웹사이트 또는 앱 디자인<br>
+            출판물 레이아웃 테스트<br>
+            시각적 프로토타입 제작
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // ====== 설정 ======
+    const API_URL = "http://b973456356743434.cafe24.com/ipsum/ajax_hangul_ipsum.php"; // 원본 유지
+
+    // ====== 엘리먼트 ======
+    const $ = (id) => document.getElementById(id);
+    const form = $("ipsumForm");
+    const selCount = $("text_line_count");
+    const selLen = $("text_len");
+    const selSource = $("text_source");
+    const resultEl = $("result");
+    const btnGenerate = $("btnGenerate");
+    const btnCopy = $("btnCopy");
+    const btnReload = $("btnReload");
+    const btnBack = $("btnBack");
+    const loadingDot = $("loadingDot");
+    const loadingText = $("loadingText");
+
+    // ====== 유틸 ======
+    function setLoading(on){
+        loadingDot.classList.toggle("loading", on);
+        loadingText.textContent = on ? "생성 중..." : "완료";
+    }
+
+    function escapeHtml(str){
+        // 서버가 HTML을 내려주는 경우도 있으니,
+        // "그대로 표시"가 목적이면 escape 하지 말고 innerHTML 사용.
+        // 지금은 원본처럼 HTML을 그대로 넣어 레이아웃 테스트에 유리하게 함.
+        return str;
+    }
+
+    function buildCountOptions(max=30){
+        const frag = document.createDocumentFragment();
+        for(let i=1;i<=max;i++){
+            const opt = document.createElement("option");
+            opt.value = String(i);
+            opt.textContent = String(i);
+            frag.appendChild(opt);
+        }
+        selCount.appendChild(frag);
+    }
+
+    // ====== 핵심: 생성 요청(ajaxForm 대체) ======
+    async function generateIpsum(){
+        setLoading(true);
+        resultEl.textContent = "";
+
+        const fd = new FormData();
+        fd.append("text_line_count", selCount.value);
+        fd.append("text_len", selLen.value);
+        fd.append("text_source", selSource.value);
+
+        try{
+            const res = await fetch(API_URL, {
+                method: "POST",
+                body: fd,
+                credentials: "same-origin"
+            });
+
+            const data = await res.json(); // ✅ JSON
+
+            if(String(data.code) === "300"){
+                alert(data.message || "요청이 처리되지 않았습니다.");
+                return;
+            }
+
+            if(String(data.code) === "200"){
+                // ✅ 서버에서 이미 escape 처리된 <p>...</p> HTML
+                resultEl.innerHTML = data.html || "";
+            }else{
+                alert("Error!! (Unexpected response)");
+            }
+
+        }catch(e){
+            console.error(e);
+            alert("네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        }finally{
+            setLoading(false);
+        }
+    }
+
+    async function copyResult(){
+        const plain = resultEl.innerText.trim();
+        if(!plain){
+            alert("복사할 내용이 없습니다.");
+            return;
+        }
+        try{
+            await navigator.clipboard.writeText(plain);
+            alert("복사 완료!");
+        }catch(e){
+            // 구형 브라우저 fallback
+            const ta = document.createElement("textarea");
+            ta.value = plain;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            document.body.removeChild(ta);
+            alert("복사 완료!");
+        }
+    }
+
+    function setDefaults(){
+        selCount.value = "5";
+        selLen.value = "middle";
+    }
+
+    // ====== 이벤트 ======
+    btnGenerate.addEventListener("click", generateIpsum);
+    btnReload.addEventListener("click", generateIpsum);
+    btnCopy.addEventListener("click", copyResult);
+    btnBack.addEventListener("click", ()=>history.back());
+
+    // ====== 시작 ======
+    buildCountOptions(30);
+    setDefaults();
+    // 원본처럼 로딩 시 자동 1회 생성
+    generateIpsum();
+</script>
+</body>
+</html>

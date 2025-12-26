@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <title>Word Counter</title>
+    <style>
+        :root{
+            --bg:#f6f8fb;
+            --card:#ffffff;
+            --text:#0f172a;
+            --muted:#64748b;
+            --line:#e5e7eb;
+            --accent:#22c55e;
+            --accent2:#0ea5e9;
+            --shadow:0 18px 55px rgba(15,23,42,.12);
+            --shadow2:0 10px 28px rgba(15,23,42,.10);
+            --radius:18px;
+        }
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans KR",Arial,sans-serif;
+            background:var(--bg);
+            color:var(--text);
+        }
+        .wrap{
+            width:min(1024px, calc(100% - 28px));
+            margin: 18px auto 48px;
+        }
+
+        /* Title */
+        .title{
+            text-align:center;
+            font-size: 42px;
+            font-weight: 300;
+            letter-spacing: -1px;
+            margin: 10px 0 14px;
+        }
+        .title b{ font-weight:900; color: var(--accent); }
+
+        .card{
+            background:var(--card);
+            border:1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow:hidden;
+        }
+        .toolbar{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            padding: 12px 14px;
+            border-bottom:1px solid var(--line);
+            background: linear-gradient(180deg,#ffffff,#fbfdff);
+        }
+
+        .badges{
+            display:flex;
+            gap:10px;
+            align-items:center;
+            flex-wrap:wrap;
+            font-weight:900;
+        }
+        .badge{
+            display:inline-flex;
+            align-items:center;
+            gap:6px;
+            padding:6px 10px;
+            border-radius:999px;
+            background:#f1f5f9;
+            border:1px solid var(--line);
+            font-size: 13px;
+            color: var(--text);
+        }
+        .badge .num{
+            width: 28px;
+            height: 28px;
+            border-radius:999px;
+            display:grid;
+            place-items:center;
+            background: #22c55e;
+            color:#fff;
+            font-weight:1000;
+            box-shadow: 0 10px 18px rgba(34,197,94,.25);
+        }
+
+        .icons{
+            display:flex;
+            gap:10px;
+            align-items:center;
+        }
+        .iconbtn{
+            width:42px;height:42px;
+            border-radius:14px;
+            border:1px solid var(--line);
+            background:#fff;
+            box-shadow: var(--shadow2);
+            display:grid;
+            place-items:center;
+            cursor:pointer;
+            user-select:none;
+            transition: transform .08s ease, box-shadow .12s ease;
+        }
+        .iconbtn:hover{ box-shadow: 0 12px 28px rgba(15,23,42,.14); }
+        .iconbtn:active{ transform: translateY(1px); }
+
+        .content{
+            padding: 14px;
+        }
+        textarea{
+            width:100%;
+            min-height: 340px;
+            resize: vertical;
+            border-radius: 16px;
+            border: 2px solid #93c5fd;
+            outline:none;
+            padding: 14px 14px;
+            font-size: 16px;
+            line-height: 1.6;
+            box-shadow: inset 0 0 0 2px rgba(59,130,246,.08);
+            background:#fff;
+        }
+        textarea:focus{
+            border-color:#60a5fa;
+            box-shadow: 0 0 0 4px rgba(59,130,246,.15);
+        }
+
+        .stats{
+            margin-top: 14px;
+            display:grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            line-height: 1.85;
+            font-weight:800;
+            color: var(--text);
+        }
+        .statline{
+            display:flex;
+            align-items:center;
+            gap:8px;
+            flex-wrap:wrap;
+        }
+        .statline .pill{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            min-width: 56px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #22c55e;
+            color:#fff;
+            font-weight:1000;
+        }
+        .statline .label{
+            color: var(--muted);
+            font-weight:900;
+        }
+
+        .tooltip{
+            position:relative;
+            display:inline-flex;
+            align-items:center;
+            gap:6px;
+            color: var(--muted);
+            font-weight:900;
+        }
+        .tooltip svg{ opacity:.75; }
+        .tooltip .tip{
+            position:absolute;
+            left: 0;
+            top: 30px;
+            background:#0f172a;
+            color:#fff;
+            font-size:12px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            box-shadow: 0 14px 30px rgba(0,0,0,.2);
+            white-space:nowrap;
+            transform: translateY(6px);
+            opacity:0;
+            pointer-events:none;
+            transition: .15s ease;
+        }
+        .tooltip:hover .tip{ opacity:1; transform: translateY(0); }
+
+        .actions{
+            margin-top: 16px;
+            display:flex;
+            gap:12px;
+            flex-wrap:wrap;
+        }
+        .btn{
+            border:1px solid var(--line);
+            background:#fff;
+            border-bottom:4px solid #cbd5e1;
+            border-radius: 14px;
+            padding: 10px 14px;
+            font-weight:1000;
+            cursor:pointer;
+            user-select:none;
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            box-shadow: var(--shadow2);
+            transition: transform .08s ease, box-shadow .12s ease;
+        }
+        .btn:hover{ box-shadow: 0 12px 28px rgba(15,23,42,.14); }
+        .btn:active{ transform: translateY(1px); border-bottom-width:2px; }
+
+        .toast{
+            position: fixed;
+            left: 50%;
+            bottom: 18px;
+            transform: translateX(-50%);
+            background:#0f172a;
+            color:#fff;
+            padding: 10px 12px;
+            border-radius: 14px;
+            font-weight: 900;
+            opacity:0;
+            pointer-events:none;
+            transition: .18s ease;
+            box-shadow: 0 14px 36px rgba(0,0,0,.22);
+        }
+        .toast.show{ opacity:1; transform: translateX(-50%) translateY(-4px); }
+
+        @media (min-width: 860px){
+            .stats{
+                grid-template-columns: 1fr 1fr;
+                gap: 10px 18px;
+            }
+        }
+
+        /* inline svg icon color */
+        .svg{ width:20px; height:20px; }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="title"><b>워드</b> 카운터</div>
+
+    <div class="card">
+        <div class="toolbar">
+            <div class="badges">
+                <span class="badge"><span class="num" id="char_words">0</span> 단어</span>
+                <span class="badge"><span class="num" id="char">0</span> 글자</span>
+            </div>
+
+            <div class="icons">
+                <div class="iconbtn" id="btnClear" title="텍스트 지우기">
+                    <!-- trash -->
+                    <svg class="svg" viewBox="0 0 20 20" aria-hidden="true">
+                        <path d="M17.291 2.192h-4.202V0H6.191s-.017 1.236 0 2.192H2.014s-.009 2.445 0 3.933h.963V20h13.326V6.125c.328.034.66.027.988 0 .03-1.31.022-2.622 0-3.933zM7.48 1.29h4.319c.06.195.002.584 0 .903H7.48c-.014-.263 0-.89 0-.903zM3.29 3.482h12.7v1.353H3.29c-.015-.384 0-1.353 0-1.353zM15.013 18.71H4.266V6.125h10.747z" fill="currentColor"/>
+                        <path d="M7.5 17.349V7.162h-1V17.35zM10 17.349V7.162H9V17.35zM12.5 17.349V7.162h-1V17.35z" fill="currentColor"/>
+                    </svg>
+                </div>
+
+                <div class="iconbtn" id="btnCopy" title="클립보드에 복사">
+                    <!-- copy -->
+                    <svg class="svg" viewBox="0 0 20 20" aria-hidden="true">
+                        <path d="M16.898 3.387c1.786-.04 2.177.94 2.176 2.177h.004V17.82c-.02 1.545-.94 2.2-2.177 2.177V20H7.264c-1.484-.043-2.115-.934-2.178-2.176V5.567c.01-1.268.753-2.152 2.178-2.178v-.003l9.634.001zM1.003 15.851L1 2.18v-.002C1.003.974 2.167.05 3.176.002V0h9.638l.002 1.654H3v14.195zm16.195 1.971V5.564h.004l-10.204.001h.004v12.259l10.196-.002z" fill="currentColor"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <textarea id="testo" rows="13" placeholder="여기에 내용입력 또는 붙여넣기" autofocus></textarea>
+
+            <div class="stats" aria-live="polite">
+                <div class="statline"><span class="pill" id="char_2">0</span> <span class="label">글자</span></div>
+                <div class="statline"><span class="pill" id="char_no_space">0</span> <span class="label">글자 (공백 없음)</span></div>
+
+                <div class="statline"><span class="pill" id="char_words_2">0</span> <span class="label">단어</span></div>
+                <div class="statline"><span class="pill" id="char_sentences">0</span> <span class="label">문장</span></div>
+
+                <div class="statline"><span class="pill" id="char_paragraphs">0</span> <span class="label">단락</span></div>
+                <div class="statline">
+                    <span class="pill" id="char_folders">0</span> <span class="label">페이지</span>
+                    <span class="tooltip" aria-label="페이지 기준">
+              <svg class="svg" viewBox="0 0 20 20" aria-hidden="true">
+                <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm-.017 13.252a1.074 1.074 0 010-2.146c.591 0 1.073.481 1.073 1.073s-.482 1.073-1.073 1.073zm1.68-5.268c-.463.434-.77.72-.77 1.415v.513H9.148V11.4c0-1.426.74-2.122 1.282-2.63.46-.431.764-.717.764-1.4 0-.217 0-.874-1.173-.874-1.1 0-1.144.606-1.162.865l-.039.526-1.743-.099.039-.562c.113-1.505 1.258-2.477 2.918-2.477.867 0 1.597.243 2.11.704.522.467.797 1.134.797 1.929 0 1.408-.738 2.099-1.276 2.603z" fill="currentColor"/>
+              </svg>
+              <span class="tip">1800자 기준</span>
+            </span>
+                </div>
+
+                <div class="statline"><span class="pill" id="char_rows">0</span> <span class="label">줄</span></div>
+
+                <div class="statline">
+                    <span class="pill" id="char_reading">0</span> <span class="label">리딩 타임</span>
+                    <span class="tooltip">
+              <svg class="svg" viewBox="0 0 20 20" aria-hidden="true">
+                <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm-.017 13.252a1.074 1.074 0 010-2.146c.591 0 1.073.481 1.073 1.073s-.482 1.073-1.073 1.073zm1.68-5.268c-.463.434-.77.72-.77 1.415v.513H9.148V11.4c0-1.426.74-2.122 1.282-2.63.46-.431.764-.717.764-1.4 0-.217 0-.874-1.173-.874-1.1 0-1.144.606-1.162.865l-.039.526-1.743-.099.039-.562c.113-1.505 1.258-2.477 2.918-2.477.867 0 1.597.243 2.11.704.522.467.797 1.134.797 1.929 0 1.408-.738 2.099-1.276 2.603z" fill="currentColor"/>
+              </svg>
+              <span class="tip">분당 200단어 기준</span>
+            </span>
+                </div>
+
+                <div class="statline">
+                    <span class="pill" id="char_speaking">0</span> <span class="label">스피킹 타임</span>
+                    <span class="tooltip">
+              <svg class="svg" viewBox="0 0 20 20" aria-hidden="true">
+                <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm-.017 13.252a1.074 1.074 0 010-2.146c.591 0 1.073.481 1.073 1.073s-.482 1.073-1.073 1.073zm1.68-5.268c-.463.434-.77.72-.77 1.415v.513H9.148V11.4c0-1.426.74-2.122 1.282-2.63.46-.431.764-.717.764-1.4 0-.217 0-.874-1.173-.874-1.1 0-1.144.606-1.162.865l-.039.526-1.743-.099.039-.562c.113-1.505 1.258-2.477 2.918-2.477.867 0 1.597.243 2.11.704.522.467.797 1.134.797 1.929 0 1.408-.738 2.099-1.276 2.603z" fill="currentColor"/>
+              </svg>
+              <span class="tip">분당 130단어 기준</span>
+            </span>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn" id="btnClear2" type="button" title="지우기">
+                    <svg class="svg" viewBox="0 0 20 20" aria-hidden="true">
+                        <path d="M17.291 2.192h-4.202V0H6.191s-.017 1.236 0 2.192H2.014s-.009 2.445 0 3.933h.963V20h13.326V6.125c.328.034.66.027.988 0 .03-1.31.022-2.622 0-3.933zM7.48 1.29h4.319c.06.195.002.584 0 .903H7.48c-.014-.263 0-.89 0-.903zM3.29 3.482h12.7v1.353H3.29c-.015-.384 0-1.353 0-1.353zM15.013 18.71H4.266V6.125h10.747z" fill="currentColor"/>
+                        <path d="M7.5 17.349V7.162h-1V17.35zM10 17.349V7.162H9V17.35zM12.5 17.349V7.162h-1V17.35z" fill="currentColor"/>
+                    </svg>
+                    지우기
+                </button>
+
+                <button class="btn" id="btnCopy2" type="button" title="클립보드에 복사">
+                    <svg class="svg" viewBox="0 0 20 20" aria-hidden="true">
+                        <path d="M16.898 3.387c1.786-.04 2.177.94 2.176 2.177h.004V17.82c-.02 1.545-.94 2.2-2.177 2.177V20H7.264c-1.484-.043-2.115-.934-2.178-2.176V5.567c.01-1.268.753-2.152 2.178-2.178v-.003l9.634.001zM1.003 15.851L1 2.18v-.002C1.003.974 2.167.05 3.176.002V0h9.638l.002 1.654H3v14.195zm16.195 1.971V5.564h.004l-10.204.001h.004v12.259l10.196-.002z" fill="currentColor"/>
+                    </svg>
+                    클립보드에 복사
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast">복사 완료!</div>
+
+<script>
+    const el = (id) => document.getElementById(id);
+
+    const textarea = el("testo");
+
+    function clamp(n, min, max){ return Math.min(max, Math.max(min, n)); }
+
+    function countWords(text){
+        // 공백/줄바꿈 다 정리하고, 0 길이 제거
+        const tokens = text.trim().split(/\s+/).filter(Boolean);
+        return text.trim() ? tokens.length : 0;
+    }
+
+    function countSentences(text){
+        // 간단 규칙: . ! ? 및 한글 종결(다/요/까/다.) 등까지 완벽히 하긴 어렵지만
+        // 실사용용으로는 구두점 기준 + 줄바꿈 기준 혼합
+        const cleaned = text.replace(/\s+/g, " ").trim();
+        if(!cleaned) return 0;
+
+        // 구두점 기준 분리
+        const parts = cleaned.split(/[.!?]+/).map(s => s.trim()).filter(Boolean);
+        // 구두점이 전혀 없는 경우: 줄바꿈 또는 길이로 1문장 처리
+        return parts.length > 0 ? parts.length : 1;
+    }
+
+    function countParagraphs(text){
+        // 빈 줄 기준(연속 줄바꿈)
+        const trimmed = text.trim();
+        if(!trimmed) return 0;
+        return trimmed.split(/\n\s*\n+/).map(s => s.trim()).filter(Boolean).length;
+    }
+
+    function countLines(text){
+        if(!text) return 0;
+        // 마지막 줄바꿈 포함해도 라인 수로 처리
+        return text.split(/\n/).length;
+    }
+
+    function formatTime(sec){
+        sec = Math.max(0, Math.round(sec));
+        if(sec < 60) return `${sec} sec`;
+        const m = Math.floor(sec / 60);
+        const s = sec % 60;
+        return s ? `${m} min ${s} sec` : `${m} min`;
+    }
+
+    function charactersCount(){
+        const t = textarea.value || "";
+
+        const chars = t.length;
+        const charsNoSpace = t.replace(/\s/g, "").length;
+        const words = countWords(t);
+        const sentences = countSentences(t);
+        const paragraphs = countParagraphs(t);
+        const lines = countLines(t);
+
+        // 페이지: 1800자 기준(원본 설명 유지)
+        const pages = Math.ceil(chars / 1800) || 0;
+
+        // reading: 200 wpm / speaking: 130 wpm (원본 설명 유지)
+        const readingSec = words > 0 ? (words / 200) * 60 : 0;
+        const speakingSec = words > 0 ? (words / 130) * 60 : 0;
+
+        el("char").textContent = chars;
+        el("char_words").textContent = words;
+
+        el("char_2").textContent = chars;
+        el("char_no_space").textContent = charsNoSpace;
+        el("char_words_2").textContent = words;
+        el("char_sentences").textContent = sentences;
+        el("char_paragraphs").textContent = paragraphs;
+        el("char_folders").textContent = pages;
+        el("char_rows").textContent = lines;
+        el("char_reading").textContent = formatTime(readingSec);
+        el("char_speaking").textContent = formatTime(speakingSec);
+    }
+
+    function showToast(msg){
+        const t = el("toast");
+        t.textContent = msg;
+        t.classList.add("show");
+        clearTimeout(showToast._timer);
+        showToast._timer = setTimeout(()=>t.classList.remove("show"), 1400);
+    }
+
+    function ClearField(){
+        textarea.value = "";
+        textarea.focus();
+        charactersCount();
+        showToast("지웠습니다.");
+    }
+
+    async function OnCopy(){
+        const text = textarea.value || "";
+        if(!text.trim()){
+            showToast("복사할 내용이 없습니다.");
+            return false;
+        }
+        try{
+            if(navigator.clipboard && window.isSecureContext){
+                await navigator.clipboard.writeText(text);
+            }else{
+                // fallback
+                textarea.select();
+                textarea.setSelectionRange(0, textarea.value.length);
+                document.execCommand("copy");
+                textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+            }
+            showToast("클립보드에 복사 완료!");
+            return true;
+        }catch(e){
+            showToast("복사 실패 (권한 확인)");
+            return false;
+        }
+    }
+
+    // events
+    textarea.addEventListener("input", charactersCount);
+
+    el("btnClear").addEventListener("click", ClearField);
+    el("btnClear2").addEventListener("click", ClearField);
+    el("btnCopy").addEventListener("click", OnCopy);
+    el("btnCopy2").addEventListener("click", OnCopy);
+
+    // init
+    charactersCount();
+</script>
+</body>
+</html>

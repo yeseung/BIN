@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Color Blindness Test</title>
+  <style>
+    :root{
+      --bg: #f6f8fb;
+      --panel:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --line:#e5e7eb;
+      --blue:#2563eb;
+      --red:#ef4444;
+      --green:#10b981;
+      --shadow: 0 18px 55px rgba(15,23,42,.12);
+      --shadow2: 0 10px 30px rgba(15,23,42,.10);
+      --radius: 18px;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans KR",Arial,sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .wrap{
+      width:min(980px, calc(100% - 28px));
+      margin: 18px auto 48px;
+    }
+
+    .quiz_title_box{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding: 14px 16px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      box-shadow: var(--shadow2);
+    }
+    .backlist{
+      display:inline-grid;
+      place-items:center;
+      width:38px;height:38px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      cursor:pointer;
+      user-select:none;
+    }
+    .backlist:active{ transform: translateY(1px); }
+    .quiz_title{
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: -0.2px;
+    }
+
+    .quiz_doc{
+      margin: 14px 2px 14px;
+      color: var(--muted);
+      line-height: 1.6;
+      font-weight: 600;
+    }
+
+    .answer_shadow{
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
+    .color_count{
+      display:flex;
+      justify-content:flex-end;
+      color: var(--muted);
+      font-weight: 900;
+      margin-bottom: 10px;
+    }
+
+    .info_box{
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
+      background: #f8fafc;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height: 240px;
+      overflow:hidden;
+    }
+    .info_box img{
+      max-width: 100%;
+      height: auto;
+      display:block;
+      border-radius: 14px;
+      box-shadow: 0 10px 26px rgba(0,0,0,.08);
+    }
+
+    .number_box{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top: 14px;
+    }
+    .num_btn{
+      flex: 1 1 120px;
+      min-width: 120px;
+      text-align:center;
+      padding: 12px 12px;
+      background:#fff;
+      border: 1px solid var(--line);
+      border-bottom: 4px solid #cbd5e1;
+      border-radius: 14px;
+      font-weight: 1000;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .08s ease, box-shadow .12s ease, border-color .12s ease;
+    }
+    .num_btn:hover{
+      box-shadow: 0 10px 24px rgba(15,23,42,.10);
+      border-color:#cbd5e1;
+    }
+    .num_btn:active{
+      transform: translateY(1px);
+      border-bottom-width:2px;
+    }
+    .num_btn.dim{
+      color:#94a3b8;
+      background:#f8fafc;
+    }
+
+    .btn_row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top: 10px;
+    }
+    .btn{
+      border:0;
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-weight: 1000;
+      cursor:pointer;
+      background:#0f172a;
+      color:#fff;
+      box-shadow: 0 10px 22px rgba(15,23,42,.18);
+    }
+    .btn:active{ transform: translateY(1px); }
+
+    #ColorBlindTest_result_box{
+      margin-top: 14px;
+      display:none;
+    }
+    table{
+      width:100%;
+      border-collapse: collapse;
+      overflow:hidden;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background:#fff;
+    }
+    thead th{
+      background:#f1f5f9;
+      padding: 10px;
+      font-weight: 1000;
+      border-bottom: 1px solid var(--line);
+      text-align:center;
+    }
+    tbody td{
+      padding: 10px;
+      border-bottom: 1px solid var(--line);
+      text-align:center;
+      font-weight: 800;
+    }
+    tbody tr:last-child td{ border-bottom:0; }
+
+    .tag{
+      display:inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 1000;
+      letter-spacing: .2px;
+    }
+    .tag.ok{ color: var(--blue); background: #eff6ff; }
+    .tag.bad{ color: var(--red); background: #fef2f2; }
+    .tag.unk{ color: #64748b; background: #f1f5f9; }
+    .tag.note{ color:#0f172a; background:#f1f5f9; }
+
+    .result_summary{
+      margin-top: 12px;
+      padding: 12px 12px;
+      border-radius: 14px;
+      background:#f8fafc;
+      border: 1px solid var(--line);
+      font-weight: 900;
+      line-height: 1.6;
+    }
+
+    .colorblind_doc{
+      margin: 14px 2px 0;
+      color: var(--muted);
+      line-height: 1.7;
+      font-weight: 600;
+    }
+  </style>
+</head>
+
+<body>
+<div class="wrap">
+
+  <div class="quiz_title_box">
+    <span class="backlist" id="btnBack" title="뒤로">←</span>
+    <div class="quiz_title">색맹 테스트</div>
+  </div>
+
+  <div class="quiz_doc">
+    아래 제공된 이미지를 확인한 후, 이미지 속에서 보이는 숫자를 선택해 주세요.
+    테스트는 색상 구분 능력을 평가하며, 특정 색상에 민감한 정도를 확인할 수 있습니다.
+  </div>
+
+  <div class="answer_shadow">
+    <div class="color_count">
+      <span id="colorblindtest_count" style="font-weight:bold">1</span> / <span id="totalCount">10</span>
+    </div>
+
+    <div id="ColorBlindTest_display" class="info_box"></div>
+    <div id="ColorBlindTest_number" class="number_box"></div>
+
+    <div id="ColorBlindTest_result_box">
+      <table>
+        <thead>
+        <tr>
+          <th>실제값</th>
+          <th>결과</th>
+          <th>선택한값</th>
+        </tr>
+        </thead>
+        <tbody id="ColorBlindTest_result"></tbody>
+      </table>
+
+      <div class="result_summary" id="resultSummary"></div>
+
+      <div class="btn_row">
+        <button class="btn" id="btnRetry">다시하기</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="colorblind_doc">
+    색각 이상은 색맹과 색약으로 구분되며, 색맹은 3원색 중 특정 색상을 완전히 감지하지 못하는 것이며,
+    색약은 감지는 할 수 있지만 수용체에 문제가 있어 다르게 보이는 것입니다.
+  </div>
+
+</div>
+
+<script>
+  // =========================
+  // 데이터(원본 유지)
+  // =========================
+  const ColorBlindTest_arr_base = [2,3,5,6,7,8,12,15,29,35,42,45,73,74,97];
+  const ColorBlindGreen_arr_base = [5,74,15,8]; // 적녹색맹/색약 판별용(선택)
+
+  // "특정 숫자에서 일부 사용자에게 달리 보일 수 있는 값" (원본 로직 유지)
+  const GREEN_SPECIAL_MAP = {
+    5: 2,    // 적록색맹이면 2로 보임(가정)
+    15: 17,  // 색약이면 17로 보임(가정)
+    8: 3,    // 적록색약이면 3으로 보임(가정)
+    74: 21   // 적록색맹이면 21로 보임(가정)
+  };
+
+  // =========================
+  // 유틸
+  // =========================
+  const $ = (id)=>document.getElementById(id);
+
+  function shuffle(arr){
+    const a = [...arr];
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]]=[a[j],a[i]];
+    }
+    return a;
+  }
+
+  function randomNum(lower, upper){
+    return Math.floor(Math.random()*(upper-lower+1))+lower;
+  }
+
+  // =========================
+  // 상태
+  // =========================
+  const TOTAL = 10;
+  $("totalCount").textContent = TOTAL;
+
+  let deck = shuffle(ColorBlindTest_arr_base);
+  let index = 0;
+
+  let selected = [];
+  let correct = [];
+
+  let correct_total = 0;
+  let incorrect_total = 0;
+
+  // 적녹 관련 카운트(원본 의도 유지)
+  let correct_green_total = 0;       // 적록색맹 패턴
+  let correct_green_weak_total = 0;  // 적록색약 패턴
+
+  // =========================
+  // 렌더
+  // =========================
+  function setCount(){
+    $("colorblindtest_count").textContent = Math.min(index+1, TOTAL);
+  }
+
+  function renderImage(num){
+    const img = document.createElement("img");
+    img.alt = "Color Blind Test";
+    img.src = `assets/data/color-blind-test/${num}.jpg`;
+
+    const box = $("ColorBlindTest_display");
+    box.innerHTML = "";
+    box.appendChild(img);
+  }
+
+  function makeOptionButton(label, value, isDim=false){
+    const b = document.createElement("span");
+    b.className = "num_btn" + (isDim ? " dim" : "");
+    b.textContent = label;
+    b.addEventListener("click", ()=>handleAnswer(value));
+    return b;
+  }
+
+  function renderOptions(correctNumber){
+    // 원본처럼 4개 + "모름" 구성 (3번대 선택지는 주석 처리되어 있었음)
+    let r1 = randomNum(13,25);
+    let r2 = randomNum(26,35);
+    let r4 = randomNum(1,9);
+    let unknown = 0; // 모름
+
+    // 특정 번호는 "다르게 보이는 선택지"를 의도적으로 포함
+    if(GREEN_SPECIAL_MAP[correctNumber]) r4 = GREEN_SPECIAL_MAP[correctNumber];
+
+    // 보기 구성
+    const options = [
+      { label: String(correctNumber), value: correctNumber },
+      { label: String(r1), value: r1 },
+      { label: String(r2), value: r2 },
+      { label: String(r4), value: r4 },
+      { label: "모름", value: unknown, dim:true }
+    ];
+
+    const shuffled = shuffle(options);
+
+    const box = $("ColorBlindTest_number");
+    box.innerHTML = "";
+    shuffled.forEach(o=>{
+      box.appendChild(makeOptionButton(o.label, o.value, !!o.dim));
+    });
+  }
+
+  // =========================
+  // 로직
+  // =========================
+  function handleAnswer(selectNumber){
+    const correctNumber = correct[index];
+    selected[index] = selectNumber;
+
+    // 적녹 패턴 체크(원본 switch 요지 유지)
+    if(correctNumber === 5 && selectNumber === 2) correct_green_total++;
+    if(correctNumber === 74 && selectNumber === 21) correct_green_total++;
+    if(correctNumber === 15 && selectNumber === 17) correct_green_weak_total++;
+    if(correctNumber === 8 && selectNumber === 3) correct_green_weak_total++;
+
+    index++;
+
+    if(index >= TOTAL){
+      showResult();
+    }else{
+      setCount();
+      nextQuestion();
+    }
+  }
+
+  function nextQuestion(){
+    // 덱 부족하면 다시 섞어서 보충
+    if(deck.length === 0) deck = shuffle(ColorBlindTest_arr_base);
+
+    const num = deck.pop();
+    correct[index] = num;
+
+    renderImage(num);
+    renderOptions(num);
+  }
+
+  function showResult(){
+    // 결과 집계
+    correct_total = 0;
+    incorrect_total = 0;
+
+    const tbody = $("ColorBlindTest_result");
+    tbody.innerHTML = "";
+
+    for(let i=0;i<TOTAL;i++){
+      const c = correct[i];
+      const s = selected[i];
+
+      let tagHtml = "";
+      let pickLabel = "";
+
+      if(s === c){
+        correct_total++;
+        tagHtml = `<span class="tag ok">맞춤</span>`;
+        pickLabel = String(s);
+      }else{
+        if(!s || s <= 0){
+          incorrect_total++;
+          tagHtml = `<span class="tag unk">모름</span>`;
+          pickLabel = "모름";
+        }else{
+          incorrect_total++;
+          tagHtml = `<span class="tag bad">틀림</span>`;
+          pickLabel = String(s);
+        }
+      }
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+          <td>${c}</td>
+          <td>${tagHtml}</td>
+          <td>${pickLabel}</td>
+        `;
+      tbody.appendChild(tr);
+    }
+
+    $("ColorBlindTest_number").innerHTML = "";
+    $("ColorBlindTest_display").innerHTML = `<div style="color:#64748b;font-weight:900;">테스트가 완료되었습니다.</div>`;
+    $("ColorBlindTest_result_box").style.display = "block";
+
+    const summary = $("resultSummary");
+    summary.innerHTML = `
+        총 <b>${TOTAL}</b>개 중 정상적으로 보이는 숫자 <b style="color:var(--blue)">${correct_total}</b>개,
+        틀린 숫자 <b style="color:var(--red)">${incorrect_total}</b>개입니다.<br>
+        <span class="tag note">참고</span>
+        적녹 관련 패턴 선택: 색맹 패턴 <b>${correct_green_total}</b>회, 색약 패턴 <b>${correct_green_weak_total}</b>회
+      `;
+  }
+
+  function reset(){
+    deck = shuffle(ColorBlindTest_arr_base);
+    index = 0;
+    selected = [];
+    correct = [];
+    correct_total = 0;
+    incorrect_total = 0;
+    correct_green_total = 0;
+    correct_green_weak_total = 0;
+
+    $("ColorBlindTest_result_box").style.display = "none";
+    setCount();
+    nextQuestion();
+  }
+
+  // =========================
+  // 이벤트
+  // =========================
+  $("btnBack").addEventListener("click", ()=>history.back());
+  $("btnRetry").addEventListener("click", reset);
+
+  // =========================
+  // 시작
+  // =========================
+  reset();
+</script>
+</body>
+</html>

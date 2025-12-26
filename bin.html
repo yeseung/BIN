@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>utilpak · 개발자 도구</title>
+
+    <!-- Bootstrap 5.3.8 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <!-- Bootstrap Icons (선택) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+
+    <style>
+        :root{
+            --su-bg: #f7f8fa;
+            --su-card: #ffffff;
+            --su-border: rgba(15, 23, 42, .08);
+            --su-muted: #6b7280;
+            --su-title: #0f172a;
+            --su-brand: #111827;
+            --su-pill: #e8fff3;
+            --su-pill-ink: #0f766e;
+            --su-shadow: 0 12px 30px rgba(15,23,42,.06);
+            --su-shadow-hover: 0 18px 45px rgba(15,23,42,.10);
+            --su-radius: 16px;
+        }
+
+        body{
+            background: var(--su-bg);
+            color: var(--su-title);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Top Nav */
+        .navbar{
+            background: rgba(255,255,255,.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--su-border);
+        }
+        .brand-badge{
+            width: 34px; height: 34px;
+            display: inline-flex; align-items:center; justify-content:center;
+            border-radius: 12px;
+            background: #111827;
+            color: #fff;
+            font-weight: 700;
+            letter-spacing: .5px;
+            margin-right: .6rem;
+            user-select: none;
+        }
+        .navbar .nav-link{
+            color: #111827;
+            font-weight: 500;
+        }
+        .navbar .nav-link:hover{ color: #0f766e; }
+
+        .search-wrap{
+            width: min(420px, 52vw);
+        }
+        .search-wrap .form-control{
+            border-radius: 999px;
+            padding-left: 2.4rem;
+            border: 1px solid var(--su-border);
+            background: #fff;
+        }
+        .search-wrap .bi-search{
+            position: absolute;
+            left: 14px; top: 50%;
+            transform: translateY(-50%);
+            color: var(--su-muted);
+            font-size: 1.05rem;
+        }
+        .kbd-hint{
+            font-size: .75rem;
+            color: var(--su-muted);
+            border: 1px solid var(--su-border);
+            border-radius: 8px;
+            padding: .15rem .45rem;
+            background: #fff;
+            user-select: none;
+            white-space: nowrap;
+        }
+        .nav-icon-btn{
+            width: 40px; height: 40px;
+            display: inline-flex;
+            align-items:center; justify-content:center;
+            border-radius: 999px;
+            border: 1px solid var(--su-border);
+            background: #fff;
+            color: #111827;
+        }
+        .nav-icon-btn:hover{
+            border-color: rgba(15,23,42,.18);
+            box-shadow: 0 8px 20px rgba(15,23,42,.06);
+        }
+
+        /* Page */
+        .page{
+            padding: 26px 0 70px;
+        }
+        .breadcrumb a{
+            color: var(--su-muted);
+            text-decoration: none;
+        }
+        .breadcrumb a:hover{ color: #0f766e; }
+        .page-title{
+            display:flex; align-items:center; gap: 14px;
+            margin-top: 8px;
+            margin-bottom: 18px;
+        }
+        .page-icon{
+            width: 56px; height: 56px;
+            display:flex; align-items:center; justify-content:center;
+            border-radius: 18px;
+            background: var(--su-pill);
+            color: var(--su-pill-ink);
+            border: 1px solid rgba(16,185,129,.18);
+            flex: 0 0 auto;
+        }
+        .page-title h1{
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin: 0;
+            font-size: clamp(1.4rem, 2vw, 2.1rem);
+        }
+        .page-title p{
+            margin: .3rem 0 0;
+            color: var(--su-muted);
+        }
+
+        /* Tool Cards */
+        .tool-card{
+            background: var(--su-card);
+            border: 1px solid var(--su-border);
+            border-radius: var(--su-radius);
+            box-shadow: var(--su-shadow);
+            height: 100%;
+            transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+            overflow: hidden;
+        }
+        .tool-card:hover{
+            transform: translateY(-3px);
+            box-shadow: var(--su-shadow-hover);
+            border-color: rgba(15,23,42,.16);
+        }
+        .tool-card .card-body{
+            padding: 22px 22px 20px;
+        }
+        .tool-title{
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: .25rem;
+            font-size: 1.1rem;
+        }
+        .tool-sub{
+            color: var(--su-muted);
+            font-size: .9rem;
+            margin-bottom: .75rem;
+        }
+        .tool-desc{
+            color: #374151;
+            font-size: .92rem;
+            line-height: 1.55;
+            margin: 0;
+        }
+        .tool-link{
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            height: 100%;
+        }
+
+        /* Footer */
+        footer{
+            background: #fff;
+            border-top: 1px solid var(--su-border);
+            padding: 42px 0 26px;
+        }
+        .footer-brand{
+            display:flex; align-items:flex-start; gap: 12px;
+        }
+        .footer-desc{
+            color: var(--su-muted);
+            margin-top: .35rem;
+            line-height: 1.6;
+            font-size: .95rem;
+        }
+        .footer-title{
+            font-weight: 800;
+            margin-bottom: .75rem;
+            font-size: 1rem;
+        }
+        .footer a{
+            text-decoration: none;
+            color: var(--su-muted);
+        }
+        .footer a:hover{ color: #0f766e; }
+        .footer small{
+            color: var(--su-muted);
+        }
+        .footer-bottom{
+            margin-top: 28px;
+            padding-top: 18px;
+            border-top: 1px solid var(--su-border);
+            display:flex;
+            gap: 10px;
+            align-items:center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .love{
+            color: #ef4444;
+            margin: 0 .25rem;
+        }
+    </style>
+</head>
+
+<body>
+<!-- Top Nav -->
+<nav class="navbar navbar-expand-lg sticky-top">
+    <div class="container py-2">
+        <a class="navbar-brand d-flex align-items-center fw-bold" href="#" style="color:var(--su-brand);">
+            <span class="brand-badge">U</span>
+            <span>Utilpak</span>
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav"
+                aria-controls="topNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="topNav">
+            <ul class="navbar-nav mx-auto gap-lg-2">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        도구
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#">모든 도구</a></li>
+                        <li><a class="dropdown-item" href="#">개발자 도구</a></li>
+                        <li><a class="dropdown-item" href="#">텍스트 도구</a></li>
+                        <li><a class="dropdown-item" href="#">디자인 도구</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item"><a class="nav-link" href="#">텍스트</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">개발</a></li>
+            </ul>
+
+            <div class="d-flex align-items-center gap-2 ms-lg-auto">
+                <div class="position-relative search-wrap">
+                    <i class="bi bi-search"></i>
+                    <input class="form-control" type="search" placeholder="도구 검색..." aria-label="도구 검색" />
+                </div>
+                <span class="kbd-hint d-none d-md-inline">⌘ K</span>
+
+                <button class="nav-icon-btn" type="button" aria-label="다크 모드">
+                    <i class="bi bi-moon-stars"></i>
+                </button>
+                <button class="nav-icon-btn" type="button" aria-label="언어/지역">
+                    <i class="bi bi-globe2"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Page -->
+<main class="page">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-2">
+                <li class="breadcrumb-item"><a href="#">Home</a></li>
+                <li class="breadcrumb-item"><a href="#">모든 도구</a></li>
+                <li class="breadcrumb-item active" aria-current="page">개발자 도구</li>
+            </ol>
+        </nav>
+
+        <div class="page-title">
+            <div class="page-icon">
+                <i class="bi bi-code-slash fs-3"></i>
+            </div>
+            <div>
+                <h1>개발자 도구</h1>
+                <p class="mb-0">개발자와 프로그래머를 위한 도구</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- 1 -->
+            <div class="col-12 col-md-6 col-lg-4">
+                <a class="tool-link" href="#">
+                    <div class="tool-card card">
+                        <div class="card-body">
+                            <div class="tool-title">JSON 포맷터</div>
+                            <div class="tool-sub">JSON Formatter</div>
+                            <p class="tool-desc">
+                                무료 온라인 JSON 포맷터 및 유효성 검사기. JSON 데이터를 즉시 정리하고
+                                포맷팅하며 유효성을 검증합니다.
+                            </p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- 2 -->
+            <div class="col-12 col-md-6 col-lg-4">
+                <a class="tool-link" href="#">
+                    <div class="tool-card card">
+                        <div class="card-body">
+                            <div class="tool-title">JSON to CSV 변환기</div>
+                            <div class="tool-sub">JSON to CSV Converter</div>
+                            <p class="tool-desc">
+                                JSON 데이터를 CSV 형식으로 변환하거나 그 반대로 변환합니다.
+                            </p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- 3 -->
+            <div class="col-12 col-md-6 col-lg-4">
+                <a class="tool-link" href="#">
+                    <div class="tool-card card">
+                        <div class="card-body">
+                            <div class="tool-title">JSON YAML 변환기</div>
+                            <div class="tool-sub">JSON to YAML Converter</div>
+                            <p class="tool-desc">
+                                JSON과 YAML 형식 간에 양방향 변환합니다.
+                            </p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- 4 -->
+            <div class="col-12 col-md-6 col-lg-4">
+                <a class="tool-link" href="#">
+                    <div class="tool-card card">
+                        <div class="card-body">
+                            <div class="tool-title">XML JSON 변환기</div>
+                            <div class="tool-sub">XML to JSON Converter</div>
+                            <p class="tool-desc">
+                                XML과 JSON 형식 간에 양방향 변환합니다.
+                            </p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- 5 -->
+            <div class="col-12 col-md-6 col-lg-4">
+                <a class="tool-link" href="#">
+                    <div class="tool-card card">
+                        <div class="card-body">
+                            <div class="tool-title">SQL 포맷터</div>
+                            <div class="tool-sub">SQL Formatter</div>
+                            <p class="tool-desc">
+                                SQL 쿼리를 정리하고 포맷팅합니다.
+                            </p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- 6 -->
+            <div class="col-12 col-md-6 col-lg-4">
+                <a class="tool-link" href="#">
+                    <div class="tool-card card">
+                        <div class="card-body">
+                            <div class="tool-title">CSS 포맷터</div>
+                            <div class="tool-sub">CSS Formatter</div>
+                            <p class="tool-desc">
+                                CSS 코드를 정리하거나 압축합니다.
+                            </p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- 7 -->
+            <div class="col-12 col-md-6 col-lg-4">
+                <a class="tool-link" href="#">
+                    <div class="tool-card card">
+                        <div class="card-body">
+                            <div class="tool-title">HTML 마크다운 변환</div>
+                            <div class="tool-sub">HTML to Markdown</div>
+                            <p class="tool-desc">
+                                HTML과 마크다운을 상호 변환합니다.
+                            </p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- 8 -->
+            <div class="col-12 col-md-6 col-lg-4">
+                <a class="tool-link" href="#">
+                    <div class="tool-card card">
+                        <div class="card-body">
+                            <div class="tool-title">크론 표현식 파서</div>
+                            <div class="tool-sub">Cron Expression Parser</div>
+                            <p class="tool-desc">
+                                크론 표현식을 시각적으로 작성하고 파싱합니다.
+                            </p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- 9 -->
+            <div class="col-12 col-md-6 col-lg-4">
+                <a class="tool-link" href="#">
+                    <div class="tool-card card">
+                        <div class="card-body">
+                            <div class="tool-title">Base64 인코더/디코더</div>
+                            <div class="tool-sub">Base64 Encoder/Decoder</div>
+                            <p class="tool-desc">
+                                Base64 문자열을 인코딩하고 디코딩합니다.
+                            </p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="container">
+        <div class="row g-4 align-items-start">
+            <div class="col-12 col-lg-4">
+                <div class="footer-brand">
+                    <span class="brand-badge">U</span>
+                    <div>
+                        <div class="fw-bold" style="font-size:1.05rem;">Utilpak</div>
+                        <div class="footer-desc">
+                            개발자, 디자이너, 모두를 위한 200개 이상의 무료 온라인 도구.
+                            가입 없이 브라우저에서 즉시 사용 가능합니다.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6 col-lg-2">
+                <div class="footer-title">텍스트 도구</div>
+                <div class="d-grid gap-2">
+                    <a href="#">글자수 세기</a>
+                    <a href="#">대소문자 변환</a>
+                    <a href="#">정규식 테스터</a>
+                    <a href="#">전체 보기 →</a>
+                </div>
+            </div>
+
+            <div class="col-6 col-lg-2">
+                <div class="footer-title">개발자 도구</div>
+                <div class="d-grid gap-2">
+                    <a href="#">JSON 포맷터</a>
+                    <a href="#">UUID 생성기</a>
+                    <a href="#">해시 생성기</a>
+                    <a href="#">전체 보기 →</a>
+                </div>
+            </div>
+
+            <div class="col-6 col-lg-2">
+                <div class="footer-title">카테고리</div>
+                <div class="d-grid gap-2">
+                    <a href="#">Image Tools</a>
+                    <a href="#">Design Tools</a>
+                    <a href="#">Calculators</a>
+                    <a href="#">Generators</a>
+                    <a href="#">Productivity</a>
+                </div>
+            </div>
+
+            <div class="col-6 col-lg-2">
+                <div class="footer-title">링크</div>
+                <div class="d-grid gap-2">
+                    <a href="#">소개</a>
+                    <a href="#">개인정보 처리방침</a>
+                    <a href="#">이용약관</a>
+                    <a href="#">문의하기</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <small>© 2025 SnapUtil. All rights reserved.</small>
+            <small>전 세계 개발자를 위해<span class="love">❤</span>로 만들었습니다</small>
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

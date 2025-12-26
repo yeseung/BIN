@@ -1,0 +1,358 @@
+<!-- 파일명(영어) 예시: coin-flip.html -->
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>동전 던지기</title>
+    <style>
+        :root{
+            --bg:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --line:#e5e7eb;
+            --shadow:0 14px 34px rgba(0,0,0,.10);
+
+            /* coin sizing */
+            --size: 280px;
+            --thick: 26px;
+            --thick-half: calc(var(--thick) / 2);
+            --edge: calc(var(--size) / 9);
+
+            --coin-face:#dcdcdc;
+            --coin-edge:silver;
+            --coin-edge2:gray;
+
+            --btn:#06b6d4;
+            --btn-text:#05202a;
+            --btn-hover:brightness(0.98);
+            --radius:18px;
+        }
+
+        *{box-sizing:border-box}
+        body{
+            margin:0;
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR",
+            Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+            color:var(--text);
+            background: var(--bg);
+        }
+        .wrap{
+            max-width: 980px;
+            margin: 24px auto 80px;
+            padding: 0 14px;
+            text-align:center;
+        }
+
+        /* layout */
+        #content{
+            max-width: 980px;
+            margin: 0 auto;
+            padding-top: 10px;
+        }
+
+        /* coin */
+        #coin-wrapper{ padding: 20px 0 8px; }
+        #coin{
+            width: var(--size);
+            height: var(--size);
+            margin: 0 auto;
+            position: relative;
+            transform-origin: calc(var(--size) / 2);
+            transform-style: preserve-3d;
+            transform: rotateX(0) rotateY(0) rotateZ(0);
+            cursor: pointer;
+        }
+        #coin>*{ position:absolute; inset:0; }
+
+        .face{
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background: var(--coin-face);
+            box-shadow: inset 0 18px 26px rgba(255,255,255,.35),
+            inset 0 -16px 26px rgba(0,0,0,.10);
+            border: 1px solid rgba(0,0,0,.08);
+            overflow:hidden;
+            backface-visibility: hidden;
+        }
+
+        /* "image" area (we draw simple coin art in CSS) */
+        .face i{
+            width: 92%;
+            height: 92%;
+            border-radius: 50%;
+            display:block;
+            background:
+                    radial-gradient(circle at 30% 25%, rgba(255,255,255,.65), rgba(255,255,255,0) 35%),
+                    radial-gradient(circle at 50% 55%, rgba(0,0,0,.10), rgba(0,0,0,0) 50%),
+                    radial-gradient(circle at 50% 50%, rgba(255,255,255,.12), rgba(255,255,255,0) 55%),
+                    radial-gradient(circle at 50% 50%, rgba(0,0,0,.06), rgba(0,0,0,0) 58%);
+            position: relative;
+        }
+
+        /* Heads / Tails label */
+        .label{
+            position:absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%,-50%);
+            font-weight: 900;
+            letter-spacing: .02em;
+            color: rgba(0,0,0,.65);
+            text-shadow: 0 1px 0 rgba(255,255,255,.4);
+            font-size: calc(var(--size) * .22);
+            user-select:none;
+        }
+        .year{
+            position:absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: 800;
+            font-size: calc(var(--size) * .08);
+            color: rgba(0,0,0,.55);
+            user-select:none;
+        }
+
+        .heads{ transform: translateZ(var(--thick-half)); }
+        .tails{ transform: rotateY(180deg) translateZ(var(--thick-half)); }
+
+        .sides{
+            transform-style: preserve-3d;
+        }
+        .side{
+            position:absolute;
+            width: var(--thick);
+            height: var(--edge);
+            top: calc((var(--size) - var(--edge))/2);
+            left: calc((var(--size) - var(--thick))/2);
+            background: var(--coin-edge);
+            border-bottom: 1px solid var(--coin-edge2);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.15);
+        }
+
+        /* loading fallback text */
+        .loading{
+            display:none;
+            width: var(--size);
+            height: var(--size);
+            border-radius: 50%;
+            background:
+                    radial-gradient(circle at 30% 25%, rgba(255,255,255,.65), rgba(255,255,255,0) 35%),
+                    radial-gradient(circle at 50% 50%, rgba(0,0,0,.08), rgba(0,0,0,0) 55%),
+                    #dcdcdc;
+            align-items:center;
+            justify-content:center;
+            font-weight: 800;
+            color: rgba(0,0,0,.55);
+        }
+
+        /* states */
+        .flipping #coin{ cursor: progress; }
+        #coin.stop{ transition:none; }
+        .stop #coin{ transition:none; }
+
+        #result{
+            margin-top: 10px;
+            font-size: 34px;
+            font-weight: 900;
+            letter-spacing:-0.02em;
+            visibility: hidden;
+        }
+        .flipped #result{ visibility: visible; }
+
+        /* button */
+        #input-wrapper{ margin-top: 10px; }
+        #flip{
+            border: 0;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 800;
+            cursor:pointer;
+            background: var(--btn);
+            color: #06262f;
+            box-shadow: 0 10px 18px rgba(6,182,212,.18);
+            transition: filter .12s ease, transform .06s ease;
+        }
+        #flip:hover{ filter: var(--btn-hover); }
+        #flip:active{ transform: translateY(1px); }
+        #flip:disabled{ opacity:.45; cursor:not-allowed; }
+
+        #flip i{ font-style: normal; }
+
+        /* desc */
+        #desc{
+            max-width: 760px;
+            margin: 44px auto 0;
+            text-align:left;
+            color:#111827;
+            line-height:1.9;
+            font-size: 15px;
+        }
+        #desc strong{ font-weight:900; }
+        #desc p{ margin: 10px 0; color:#111827; }
+
+        /* old env warning */
+        #warning{
+            font-size: 28px;
+            width: min(720px, 92%);
+            margin: 60px auto;
+            color: #dc2626;
+            display:none;
+            line-height: 1.4;
+            font-weight: 900;
+        }
+        .old-env #content, .old-env #desc{ display:none; }
+        .old-env #warning{ display:block; }
+
+        /* responsive */
+        @media (max-width: 520px){
+            :root{ --size: 220px; --thick: 22px; }
+            #result{ font-size: 28px; }
+            #desc{ font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <h1>동전 던지기</h1>
+    <div id="content" class="col-12 col-xl-8 offset-xl-2">
+        <div id="coin-wrapper">
+            <div id="coin" aria-label="동전" role="button" tabindex="0">
+                <div class="loading">Loading…</div>
+                <div class="sides" aria-hidden="true"></div>
+
+                <div class="face heads">
+                    <i></i>
+                    <div class="year">1982</div>
+                    <div class="label">YES</div>
+                </div>
+
+                <div class="face tails">
+                    <i></i>
+                    <div class="year">1982</div>
+                    <div class="label">NO</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="result" class="text-center my-3 fs-2">_</div>
+
+        <div id="input-wrapper" class="text-center">
+            <button id="flip" class="btn btn-info btn-lg">동전 던지기 <i>↻</i></button>
+        </div>
+    </div>
+
+    <div id="desc" class="col-12 col-xl-6 offset-xl-3">
+        <p>
+            <strong>동전 던지기</strong>는 결정을 내리는 간단한 방법입니다. 대부분의 동전 앞면에는 사람의 얼굴이 그려져 있어
+            '예'를 나타내고, 뒷면은 '아니오'를 나타냅니다. 이론적으로 각 결과의 확률은 50%입니다.
+            공정성과 조작 방지를 위해, 저희 애플리케이션은 일반적으로 사용되는 내장 랜덤 함수(Math.random) 대신
+            보다 무작위적인 암호화 함수(crypto.getRandomValues)를 사용합니다.
+        </p>
+        <p>
+            일부 국가의 사용자들은 이 페이지에서 실제 동전을 볼 수 있습니다. 문제가 발생하면 알려주시기 바랍니다.
+            사용자는 지역 법률을 준수해야 하며, 위반에 대한 책임은 사용자에게 있습니다.
+            이 페이지는 '있는 그대로' 제공되며, 명시적이든 묵시적이든 어떠한 종류의 보증도 없습니다.
+        </p>
+    </div>
+
+    <div id="warning">
+        브라우저가 너무 오래되어 이 웹 애플리케이션을 올바르게 표시할 수 없습니다.
+        대신 최신 버전의 Google Chrome 또는 Firefox를 사용해 보세요.
+    </div>
+</div>
+
+<script>
+    (() => {
+        // ----- old browser check -----
+        const supports = !!(window.crypto && crypto.getRandomValues && window.CSS && CSS.supports && CSS.supports("transform-style","preserve-3d"));
+        if (!supports) document.documentElement.classList.add("old-env");
+
+        const $ = (sel, root=document) => root.querySelector(sel);
+
+        const coin = $("#coin");
+        const sides = $(".sides");
+        const resultEl = $("#result");
+        const btn = $("#flip");
+        const wrap = document.documentElement;
+
+        // ----- build side slices -----
+        function buildSides() {
+            if (!sides) return;
+            sides.innerHTML = "";
+            const sliceCount = 40; // smooth edge
+            for (let i=0; i<sliceCount; i++){
+                const s = document.createElement("div");
+                s.className = "side";
+                const deg = (360 / sliceCount) * i;
+                s.style.transform = `rotateY(calc(var(--size)/3) translateZ(${deg}deg))`;
+                sides.appendChild(s);
+            }
+        }
+        buildSides();
+
+        // ----- secure random (50/50) -----
+        function randomBit() {
+            const a = new Uint8Array(1);
+            crypto.getRandomValues(a);
+            return a[0] & 1; // 0 or 1
+        }
+
+        // ----- animation -----
+        let busy = false;
+
+        function setResult(isHeads){
+            wrap.classList.add("flipped");
+            resultEl.textContent = isHeads ? "예 (앞면)" : "아니오 (뒷면)";
+        }
+
+        function flip(){
+            if (busy || wrap.classList.contains("old-env")) return;
+            busy = true;
+            wrap.classList.add("flipping");
+            btn.disabled = true;
+            wrap.classList.remove("flipped");
+            resultEl.textContent = "_";
+
+            const isHeads = randomBit() === 1;
+
+            // many spins for fun (rotateY chooses face)
+            const spins = 10 + Math.floor(Math.random() * 6); // cosmetic only
+            const endY = (spins * 360) + (isHeads ? 0 : 180);
+            const endX = (spins * 360) + 360; // extra flair
+
+            // animate with CSS transition
+            coin.classList.remove("stop");
+            coin.style.transition = "transform 1.25s cubic-bezier(.22,.9,.18,1)";
+            coin.style.transform = `rotateX(${endX}deg) rotateY(${endY}deg) rotateZ(0deg)`;
+
+            // finish
+            window.setTimeout(() => {
+                coin.style.transition = "none";
+                wrap.classList.remove("flipping");
+                setResult(isHeads);
+                btn.disabled = false;
+                busy = false;
+            }, 1300);
+        }
+
+        // interactions
+        btn.addEventListener("click", flip);
+        coin.addEventListener("click", flip);
+        coin.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                flip();
+            }
+        });
+
+    })();
+</script>
+</body>
+</html>

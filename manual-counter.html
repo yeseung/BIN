@@ -1,0 +1,408 @@
+<!-- 파일명(영어) 예시: manual-counter.html -->
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>수동계수기</title>
+    <style>
+        :root{
+            --bg:#fbf4f4;
+            --text:#1f2937;
+            --muted:#6b7280;
+            --line:rgba(0,0,0,.08);
+            --shadow:0 12px 30px rgba(0,0,0,.10);
+            --radius:18px;
+            --frame:#707b8a;
+            --frame2:#576172;
+            --digit-bg:#0b0b0c;
+            --digit:#ffffff;
+            --btn-border:#6b7280;
+            --btn-plus:#9be57f;
+            --btn-minus:#f2e2c9;
+            --focus:#2563eb;
+        }
+        *{box-sizing:border-box}
+        body{
+            margin:0;
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR",
+            Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+            background:var(--bg);
+            color:var(--text);
+        }
+        .wrap{
+            max-width: 900px;
+            margin: 28px auto 60px;
+            padding: 0 14px;
+            text-align:center;
+        }
+        h1{
+            margin: 20px 0 18px;
+            font-size: 44px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color:#555;
+        }
+
+        /* Counter box */
+        .counter-shell{
+            display:inline-block;
+            padding: 14px 18px;
+            border-radius: 22px;
+            background: linear-gradient(180deg, var(--frame), var(--frame2));
+            box-shadow: var(--shadow);
+            border: 6px solid rgba(255,255,255,.15);
+        }
+        .digits{
+            display:flex;
+            gap: 14px;
+            padding: 14px;
+            border-radius: 16px;
+            background: rgba(0,0,0,.20);
+        }
+        .digit{
+            width: 120px;
+            height: 168px;
+            border-radius: 14px;
+            background: var(--digit-bg);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            box-shadow: inset 0 10px 18px rgba(255,255,255,.05);
+            border: 2px solid rgba(255,255,255,.06);
+            user-select:none;
+        }
+        .digit span{
+            font-size: 120px;
+            font-weight: 900;
+            line-height: 1;
+            color: var(--digit);
+            letter-spacing: -0.04em;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Controls */
+        .controls{
+            margin: 42px auto 26px;
+            display:flex;
+            justify-content:center;
+            gap: 90px;
+            flex-wrap: wrap;
+        }
+        .circle-btn{
+            width: 170px;
+            height: 170px;
+            border-radius: 999px;
+            border: 8px solid rgba(0,0,0,.45);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            cursor:pointer;
+            user-select:none;
+            box-shadow: 0 18px 30px rgba(0,0,0,.12);
+            transition: transform .06s ease, filter .12s ease;
+            position: relative;
+            outline: none;
+        }
+        .circle-btn:active{ transform: translateY(2px); }
+        .circle-btn:focus-visible{
+            box-shadow: 0 0 0 4px rgba(37,99,235,.25), 0 18px 30px rgba(0,0,0,.12);
+        }
+        .circle-btn.minus{ background: var(--btn-minus); }
+        .circle-btn.plus{ background: var(--btn-plus); }
+        .circle-btn .sym{
+            font-size: 92px;
+            font-weight: 900;
+            line-height: 1;
+            color:#111;
+        }
+
+        /* Editable title + value */
+        .editbar{
+            margin: 18px auto 0;
+            display:flex;
+            justify-content:center;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items:center;
+        }
+        .editbar input{
+            height: 42px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            padding: 0 12px;
+            font-size: 16px;
+            background:#fff;
+            color:var(--text);
+            outline:none;
+            min-width: 220px;
+        }
+        .editbar input:focus{
+            border-color: rgba(37,99,235,.55);
+            box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+        }
+        .pill{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.65);
+            border: 1px solid var(--line);
+            color:#374151;
+            font-size: 14px;
+        }
+
+        /* Description */
+        #desc{
+            max-width: 860px;
+            margin: 18px auto 0;
+            text-align:left;
+            background: rgba(255,255,255,.65);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 16px 18px;
+            line-height: 1.9;
+            color:#111827;
+        }
+        #desc li{ margin: 6px 0; }
+        #desc .key{
+            display:inline-block;
+            padding: 2px 8px;
+            border-radius: 8px;
+            border: 1px solid rgba(0,0,0,.15);
+            background:#fff;
+            font-weight: 700;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 13px;
+        }
+        #desc .add, #desc .minus{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            border: 1px solid rgba(0,0,0,.15);
+            background:#fff;
+            font-weight: 900;
+        }
+
+        .foot{
+            margin-top: 14px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
+            text-align:center;
+        }
+
+        /* Responsive */
+        @media (max-width: 720px){
+            h1{ font-size: 34px; }
+            .digit{ width: 78px; height: 112px; }
+            .digit span{ font-size: 76px; }
+            .controls{ gap: 26px; margin-top: 30px; }
+            .circle-btn{ width: 130px; height: 130px; border-width: 7px; }
+            .circle-btn .sym{ font-size: 70px; }
+        }
+        @media (max-width: 420px){
+            .digits{ gap: 10px; padding: 12px; }
+            .digit{ width: 66px; height: 100px; }
+            .digit span{ font-size: 70px; }
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <h1 id="titleText">수동계수기</h1>
+
+    <div class="counter-shell" aria-label="카운터 표시">
+        <div class="digits" id="digits"></div>
+    </div>
+
+    <div class="controls" aria-label="증가/감소 버튼">
+        <button class="circle-btn minus" id="btnMinus" type="button" aria-label="1 감소">
+            <span class="sym">−</span>
+        </button>
+        <button class="circle-btn plus" id="btnPlus" type="button" aria-label="1 증가">
+            <span class="sym">+</span>
+        </button>
+    </div>
+
+    <!-- 옵션: 제목/값 편집 -->
+    <div class="editbar" aria-label="편집">
+        <span class="pill">제목</span>
+        <input id="titleInput" type="text" value="수동계수기" />
+        <span class="pill">현재값</span>
+        <input id="valueInput" type="number" inputmode="numeric" />
+    </div>
+
+    <ul id="desc">
+        <li>사람 수, 점수 또는 마우스 클릭 수를 계산하는 데 사용할 수 있습니다.</li>
+        <li>시작 시 4자리를 표시합니다. 카운터 수가 9999를 초과하면 5자리가 됩니다. 숫자는 -99999와 999999 사이일 수 있습니다.</li>
+        <li>
+            클릭하여 계산합니다.
+            <span class="add">＋</span> 버튼을 클릭하여 하나를 추가하고
+            <span class="minus">－</span> 버튼을 클릭하여 하나를 빼십시오.
+            키보드 버튼도 사용할 수 있습니다.
+            <span class="key">+</span> / <span class="key">space</span> 키를 눌러 하나를 추가하고,
+            <span class="key">-</span> 키를 눌러 하나를 빼십시오.
+        </li>
+        <li>제목과 번호를 편집할 수 있습니다.</li>
+        <li>버튼을 클릭하면 화면이 계속 켜집니다.</li>
+        <li>번호가 브라우저에 저장됩니다. 언제든지 페이지를 새로 고칠 수 있습니다.</li>
+        <li>이것은 온라인 웹앱입니다. 설치가 필요하지 않습니다.</li>
+        <li>명시적이든 묵시적이든 어떠한 종류의 보증도 하지 않습니다. 현지 법률을 따르십시오. 위반 사항에 대한 책임은 사용자에게 있습니다.</li>
+    </ul>
+
+    <div class="foot" id="hint">
+        단축키: <b>+</b> 또는 <b>Space</b> = 증가 / <b>-</b> = 감소
+    </div>
+</div>
+
+<script>
+    (() => {
+        const MIN = -99999;
+        const MAX = 999999;
+        const LS_KEY = "manual_counter_v1";
+
+        const $ = (sel, root=document) => root.querySelector(sel);
+
+        const digitsEl = $("#digits");
+        const titleText = $("#titleText");
+        const titleInput = $("#titleInput");
+        const valueInput = $("#valueInput");
+
+        let value = 0;
+        let keepAwakeLock = null;
+
+        // ----- formatting -----
+        function clamp(n){
+            return Math.max(MIN, Math.min(MAX, n));
+        }
+
+        function getDigitCount(n){
+            // 기본 4자리, |n| > 9999 이면 5자리(스크린샷 느낌)
+            return Math.abs(n) > 9999 ? 5 : 4;
+        }
+
+        function render(){
+            const count = getDigitCount(value);
+            digitsEl.innerHTML = "";
+
+            const str = String(Math.abs(value)).padStart(count, "0");
+            for (let i=0; i<count; i++){
+                const d = document.createElement("div");
+                d.className = "digit";
+                const s = document.createElement("span");
+                s.textContent = str[i];
+                d.appendChild(s);
+                digitsEl.appendChild(d);
+            }
+
+            // 값 입력칸 동기화(사용자가 직접 값 수정 가능)
+            valueInput.value = value;
+        }
+
+        // ----- storage -----
+        function save(){
+            localStorage.setItem(LS_KEY, JSON.stringify({
+                title: titleInput.value || "수동계수기",
+                value
+            }));
+        }
+
+        function load(){
+            const raw = localStorage.getItem(LS_KEY);
+            if (!raw) return;
+            try{
+                const data = JSON.parse(raw);
+                if (typeof data.title === "string"){
+                    titleInput.value = data.title;
+                    titleText.textContent = data.title;
+                    document.title = data.title;
+                }
+                if (typeof data.value === "number" && Number.isFinite(data.value)){
+                    value = clamp(Math.trunc(data.value));
+                }
+            }catch(e){}
+        }
+
+        // ----- wake lock (지원 브라우저에서만) -----
+        async function requestWakeLock(){
+            try{
+                if (!("wakeLock" in navigator)) return;
+                if (keepAwakeLock) return;
+                keepAwakeLock = await navigator.wakeLock.request("screen");
+                keepAwakeLock.addEventListener("release", () => { keepAwakeLock = null; });
+            }catch(e){
+                keepAwakeLock = null;
+            }
+        }
+
+        function step(delta){
+            value = clamp(value + delta);
+            render();
+            save();
+            requestWakeLock(); // 버튼 클릭 시 화면 켜짐 유지 시도
+        }
+
+        // ----- events -----
+        $("#btnPlus").addEventListener("click", () => step(+1));
+        $("#btnMinus").addEventListener("click", () => step(-1));
+
+        // 키보드: + / space = 증가, - = 감소
+        window.addEventListener("keydown", (e) => {
+            // 입력창에서 타이핑 중이면 스킵(숫자/제목 수정 방해 X)
+            const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : "";
+            const inInput = tag === "input" || tag === "textarea";
+            if (inInput) return;
+
+            if (e.key === "+" || e.code === "Space"){
+                e.preventDefault();
+                step(+1);
+            } else if (e.key === "-"){
+                e.preventDefault();
+                step(-1);
+            }
+        });
+
+        // 제목 편집
+        titleInput.addEventListener("input", () => {
+            const t = titleInput.value.trim() || "수동계수기";
+            titleText.textContent = t;
+            document.title = t;
+            save();
+        });
+
+        // 값 직접 입력(엔터/포커스아웃)
+        function commitValue(){
+            const n = Number(valueInput.value);
+            if (!Number.isFinite(n)) { render(); return; }
+            value = clamp(Math.trunc(n));
+            render();
+            save();
+        }
+        valueInput.addEventListener("change", commitValue);
+        valueInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                valueInput.blur();
+                commitValue();
+            }
+        });
+
+        // 초기화: 로드 후 렌더
+        load();
+        render();
+
+        // 탭 복귀 시 wake lock이 풀릴 수 있어 재시도(필수는 아님)
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible") {
+                keepAwakeLock = null;
+            }
+        });
+    })();
+</script>
+</body>
+</html>
