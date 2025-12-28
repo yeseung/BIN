@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Age Calculator</title>
+    <style>
+        :root{
+            --bg:#ffffff;
+            --page:#f6f7fb;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --border:#e5e7eb;
+            --shadow:0 14px 40px rgba(17,24,39,.08);
+            --radius:18px;
+            --focus:0 0 0 4px rgba(59,130,246,.18);
+            --primary:#3b82f6;
+            --green:#6CC04A;
+            --greenDark:#51A234;
+            --barBg:#eef0f6;
+        }
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, "Apple SD Gothic Neo","Malgun Gothic", sans-serif;
+            color:var(--text);
+            background: var(--page);
+        }
+
+        .wrap{
+            max-width: 1180px;
+            margin: 28px auto;
+            padding: 0 18px 40px;
+        }
+
+        .top{
+            display:flex;
+            align-items:flex-start;
+            gap:14px;
+            margin-bottom: 18px;
+        }
+        .logo{
+            width: 56px; height: 56px;
+            border-radius: 16px;
+            background: linear-gradient(135deg,#ff8a72,#e85b7f);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            box-shadow: 0 10px 26px rgba(232,91,127,.25);
+            flex: 0 0 auto;
+        }
+        .logo svg{ width:28px; height:28px; fill:#fff; opacity:.95; }
+
+        h1{
+            margin:0;
+            font-size: 26px;
+            letter-spacing:-.02em;
+        }
+        .sub{
+            margin:6px 0 0;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .card{
+            background: var(--card);
+            border:1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 18px;
+        }
+
+        .center{
+            display:flex;
+            justify-content:center;
+        }
+
+        .form{
+            width: min(620px, 100%);
+            margin: 18px auto 0;
+        }
+        .field{
+            margin-bottom: 14px;
+        }
+        .label{
+            font-size: 13px;
+            font-weight: 800;
+            margin: 0 0 8px;
+            color:#0f172a;
+        }
+        .inputWrap{
+            position:relative;
+        }
+        input[type="date"]{
+            width:100%;
+            height: 46px;
+            border-radius: 12px;
+            border:1px solid var(--border);
+            padding: 0 44px 0 14px;
+            font-size: 15px;
+            outline:none;
+            background: #fbfbfe;
+            transition: box-shadow .15s ease, border-color .15s ease, background .15s ease;
+        }
+        input[type="date"]:focus{
+            border-color: rgba(59,130,246,.55);
+            box-shadow: var(--focus);
+            background:#fff;
+        }
+        .calIcon{
+            position:absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            opacity:.65;
+            pointer-events:none;
+        }
+
+        .btn{
+            width:100%;
+            height: 48px;
+            border:0;
+            border-radius: 12px;
+            background: var(--primary);
+            color:#fff;
+            font-weight: 900;
+            font-size: 15px;
+            cursor:pointer;
+            margin-top: 4px;
+            box-shadow: 0 12px 28px rgba(59,130,246,.22);
+            transition: transform .05s ease, filter .15s ease;
+        }
+        .btn:hover{ filter: brightness(1.03); }
+        .btn:active{ transform: translateY(1px); }
+
+        .sectionTitle{
+            text-align:center;
+            margin: 22px 0 12px;
+            color:#111827;
+            font-weight: 900;
+            letter-spacing:-.02em;
+        }
+        .sectionTitle .emoji{ opacity:.95; }
+
+        /* Age boxes */
+        .ageRow{
+            display:flex;
+            justify-content:center;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+        .ageItem{
+            display:flex;
+            align-items:center;
+            gap: 10px;
+        }
+        .numBox{
+            width: 78px;
+            height: 58px;
+            border-radius: 10px;
+            background: var(--green);
+            color:#fff;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-weight: 950;
+            font-size: 30px;
+            box-shadow: 0 10px 24px rgba(81,162,52,.18);
+        }
+        .unit{
+            font-size: 14px;
+            font-weight: 800;
+            color:#111827;
+            margin-top: 2px;
+            min-width: 38px;
+        }
+
+        .bigGreen{
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            gap: 10px;
+            margin: 10px 0 10px;
+        }
+        .bigGreen .num{
+            min-width: 170px;
+            height: 64px;
+            border-radius: 12px;
+            background: var(--green);
+            color:#fff;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            font-size: 34px;
+            font-weight: 950;
+            box-shadow: 0 10px 24px rgba(81,162,52,.18);
+            padding: 0 16px;
+        }
+        .bigGreen .suffix{
+            font-weight: 900;
+            color:#111827;
+        }
+
+        .downArrow{
+            text-align:center;
+            color:#60a5fa;
+            font-size: 18px;
+            margin: 8px 0 8px;
+            user-select:none;
+        }
+
+        /* Progress bar */
+        .progressWrap{
+            width: min(760px, 100%);
+            margin: 0 auto;
+        }
+        .bar{
+            height: 14px;
+            background: var(--barBg);
+            border-radius: 999px;
+            overflow:hidden;
+            border: 1px solid var(--border);
+        }
+        .bar > div{
+            height:100%;
+            width: 0%;
+            background: repeating-linear-gradient(
+                    45deg,
+                    rgba(59,130,246,.95),
+                    rgba(59,130,246,.95) 10px,
+                    rgba(59,130,246,.70) 10px,
+                    rgba(59,130,246,.70) 20px
+            );
+            border-radius: 999px;
+            transition: width .35s ease;
+        }
+        .barLabel{
+            margin-top: 8px;
+            text-align:center;
+            font-weight: 900;
+            color:#2563eb;
+            font-size: 13px;
+        }
+        .barNote{
+            margin-top: 6px;
+            text-align:center;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .footGap{ height: 12px; }
+
+        .hint{
+            text-align:center;
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 520px){
+            .numBox{ width: 74px; }
+            .bigGreen .num{ min-width: 150px; font-size: 30px; }
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="top">
+        <div class="logo" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+                <path d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm0 6h10v2H7V8zm0 4h10v2H7v-2zm0 4h6v2H7v-2z"/>
+            </svg>
+        </div>
+        <div>
+            <h1>나이 계산기</h1>
+            <div class="sub">당신이나 당신의 친구의 나이를 계산</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="form">
+            <div class="field">
+                <div class="label">생일</div>
+                <div class="inputWrap">
+                    <input id="birth" type="date" />
+                    <svg class="calIcon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M7 2v3M17 2v3M4 7h16M6 11h4M6 15h4M14 11h4M14 15h4M6 21h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z"
+                              stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="label">해당 날짜의 나이</div>
+                <div class="inputWrap">
+                    <input id="asof" type="date" />
+                    <svg class="calIcon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M7 2v3M17 2v3M4 7h16M6 11h4M6 15h4M14 11h4M14 15h4M6 21h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z"
+                              stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                    </svg>
+                </div>
+            </div>
+
+            <button class="btn" id="btnCalc" type="button">계산하다</button>
+        </div>
+
+        <div class="sectionTitle"><span class="emoji">👇</span> 나이 <span class="emoji">👇</span></div>
+
+        <div class="ageRow">
+            <div class="ageItem">
+                <div class="numBox" id="yBox">0</div>
+                <div class="unit">연령</div>
+            </div>
+            <div class="ageItem">
+                <div class="numBox" id="mBox">00</div>
+                <div class="unit">개월</div>
+            </div>
+            <div class="ageItem">
+                <div class="numBox" id="dBox">00</div>
+                <div class="unit">날</div>
+            </div>
+        </div>
+
+        <div class="sectionTitle"><span class="emoji">👇</span> 이 세상을 살아가는 시간 <span class="emoji">👇</span></div>
+
+        <div class="bigGreen">
+            <div class="num" id="daysLived">0</div>
+            <div class="suffix">날</div>
+        </div>
+
+        <div class="downArrow">⇩</div>
+
+        <div class="sectionTitle"><span class="emoji">👇</span> 생활 진행 표시줄 <span class="emoji">👇</span></div>
+
+        <div class="progressWrap">
+            <div class="bar" aria-label="생활 진행 표시줄">
+                <div id="barFill"></div>
+            </div>
+            <div class="barLabel" id="barPct">0%</div>
+            <div class="barNote">*기대수명 90세를 기준으로 계산</div>
+        </div>
+
+        <div class="footGap"></div>
+
+        <div class="sectionTitle"><span class="emoji">👇</span> 다음 생일까지 남은 시간 <span class="emoji">👇</span></div>
+
+        <div class="bigGreen">
+            <div class="num" id="daysToBday">0</div>
+            <div class="suffix">날</div>
+        </div>
+
+        <div class="hint" id="warn" style="display:none;"></div>
+    </div>
+</div>
+
+<script>
+    const $ = (sel) => document.querySelector(sel);
+
+    const birthEl = $("#birth");
+    const asofEl  = $("#asof");
+    const btn     = $("#btnCalc");
+
+    const yBox = $("#yBox");
+    const mBox = $("#mBox");
+    const dBox = $("#dBox");
+    const daysLivedEl = $("#daysLived");
+    const daysToBdayEl = $("#daysToBday");
+    const barFill = $("#barFill");
+    const barPct  = $("#barPct");
+    const warnEl  = $("#warn");
+
+    const MS_DAY = 24 * 60 * 60 * 1000;
+
+    function pad2(n){ return String(n).padStart(2, "0"); }
+
+    function toLocalMidnightDate(dateStr){
+        // input[type=date]는 "YYYY-MM-DD"
+        // 로컬 자정 기준 Date로 만들기
+        const [y,m,d] = dateStr.split("-").map(Number);
+        return new Date(y, m - 1, d, 0, 0, 0, 0);
+    }
+
+    function isValidDateInput(el){
+        return !!el.value && /^\d{4}-\d{2}-\d{2}$/.test(el.value);
+    }
+
+    function formatInt(n){
+        return new Intl.NumberFormat("en-US").format(n);
+    }
+
+    function clamp(n, a, b){
+        return Math.max(a, Math.min(b, n));
+    }
+
+    function addYearsSafe(dateObj, years){
+        // 생일이 2/29인 경우 등 안전 처리: 목표 연도에 존재하지 않으면 2/28로
+        const y = dateObj.getFullYear() + years;
+        const m = dateObj.getMonth();
+        const d = dateObj.getDate();
+        const cand = new Date(y, m, d);
+        if (cand.getMonth() !== m) {
+            // overflow => 해당월 마지막 날로 맞춤 (주로 2/29 -> 3/1로 넘어감)
+            return new Date(y, m + 1, 0);
+        }
+        return cand;
+    }
+
+    function diffYMD(birth, asof){
+        // asof >= birth 가정
+        let y = asof.getFullYear() - birth.getFullYear();
+        let m = asof.getMonth() - birth.getMonth();
+        let d = asof.getDate() - birth.getDate();
+
+        if (d < 0){
+            // 이전 달의 일수를 빌림
+            const prevMonthLastDay = new Date(asof.getFullYear(), asof.getMonth(), 0).getDate();
+            d += prevMonthLastDay;
+            m -= 1;
+        }
+        if (m < 0){
+            m += 12;
+            y -= 1;
+        }
+        return { years: y, months: m, days: d };
+    }
+
+    function daysBetweenFloor(start, end){
+        // start->end (end-start) 일수, 로컬 자정 기반이면 안전
+        return Math.floor((end.getTime() - start.getTime()) / MS_DAY);
+    }
+
+    function daysUntilNextBirthday(birth, asof){
+        const bm = birth.getMonth();
+        const bd = birth.getDate();
+
+        // 올해 생일 후보
+        let next = new Date(asof.getFullYear(), bm, bd, 0,0,0,0);
+
+        // 2/29 보정: 올해에 2/29가 없으면 2/28
+        if (bm === 1 && bd === 29 && next.getMonth() !== 1){
+            next = new Date(asof.getFullYear(), 1, 28, 0,0,0,0);
+        }
+
+        // 오늘이 생일이거나 지났으면 다음 해
+        if (next.getTime() <= asof.getTime()){
+            next = new Date(asof.getFullYear() + 1, bm, bd, 0,0,0,0);
+            if (bm === 1 && bd === 29 && next.getMonth() !== 1){
+                next = new Date(asof.getFullYear() + 1, 1, 28, 0,0,0,0);
+            }
+        }
+
+        return Math.ceil((next.getTime() - asof.getTime()) / MS_DAY);
+    }
+
+    function update(){
+        warnEl.style.display = "none";
+        warnEl.textContent = "";
+
+        if (!isValidDateInput(birthEl) || !isValidDateInput(asofEl)){
+            return;
+        }
+
+        const birth = toLocalMidnightDate(birthEl.value);
+        const asof  = toLocalMidnightDate(asofEl.value);
+
+        if (asof.getTime() < birth.getTime()){
+            warnEl.style.display = "block";
+            warnEl.style.color = "#b91c1c";
+            warnEl.textContent = "해당 날짜는 생일 이후여야 합니다.";
+            return;
+        }
+
+        // 1) 만 나이 (년/개월/일)
+        const { years, months, days } = diffYMD(birth, asof);
+        yBox.textContent = String(years);
+        mBox.textContent = pad2(months);
+        dBox.textContent = pad2(days);
+
+        // 2) 살아온 날(일수)
+        const livedDays = daysBetweenFloor(birth, asof);
+        daysLivedEl.textContent = formatInt(livedDays);
+
+        // 3) 기대수명 90세 진행률 (birth + 90년 기준)
+        const end90 = addYearsSafe(birth, 90);
+        const total90 = Math.max(1, daysBetweenFloor(birth, end90));
+        const pct = clamp((livedDays / total90) * 100, 0, 100);
+
+        barFill.style.width = pct.toFixed(0) + "%";
+        barPct.textContent = pct.toFixed(0) + "%";
+
+        // 4) 다음 생일까지 남은 날
+        const remain = daysUntilNextBirthday(birth, asof);
+        daysToBdayEl.textContent = formatInt(remain);
+    }
+
+    function setDefaults(){
+        // 기본값: 오늘 날짜
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = pad2(now.getMonth()+1);
+        const dd = pad2(now.getDate());
+        asofEl.value = `${yyyy}-${mm}-${dd}`;
+
+        // 예시값(스크린샷 느낌): 1985-08-28 (원하면 바꾸세요)
+        birthEl.value = "1985-08-28";
+        update();
+    }
+
+    birthEl.addEventListener("input", update);
+    asofEl.addEventListener("input", update);
+    btn.addEventListener("click", update);
+
+    setDefaults();
+</script>
+</body>
+</html>

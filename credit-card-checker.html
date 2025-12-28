@@ -1,0 +1,694 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Credit Card Checker (BIN API)</title>
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --border:#e5e7eb;
+            --shadow:0 14px 40px rgba(17,24,39,.08);
+            --radius:18px;
+            --focus:0 0 0 4px rgba(59,130,246,.18);
+            --primary:#2563eb;
+            --ok:#16a34a;
+            --bad:#dc2626;
+            --soft:#fbfbfe;
+            --chip:#f3f4f6;
+        }
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, "Apple SD Gothic Neo","Malgun Gothic", sans-serif;
+            color:var(--text);
+            background:#ffffff;
+        }
+        .wrap{ max-width: 1100px; margin: 28px auto; padding: 0 18px 44px; }
+        h1{ margin:0; font-size: 28px; letter-spacing:-.02em; }
+        .sub{ margin:8px 0 0; color: var(--muted); font-size: 13px; }
+        .center{ margin-top: 26px; display:flex; justify-content:center; }
+        .card{
+            width: min(860px, 100%);
+            background: var(--card);
+            border:1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 18px;
+        }
+
+        .brands{
+            display:flex;
+            justify-content:center;
+            gap:10px;
+            flex-wrap:wrap;
+            margin: 6px 0 14px;
+            user-select:none;
+        }
+        .brand{
+            width: 78px;
+            height: 34px;
+            border-radius: 10px;
+            border:1px solid var(--border);
+            background: #fff;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-weight: 900;
+            font-size: 12px;
+            color:#111827;
+            box-shadow: 0 8px 18px rgba(17,24,39,.05);
+        }
+        .brand.active{
+            outline: 3px solid rgba(37,99,235,.18);
+            border-color: rgba(37,99,235,.45);
+        }
+        .brand small{ color: var(--muted); font-weight: 800; }
+
+        .row{
+            display:flex;
+            gap:10px;
+            align-items:center;
+            justify-content:center;
+            margin: 6px 0 10px;
+            flex-wrap:wrap;
+        }
+        .labelRow{
+            width:100%;
+            max-width: 720px;
+            display:flex;
+            align-items:center;
+            gap:8px;
+            color:#111827;
+            font-weight: 900;
+            margin: 0 auto 8px;
+        }
+        .labelRow svg{ width:18px; height:18px; opacity:.75; }
+
+        .inputWrap{
+            width:100%;
+            max-width: 720px;
+            display:flex;
+            border:1px solid var(--border);
+            border-radius: 12px;
+            overflow:hidden;
+            background: var(--soft);
+            box-shadow: 0 10px 24px rgba(17,24,39,.05);
+        }
+        input[type="text"]{
+            flex:1;
+            height: 48px;
+            border:0;
+            outline:none;
+            padding: 0 14px;
+            font-size: 16px;
+            background: transparent;
+        }
+        .iconBtn{
+            width: 52px;
+            height: 48px;
+            border:0;
+            cursor:pointer;
+            background: #eef2ff;
+            border-left:1px solid var(--border);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            transition: filter .15s ease, transform .05s ease;
+        }
+        .iconBtn:hover{ filter: brightness(1.03); }
+        .iconBtn:active{ transform: translateY(1px); }
+        .iconBtn svg{ width:20px; height:20px; opacity:.75; }
+
+        .btn{
+            width:100%;
+            max-width: 720px;
+            height: 48px;
+            border-radius: 12px;
+            border:1px solid rgba(220,38,38,.45);
+            background:#fff;
+            color:#b91c1c;
+            font-weight: 950;
+            cursor:pointer;
+            margin: 10px auto 0;
+            display:block;
+            transition: background .15s ease, transform .05s ease;
+        }
+        .btn:hover{ background:#fff1f2; }
+        .btn:active{ transform: translateY(1px); }
+        .btn:disabled{
+            opacity:.6;
+            cursor:not-allowed;
+        }
+
+        .status{
+            margin: 16px 0 4px;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            gap:8px;
+            font-weight: 950;
+            color: var(--muted);
+            text-align:center;
+            min-height: 26px;
+        }
+        .status.ok{ color: var(--ok); }
+        .status.bad{ color: var(--bad); }
+        .status svg{ width:18px; height:18px; }
+
+        .sectionTitle{
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-weight: 900;
+            font-size: 13px;
+            max-width: 720px;
+            margin-left:auto;
+            margin-right:auto;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+        }
+        .tiny{
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 900;
+            display:flex;
+            align-items:center;
+            gap:8px;
+            user-select:none;
+        }
+        .dot{
+            width:8px;height:8px;border-radius:999px;background:#d1d5db;display:inline-block;
+        }
+        .dot.on{ background:#22c55e; }
+        .dot.warn{ background:#f59e0b; }
+        .dot.err{ background:#ef4444; }
+
+        table{
+            width:100%;
+            max-width: 720px;
+            margin: 10px auto 0;
+            border-collapse: collapse;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow:hidden;
+            background:#fff;
+        }
+        td{
+            padding: 12px 12px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+            vertical-align: middle;
+        }
+        tr:last-child td{ border-bottom:0; }
+        td:first-child{
+            width: 44%;
+            color:#111827;
+            font-weight: 900;
+            background: #fafafa;
+        }
+        .val{
+            display:flex;
+            align-items:center;
+            gap:8px;
+            justify-content:flex-start;
+            color:#111827;
+            font-weight: 800;
+            flex-wrap: wrap;
+        }
+        .pill{
+            display:inline-flex;
+            align-items:center;
+            gap:6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: var(--chip);
+            border:1px solid var(--border);
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 900;
+        }
+        .okMark{ color: var(--ok); font-weight: 950; }
+        .badMark{ color: var(--bad); font-weight: 950; }
+
+        .note{
+            max-width: 720px;
+            margin: 10px auto 0;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        .link{
+            color:#2563eb;
+            text-decoration:none;
+            font-weight: 900;
+        }
+        .link:hover{ text-decoration: underline; }
+
+        @media (max-width: 520px){
+            td:first-child{ width: 48%; }
+            .brand{ width: 74px; }
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <h1>신용카드 검사기</h1>
+    <div class="sub">잘못된 신용카드 번호를 감지하고 사기로부터 자신을 보호하세요</div>
+
+    <div class="center">
+        <div class="card">
+            <div class="brands" id="brands" aria-label="카드 브랜드">
+                <div class="brand" data-b="visa">VISA</div>
+                <div class="brand" data-b="amex">AMERICAN<br><small>EXPRESS</small></div>
+                <div class="brand" data-b="discover">DISCOVER</div>
+                <div class="brand" data-b="mc">MasterCard</div>
+            </div>
+
+            <div class="labelRow">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M3 7h18v10H3V7Z" stroke="currentColor" stroke-width="1.7"/>
+                    <path d="M3 10h18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                    <path d="M6 15h5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                </svg>
+                신용카드 번호:
+            </div>
+
+            <div class="row">
+                <div class="inputWrap">
+                    <input id="cc" type="text" inputmode="numeric" autocomplete="off" placeholder="카드 번호 입력 (숫자만)" />
+                    <button class="iconBtn" id="btnSearch" type="button" title="검사">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" stroke-width="1.7"/>
+                            <path d="M16.5 16.5 21 21" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <button class="btn" id="btnCheck" type="button">신용카드 확인</button>
+
+            <div class="status" id="status"></div>
+
+            <div class="sectionTitle">
+                <span>신용카드 세부정보</span>
+                <span class="tiny" id="apiState"><span class="dot"></span> BIN API 대기</span>
+            </div>
+
+            <table>
+                <tr>
+                    <td>Luhn 알고리즘 확인</td>
+                    <td><div class="val" id="luhnVal">-</div></td>
+                </tr>
+                <tr>
+                    <td>BIN</td>
+                    <td><div class="val"><span id="binVal">-</span><span class="pill" id="binLenPill">6-digit</span></div></td>
+                </tr>
+                <tr>
+                    <td>신용카드 발급사(브랜드)</td>
+                    <td><div class="val"><span id="brandVal">-</span></div></td>
+                </tr>
+                <tr>
+                    <td>카드 스킴</td>
+                    <td><div class="val"><span id="schemeVal">-</span></div></td>
+                </tr>
+                <tr>
+                    <td>카드 타입</td>
+                    <td><div class="val"><span id="typeVal">-</span></div></td>
+                </tr>
+                <tr>
+                    <td>카드 등급</td>
+                    <td><div class="val"><span id="levelVal">-</span></div></td>
+                </tr>
+                <tr>
+                    <td>선불(Prepaid)</td>
+                    <td><div class="val"><span id="prepaidVal">-</span></div></td>
+                </tr>
+                <tr>
+                    <td>은행 이름</td>
+                    <td><div class="val"><span id="bankVal">-</span></div></td>
+                </tr>
+                <tr>
+                    <td>은행 국가</td>
+                    <td><div class="val"><span id="countryVal">-</span></div></td>
+                </tr>
+            </table>
+
+            <div class="note">
+                ※ 이 도구는 <b>루ーン(Luhn) 알고리즘</b>으로 번호 형식의 유효성을 확인하고, <b>BIN API</b>로 발급 정보를 조회합니다. <br>
+                실제 결제 가능 여부/소유 여부/도난 여부는 확인할 수 없습니다.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const $ = (s) => document.querySelector(s);
+
+    const cc = $("#cc");
+    const btnCheck = $("#btnCheck");
+    const btnSearch = $("#btnSearch");
+    const statusEl = $("#status");
+
+    const luhnVal = $("#luhnVal");
+    const binVal = $("#binVal");
+    const binLenPill = $("#binLenPill");
+
+    const brandVal = $("#brandVal");
+    const schemeVal = $("#schemeVal");
+    const typeVal = $("#typeVal");
+    const levelVal = $("#levelVal");
+    const prepaidVal = $("#prepaidVal");
+    const bankVal = $("#bankVal");
+    const countryVal = $("#countryVal");
+
+    const apiState = $("#apiState");
+    const brandEls = Array.from(document.querySelectorAll(".brand"));
+
+    const MS_DAY = 24*60*60*1000;
+
+    // ===== Utilities =====
+    function digitsOnly(s){ return (s || "").replace(/\D+/g, ""); }
+
+    function formatCardNumber(d){
+        return d.replace(/(.{4})/g, "$1 ").trim();
+    }
+
+    function setBrandHighlight(id){
+        brandEls.forEach(el => el.classList.toggle("active", el.dataset.b === id));
+    }
+
+    function setStatus(ok, msg){
+        statusEl.classList.remove("ok","bad");
+        statusEl.innerHTML = "";
+        if (!msg){ statusEl.textContent = ""; return; }
+
+        const icon = ok
+            ? `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+             <path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+           </svg>`
+            : `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+             <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+           </svg>`;
+
+        statusEl.classList.add(ok ? "ok" : "bad");
+        statusEl.innerHTML = icon + msg;
+    }
+
+    function setApiState(kind, text){
+        // kind: idle | loading | ok | warn | err
+        const dot = apiState.querySelector(".dot");
+        dot.className = "dot";
+        if (kind === "ok") dot.classList.add("on");
+        if (kind === "warn") dot.classList.add("warn");
+        if (kind === "err") dot.classList.add("err");
+        apiState.childNodes[1].textContent = " " + text;
+    }
+
+    function safeText(v, fallback="-"){
+        if (v === undefined || v === null || v === "") return fallback;
+        return String(v);
+    }
+
+    // ===== Luhn =====
+    function luhnCheck(numStr){
+        const s = digitsOnly(numStr);
+        if (s.length < 12) return false;
+
+        let sum = 0;
+        let dbl = false;
+        for (let i = s.length - 1; i >= 0; i--){
+            let n = s.charCodeAt(i) - 48;
+            if (dbl){
+                n *= 2;
+                if (n > 9) n -= 9;
+            }
+            sum += n;
+            dbl = !dbl;
+        }
+        return (sum % 10) === 0;
+    }
+
+    // ===== Brand detect (local heuristic) =====
+    function detectBrand(numStr){
+        const s = digitsOnly(numStr);
+        if (!s) return { id:null, name:"-" };
+
+        if (s[0] === "4" && (s.length === 13 || s.length === 16 || s.length === 19)){
+            return { id:"visa", name:"VISA" };
+        }
+        if ((s.startsWith("34") || s.startsWith("37")) && s.length === 15){
+            return { id:"amex", name:"AMERICAN EXPRESS" };
+        }
+        const prefix2 = Number(s.slice(0,2));
+        const prefix4 = Number(s.slice(0,4));
+        if (s.length === 16 && ((prefix2 >= 51 && prefix2 <= 55) || (prefix4 >= 2221 && prefix4 <= 2720))){
+            return { id:"mc", name:"MasterCard" };
+        }
+        const prefix3 = Number(s.slice(0,3));
+        if ((s.startsWith("6011") || s.startsWith("65") || (prefix3 >= 644 && prefix3 <= 649)) && (s.length === 16 || s.length === 19)){
+            return { id:"discover", name:"Discover" };
+        }
+        return { id:null, name:"알 수 없음" };
+    }
+
+    // ===== BIN API (binlist) =====
+    // - 캐시로 호출 최소화
+    // - 429(레이트리밋) / 네트워크 오류 처리
+    const BIN_CACHE_KEY = "bin_cache_v1";
+    const BIN_CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 7; // 7일
+
+    function loadCache(){
+        try{
+            const raw = localStorage.getItem(BIN_CACHE_KEY);
+            return raw ? JSON.parse(raw) : {};
+        }catch(e){
+            return {};
+        }
+    }
+    function saveCache(cache){
+        try{ localStorage.setItem(BIN_CACHE_KEY, JSON.stringify(cache)); }catch(e){}
+    }
+    function getCached(bin){
+        const cache = loadCache();
+        const item = cache[bin];
+        if (!item) return null;
+        if ((Date.now() - item.t) > BIN_CACHE_TTL_MS) return null;
+        return item.v;
+    }
+    function setCached(bin, value){
+        const cache = loadCache();
+        cache[bin] = { t: Date.now(), v: value };
+        saveCache(cache);
+    }
+
+    async function fetchBinInfo(bin){
+        // bin: "123456" 등
+        const cached = getCached(bin);
+        if (cached) return { ok:true, data:cached, cached:true };
+
+        // binlist endpoint
+        const url = `https://lookup.binlist.net/${encodeURIComponent(bin)}`;
+
+        const res = await fetch(url, {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        });
+
+        if (res.status === 429){
+            return { ok:false, code:429, message:"요청 제한(429). 잠시 후 다시 시도하세요." };
+        }
+        if (!res.ok){
+            return { ok:false, code:res.status, message:`BIN API 오류 (${res.status})` };
+        }
+
+        const data = await res.json();
+        setCached(bin, data);
+        return { ok:true, data, cached:false };
+    }
+
+    // ===== UI update =====
+    function resetBinFields(){
+        schemeVal.textContent = "-";
+        typeVal.textContent = "-";
+        levelVal.textContent = "-";
+        prepaidVal.textContent = "-";
+        bankVal.textContent = "-";
+        countryVal.textContent = "-";
+    }
+
+    function setLuhnUI(ok, hasValue){
+        if (!hasValue){
+            luhnVal.innerHTML = "-";
+            return;
+        }
+        luhnVal.innerHTML = ok
+            ? `<span class="okMark">✅ 통과하다</span>`
+            : `<span class="badMark">❌ 실패</span>`;
+    }
+
+    let lastBinRequested = "";
+
+    async function runCheck(){
+        const d = digitsOnly(cc.value);
+        cc.value = formatCardNumber(d);
+
+        // BIN 표시 (6/8)
+        const bin6 = d.slice(0,6);
+        const bin8 = d.slice(0,8);
+        const bin = (bin8.length === 8) ? bin8 : bin6;
+        const is8 = (bin.length === 8);
+
+        binVal.textContent = bin || "-";
+        binLenPill.textContent = is8 ? "8-digit" : "6-digit";
+
+        // 로컬 브랜드
+        const localBrand = detectBrand(d);
+        brandVal.textContent = localBrand.name;
+        setBrandHighlight(localBrand.id);
+
+        // Luhn
+        const hasValue = !!d;
+        const luhnOk = hasValue ? luhnCheck(d) : false;
+        setLuhnUI(luhnOk, hasValue);
+
+        if (!d){
+            setStatus(false, "");
+            setApiState("idle","BIN API 대기");
+            resetBinFields();
+            return;
+        }
+
+        setStatus(luhnOk,
+            luhnOk ? "귀하의 신용 카드 번호가 유효합니다" : "신용 카드 번호가 유효하지 않습니다"
+        );
+
+        // BIN API는 최소 6자리부터
+        if (bin.length < 6){
+            setApiState("idle","BIN API 대기");
+            resetBinFields();
+            return;
+        }
+
+        // 같은 BIN이면 재호출 방지
+        if (lastBinRequested === bin){
+            return;
+        }
+        lastBinRequested = bin;
+
+        // Fetch BIN Info
+        setApiState("loading","BIN 정보 조회 중…");
+        resetBinFields();
+
+        btnCheck.disabled = true;
+        btnSearch.disabled = true;
+
+        try{
+            const r = await fetchBinInfo(bin);
+
+            if (!r.ok){
+                if (r.code === 429){
+                    setApiState("warn","요청 제한(429)");
+                } else {
+                    setApiState("err","BIN 조회 실패");
+                }
+                // 실패 시도에도 최소한 빈 값 유지
+                return;
+            }
+
+            const data = r.data || {};
+            // binlist 응답 예시 필드:
+            // scheme, type, brand, prepaid, bank{name,url,phone,city}, country{name,emoji}
+            schemeVal.textContent  = safeText(data.scheme, "-");
+            typeVal.textContent    = safeText(data.type, "-");
+            levelVal.textContent   = safeText(data.brand, "-"); // 등급(brand)
+            prepaidVal.textContent = (data.prepaid === true) ? "YES" : (data.prepaid === false ? "NO" : "-");
+
+            bankVal.textContent = safeText(data.bank && data.bank.name, "-");
+            const countryName = safeText(data.country && data.country.name, "-");
+            const countryEmoji = safeText(data.country && data.country.emoji, "");
+            countryVal.textContent = (countryEmoji ? (countryEmoji + " ") : "") + countryName;
+
+            // BIN API가 준 scheme/type 기준으로 브랜드 텍스트 보정
+            // (local detect와 다를 수 있으므로)
+            if (data.scheme){
+                const s = String(data.scheme).toLowerCase();
+                if (s.includes("visa")) setBrandHighlight("visa");
+                else if (s.includes("mastercard")) setBrandHighlight("mc");
+                else if (s.includes("amex")) setBrandHighlight("amex");
+                else if (s.includes("discover")) setBrandHighlight("discover");
+            }
+
+            if (r.cached){
+                setApiState("ok","BIN 조회 완료 (캐시)");
+            } else {
+                setApiState("ok","BIN 조회 완료");
+            }
+        } catch(e){
+            console.error(e);
+            setApiState("err","네트워크 오류");
+        } finally{
+            btnCheck.disabled = false;
+            btnSearch.disabled = false;
+        }
+    }
+
+    // 입력시 즉시 포맷 + Luhn/브랜드는 즉시, BIN fetch는 버튼/엔터로만 (호출 절약)
+    function quickLocalUpdate(){
+        const d = digitsOnly(cc.value);
+        cc.value = formatCardNumber(d);
+
+        const bin6 = d.slice(0,6);
+        binVal.textContent = bin6 || "-";
+        binLenPill.textContent = "6-digit";
+        lastBinRequested = ""; // 번호가 바뀌면 다음 조회 허용
+
+        const localBrand = detectBrand(d);
+        brandVal.textContent = localBrand.name;
+        setBrandHighlight(localBrand.id);
+
+        const hasValue = !!d;
+        const luhnOk = hasValue ? luhnCheck(d) : false;
+        setLuhnUI(luhnOk, hasValue);
+
+        if (!d){
+            setStatus(false,"");
+            setApiState("idle","BIN API 대기");
+            resetBinFields();
+            return;
+        }
+        setStatus(luhnOk,
+            luhnOk ? "귀하의 신용 카드 번호가 유효합니다" : "신용 카드 번호가 유효하지 않습니다"
+        );
+
+        // BIN API 값은 유지하지 않기 위해(혼동 방지) 입력중에는 리셋
+        resetBinFields();
+        setApiState("idle","BIN API 대기");
+    }
+
+    cc.addEventListener("input", quickLocalUpdate);
+    btnCheck.addEventListener("click", runCheck);
+    btnSearch.addEventListener("click", runCheck);
+
+    // Enter 키로 조회
+    cc.addEventListener("keydown", (e) => {
+        if (e.key === "Enter"){
+            e.preventDefault();
+            runCheck();
+        }
+    });
+
+    // 데모값(원하면 제거): 테스트 번호(결제 불가)
+    cc.value = "4111 1111 1111 1111";
+    quickLocalUpdate();
+</script>
+</body>
+</html>
