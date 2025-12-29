@@ -1,0 +1,62 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <title>QR 코드 생성기</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Noto Sans KR"', 'sans-serif'],
+                    },
+                },
+                darkMode: 'class',
+            }
+        }
+    </script>
+</head>
+
+<body
+        class="bg-[#65a8fa] dark:bg-gray-900 noscroll transition-colors min-h-screen flex items-center justify-center font-sans">
+<div class="w-full max-w-4xl bg-white rounded-2xl shadow-2xl p-6 m-4 text-center">
+    <h1 class="text-2xl font-semibold text-gray-800 mb-4">QR 코드 생성기</h1>
+
+    <input id="qrText"
+           class="w-full p-4 mb-6 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#65a8fa] text-gray-800"
+           type="text" placeholder="텍스트나 URL을 입력하세요.">
+
+    <button onclick="generateQR()"
+            class="px-6 py-2 mb-6 bg-[#65a8fa] text-white rounded-md hover:bg-blue-500 transition">QR 코드 생성</button>
+
+    <div id="qrcode" class="flex justify-center"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+    function generateQR() {
+        const text = document.getElementById('qrText').value;
+        const qrcodeContainer = document.getElementById('qrcode');
+        qrcodeContainer.innerHTML = ""; // 기존 QR 코드 삭제
+        if (text.trim() !== "") {
+            new QRCode(qrcodeContainer, {
+                text: text,
+                width: 200,
+                height: 200,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+    }
+</script>
+</body>
+
+</html>

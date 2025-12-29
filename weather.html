@@ -1,0 +1,127 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>날씨 검색</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Rubik', 'Noto Sans KR', sans-serif;
+    }
+
+    select:focus,
+    input:focus {
+      outline: none;
+      border-color: #3b82f6;
+    }
+  </style>
+</head>
+
+<body
+        class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-white min-h-screen flex flex-col items-center justify-center p-6">
+
+<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 w-full max-w-xl text-center">
+  <h1 class="text-2xl font-semibold mb-4">🌦️ 날씨 정보 검색</h1>
+
+  <div class="mb-4">
+    <input id="searchInput" type="text" placeholder="도시를 입력하세요 (예: 서울, 부산, 도쿄, 뉴욕)"
+           class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:bg-gray-700 dark:border-gray-600 text-lg" />
+  </div>
+
+  <div class="mb-6">
+    <select id="citySelect"
+            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:bg-gray-700 dark:border-gray-600 text-lg">
+      <option value="">도시를 선택하세요</option>
+    </select>
+  </div>
+
+  <button onclick="fetchWeather()" class="px-6 py-2 bg-blue-500 text-white rounded-xl hover:brightness-110">
+    🔍 날씨 확인
+  </button>
+
+  <div id="result" class="mt-6 text-left hidden bg-blue-100 dark:bg-gray-700 p-5 rounded-xl shadow"></div>
+</div>
+
+<script>
+  const cities = [
+    { name: "서울", lat: 37.5665, lon: 126.9780 },
+    { name: "부산", lat: 35.1796, lon: 129.0756 },
+    { name: "대구", lat: 35.8722, lon: 128.6025 },
+    { name: "제주", lat: 33.4996, lon: 126.5312 },
+    { name: "도쿄", lat: 35.6895, lon: 139.6917 },
+    { name: "베이징", lat: 39.9042, lon: 116.4074 },
+    { name: "파리", lat: 48.8566, lon: 2.3522 },
+    { name: "런던", lat: 51.5074, lon: -0.1278 },
+    { name: "뉴욕", lat: 40.7128, lon: -74.0060 },
+    { name: "워싱턴", lat: 38.9072, lon: -77.0369 },
+    { name: "로마", lat: 41.9028, lon: 12.4964 },
+    { name: "시드니", lat: -33.8688, lon: 151.2093 },
+    { name: "자카르타", lat: -6.2088, lon: 106.8456 },
+    { name: "서울", lat: 37.5665, lon: 126.9780 }
+  ];
+
+  const citySelect = document.getElementById('citySelect');
+  const searchInput = document.getElementById('searchInput');
+  const result = document.getElementById('result');
+
+  // 드롭다운에 도시 추가
+  cities.forEach(c => {
+    const option = document.createElement('option');
+    option.value = `${c.lat},${c.lon}`;
+    option.textContent = c.name;
+    citySelect.appendChild(option);
+  });
+
+  // 검색어 입력 시 자동 선택
+  searchInput.addEventListener('input', () => {
+    const query = searchInput.value.trim().toLowerCase();
+    const match = cities.find(c => c.name.toLowerCase().includes(query));
+    if (match) {
+      citySelect.value = `${match.lat},${match.lon}`;
+    }
+  });
+
+  function getWeatherEmoji(code) {
+    if (code === 0) return "☀️ 맑음";
+    if (code === 1 || code === 2) return "⛅ 부분 흐림";
+    if (code === 3) return "☁️ 흐림";
+    if (code >= 45 && code <= 48) return "🌫️ 안개";
+    if (code >= 51 && code <= 67) return "🌦️ 이슬비";
+    if (code >= 71 && code <= 77) return "🌨️ 눈";
+    if (code >= 80 && code <= 82) return "🌧️ 소나기";
+    if (code >= 95) return "⛈️ 뇌우";
+    return "❓ 알 수 없음";
+  }
+
+  async function fetchWeather() {
+    const value = citySelect.value;
+    if (!value) return alert("도시를 선택하거나 검색해 주세요.");
+
+    const [lat, lon] = value.split(',');
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=auto`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+    const weather = data.current_weather;
+
+    const cityName = cities.find(c => `${c.lat},${c.lon}` === value)?.name || "선택한 도시";
+
+    result.innerHTML = `
+        <h2 class="text-xl font-semibold mb-2">📍 ${cityName}</h2>
+        <div class="text-lg">🌡️ 온도: <strong>${weather.temperature}°C</strong></div>
+        <div class="text-lg">🌤️ 상태: ${getWeatherEmoji(weather.weathercode)}</div>
+        <div class="text-lg">💨 풍속: ${weather.windspeed} km/h</div>
+        <div class="text-sm mt-2">🕒 기준 시간: ${new Date(weather.time).toLocaleString()}</div>
+      `;
+    result.classList.remove('hidden');
+  }
+</script>
+
+</body>
+
+</html>
