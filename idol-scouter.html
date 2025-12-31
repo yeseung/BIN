@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI 아이돌 스카우터</title>
+
+    <!-- (선택) 파비콘 -->
+    <!--
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    -->
+
+    <!-- Teachable Machine / TFJS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+
+    <style>
+        :root{
+            --bg:#0b1220;
+            --panel:#0f1b33;
+            --panel2:#0d1730;
+            --text:#eaf0ff;
+            --muted:#a9b7df;
+            --line:rgba(255,255,255,.10);
+            --brand:#7aa2ff;
+            --ok:#38d39f;
+            --warn:#ffcc66;
+            --danger:#ff5d7a;
+            --radius:18px;
+            --shadow:0 18px 55px rgba(0,0,0,.45);
+        }
+        *{ box-sizing:border-box; }
+        html, body { height:100%; }
+        body{
+            margin:0;
+            font-family: ui-sans-serif, system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+            background:
+                    radial-gradient(900px 600px at 20% 10%, rgba(122,162,255,.22), transparent 60%),
+                    radial-gradient(900px 600px at 80% 40%, rgba(56,211,159,.18), transparent 60%),
+                    linear-gradient(180deg, #070b14, #090f1f 60%, #070b14);
+            color:var(--text);
+            display:flex;
+            min-height:100%;
+        }
+
+        .wrap{
+            width:min(920px, 92vw);
+            margin:28px auto 40px;
+        }
+
+        /* top bar */
+        .topbar{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            padding:14px 16px;
+            border:1px solid var(--line);
+            background:rgba(15,27,51,.55);
+            backdrop-filter: blur(10px);
+            border-radius:14px;
+            box-shadow: var(--shadow);
+        }
+        .brand{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            min-width:0;
+        }
+        .brand a{
+            color:var(--text);
+            text-decoration:none;
+            font-weight:800;
+            letter-spacing:.5px;
+            white-space:nowrap;
+        }
+        .chip{
+            font-size:12px;
+            color:var(--muted);
+            border:1px solid var(--line);
+            padding:4px 10px;
+            border-radius:999px;
+            white-space:nowrap;
+        }
+
+        .actions{
+            display:flex;
+            gap:8px;
+        }
+        .btn{
+            appearance:none;
+            border:1px solid var(--line);
+            background:rgba(255,255,255,.04);
+            color:var(--text);
+            padding:10px 12px;
+            border-radius:12px;
+            cursor:pointer;
+            transition: transform .06s ease, background .2s ease, border-color .2s ease;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap:8px;
+            user-select:none;
+        }
+        .btn:hover{ background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.16); }
+        .btn:active{ transform: translateY(1px); }
+        .btn svg{ width:18px; height:18px; }
+
+        /* header */
+        .hero{
+            text-align:center;
+            margin:22px 0 18px;
+        }
+        .hero h1{
+            margin:0;
+            font-size:clamp(22px, 3.3vw, 32px);
+            letter-spacing:-.5px;
+        }
+        .hero p{
+            margin:10px 0 0;
+            color:var(--muted);
+            line-height:1.55;
+        }
+
+        /* main card */
+        .card{
+            border:1px solid var(--line);
+            background: linear-gradient(180deg, rgba(15,27,51,.78), rgba(13,23,48,.62));
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow:hidden;
+        }
+        .card-body{
+            padding:18px;
+        }
+
+        /* uploader */
+        .uploader{
+            display:grid;
+            grid-template-columns: 1.1fr .9fr;
+            gap:14px;
+        }
+        @media (max-width: 820px){
+            .uploader{ grid-template-columns: 1fr; }
+        }
+
+        .dropzone{
+            border:1.6px dashed rgba(255,255,255,.18);
+            background: rgba(255,255,255,.03);
+            border-radius: 16px;
+            padding:18px;
+            min-height:220px;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            gap:10px;
+            text-align:center;
+            cursor:pointer;
+            transition: background .2s ease, border-color .2s ease, transform .06s ease;
+        }
+        .dropzone:hover{
+            background: rgba(255,255,255,.05);
+            border-color: rgba(122,162,255,.55);
+        }
+        .dropzone.dragover{
+            border-color: rgba(56,211,159,.75);
+            background: rgba(56,211,159,.10);
+            transform: scale(0.995);
+        }
+        .dropzone input{
+            display:none;
+        }
+        .dz-title{
+            font-weight:800;
+            font-size:15px;
+        }
+        .dz-sub{
+            color:var(--muted);
+            font-size:13px;
+            line-height:1.5;
+        }
+        .dz-hint{
+            font-size:12px;
+            color:rgba(255,255,255,.65);
+            border:1px solid var(--line);
+            padding:6px 10px;
+            border-radius:999px;
+            margin-top:6px;
+            display:inline-flex;
+            gap:8px;
+            align-items:center;
+        }
+
+        /* preview */
+        .preview{
+            border:1px solid var(--line);
+            border-radius:16px;
+            background: rgba(255,255,255,.02);
+            padding:14px;
+            display:flex;
+            flex-direction:column;
+            gap:12px;
+            min-height:220px;
+        }
+        .preview-top{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+        }
+        .preview-title{
+            font-weight:800;
+            color:rgba(255,255,255,.9);
+        }
+        .preview-actions{
+            display:flex;
+            gap:8px;
+        }
+        .btn.small{ padding:8px 10px; border-radius:10px; font-size:13px; }
+
+        .imgbox{
+            width:100%;
+            aspect-ratio: 4 / 3;
+            border-radius:14px;
+            overflow:hidden;
+            border:1px solid rgba(255,255,255,.08);
+            background: rgba(0,0,0,.25);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        }
+        .imgbox img{
+            width:100%;
+            height:100%;
+            object-fit:cover;
+            display:block;
+        }
+        .placeholder{
+            color:rgba(255,255,255,.45);
+            font-size:13px;
+            padding:10px;
+            text-align:center;
+        }
+
+        /* result */
+        .result{
+            margin-top:14px;
+            border-top:1px solid var(--line);
+            padding-top:14px;
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap:14px;
+        }
+        @media (max-width: 820px){
+            .result{ grid-template-columns: 1fr; }
+        }
+
+        .panel{
+            border:1px solid var(--line);
+            background: rgba(255,255,255,.02);
+            border-radius:16px;
+            padding:14px;
+        }
+        .panel h3{
+            margin:0 0 10px;
+            font-size:15px;
+            color:rgba(255,255,255,.9);
+        }
+        .message{
+            font-size:14px;
+            line-height:1.6;
+            color:rgba(255,255,255,.92);
+            padding:10px 12px;
+            border-radius:14px;
+            border:1px solid rgba(255,255,255,.08);
+            background: rgba(122,162,255,.10);
+            min-height:44px;
+            display:flex;
+            align-items:center;
+        }
+        .message.muted{
+            background: rgba(255,255,255,.03);
+            color: rgba(255,255,255,.55);
+        }
+
+        /* bars */
+        .bars{ display:flex; flex-direction:column; gap:10px; }
+        .bar-row{
+            display:grid;
+            grid-template-columns: 110px 1fr 56px;
+            gap:10px;
+            align-items:center;
+        }
+        @media (max-width: 420px){
+            .bar-row{ grid-template-columns: 86px 1fr 50px; }
+        }
+        .label{
+            font-weight:700;
+            color:rgba(255,255,255,.86);
+            font-size:13px;
+            text-align:right;
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+        }
+        .track{
+            height:12px;
+            border-radius:999px;
+            border:1px solid rgba(255,255,255,.10);
+            background: rgba(0,0,0,.18);
+            overflow:hidden;
+        }
+        .fill{
+            height:100%;
+            width:0%;
+            border-radius:999px;
+            background: linear-gradient(90deg, rgba(122,162,255,.95), rgba(56,211,159,.95));
+            transition: width .35s ease;
+        }
+        .pct{
+            font-variant-numeric: tabular-nums;
+            font-size:13px;
+            color:rgba(255,255,255,.82);
+            text-align:left;
+        }
+
+        .foot{
+            margin-top:14px;
+            color:rgba(255,255,255,.55);
+            font-size:12px;
+            line-height:1.5;
+            text-align:center;
+        }
+
+        /* light mode (토글용) */
+        body.light{
+            --bg:#f7f8ff;
+            --panel:#ffffff;
+            --panel2:#f3f5ff;
+            --text:#101426;
+            --muted:#4b556b;
+            --line:rgba(10,20,40,.12);
+            --shadow:0 18px 55px rgba(0,0,0,.10);
+            background:
+                    radial-gradient(900px 600px at 20% 10%, rgba(122,162,255,.20), transparent 60%),
+                    radial-gradient(900px 600px at 80% 40%, rgba(56,211,159,.16), transparent 60%),
+                    linear-gradient(180deg, #f6f7ff, #f2f5ff 60%, #f6f7ff);
+            color: var(--text);
+        }
+        body.light .card{
+            background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(243,245,255,.88));
+        }
+        body.light .topbar{
+            background: rgba(255,255,255,.70);
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <header class="topbar">
+        <div class="brand">
+            <a href="https://ahoxy.com" aria-label="Back to Home">AHOXY.COM</a>
+            <span class="chip">AI Idol Scouter</span>
+        </div>
+
+        <div class="actions">
+            <button class="btn" id="darkToggle" type="button" aria-label="Toggle Theme">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12 18a6 6 0 1 1 6-6 6 6 0 0 1-6 6Zm0-10a4 4 0 1 0 4 4 4 4 0 0 0-4-4Z"/>
+                </svg>
+                <span style="font-size:13px;">테마</span>
+            </button>
+
+            <button class="btn" id="fullToggle" type="button" aria-label="Toggle Fullscreen">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M7 14H5v5h5v-2H7v-3Zm0-4h2V7h3V5H5v5Zm10 9h-3v2h5v-5h-2v3Zm0-14V5h-5v2h3v3h2Z"/>
+                </svg>
+                <span style="font-size:13px;">전체화면</span>
+            </button>
+        </div>
+    </header>
+
+    <section class="hero">
+        <h1>AI 아이돌 스카우터</h1>
+        <p>얼굴 사진을 업로드하면 Teachable Machine 모델이<br/>가장 어울리는 소속사를 예측해 보여줍니다.</p>
+    </section>
+
+    <main class="card">
+        <div class="card-body">
+            <div class="uploader">
+                <!-- Dropzone -->
+                <label class="dropzone" id="dropzone" for="fileInput">
+                    <input id="fileInput" type="file" accept="image/*" />
+                    <div class="dz-title">얼굴 사진 업로드</div>
+                    <div class="dz-sub">드래그 앤 드롭 또는 클릭하여 파일을 선택하세요.</div>
+                    <div class="dz-hint">
+                        <span>JPG/PNG</span>
+                        <span style="opacity:.55;">•</span>
+                        <span>정면 사진 권장</span>
+                    </div>
+                </label>
+
+                <!-- Preview -->
+                <section class="preview" aria-live="polite">
+                    <div class="preview-top">
+                        <div class="preview-title">미리보기</div>
+                        <div class="preview-actions">
+                            <button class="btn small" id="btnRePredict" type="button" disabled>재분석</button>
+                            <button class="btn small" id="btnClear" type="button" disabled>지우기</button>
+                        </div>
+                    </div>
+
+                    <div class="imgbox" id="imgBox">
+                        <div class="placeholder" id="placeholder">아직 업로드된 이미지가 없습니다.</div>
+                        <img id="faceImage" alt="Uploaded face" style="display:none;" />
+                    </div>
+
+                    <div class="foot">
+                        ※ 업로드 이미지는 브라우저에서만 사용됩니다(서버 업로드 없음).
+                    </div>
+                </section>
+            </div>
+
+            <section class="result">
+                <div class="panel">
+                    <h3>결과 메시지</h3>
+                    <div id="resultMessage" class="message muted">이미지를 업로드하면 결과가 표시됩니다.</div>
+                </div>
+
+                <div class="panel">
+                    <h3>확률 분포</h3>
+                    <div id="bars" class="bars"></div>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+
+<script>
+    // =========================
+    // 설정: Teachable Machine URL
+    // =========================
+    const TM_URL = "https://teachablemachine.withgoogle.com/models/EMUpdWaz9/";
+
+    let model = null;
+    let maxPredictions = 0;
+    let isModelReady = false;
+
+    const el = {
+        body: document.body,
+        dropzone: document.getElementById("dropzone"),
+        fileInput: document.getElementById("fileInput"),
+        faceImage: document.getElementById("faceImage"),
+        placeholder: document.getElementById("placeholder"),
+        imgBox: document.getElementById("imgBox"),
+        resultMessage: document.getElementById("resultMessage"),
+        bars: document.getElementById("bars"),
+        btnClear: document.getElementById("btnClear"),
+        btnRePredict: document.getElementById("btnRePredict"),
+        darkToggle: document.getElementById("darkToggle"),
+        fullToggle: document.getElementById("fullToggle"),
+    };
+
+    // =========================
+    // 유틸
+    // =========================
+    function setMessage(text, muted=false){
+        el.resultMessage.textContent = text || "";
+        el.resultMessage.classList.toggle("muted", !!muted);
+    }
+
+    function agencyMessage(topClass){
+        switch (topClass) {
+            case "SM":
+                return "당신은 확신의 SM상. SM엔터테인먼트에 지원하시겠습니까?";
+            case "YG":
+                return "당신은 확신의 YG상. YG엔터테인먼트에 지원하시겠습니까?";
+            case "JYP":
+                return "당신은 확신의 JYP상. JYP엔터테인먼트에 지원하시겠습니까?";
+            case "BigHit":
+                return "당신은 확신의 BigHit상. BigHit엔터테인먼트에 지원하시겠습니까?";
+            case "DSP Media":
+                return "당신은 확신의 DSP Media상. DSP Media엔터테인먼트에 지원하시겠습니까?";
+            case "Starship Ent.":
+                return "당신은 확신의 Starship상. Starship엔터테인먼트에 지원하시겠습니까?";
+            case "Cube Ent.":
+                return "당신은 확신의 Cube Ent.상. Cube엔터테인먼트에 지원하시겠습니까?";
+            default:
+                return "결과를 해석할 수 없습니다. (클래스 이름 확인 필요)";
+        }
+    }
+
+    function renderBars(prediction){
+        el.bars.innerHTML = "";
+        prediction.forEach((p) => {
+            const pct = Math.round(p.probability * 100);
+
+            const row = document.createElement("div");
+            row.className = "bar-row";
+
+            const label = document.createElement("div");
+            label.className = "label";
+            label.textContent = p.className;
+
+            const track = document.createElement("div");
+            track.className = "track";
+
+            const fill = document.createElement("div");
+            fill.className = "fill";
+            fill.style.width = "0%";
+            track.appendChild(fill);
+
+            const percent = document.createElement("div");
+            percent.className = "pct";
+            percent.textContent = pct + "%";
+
+            row.appendChild(label);
+            row.appendChild(track);
+            row.appendChild(percent);
+            el.bars.appendChild(row);
+
+            // 애니메이션
+            requestAnimationFrame(() => { fill.style.width = pct + "%"; });
+        });
+    }
+
+    // =========================
+    // 모델 로드
+    // =========================
+    async function initModel(){
+        if (isModelReady) return;
+        setMessage("모델 로딩 중...", true);
+
+        const modelURL = TM_URL + "model.json";
+        const metadataURL = TM_URL + "metadata.json";
+
+        model = await tmImage.load(modelURL, metadataURL);
+        maxPredictions = model.getTotalClasses();
+        isModelReady = true;
+
+        setMessage("이미지를 업로드하면 결과가 표시됩니다.", true);
+    }
+
+    // =========================
+    // 예측
+    // =========================
+    async function predict(){
+        if (!isModelReady || !model) {
+            await initModel();
+        }
+
+        if (!el.faceImage.src) {
+            setMessage("먼저 이미지를 업로드해주세요.", true);
+            return;
+        }
+
+        // 이미지가 완전히 로드된 뒤 예측
+        if (!el.faceImage.complete) {
+            await new Promise(res => el.faceImage.onload = () => res());
+        }
+
+        setMessage("분석 중...", true);
+
+        const prediction = await model.predict(el.faceImage);
+        prediction.sort((a,b) => b.probability - a.probability);
+
+        const top = prediction[0];
+        setMessage(agencyMessage(top.className), false);
+        renderBars(prediction);
+    }
+
+    // =========================
+    // 업로드 처리
+    // =========================
+    function setPreview(file){
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            el.faceImage.src = reader.result;
+            el.faceImage.style.display = "block";
+            el.placeholder.style.display = "none";
+            el.btnClear.disabled = false;
+            el.btnRePredict.disabled = false;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function clearAll(){
+        el.fileInput.value = "";
+        el.faceImage.removeAttribute("src");
+        el.faceImage.style.display = "none";
+        el.placeholder.style.display = "block";
+        el.bars.innerHTML = "";
+        setMessage("이미지를 업로드하면 결과가 표시됩니다.", true);
+        el.btnClear.disabled = true;
+        el.btnRePredict.disabled = true;
+    }
+
+    // =========================
+    // 이벤트: 클릭 업로드
+    // =========================
+    el.fileInput.addEventListener("change", async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+
+        setPreview(file);
+        await initModel();
+        await predict();
+    });
+
+    // =========================
+    // 이벤트: 드래그앤드롭
+    // =========================
+    ["dragenter","dragover"].forEach(evt => {
+        el.dropzone.addEventListener(evt, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            el.dropzone.classList.add("dragover");
+        });
+    });
+    ["dragleave","drop"].forEach(evt => {
+        el.dropzone.addEventListener(evt, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            el.dropzone.classList.remove("dragover");
+        });
+    });
+
+    el.dropzone.addEventListener("drop", async (e) => {
+        const file = e.dataTransfer.files && e.dataTransfer.files[0];
+        if (!file) return;
+
+        // input에도 반영(선택사항)
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        el.fileInput.files = dt.files;
+
+        setPreview(file);
+        await initModel();
+        await predict();
+    });
+
+    // =========================
+    // 버튼
+    // =========================
+    el.btnClear.addEventListener("click", clearAll);
+    el.btnRePredict.addEventListener("click", predict);
+
+    el.darkToggle.addEventListener("click", () => {
+        el.body.classList.toggle("light");
+    });
+
+    el.fullToggle.addEventListener("click", async () => {
+        try{
+            if (!document.fullscreenElement) {
+                await document.documentElement.requestFullscreen();
+            } else {
+                await document.exitFullscreen();
+            }
+        }catch(e){
+            // fullscreen 정책/브라우저 제한
+            console.warn(e);
+        }
+    });
+
+    // 최초: 모델은 미리 로드해도 되고, 업로드 시 로드해도 됨
+    // initModel();
+    setMessage("이미지를 업로드하면 결과가 표시됩니다.", true);
+</script>
+</body>
+</html>

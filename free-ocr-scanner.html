@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <!-- 1) 기본 메타 -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta http-equiv="content-language" content="ko" />
+
+  <!-- 2) SEO -->
+  <title>무료 OCR 문자인식 사이트 | 이미지 텍스트 변환기</title>
+  <meta name="description" content="무료 OCR 문자인식 사이트에서 이미지를 손쉽게 텍스트로 변환하세요. 빠르고 정확한 온라인 OCR 변환기로 스캔한 문서와 이미지를 텍스트로 추출합니다." />
+  <meta name="keywords" content="OCR, 문자 인식, 이미지 텍스트 변환, 무료 OCR, 온라인 OCR, 이미지에서 텍스트 추출, 스캔 텍스트 변환, 텍스트 변환기, 문서 스캔 변환" />
+  <meta name="author" content="웹웍스" />
+
+  <!-- Bootstrap + Icons (토스트/기본 유틸용) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet" />
+
+  <!-- 공통 스타일 -->
+  <style>
+    :root {
+      --primary-color: #0066ff;
+      --primary-color-dark: #0052cc;
+      --secondary-color: #1a1d29;
+      --white: #ffffff;
+      --gray-50: #fafbfc;
+      --gray-100: #f4f6f8;
+      --gray-200: #e5e8ec;
+      --gray-300: #d1d5db;
+      --gray-600: #6b7280;
+      --gray-700: #374151;
+      --success-color: #10b981;
+      --border-radius: 16px;
+      --border-radius-sm: 12px;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+      --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s ease;
+    }
+
+    html, body {
+      height: 100%;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: linear-gradient(135deg, var(--gray-50) 0%, var(--white) 100%);
+      color: var(--secondary-color);
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* 상단 고정 헤더 높이만큼 패딩 */
+    body { padding-top: 72px; }
+    @media (min-width: 992px) { body { padding-top: 80px; } }
+
+    .webtools-site-header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1030;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--gray-200);
+      transition: var(--transition);
+    }
+
+    .webtools-site-header .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 15px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      font-weight: 800;
+      font-size: 1.2rem;
+      padding: 18px 0;
+      color: var(--secondary-color);
+      text-decoration: none;
+    }
+
+    .brand i { color: var(--primary-color); }
+
+    /* OCR 전용 스타일 */
+    .webtools-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 15px;
+    }
+
+    .ocr-hero {
+      background: linear-gradient(135deg, #ff6b35 0%, #f7931e 50%, #ffd700 100%);
+      border-radius: 20px;
+      padding: 2rem;
+      text-align: center;
+      margin: 1.25rem 0 2rem;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+    .ocr-hero::before {
+      content: '📄';
+      position: absolute; top: 20px; right: 30px;
+      font-size: 3rem; opacity: 0.3;
+      animation: bounce 2s ease-in-out infinite;
+    }
+    .ocr-hero::after {
+      content: '✨';
+      position: absolute; bottom: 20px; left: 30px;
+      font-size: 2.5rem; opacity: 0.3;
+      animation: sparkle 3s ease-in-out infinite;
+    }
+    @keyframes bounce { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
+    @keyframes sparkle { 0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.3; } 50% { transform: scale(1.2) rotate(180deg); opacity: 0.6; } }
+
+    .ocr-hero h1 {
+      margin: 0;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .ocr-hero p {
+      margin: .5rem 0 0;
+      opacity: .95;
+    }
+
+    .webtools-card {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: 16px;
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .webtools-card-body { padding: 1.25rem; }
+
+    .ocr-upload-zone {
+      border: 2px dashed #e5e8ec;
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin: 1rem 0;
+    }
+    .ocr-upload-zone:hover {
+      border-color: var(--primary-color);
+      background: linear-gradient(135deg, #e3f2fd 0%, #e1f5fe 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(79, 70, 229, 0.15);
+    }
+    .ocr-upload-zone.drag-over {
+      border-color: var(--primary-color);
+      background: linear-gradient(135deg, #e8f5e8 0%, #f3e5f5 100%);
+      box-shadow: 0 0 15px rgba(79, 70, 229, 0.3);
+    }
+
+    .ocr-upload-content {
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:1rem;
+      flex-wrap:wrap;
+    }
+    .ocr-upload-icon { font-size: 2rem; color: var(--primary-color); }
+    .ocr-upload-text { flex: 1; min-width: 200px; }
+    .ocr-upload-text h4 { color:#374151; font-weight:700; margin:0 0 .25rem 0; font-size:1.1rem; }
+    .ocr-upload-text p { color:#6b7280; margin:0; font-size:0.9rem; }
+
+    .ocr-browse-btn {
+      background: linear-gradient(135deg, var(--primary-color) 0%, #8b5cf6 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: .75rem 1.5rem;
+      font-weight: 700;
+      transition: all .3s ease;
+      white-space: nowrap;
+    }
+    .ocr-browse-btn:hover {
+      background: linear-gradient(135deg, #8b5cf6 0%, var(--primary-color) 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+      color: white;
+    }
+
+    .ocr-pdf-preview { text-align:center; margin:2rem 0; }
+    #pdfPreview { max-width:100%; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.1); }
+    .ocr-page-controls {
+      background:white; border-radius:8px; padding:1rem; margin-top:1rem;
+      border:1px solid #e9ecef; box-shadow:0 2px 4px rgba(0,0,0,.05);
+    }
+    .ocr-page-controls .btn { font-size:.875rem; padding:.5rem 1rem; font-weight:600; }
+    #pageInfo { font-weight:700; color:#374151; margin:0 1rem; }
+
+    .btn-ocr-process {
+      background: linear-gradient(135deg, var(--primary-color) 0%, #8b5cf6 100%) !important;
+      color:#fff !important;
+      border:none !important;
+      padding:.875rem 2rem !important;
+      font-weight:800 !important;
+      font-size:1rem !important;
+      border-radius:10px !important;
+      transition: all .3s ease !important;
+      letter-spacing:.025em !important;
+      box-shadow:0 2px 8px rgba(79,70,229,.2) !important;
+    }
+    .btn-ocr-process:hover {
+      background: linear-gradient(135deg, #8b5cf6 0%, var(--primary-color) 100%) !important;
+      transform: translateY(-2px) !important;
+      box-shadow:0 6px 15px rgba(79,70,229,.4) !important;
+    }
+
+    .ocr-progress {
+      height: 1.5rem;
+      border-radius: 8px;
+      background-color: #e5e8ec;
+      overflow: hidden;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,.1);
+      margin: 2rem 0 0;
+    }
+    .ocr-progress .progress-bar {
+      background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+      border-radius: 8px;
+      transition: width .3s ease;
+      font-weight: 700;
+      font-size: .875rem;
+      display:flex; align-items:center; justify-content:center;
+      color:white;
+      text-shadow:0 1px 2px rgba(0,0,0,.2);
+      white-space: nowrap;
+      padding: 0 .5rem;
+    }
+
+    .ocr-result-area {
+      background:#fff;
+      border:1px solid #e5e8ec;
+      border-radius:12px;
+      padding:1.5rem;
+      margin:2rem 0;
+      box-shadow:0 2px 4px rgba(0,0,0,.05);
+    }
+    .ocr-result-header {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:1rem;
+      gap: 1rem;
+    }
+    .ocr-result-header h5 { color:#374151; font-weight:800; margin:0; }
+
+    .ocr-copy-btn {
+      background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+      color:white; border:none;
+      padding:.55rem 1rem; border-radius:8px;
+      font-size:.9rem; font-weight:800;
+      transition: all .3s ease;
+    }
+    .ocr-copy-btn:hover {
+      background: linear-gradient(135deg, #8b5cf6, var(--primary-color));
+      transform: translateY(-1px);
+      box-shadow:0 4px 8px rgba(0,0,0,.15);
+      color:white;
+    }
+
+    #resultText {
+      border:1px solid #e5e8ec;
+      border-radius:10px;
+      padding:1rem;
+      font-size:1rem;
+      line-height:1.6;
+      min-height:220px;
+      resize: vertical;
+      background:#f8f9fa;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    /* 특징 카드 */
+    .ocr-feature-card {
+      background: #ffffff;
+      border: 1px solid #e5e8ec;
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      height: 100%;
+    }
+    .ocr-feature-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+      border-color: var(--primary-color);
+    }
+    .ocr-feature-icon {
+      background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+      color: white;
+      width: 3rem; height: 3rem;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center; justify-content: center;
+      margin-bottom: 1rem;
+      font-size: 1.5rem;
+    }
+    .ocr-feature-card h5 { color: #374151; font-weight: 800; margin-bottom: 0.75rem; }
+    .ocr-feature-card p { color: #6b7280; margin: 0; font-size: 0.9rem; line-height: 1.5; }
+
+    /* FAQ */
+    .ocr-faq-section {
+      background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f4 100%);
+      border-radius: 16px;
+      padding: 2rem;
+      margin: 3rem 0 2rem;
+      border: 1px solid #e5e8ec;
+    }
+    .ocr-faq-header { text-align:center; margin-bottom:2rem; }
+    .ocr-faq-header h2 { color:#374151; font-weight:900; margin-bottom:.5rem; }
+    .ocr-faq-header p { color:#6b7280; margin:0; }
+    .ocr-faq-container { max-width:800px; margin:0 auto; }
+
+    .ocr-faq-item { background:white; border:1px solid #e5e8ec; border-radius:12px; margin-bottom:1rem; overflow:hidden; transition: all .3s ease; }
+    .ocr-faq-item:hover { box-shadow:0 4px 8px rgba(0,0,0,.1); }
+
+    .ocr-faq-question {
+      padding:1.25rem;
+      cursor:pointer;
+      display:flex; justify-content:space-between; align-items:center;
+      transition: all .3s ease;
+      background:white;
+      gap: 1rem;
+    }
+    .ocr-faq-question:hover { background:#f8f9fa; }
+    .ocr-faq-item.active .ocr-faq-question {
+      background: linear-gradient(135deg, rgba(79,70,229,.05), rgba(139,92,246,.05));
+      border-bottom:1px solid #e5e8ec;
+    }
+
+    .ocr-faq-category {
+      background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+      color:white;
+      padding:.25rem .75rem;
+      border-radius:12px;
+      font-size:.75rem;
+      font-weight:900;
+      margin-right:1rem;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .ocr-faq-question .q-text {
+      display:flex;
+      align-items:center;
+      font-weight:800;
+      color:#374151;
+      flex: 1;
+      min-width: 0;
+    }
+    .ocr-faq-question i { color:#6b7280; transition: transform .3s ease; }
+    .ocr-faq-item.active .ocr-faq-question i { transform: rotate(180deg); }
+
+    .ocr-faq-answer { padding: 0 1.25rem; max-height:0; overflow:hidden; transition: all .3s ease; }
+    .ocr-faq-item.active .ocr-faq-answer { padding:1.25rem; max-height:420px; }
+
+    .ocr-faq-answer p { color:#6b7280; line-height:1.6; margin-bottom:1rem; }
+    .ocr-faq-answer ul { margin:0; padding-left:1.2rem; }
+    .ocr-faq-answer li { color:#6b7280; line-height:1.5; margin-bottom:.5rem; }
+
+    @media (max-width:768px) {
+      .ocr-upload-content { flex-direction:column; text-align:center; }
+      .ocr-upload-text { min-width:auto; }
+      .ocr-upload-zone { padding:2rem 1rem; }
+      .ocr-feature-card { margin-bottom:1rem; }
+      .ocr-faq-section { padding:1.5rem; }
+      .ocr-faq-question { padding:1rem; }
+      .ocr-faq-item.active .ocr-faq-answer { padding:1rem; }
+      .ocr-result-header { flex-direction:column; align-items:stretch; }
+      .ocr-copy-btn { width:100%; }
+    }
+    @media (max-width:576px) {
+      .ocr-upload-zone { padding:1rem; }
+      .ocr-upload-icon { font-size:1.5rem; }
+      .ocr-upload-text h4 { font-size:1rem; }
+      .ocr-upload-text p { font-size:.85rem; }
+      .ocr-browse-btn { padding:.65rem 1.25rem; font-size:.9rem; }
+    }
+  </style>
+</head>
+
+<body>
+<!-- 상단 헤더 -->
+<header class="webtools-site-header">
+  <div class="container">
+    <a class="brand" href="javascript:void(0)">
+      <i class="bi bi-text-paragraph"></i>
+      <span>Text Scanner</span>
+    </a>
+  </div>
+</header>
+
+<main>
+  <div class="webtools-container">
+    <div class="ocr-hero">
+      <h1>Text Scanner</h1>
+      <p>이미지와 PDF에서 텍스트를 추출하는 무료 OCR 서비스</p>
+    </div>
+
+    <div class="webtools-card">
+      <div class="webtools-card-body">
+        <div id="dropZone" class="ocr-upload-zone" role="button" tabindex="0">
+          <div class="ocr-upload-content">
+            <i class="bi bi-cloud-arrow-up ocr-upload-icon"></i>
+            <div class="ocr-upload-text">
+              <h4>이미지나 PDF 파일을 드래그하거나 선택하세요</h4>
+              <p>JPG, PNG, GIF, PDF 지원 (최대 10MB, 20개 파일)</p>
+            </div>
+            <input type="file" id="fileInput" accept="image/*,.pdf" multiple hidden />
+            <button type="button" id="browseBtn" class="btn ocr-browse-btn">
+              <i class="bi bi-folder2-open me-2"></i>파일 선택
+            </button>
+          </div>
+        </div>
+
+        <div id="uploadStatus" class="alert d-none ocr-upload-status" role="alert"></div>
+
+        <div class="ocr-pdf-preview">
+          <canvas id="pdfPreview" class="d-none"></canvas>
+          <div class="ocr-page-controls d-none">
+            <button class="btn btn-outline-primary btn-sm me-2" type="button" id="btnPrev">
+              <i class="bi bi-chevron-left"></i> 이전
+            </button>
+            <span id="pageInfo">1/1</span>
+            <button class="btn btn-outline-primary btn-sm ms-2" type="button" id="btnNext">
+              다음 <i class="bi bi-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="text-center mb-3">
+          <button type="button" id="btnProcess" class="btn btn-ocr-process">
+            <i class="bi bi-magic me-2"></i>텍스트 추출하기
+          </button>
+        </div>
+
+        <div class="ocr-progress d-none progress-area">
+          <div class="progress-bar progress-bar-striped progress-bar-animated"
+               role="progressbar" style="width: 0%">0%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ocr-result-area">
+      <div class="ocr-result-header">
+        <h5><i class="bi bi-file-text me-2"></i>추출 결과</h5>
+        <button type="button" id="btnCopy" class="btn ocr-copy-btn">
+          <i class="bi bi-clipboard me-1"></i>복사
+        </button>
+      </div>
+      <textarea id="resultText" class="form-control" placeholder="추출된 텍스트가 여기에 표시됩니다..." readonly></textarea>
+    </div>
+
+    <div class="row g-4 mb-4">
+      <div class="col-md-4">
+        <div class="ocr-feature-card">
+          <div class="ocr-feature-icon"><i class="bi bi-file-earmark-text"></i></div>
+          <h5>다양한 파일 지원</h5>
+          <p>이미지(JPG, PNG, GIF)와 PDF 파일에서 텍스트 추출</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="ocr-feature-card">
+          <div class="ocr-feature-icon"><i class="bi bi-translate"></i></div>
+          <h5>다국어 지원</h5>
+          <p>한글, 영어 등 다양한 언어 인식</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="ocr-feature-card">
+          <div class="ocr-feature-icon"><i class="bi bi-shield-check"></i></div>
+          <h5>안전한 처리</h5>
+          <p>파일은 서버에 저장되지 않으며 즉시 삭제</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAQ: 원문 6개 모두 -->
+    <div class="ocr-faq-section">
+      <div class="ocr-faq-header">
+        <h2>자주 묻는 질문</h2>
+        <p>OCR 서비스 이용에 대한 궁금증을 해결해드립니다</p>
+      </div>
+
+      <div class="ocr-faq-container">
+
+        <div class="ocr-faq-item">
+          <div class="ocr-faq-question">
+            <div class="q-text">
+              <span class="ocr-faq-category">기본</span>
+              OCR이란 무엇인가요?
+            </div>
+            <i class="bi bi-chevron-down"></i>
+          </div>
+          <div class="ocr-faq-answer">
+            <p>OCR(Optical Character Recognition)은 이미지나 스캔한 문서에서 텍스트를 인식하고 디지털 텍스트로 변환하는 기술입니다.</p>
+            <ul>
+              <li>종이 문서의 디지털화 가능</li>
+              <li>편집 가능한 텍스트로 변환</li>
+              <li>문서 검색 및 관리 용이</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="ocr-faq-item">
+          <div class="ocr-faq-question">
+            <div class="q-text">
+              <span class="ocr-faq-category">기능</span>
+              어떤 파일 형식을 지원하나요?
+            </div>
+            <i class="bi bi-chevron-down"></i>
+          </div>
+          <div class="ocr-faq-answer">
+            <p>다음과 같은 파일 형식을 지원합니다:</p>
+            <ul>
+              <li>이미지 파일: JPG, PNG, GIF</li>
+              <li>문서 파일: PDF (멀티페이지 지원)</li>
+              <li>스캔된 문서 이미지</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="ocr-faq-item">
+          <div class="ocr-faq-question">
+            <div class="q-text">
+              <span class="ocr-faq-category">데이터</span>
+              추출된 텍스트는 어떻게 저장되나요?
+            </div>
+            <i class="bi bi-chevron-down"></i>
+          </div>
+          <div class="ocr-faq-answer">
+            <p>추출된 텍스트는 다음과 같은 방식으로 활용할 수 있습니다:</p>
+            <ul>
+              <li>클립보드에 즉시 복사하여 사용</li>
+              <li>텍스트 영역에서 직접 복사하여 활용</li>
+              <li>모든 처리는 브라우저에서 이루어지며 서버에 저장되지 않음</li>
+              <li>개인정보가 포함된 문서도 안전하게 처리</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="ocr-faq-item">
+          <div class="ocr-faq-question">
+            <div class="q-text">
+              <span class="ocr-faq-category">언어</span>
+              다국어 지원이 가능한가요?
+            </div>
+            <i class="bi bi-chevron-down"></i>
+          </div>
+          <div class="ocr-faq-answer">
+            <p>다음과 같은 언어를 지원합니다:</p>
+            <ul>
+              <li>한글 (기본 지원)</li>
+              <li>영어 (기본 지원)</li>
+              <li>기타 주요 언어 지원</li>
+              <li>다국어가 혼합된 문서도 처리 가능</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="ocr-faq-item">
+          <div class="ocr-faq-question">
+            <div class="q-text">
+              <span class="ocr-faq-category">보안</span>
+              개인정보는 안전한가요?
+            </div>
+            <i class="bi bi-chevron-down"></i>
+          </div>
+          <div class="ocr-faq-answer">
+            <p>개인정보 보호를 위해 다음과 같은 조치를 취하고 있습니다:</p>
+            <ul>
+              <li>모든 처리는 사용자의 브라우저에서 직접 수행</li>
+              <li>서버에 어떠한 데이터도 저장하지 않음</li>
+              <li>업로드된 파일은 처리 후 즉시 삭제</li>
+              <li>SSL 보안 프로토콜 적용</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="ocr-faq-item">
+          <div class="ocr-faq-question">
+            <div class="q-text">
+              <span class="ocr-faq-category">활용</span>
+              어떤 경우에 활용할 수 있나요?
+            </div>
+            <i class="bi bi-chevron-down"></i>
+          </div>
+          <div class="ocr-faq-answer">
+            <p>다양한 상황에서 활용이 가능합니다:</p>
+            <ul>
+              <li>스캔한 문서의 텍스트 추출</li>
+              <li>이미지 속 텍스트 디지털화</li>
+              <li>PDF 문서 텍스트 변환</li>
+              <li>문서 아카이빙 및 검색 시스템 구축</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- OCR 라이브러리 -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+<!-- Bootstrap JS (토스트 동작 필수) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+
+<script>
+  // PDF.js 워커 설정
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  // DOM
+  const fileInput = document.getElementById('fileInput');
+  const browseBtn = document.getElementById('browseBtn');
+  const resultText = document.getElementById('resultText');
+  const progressArea = document.querySelector('.progress-area');
+  const progressBar = document.querySelector('.progress-bar');
+  const pdfPreview = document.getElementById('pdfPreview');
+  const pageControls = document.querySelector('.ocr-page-controls');
+  const pageInfo = document.getElementById('pageInfo');
+  const uploadZone = document.getElementById('dropZone');
+  const uploadStatus = document.getElementById('uploadStatus');
+
+  const btnPrev = document.getElementById('btnPrev');
+  const btnNext = document.getElementById('btnNext');
+  const btnProcess = document.getElementById('btnProcess');
+  const btnCopy = document.getElementById('btnCopy');
+
+  let currentPdf = null;
+  let currentPage = 1;
+
+  // 파일 선택 버튼
+  if (browseBtn) browseBtn.addEventListener('click', () => fileInput.click());
+
+  // 업로드 존 클릭(접근성)
+  if (uploadZone) {
+    uploadZone.addEventListener('click', (e) => {
+      // 버튼 클릭이면 중복 방지
+      if (e.target && e.target.closest && e.target.closest('button')) return;
+      fileInput.click();
+    });
+    uploadZone.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        fileInput.click();
+      }
+    });
+  }
+
+  // FAQ 토글
+  document.querySelectorAll('.ocr-faq-item').forEach(item => {
+    const q = item.querySelector('.ocr-faq-question');
+    if (!q) return;
+    q.addEventListener('click', () => {
+      item.classList.toggle('active');
+      document.querySelectorAll('.ocr-faq-item').forEach(other => {
+        if (other !== item) other.classList.remove('active');
+      });
+    });
+  });
+
+  // 드래그 스타일
+  function setDragOverStyle(zone){ zone.classList.add('drag-over'); }
+  function resetDragStyle(zone){ zone.classList.remove('drag-over'); }
+
+  // 드래그 앤 드롭
+  uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); setDragOverStyle(uploadZone); });
+  uploadZone.addEventListener('dragleave', (e) => { e.preventDefault(); resetDragStyle(uploadZone); });
+  uploadZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    resetDragStyle(uploadZone);
+    const file = e.dataTransfer.files[0];
+    if (file && (file.type.startsWith('image/') || file.type === 'application/pdf')) {
+      fileInput.files = e.dataTransfer.files;
+      handleFileSelection(file);
+    } else {
+      showToast('❌ 지원되지 않는 파일 형식입니다. 이미지 또는 PDF 파일만 업로드 가능합니다.', 'error');
+    }
+  });
+
+  // input change
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) handleFileSelection(file);
+  });
+
+  // 페이지 버튼
+  btnPrev.addEventListener('click', () => changePage(-1));
+  btnNext.addEventListener('click', () => changePage(1));
+
+  // 처리/복사 버튼
+  btnProcess.addEventListener('click', processFile);
+  btnCopy.addEventListener('click', copyText);
+
+  async function handleFileSelection(file) {
+    pdfPreview.classList.add('d-none');
+    pageControls.classList.add('d-none');
+    currentPdf = null;
+    currentPage = 1;
+
+    uploadStatus.className = 'alert d-none';
+    uploadStatus.textContent = '';
+    resultText.value = '';
+
+    if (file.type === 'application/pdf' || file.type.startsWith('image/')) {
+      uploadStatus.className = 'alert alert-success ocr-upload-status';
+      uploadStatus.textContent = `✅ 파일 업로드 성공: ${file.name}`;
+
+      if (file.type === 'application/pdf') {
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          currentPdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+          pageInfo.textContent = `${currentPage}/${currentPdf.numPages}`;
+          await renderPdfPage(currentPage);
+          pdfPreview.classList.remove('d-none');
+          if (currentPdf.numPages > 1) pageControls.classList.remove('d-none');
+        } catch (error) {
+          uploadStatus.className = 'alert alert-danger ocr-upload-status';
+          uploadStatus.textContent = '❌ PDF 파일 로드 중 오류가 발생했습니다.';
+          console.error(error);
+        }
+      }
+    } else {
+      uploadStatus.className = 'alert alert-danger ocr-upload-status';
+      uploadStatus.textContent = '❌ 지원되지 않는 파일 형식입니다.';
+    }
+  }
+
+  async function renderPdfPage(pageNumber) {
+    try {
+      const page = await currentPdf.getPage(pageNumber);
+      const viewport = page.getViewport({ scale: 1.5 });
+
+      pdfPreview.width = viewport.width;
+      pdfPreview.height = viewport.height;
+
+      await page.render({
+        canvasContext: pdfPreview.getContext('2d'),
+        viewport
+      }).promise;
+    } catch (error) {
+      console.error('PDF 페이지 렌더링 오류:', error);
+      showToast('PDF 페이지 렌더링 중 오류가 발생했습니다.', 'error');
+    }
+  }
+
+  async function changePage(offset) {
+    if (!currentPdf) return;
+    const newPage = currentPage + offset;
+    if (newPage >= 1 && newPage <= currentPdf.numPages) {
+      currentPage = newPage;
+      pageInfo.textContent = `${currentPage}/${currentPdf.numPages}`;
+      await renderPdfPage(currentPage);
+    }
+  }
+
+  function simulateProgress(duration = 3000) {
+    let progress = 0;
+    const increment = 100 / (duration / 100);
+    const interval = setInterval(() => {
+      progress += increment;
+      if (progress >= 95) {
+        progressBar.style.width = '95%';
+        progressBar.textContent = '처리 중...';
+        clearInterval(interval);
+      } else {
+        progressBar.style.width = `${Math.round(progress)}%`;
+        progressBar.textContent = `${Math.round(progress)}%`;
+      }
+    }, 100);
+    return interval;
+  }
+
+  async function processFile() {
+    const file = fileInput.files[0];
+    if (!file) { showToast('파일을 먼저 선택해주세요.', 'error'); return; }
+
+    progressArea.classList.remove('d-none');
+    resultText.value = '처리 중입니다...';
+    progressBar.style.width = '0%';
+    progressBar.textContent = '0%';
+
+    try {
+      if (file.type === 'application/pdf') await processPdf();
+      else await processImage(file);
+    } catch (error) {
+      console.error('처리 오류:', error);
+      resultText.value = '오류가 발생했습니다: ' + (error.message || error);
+      progressArea.classList.add('d-none');
+      showToast('처리 중 오류가 발생했습니다.', 'error');
+    }
+  }
+
+  async function processPdf() {
+    if (!currentPdf) return;
+
+    let fullText = '';
+    const totalPages = currentPdf.numPages;
+
+    for (let i = 1; i <= totalPages; i++) {
+      const page = await currentPdf.getPage(i);
+      const viewport = page.getViewport({ scale: 2.0 });
+
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+
+      await page.render({
+        canvasContext: canvas.getContext('2d'),
+        viewport
+      }).promise;
+
+      const baseProgress = ((i - 1) / totalPages) * 100;
+      progressBar.style.width = `${Math.round(baseProgress)}%`;
+      progressBar.textContent = `페이지 ${i}/${totalPages} 처리 중...`;
+
+      const text = await performOcr(canvas);
+      fullText += `[페이지 ${i}]\n${text}\n\n`;
+
+      const completedProgress = (i / totalPages) * 100;
+      progressBar.style.width = `${Math.round(completedProgress)}%`;
+      progressBar.textContent = `${Math.round(completedProgress)}%`;
+    }
+
+    resultText.value = fullText.trim();
+    progressArea.classList.add('d-none');
+    showToast('PDF 텍스트 추출이 완료되었습니다.');
+  }
+
+  function preprocessImage(canvas) {
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+
+    for (let i = 0; i < data.length; i += 4) {
+      const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+      const threshold = gray > 140 ? 255 : 0;
+      data[i] = threshold;
+      data[i + 1] = threshold;
+      data[i + 2] = threshold;
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    return canvas;
+  }
+
+  async function processImage(file) {
+    const progressInterval = simulateProgress(4000);
+
+    const worker = await Tesseract.createWorker('kor+eng');
+    await worker.setParameters({
+      tessedit_ocr_engine_mode: Tesseract.OEM.LSTM_ONLY,
+      tessedit_pageseg_mode: Tesseract.PSM.AUTO,
+      preserve_interword_spaces: '1',
+      tessedit_char_whitelist: '',
+    });
+
+    const { data: { text } } = await worker.recognize(file);
+    await worker.terminate();
+
+    clearInterval(progressInterval);
+    progressBar.style.width = '100%';
+    progressBar.textContent = '100%';
+
+    setTimeout(() => {
+      resultText.value = (text || '').trim();
+      progressArea.classList.add('d-none');
+      showToast('이미지 텍스트 추출이 완료되었습니다.');
+    }, 200);
+  }
+
+  async function performOcr(canvas) {
+    const processedCanvas = preprocessImage(canvas);
+
+    const worker = await Tesseract.createWorker('kor+eng');
+    await worker.setParameters({
+      tessedit_ocr_engine_mode: Tesseract.OEM.LSTM_ONLY,
+      tessedit_pageseg_mode: Tesseract.PSM.AUTO,
+      preserve_interword_spaces: '1',
+      tessedit_char_whitelist: '',
+    });
+
+    const { data: { text } } = await worker.recognize(processedCanvas);
+    await worker.terminate();
+    return (text || '').trim();
+  }
+
+  async function copyText() {
+    if (!resultText.value) { showToast('복사할 텍스트가 없습니다.', 'error'); return; }
+
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(resultText.value);
+      } else {
+        resultText.select();
+        resultText.setSelectionRange(0, 99999);
+        document.execCommand('copy');
+      }
+      showToast('텍스트가 클립보드에 복사되었습니다.');
+    } catch (e) {
+      showToast('복사 중 오류가 발생했습니다.', 'error');
+    }
+  }
+
+  function showToast(message, type = 'success') {
+    const toastDiv = document.createElement('div');
+    toastDiv.className = 'toast align-items-center border-0 position-fixed bottom-0 end-0 m-3';
+    toastDiv.style.background = (type === 'success') ? 'var(--primary-color)' : '#dc3545';
+    toastDiv.style.color = 'white';
+    toastDiv.style.zIndex = '1050';
+    toastDiv.setAttribute('role', 'alert');
+    toastDiv.setAttribute('aria-live', 'assertive');
+    toastDiv.setAttribute('aria-atomic', 'true');
+
+    toastDiv.innerHTML = `
+        <div class="d-flex">
+          <div class="toast-body">
+            <i class="bi ${type === 'success' ? 'bi-check-circle' : 'bi-exclamation-circle'} me-2"></i>
+            ${message}
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      `;
+
+    document.body.appendChild(toastDiv);
+
+    // bootstrap bundle이 defer라서 로딩 타이밍 보호
+    const run = () => {
+      try {
+        const toast = new bootstrap.Toast(toastDiv, { delay: 3000 });
+        toast.show();
+        setTimeout(() => toastDiv.remove(), 3500);
+      } catch {
+        // bootstrap 미로딩이면 그냥 제거
+        setTimeout(() => toastDiv.remove(), 2000);
+      }
+    };
+
+    if (window.bootstrap && window.bootstrap.Toast) run();
+    else setTimeout(run, 50);
+  }
+</script>
+</body>
+</html>

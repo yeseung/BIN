@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTML 웹 에디터 | Live Preview</title>
+    <meta name="description" content="바닐라 자바스크립트 기반의 HTML 웹 에디터. 실시간 미리보기 + 코드 하이라이팅 토글 + 드래그앤드롭 이미지 삽입." />
+
+    <!-- (선택) Prism: 코드 하이라이팅 토글용. 필요 없으면 아래 2줄 + JS 로드 제거 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css">
+
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --panel:#ffffff;
+            --panel2:#fbfbfe;
+            --text:#111827;
+            --muted:#6b7280;
+            --border:rgba(17,24,39,.12);
+            --shadow:0 14px 40px rgba(17,24,39,.10);
+            --radius:18px;
+
+            --primary:#2563eb;
+            --primary2:#1d4ed8;
+            --success:#16a34a;
+            --warning:#f59e0b;
+            --danger:#ef4444;
+            --focus: rgba(37,99,235,.18);
+        }
+
+        *{ box-sizing:border-box; }
+        html,body{ height:100%; }
+
+        body{
+            margin:0;
+            font-family: ui-sans-serif, system-ui, -apple-system, "Malgun Gothic","Apple SD Gothic Neo", sans-serif;
+            background:
+                    radial-gradient(1200px 700px at 15% 10%, rgba(37,99,235,.10), transparent 55%),
+                    radial-gradient(900px 600px at 85% 15%, rgba(22,163,74,.08), transparent 55%),
+                    radial-gradient(900px 600px at 70% 90%, rgba(245,158,11,.07), transparent 55%),
+                    var(--bg);
+            color: var(--text);
+            line-height:1.5;
+        }
+
+        .container{
+            width:min(1200px, 94vw);
+            margin: 26px auto 46px;
+        }
+
+        .header{
+            display:flex;
+            align-items:flex-end;
+            justify-content:space-between;
+            gap:14px;
+            margin-bottom: 14px;
+        }
+        .header h1{
+            margin:0;
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing:-0.2px;
+            display:flex;
+            align-items:center;
+            gap:10px;
+        }
+        .header p{
+            margin:6px 0 0;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .layout{
+            display:grid;
+            gap: 14px;
+            grid-template-columns: 1fr;
+        }
+        @media (min-width: 980px){
+            .layout{ grid-template-columns: 1fr 1fr; }
+        }
+
+        .card{
+            background: var(--panel);
+            border:1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow:hidden;
+            min-height: 70vh;
+            display:flex;
+            flex-direction:column;
+        }
+
+        .toolbar{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            padding: 12px 12px;
+            border-bottom:1px solid var(--border);
+            background: linear-gradient(180deg, rgba(17,24,39,.03), rgba(17,24,39,.01));
+        }
+
+        .toolbar-left{
+            display:flex;
+            flex-wrap:wrap;
+            gap:10px;
+            align-items:center;
+        }
+
+        .toolbar-group{
+            display:flex;
+            align-items:center;
+            gap:8px;
+            padding: 6px;
+            border:1px solid var(--border);
+            border-radius: 14px;
+            background: rgba(17,24,39,.02);
+        }
+
+        .btn{
+            appearance:none;
+            border:1px solid var(--border);
+            background: #fff;
+            color: var(--text);
+            cursor:pointer;
+            border-radius: 12px;
+            padding: 8px 9px;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap:8px;
+            transition: transform .05s ease, filter .15s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease;
+            user-select:none;
+            line-height: 1;
+            font-weight: 800;
+            font-size: 12px;
+        }
+        .btn:hover{
+            background: rgba(37,99,235,.06);
+            border-color: rgba(37,99,235,.22);
+        }
+        .btn:active{ transform: translateY(1px); }
+        .btn:focus{
+            outline:none;
+            box-shadow: 0 0 0 4px var(--focus);
+            border-color: rgba(37,99,235,.45);
+        }
+
+        .btn-primary{
+            background: linear-gradient(180deg, var(--primary), var(--primary2));
+            color: #fff;
+            border-color: rgba(37,99,235,.35);
+        }
+        .btn-primary:hover{ filter: brightness(1.03); }
+
+        .hint{
+            color: var(--muted);
+            font-size: 12.5px;
+            display:flex;
+            align-items:center;
+            gap:10px;
+            white-space:nowrap;
+        }
+
+        .ico{
+            width:16px; height:16px;
+            flex: 0 0 auto;
+            opacity:.95;
+        }
+
+        .color{
+            width: 34px;
+            height: 34px;
+            border-radius: 12px;
+            border:1px solid var(--border);
+            background: #fff;
+            padding: 5px;
+            cursor:pointer;
+        }
+
+        .body{
+            padding: 12px;
+            display:flex;
+            flex-direction:column;
+            gap:10px;
+            flex:1;
+            min-height:0;
+        }
+
+        textarea{
+            width:100%;
+            height:100%;
+            min-height: 52vh;
+            resize: vertical;
+            padding: 12px 12px;
+            border-radius: 16px;
+            border:1px solid var(--border);
+            background: #ffffff;
+            color: var(--text);
+            outline:none;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+            font-size: 13px;
+            line-height: 1.55;
+            transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+        }
+        textarea::placeholder{ color: rgba(107,114,128,.85); }
+        textarea:focus{
+            border-color: rgba(37,99,235,.55);
+            box-shadow: 0 0 0 4px rgba(37,99,235,.14);
+        }
+        textarea.dragover{
+            border-color: rgba(22,163,74,.60);
+            box-shadow: 0 0 0 4px rgba(22,163,74,.14);
+            background: rgba(22,163,74,.03);
+        }
+
+        .preview{
+            width:100%;
+            height:100%;
+            min-height: 52vh;
+            padding: 14px 14px;
+            border-radius: 16px;
+            border:1px solid var(--border);
+            background: #ffffff;
+            overflow:auto;
+            color: var(--text);
+        }
+
+        /* preview 기본 스타일 */
+        .preview :is(h1,h2,h3){
+            margin: 0.2em 0 0.35em;
+            color:#0f172a;
+        }
+        .preview p{ margin: 0.4em 0; }
+        .preview a{ color: #2563eb; }
+        .preview blockquote{
+            margin: 12px 0;
+            padding: 10px 12px;
+            border-left: 4px solid rgba(37,99,235,.35);
+            background: rgba(37,99,235,.05);
+            border-radius: 12px;
+            color: #0f172a;
+        }
+        .preview table{
+            width:100%;
+            border-collapse: collapse;
+            overflow:hidden;
+            border-radius: 12px;
+            border:1px solid rgba(17,24,39,.12);
+            margin: 10px 0;
+        }
+        .preview th,.preview td{
+            border-bottom:1px solid rgba(17,24,39,.10);
+            padding: 8px 10px;
+            text-align:left;
+            font-size: 13px;
+            color: #111827;
+        }
+        .preview th{
+            background: rgba(17,24,39,.04);
+            font-weight: 900;
+        }
+        .preview code{
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+            background: rgba(17,24,39,.04);
+            border: 1px solid rgba(17,24,39,.10);
+            border-radius: 10px;
+            padding: 2px 6px;
+            color: #0f172a;
+        }
+        .preview pre{
+            background: rgba(17,24,39,.04);
+            border:1px solid rgba(17,24,39,.10);
+            border-radius: 14px;
+            padding: 12px;
+            overflow:auto;
+        }
+
+        .footer{
+            margin-top: 12px;
+            color: rgba(17,24,39,.55);
+            font-size: 12.5px;
+            text-align:center;
+        }
+
+        /* Prism 사용 시(선택): 배경을 흰 톤으로 */
+        pre[class*="language-"]{
+            background: rgba(17,24,39,.04) !important;
+            border:1px solid rgba(17,24,39,.10) !important;
+            border-radius: 14px !important;
+        }
+        code[class*="language-"]{
+            text-shadow:none !important;
+        }
+
+    </style>
+</head>
+
+<body>
+<main class="container">
+    <header class="header">
+        <div>
+            <h1>
+                <svg class="ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M4 4h16v16H4z" stroke="currentColor" stroke-width="2"/>
+                    <path d="M8 8h8M8 12h8M8 16h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                HTML 웹 에디터
+            </h1>
+            <p>좌측에서 HTML을 입력하고, 우측에서 실시간 미리보기를 확인하세요. (이미지 드래그&드롭 지원)</p>
+        </div>
+        <div class="hint">
+            <span>Enter: 변환 없음 · Ctrl/Cmd+V: 붙여넣기</span>
+        </div>
+    </header>
+
+    <section class="layout">
+        <!-- Editor -->
+        <section class="card">
+            <div class="toolbar">
+                <div class="toolbar-left">
+                    <!-- 텍스트 스타일 -->
+                    <div class="toolbar-group">
+                        <button class="btn" type="button" onclick="insertTag('b')" title="굵게">
+                            <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M8 5h6a4 4 0 0 1 0 8H8V5Z" stroke="currentColor" stroke-width="2"/><path d="M8 13h7a4 4 0 0 1 0 8H8v-8Z" stroke="currentColor" stroke-width="2"/></svg>
+                        </button>
+                        <button class="btn" type="button" onclick="insertTag('i')" title="기울임">
+                            <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M10 5h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M6 19h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M14 5 10 19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        </button>
+                        <button class="btn" type="button" onclick="insertTag('u')" title="밑줄">
+                            <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M7 4v7a5 5 0 0 0 10 0V4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M5 20h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        </button>
+                    </div>
+
+                    <!-- 제목 -->
+                    <div class="toolbar-group">
+                        <button class="btn" type="button" onclick="insertTag('h1')" title="제목 1">H1</button>
+                        <button class="btn" type="button" onclick="insertTag('h2')" title="제목 2">H2</button>
+                        <button class="btn" type="button" onclick="insertTag('h3')" title="제목 3">H3</button>
+                    </div>
+
+                    <!-- 목록 -->
+                    <div class="toolbar-group">
+                        <button class="btn" type="button" onclick="insertTag('ul')" title="순서없는 목록">
+                            <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M9 6h12M9 12h12M9 18h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M5 7h.01M5 13h.01M5 19h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+                        </button>
+                        <button class="btn" type="button" onclick="insertTag('ol')" title="순서있는 목록">
+                            <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M9 6h12M9 12h12M9 18h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M4 6h2M4 12h2M4 18h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        </button>
+                    </div>
+
+                    <!-- 정렬 -->
+                    <div class="toolbar-group">
+                        <button class="btn" type="button" onclick="insertAlignment('left')" title="왼쪽 정렬">
+                            <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 10h10M4 14h16M4 18h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        </button>
+                        <button class="btn" type="button" onclick="insertAlignment('center')" title="가운데 정렬">
+                            <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M7 10h10M4 14h16M7 18h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        </button>
+                        <button class="btn" type="button" onclick="insertAlignment('right')" title="오른쪽 정렬">
+                            <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M10 10h10M4 14h16M10 18h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        </button>
+                    </div>
+
+                    <!-- 미디어 -->
+                    <div class="toolbar-group">
+                        <button class="btn" type="button" onclick="insertTag('a')" title="링크">
+                            <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M10 13a5 5 0 0 1 0-7l1-1a5 5 0 0 1 7 7l-1 1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M14 11a5 5 0 0 1 0 7l-1 1a5 5 0 0 1-7-7l1-1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        </button>
+                        <button class="btn" type="button" onclick="insertImage()" title="이미지">
+                            <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v14H4z" stroke="currentColor" stroke-width="2"/><path d="M8 11l2.5 3 3.5-4 4 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 9h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+                        </button>
+                        <button class="btn" type="button" onclick="insertTag('table')" title="테이블">
+                            <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M4 6h16v12H4z" stroke="currentColor" stroke-width="2"/><path d="M4 10h16M8 6v12M16 6v12" stroke="currentColor" stroke-width="2"/></svg>
+                        </button>
+                    </div>
+
+                    <!-- 특수 -->
+                    <div class="toolbar-group">
+                        <button class="btn" type="button" onclick="insertTag('code')" title="코드">
+                            <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M9 18 3 12l6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </button>
+                        <button class="btn" type="button" onclick="insertTag('blockquote')" title="인용구">
+                            <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M7 17h4V9H6v4h1v4Zm10 0h4V9h-5v4h1v4Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+                        </button>
+                    </div>
+
+                    <!-- 색상 -->
+                    <div class="toolbar-group" title="텍스트/배경 색상">
+                        <input type="color" class="color" onchange="insertColor(this.value)" title="텍스트 색상">
+                        <input type="color" class="color" onchange="insertBgColor(this.value)" title="배경 색상">
+                    </div>
+                </div>
+
+                <div class="toolbar-right">
+                    <button class="btn btn-primary" type="button" onclick="clearEditor()" title="전체 지우기">
+                        <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M8 6V4h8v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M7 6l1 16h8l1-16" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+                        전체 지우기
+                    </button>
+                </div>
+            </div>
+
+            <div class="body">
+          <textarea id="editor" oninput="updatePreview()" placeholder="<h2>여기에 HTML을 입력하세요</h2>
+<p><b>굵게</b>, <i>기울임</i>, <u>밑줄</u> 가능</p>
+<blockquote>인용문</blockquote>
+<ul>
+  <li>목록 1</li>
+  <li>목록 2</li>
+</ul>"></textarea>
+            </div>
+        </section>
+
+        <!-- Preview -->
+        <section class="card">
+            <div class="toolbar">
+                <div class="hint">
+                    <svg class="ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M12 5c6 0 10 7 10 7s-4 7-10 7S2 12 2 12s4-7 10-7Z" stroke="currentColor" stroke-width="2"/>
+                        <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    실시간 미리보기
+                </div>
+
+                <button class="btn" type="button" onclick="toggleHighlight()">
+                    코드 하이라이팅 토글
+                </button>
+            </div>
+
+            <div class="body">
+                <div id="preview" class="preview"></div>
+            </div>
+        </section>
+    </section>
+
+    <div class="footer">© HTML Web Editor · Pure CSS + Vanilla JS</div>
+</main>
+
+<!-- (선택) Prism: 하이라이팅 토글용. 필요 없으면 아래 4줄 제거 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js" defer></script>
+
+<script>
+    // =========================
+    // 상태
+    // =========================
+    let isHighlighted = false;
+
+    // =========================
+    // 공통 삽입 함수 (스크롤/커서 유지)
+    // =========================
+    function insertContent(content, start, end, editor) {
+        const scrollTop = editor.scrollTop;
+
+        editor.value = editor.value.substring(0, start) + content + editor.value.substring(end);
+        updatePreview();
+
+        editor.focus();
+        editor.setSelectionRange(start + content.length, start + content.length);
+        editor.scrollTop = scrollTop;
+    }
+
+    // =========================
+    // 미리보기 업데이트
+    // =========================
+    function updatePreview() {
+        const editorContent = document.getElementById('editor').value;
+        const previewPane = document.getElementById('preview');
+
+        if (isHighlighted) {
+            previewPane.innerHTML = `
+          <pre class="line-numbers"><code class="language-markup">${escapeHtml(editorContent)}</code></pre>
+        `;
+            // Prism이 로드되었을 때만
+            if (window.Prism && Prism.highlightAll) Prism.highlightAll();
+            return;
+        }
+
+        // code 태그 내용 보호 (code 안의 < >가 실제 태그로 먹지 않도록)
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = editorContent;
+
+        const codeTags = tempDiv.getElementsByTagName('code');
+        Array.from(codeTags).forEach(codeTag => {
+            const originalContent = codeTag.innerHTML;
+            codeTag.innerHTML = escapeHtml(originalContent);
+        });
+
+        previewPane.innerHTML = tempDiv.innerHTML;
+    }
+
+    // HTML 이스케이프
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // 하이라이트 토글
+    function toggleHighlight() {
+        isHighlighted = !isHighlighted;
+        updatePreview();
+    }
+
+    // 정렬
+    function insertAlignment(align) {
+        const editor = document.getElementById('editor');
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        const selectedText = editor.value.substring(start, end);
+
+        const alignedText = `<div style="text-align: ${align};">${selectedText || '텍스트'}</div>`;
+        insertContent(alignedText, start, end, editor);
+    }
+
+    // 태그 삽입
+    function insertTag(tag) {
+        const editor = document.getElementById('editor');
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        const selectedText = editor.value.substring(start, end);
+
+        let insertText = '';
+
+        switch (tag) {
+            case 'code': {
+                const escapedText = (selectedText || '코드를 입력하세요')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+                insertText = `<code>${escapedText}</code>`;
+                break;
+            }
+            case 'blockquote':
+                insertText = `<blockquote>${selectedText || '인용문을 입력하세요'}</blockquote>`;
+                break;
+            case 'a': {
+                const url = prompt('링크 URL을 입력하세요:', 'https://');
+                if (!url) return;
+                insertText = `<a href="${url}">${selectedText || '링크 텍스트'}</a>`;
+                break;
+            }
+            case 'ul':
+            case 'ol':
+                insertText = `<${tag}>\n  <li>항목 1</li>\n  <li>항목 2</li>\n</${tag}>`;
+                break;
+            case 'table':
+                insertText = `<table>\n  <tr>\n    <th>제목 1</th>\n    <th>제목 2</th>\n  </tr>\n  <tr>\n    <td>내용 1</td>\n    <td>내용 2</td>\n  </tr>\n</table>`;
+                break;
+            default:
+                insertText = `<${tag}>${selectedText || '텍스트'}</${tag}>`;
+        }
+
+        if (insertText) insertContent(insertText, start, end, editor);
+    }
+
+    // 이미지 삽입 (URL)
+    function insertImage() {
+        const url = prompt('이미지 URL을 입력하세요:', 'https://');
+        if (!url) return;
+
+        const editor = document.getElementById('editor');
+        const start = editor.selectionStart;
+        const imageTag = `<img src="${url}" alt="이미지" style="max-width: 100%;">`;
+
+        insertContent(imageTag, start, start, editor);
+    }
+
+    // 색상
+    function insertColor(color) {
+        const editor = document.getElementById('editor');
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        const selectedText = editor.value.substring(start, end);
+
+        const coloredText = `<span style="color: ${color}">${selectedText || '텍스트'}</span>`;
+        insertContent(coloredText, start, end, editor);
+    }
+
+    // 배경색
+    function insertBgColor(color) {
+        const editor = document.getElementById('editor');
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        const selectedText = editor.value.substring(start, end);
+
+        const bgColoredText = `<span style="background-color: ${color}">${selectedText || '텍스트'}</span>`;
+        insertContent(bgColoredText, start, end, editor);
+    }
+
+    // 전체 지우기
+    function clearEditor() {
+        if (!confirm('에디터 내용을 모두 지울까요?')) return;
+        const editor = document.getElementById('editor');
+        editor.value = '';
+        updatePreview();
+        editor.focus();
+    }
+
+    // 드래그&드롭 이미지 (DataURL)
+    document.addEventListener('DOMContentLoaded', function () {
+        const editor = document.getElementById('editor');
+
+        editor.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            this.classList.add('dragover');
+        });
+
+        editor.addEventListener('dragleave', function (e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+        });
+
+        editor.addEventListener('drop', function (e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].type.startsWith('image/')) {
+                const reader = new FileReader();
+                const scrollTop = editor.scrollTop;
+
+                reader.onload = function (ev) {
+                    const imageTag = `<img src="${ev.target.result}" alt="업로드된 이미지" style="max-width: 100%;">`;
+                    const start = editor.selectionStart;
+                    insertContent(imageTag, start, start, editor);
+                    editor.scrollTop = scrollTop;
+                };
+                reader.readAsDataURL(files[0]);
+            }
+        });
+
+        // 초기화
+        updatePreview();
+        editor.focus();
+    });
+</script>
+</body>
+</html>

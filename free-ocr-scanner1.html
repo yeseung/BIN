@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <!-- 1) 기본 메타 -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="content-language" content="ko" />
+
+    <!-- 2) SEO -->
+    <title>무료 OCR 문자인식 사이트 | 이미지 텍스트 변환기</title>
+    <meta name="description" content="무료 OCR 문자인식 사이트에서 이미지를 손쉽게 텍스트로 변환하세요. 빠르고 정확한 온라인 OCR 변환기로 스캔한 문서와 이미지를 텍스트로 추출합니다." />
+    <meta name="keywords" content="OCR, 문자 인식, 이미지 텍스트 변환, 무료 OCR, 온라인 OCR, 이미지에서 텍스트 추출, 스캔 텍스트 변환, 텍스트 변환기, 문서 스캔 변환" />
+    <meta name="author" content="웹웍스" />
+
+    <!-- 공통 + OCR 전용 스타일 (Bootstrap 제거, 순수 CSS) -->
+    <style>
+        :root{
+            --primary-color:#0066ff;
+            --primary-color-dark:#0052cc;
+            --secondary-color:#1a1d29;
+            --white:#ffffff;
+            --gray-50:#fafbfc;
+            --gray-100:#f4f6f8;
+            --gray-200:#e5e8ec;
+            --gray-300:#d1d5db;
+            --gray-600:#6b7280;
+            --gray-700:#374151;
+            --danger:#dc3545;
+            --success:#10b981;
+            --radius:16px;
+            --radius-sm:12px;
+            --shadow-sm:0 1px 3px rgba(0,0,0,.10);
+            --shadow-md:0 10px 25px rgba(0,0,0,.10);
+            --transition:all .3s ease;
+        }
+
+        html,body{
+            height:100%;
+            min-height:100vh;
+            font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic","Apple SD Gothic Neo",Roboto,"Helvetica Neue",Arial,sans-serif;
+            background:linear-gradient(135deg,var(--gray-50) 0%,var(--white) 100%);
+            color:var(--secondary-color);
+            line-height:1.6;
+            margin:0;
+            padding:0;
+        }
+
+        /* 헤더 높이만큼 여백 */
+        body{ padding-top:72px; }
+        @media(min-width:992px){ body{ padding-top:80px; } }
+
+        /* 상단 고정 헤더 */
+        .site-header{
+            position:fixed;
+            top:0;left:0;right:0;
+            z-index:1030;
+            background:rgba(255,255,255,.95);
+            backdrop-filter:blur(10px);
+            border-bottom:1px solid var(--gray-200);
+        }
+        .container{
+            max-width:1200px;
+            margin:0 auto;
+            padding:0 15px;
+        }
+        .brand{
+            display:flex;
+            align-items:center;
+            gap:.55rem;
+            font-weight:900;
+            font-size:1.15rem;
+            padding:18px 0;
+            color:var(--secondary-color);
+            text-decoration:none;
+            user-select:none;
+        }
+        .brand .logo{
+            width:34px;height:34px;
+            border-radius:10px;
+            background:linear-gradient(135deg,var(--primary-color),#8b5cf6);
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            color:#fff;
+            box-shadow:0 6px 15px rgba(79,70,229,.25);
+            font-weight:900;
+        }
+
+        /* 카드/레이아웃 */
+        .card{
+            background:#fff;
+            border:1px solid var(--gray-200);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow-sm);
+            overflow:hidden;
+        }
+        .card-body{ padding:1.25rem; }
+
+        /* Hero */
+        .ocr-hero{
+            background:linear-gradient(135deg,#ff6b35 0%,#f7931e 50%,#ffd700 100%);
+            border-radius:20px;
+            padding:2rem;
+            text-align:center;
+            margin:1.25rem 0 2rem;
+            color:#fff;
+            position:relative;
+            overflow:hidden;
+        }
+        .ocr-hero::before{
+            content:'📄';
+            position:absolute; top:20px; right:30px;
+            font-size:3rem; opacity:.3;
+            animation:bounce 2s ease-in-out infinite;
+        }
+        .ocr-hero::after{
+            content:'✨';
+            position:absolute; bottom:20px; left:30px;
+            font-size:2.5rem; opacity:.3;
+            animation:sparkle 3s ease-in-out infinite;
+        }
+        @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+        @keyframes sparkle{0%,100%{transform:scale(1) rotate(0);opacity:.3}50%{transform:scale(1.2) rotate(180deg);opacity:.6}}
+        .ocr-hero h1{ margin:0; font-weight:900; letter-spacing:-.02em; }
+        .ocr-hero p{ margin:.5rem 0 0; opacity:.95; }
+
+        /* 업로드 존 */
+        .ocr-upload-zone{
+            border:2px dashed var(--gray-200);
+            border-radius:12px;
+            padding:1.5rem;
+            text-align:center;
+            background:linear-gradient(135deg,#f8f9fa 0%,#e9ecef 100%);
+            cursor:pointer;
+            transition:var(--transition);
+            margin:1rem 0;
+            outline:none;
+        }
+        .ocr-upload-zone:hover{
+            border-color:var(--primary-color);
+            background:linear-gradient(135deg,#e3f2fd 0%,#e1f5fe 100%);
+            transform:translateY(-1px);
+            box-shadow:0 10px 25px rgba(79,70,229,.12);
+        }
+        .ocr-upload-zone.drag-over{
+            border-color:var(--primary-color);
+            background:linear-gradient(135deg,#e8f5e8 0%,#f3e5f5 100%);
+            box-shadow:0 0 15px rgba(79,70,229,.25);
+        }
+        .ocr-upload-content{
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:1rem;
+            flex-wrap:wrap;
+        }
+        .ocr-upload-icon{
+            width:56px;height:56px;
+            border-radius:18px;
+            background:rgba(0,102,255,.10);
+            color:var(--primary-color);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:26px;
+            font-weight:900;
+            flex:0 0 auto;
+        }
+        .ocr-upload-text{ flex:1; min-width:220px; }
+        .ocr-upload-text h4{
+            margin:0 0 .25rem 0;
+            color:var(--gray-700);
+            font-weight:900;
+            font-size:1.05rem;
+        }
+        .ocr-upload-text p{
+            margin:0;
+            color:var(--gray-600);
+            font-size:.9rem;
+        }
+
+        /* 버튼 */
+        .btn{
+            appearance:none;
+            border:none;
+            background:#fff;
+            color:var(--secondary-color);
+            font-weight:800;
+            border-radius:10px;
+            padding:.75rem 1.15rem;
+            cursor:pointer;
+            transition:var(--transition);
+            user-select:none;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap:.5rem;
+            line-height:1;
+        }
+        .btn:disabled{ opacity:.6; cursor:not-allowed; transform:none !important; box-shadow:none !important; }
+        .btn-primary{
+            background:linear-gradient(135deg,var(--primary-color) 0%,#8b5cf6 100%);
+            color:#fff;
+            box-shadow:0 8px 20px rgba(79,70,229,.18);
+        }
+        .btn-primary:hover{
+            background:linear-gradient(135deg,#8b5cf6 0%,var(--primary-color) 100%);
+            transform:translateY(-1px);
+            box-shadow:0 12px 28px rgba(79,70,229,.28);
+        }
+        .btn-outline{
+            background:#fff;
+            border:1px solid var(--gray-300);
+            color:var(--gray-700);
+        }
+        .btn-outline:hover{
+            border-color:var(--primary-color);
+            color:var(--primary-color);
+            transform:translateY(-1px);
+            box-shadow:0 10px 25px rgba(79,70,229,.10);
+        }
+
+        /* 상태 알림(기존 bootstrap alert 대체) */
+        .status{
+            display:none;
+            margin-top:1rem;
+            border-radius:12px;
+            padding:.9rem 1rem;
+            border:1px solid var(--gray-200);
+            background:#fff;
+            box-shadow:var(--shadow-sm);
+            font-weight:700;
+        }
+        .status.show{ display:block; }
+        .status.success{
+            border-color:rgba(16,185,129,.35);
+            background:rgba(16,185,129,.08);
+            color:#0f766e;
+        }
+        .status.error{
+            border-color:rgba(220,53,69,.35);
+            background:rgba(220,53,69,.08);
+            color:#b91c1c;
+        }
+
+        /* PDF 미리보기 */
+        .ocr-pdf-preview{ text-align:center; margin:2rem 0; }
+        #pdfPreview{
+            max-width:100%;
+            border-radius:12px;
+            box-shadow:0 10px 25px rgba(0,0,0,.10);
+            display:none;
+        }
+        .page-controls{
+            display:none;
+            margin-top:1rem;
+            background:#fff;
+            border-radius:12px;
+            padding:1rem;
+            border:1px solid var(--gray-200);
+            box-shadow:var(--shadow-sm);
+            align-items:center;
+            justify-content:center;
+            gap:.75rem;
+            flex-wrap:wrap;
+        }
+        .page-controls.show{ display:flex; }
+        #pageInfo{ font-weight:900; color:var(--gray-700); min-width:70px; text-align:center; }
+
+        /* 진행바 */
+        .progress-area{ display:none; margin:1.25rem 0 0; }
+        .progress-area.show{ display:block; }
+        .progress{
+            height:1.5rem;
+            border-radius:10px;
+            background:var(--gray-200);
+            overflow:hidden;
+            box-shadow:inset 0 1px 2px rgba(0,0,0,.10);
+        }
+        .progress-bar{
+            width:0%;
+            height:100%;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-weight:900;
+            font-size:.875rem;
+            color:#fff;
+            white-space:nowrap;
+            padding:0 .6rem;
+            background:linear-gradient(135deg,var(--primary-color),#8b5cf6);
+            transition:width .25s ease;
+        }
+        .progress-bar.striped{
+            background-image:linear-gradient(
+                    45deg,
+                    rgba(255,255,255,.20) 25%,
+                    transparent 25%,
+                    transparent 50%,
+                    rgba(255,255,255,.20) 50%,
+                    rgba(255,255,255,.20) 75%,
+                    transparent 75%,
+                    transparent
+            );
+            background-size:1.2rem 1.2rem;
+            animation:moveStripes 1s linear infinite;
+        }
+        @keyframes moveStripes{
+            from{ background-position: 0 0; }
+            to{ background-position: 1.2rem 0; }
+        }
+
+        /* 결과 영역 */
+        .ocr-result-area{
+            background:#fff;
+            border:1px solid var(--gray-200);
+            border-radius:14px;
+            padding:1.25rem;
+            margin:2rem 0;
+            box-shadow:var(--shadow-sm);
+        }
+        .ocr-result-header{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:1rem;
+            margin-bottom:1rem;
+            flex-wrap:wrap;
+        }
+        .ocr-result-header h5{ margin:0; font-weight:900; color:var(--gray-700); }
+        #resultText{
+            width:100%;
+            border:1px solid var(--gray-200);
+            border-radius:12px;
+            padding:1rem;
+            font-size:1rem;
+            min-height:220px;
+            resize:vertical;
+            background:#f8f9fa;
+            line-height:1.6;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            outline:none;
+        }
+        #resultText:focus{
+            border-color:var(--primary-color);
+            box-shadow:0 0 0 .2rem rgba(79,70,229,.18);
+            background:#fff;
+        }
+
+        /* 특징 카드 */
+        .grid{
+            display:grid;
+            grid-template-columns:repeat(3,minmax(0,1fr));
+            gap:1rem;
+            margin:0 0 1rem;
+        }
+        @media(max-width:900px){ .grid{ grid-template-columns:1fr; } }
+        .feature-card{
+            background:#fff;
+            border:1px solid var(--gray-200);
+            border-radius:14px;
+            padding:1.25rem;
+            text-align:center;
+            transition:var(--transition);
+            box-shadow:0 6px 15px rgba(0,0,0,.04);
+        }
+        .feature-card:hover{
+            transform:translateY(-3px);
+            box-shadow:0 12px 28px rgba(0,0,0,.08);
+            border-color:rgba(0,102,255,.35);
+        }
+        .feature-icon{
+            width:52px;height:52px;
+            border-radius:50%;
+            margin:0 auto 1rem;
+            background:linear-gradient(135deg,var(--primary-color),#8b5cf6);
+            color:#fff;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-weight:900;
+            font-size:20px;
+        }
+        .feature-card h5{ margin:.25rem 0 .5rem; font-weight:900; color:var(--gray-700); }
+        .feature-card p{ margin:0; color:var(--gray-600); font-size:.92rem; }
+
+        /* FAQ */
+        .faq-section{
+            background:linear-gradient(135deg,#f8f9fa 0%,#f1f3f4 100%);
+            border-radius:16px;
+            padding:2rem;
+            margin:3rem 0 2rem;
+            border:1px solid var(--gray-200);
+        }
+        .faq-header{ text-align:center; margin-bottom:2rem; }
+        .faq-header h2{ margin:0 0 .25rem; font-weight:950; color:var(--gray-700); }
+        .faq-header p{ margin:0; color:var(--gray-600); }
+        .faq-container{ max-width:820px; margin:0 auto; }
+        .faq-item{
+            background:#fff;
+            border:1px solid var(--gray-200);
+            border-radius:14px;
+            overflow:hidden;
+            margin-bottom:1rem;
+            transition:var(--transition);
+        }
+        .faq-item:hover{ box-shadow:0 12px 28px rgba(0,0,0,.08); }
+        .faq-question{
+            padding:1.1rem 1.1rem;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:1rem;
+            cursor:pointer;
+            user-select:none;
+            font-weight:900;
+            color:var(--gray-700);
+            background:#fff;
+        }
+        .faq-item.active .faq-question{
+            background:linear-gradient(135deg,rgba(79,70,229,.06),rgba(139,92,246,.06));
+            border-bottom:1px solid var(--gray-200);
+        }
+        .faq-q-left{
+            display:flex;
+            align-items:center;
+            gap:.75rem;
+            min-width:0;
+            flex:1;
+        }
+        .badge{
+            padding:.25rem .65rem;
+            border-radius:999px;
+            background:linear-gradient(135deg,var(--primary-color),#8b5cf6);
+            color:#fff;
+            font-weight:950;
+            font-size:.72rem;
+            letter-spacing:.02em;
+            flex:0 0 auto;
+        }
+        .chev{
+            width:34px;height:34px;
+            border-radius:10px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background:#f3f4f6;
+            color:var(--gray-700);
+            transition:transform .25s ease;
+            flex:0 0 auto;
+            font-weight:900;
+        }
+        .faq-item.active .chev{ transform:rotate(180deg); }
+
+        .faq-answer{
+            max-height:0;
+            overflow:hidden;
+            transition:max-height .35s ease, padding .35s ease;
+            padding:0 1.1rem;
+        }
+        .faq-item.active .faq-answer{
+            max-height:420px;
+            padding:1rem 1.1rem 1.1rem;
+        }
+        .faq-answer p{ margin:.2rem 0 .75rem; color:var(--gray-600); }
+        .faq-answer ul{ margin:0; padding-left:1.1rem; }
+        .faq-answer li{ color:var(--gray-600); margin:.4rem 0; }
+
+        /* 유틸 */
+        .center{ text-align:center; }
+        .mb-1{ margin-bottom:.25rem; }
+        .mb-2{ margin-bottom:.5rem; }
+        .mb-3{ margin-bottom:1rem; }
+        .mb-4{ margin-bottom:1.5rem; }
+        .mt-3{ margin-top:1rem; }
+        .d-none{ display:none !important; }
+        .w-100{ width:100%; }
+
+        /* 토스트(순수 CSS/JS) */
+        .toast-wrap{
+            position:fixed;
+            right:16px;
+            bottom:16px;
+            z-index:9999;
+            display:flex;
+            flex-direction:column;
+            gap:10px;
+            pointer-events:none;
+        }
+        .toast{
+            pointer-events:auto;
+            min-width:260px;
+            max-width:360px;
+            background:rgba(26,29,41,.92);
+            color:#fff;
+            border:1px solid rgba(255,255,255,.10);
+            border-radius:14px;
+            box-shadow:0 16px 40px rgba(0,0,0,.25);
+            padding:12px 12px 12px 14px;
+            display:flex;
+            align-items:flex-start;
+            gap:10px;
+            transform:translateY(12px);
+            opacity:0;
+            animation:toastIn .22s ease forwards;
+            backdrop-filter: blur(8px);
+        }
+        @keyframes toastIn{
+            to{ transform:translateY(0); opacity:1; }
+        }
+        .toast.out{
+            animation:toastOut .18s ease forwards;
+        }
+        @keyframes toastOut{
+            to{ transform:translateY(10px); opacity:0; }
+        }
+        .toast .icon{
+            width:34px;height:34px;
+            border-radius:12px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-weight:950;
+            flex:0 0 auto;
+            background:rgba(255,255,255,.12);
+        }
+        .toast.success .icon{ background:rgba(16,185,129,.22); }
+        .toast.error .icon{ background:rgba(220,53,69,.22); }
+        .toast .content{ flex:1; min-width:0; }
+        .toast .title{
+            font-weight:950;
+            font-size:.92rem;
+            margin:0 0 2px 0;
+        }
+        .toast .msg{
+            margin:0;
+            font-size:.88rem;
+            line-height:1.35;
+            opacity:.95;
+            word-break:break-word;
+        }
+        .toast .close{
+            border:none;
+            background:transparent;
+            color:rgba(255,255,255,.75);
+            cursor:pointer;
+            font-size:18px;
+            line-height:1;
+            padding:6px 8px;
+            border-radius:10px;
+            transition:var(--transition);
+            flex:0 0 auto;
+        }
+        .toast .close:hover{
+            background:rgba(255,255,255,.10);
+            color:#fff;
+        }
+
+        @media(max-width:480px){
+            .toast-wrap{ left:12px; right:12px; }
+            .toast{ max-width:none; width:100%; }
+        }
+    </style>
+</head>
+
+<body>
+<header class="site-header">
+    <div class="container">
+        <a class="brand" href="javascript:void(0)">
+            <span class="logo">T</span>
+            <span>Text Scanner</span>
+        </a>
+    </div>
+</header>
+
+<main>
+    <div class="container">
+        <section class="ocr-hero">
+            <h1>Text Scanner</h1>
+            <p>이미지와 PDF에서 텍스트를 추출하는 무료 OCR 서비스</p>
+        </section>
+
+        <section class="card">
+            <div class="card-body">
+                <div id="dropZone" class="ocr-upload-zone" role="button" tabindex="0" aria-label="파일 업로드 영역">
+                    <div class="ocr-upload-content">
+                        <div class="ocr-upload-icon">↑</div>
+                        <div class="ocr-upload-text">
+                            <h4>이미지나 PDF 파일을 드래그하거나 선택하세요</h4>
+                            <p>JPG, PNG, GIF, PDF 지원 (최대 10MB, 20개 파일)</p>
+                        </div>
+                        <input type="file" id="fileInput" accept="image/*,.pdf" multiple hidden />
+                        <button type="button" id="browseBtn" class="btn btn-primary">
+                            <span>📁</span><span>파일 선택</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="uploadStatus" class="status" role="alert"></div>
+
+                <div class="ocr-pdf-preview">
+                    <canvas id="pdfPreview"></canvas>
+                    <div id="pageControls" class="page-controls">
+                        <button class="btn btn-outline" type="button" id="btnPrev">← 이전</button>
+                        <span id="pageInfo">1/1</span>
+                        <button class="btn btn-outline" type="button" id="btnNext">다음 →</button>
+                    </div>
+                </div>
+
+                <div class="center mb-3">
+                    <button type="button" id="btnProcess" class="btn btn-primary" style="padding:.95rem 2rem;border-radius:12px;">
+                        ✨ 텍스트 추출하기
+                    </button>
+                </div>
+
+                <div id="progressArea" class="progress-area">
+                    <div class="progress">
+                        <div id="progressBar" class="progress-bar striped" role="progressbar">0%</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="ocr-result-area">
+            <div class="ocr-result-header">
+                <h5>📄 추출 결과</h5>
+                <button type="button" id="btnCopy" class="btn btn-primary" style="padding:.65rem 1rem;">
+                    📋 복사
+                </button>
+            </div>
+            <textarea id="resultText" placeholder="추출된 텍스트가 여기에 표시됩니다..." readonly></textarea>
+        </section>
+
+        <section class="grid mb-4">
+            <div class="feature-card">
+                <div class="feature-icon">📁</div>
+                <h5>다양한 파일 지원</h5>
+                <p>이미지(JPG, PNG, GIF)와 PDF 파일에서 텍스트 추출</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🌐</div>
+                <h5>다국어 지원</h5>
+                <p>한글, 영어 등 다양한 언어 인식</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🛡️</div>
+                <h5>안전한 처리</h5>
+                <p>파일은 서버에 저장되지 않으며 즉시 삭제</p>
+            </div>
+        </section>
+
+        <section class="faq-section">
+            <div class="faq-header">
+                <h2>자주 묻는 질문</h2>
+                <p>OCR 서비스 이용에 대한 궁금증을 해결해드립니다</p>
+            </div>
+
+            <div class="faq-container">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <div class="faq-q-left"><span class="badge">기본</span> OCR이란 무엇인가요?</div>
+                        <div class="chev">⌄</div>
+                    </div>
+                    <div class="faq-answer">
+                        <p>OCR(Optical Character Recognition)은 이미지나 스캔한 문서에서 텍스트를 인식하고 디지털 텍스트로 변환하는 기술입니다.</p>
+                        <ul>
+                            <li>종이 문서의 디지털화 가능</li>
+                            <li>편집 가능한 텍스트로 변환</li>
+                            <li>문서 검색 및 관리 용이</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <div class="faq-q-left"><span class="badge">기능</span> 어떤 파일 형식을 지원하나요?</div>
+                        <div class="chev">⌄</div>
+                    </div>
+                    <div class="faq-answer">
+                        <p>다음과 같은 파일 형식을 지원합니다:</p>
+                        <ul>
+                            <li>이미지 파일: JPG, PNG, GIF</li>
+                            <li>문서 파일: PDF (멀티페이지 지원)</li>
+                            <li>스캔된 문서 이미지</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <div class="faq-q-left"><span class="badge">데이터</span> 추출된 텍스트는 어떻게 저장되나요?</div>
+                        <div class="chev">⌄</div>
+                    </div>
+                    <div class="faq-answer">
+                        <p>추출된 텍스트는 다음과 같은 방식으로 활용할 수 있습니다:</p>
+                        <ul>
+                            <li>클립보드에 즉시 복사하여 사용</li>
+                            <li>텍스트 영역에서 직접 복사하여 활용</li>
+                            <li>모든 처리는 브라우저에서 이루어지며 서버에 저장되지 않음</li>
+                            <li>개인정보가 포함된 문서도 안전하게 처리</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <div class="faq-q-left"><span class="badge">언어</span> 다국어 지원이 가능한가요?</div>
+                        <div class="chev">⌄</div>
+                    </div>
+                    <div class="faq-answer">
+                        <p>다음과 같은 언어를 지원합니다:</p>
+                        <ul>
+                            <li>한글 (기본 지원)</li>
+                            <li>영어 (기본 지원)</li>
+                            <li>다국어가 혼합된 문서도 처리 가능</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <div class="faq-q-left"><span class="badge">보안</span> 개인정보는 안전한가요?</div>
+                        <div class="chev">⌄</div>
+                    </div>
+                    <div class="faq-answer">
+                        <p>개인정보 보호를 위해 다음과 같은 조치를 취하고 있습니다:</p>
+                        <ul>
+                            <li>모든 처리는 사용자의 브라우저에서 직접 수행</li>
+                            <li>서버에 어떠한 데이터도 저장하지 않음</li>
+                            <li>처리 후 즉시 해제(저장하지 않음)</li>
+                            <li>HTTPS 환경에서 사용 권장</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <div class="faq-q-left"><span class="badge">활용</span> 어떤 경우에 활용할 수 있나요?</div>
+                        <div class="chev">⌄</div>
+                    </div>
+                    <div class="faq-answer">
+                        <p>다양한 상황에서 활용이 가능합니다:</p>
+                        <ul>
+                            <li>스캔한 문서의 텍스트 추출</li>
+                            <li>이미지 속 텍스트 디지털화</li>
+                            <li>PDF 문서 텍스트 변환</li>
+                            <li>문서 아카이빙 및 검색 시스템 구축</li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </div>
+</main>
+
+<!-- 토스트 컨테이너 -->
+<div id="toastWrap" class="toast-wrap" aria-live="polite" aria-atomic="true"></div>
+
+<!-- OCR 라이브러리 -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+<script>
+    // PDF.js 워커 설정
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    // DOM
+    const fileInput = document.getElementById('fileInput');
+    const browseBtn = document.getElementById('browseBtn');
+    const dropZone = document.getElementById('dropZone');
+
+    const uploadStatus = document.getElementById('uploadStatus');
+
+    const pdfPreview = document.getElementById('pdfPreview');
+    const pageControls = document.getElementById('pageControls');
+    const pageInfo = document.getElementById('pageInfo');
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+
+    const btnProcess = document.getElementById('btnProcess');
+    const btnCopy = document.getElementById('btnCopy');
+    const resultText = document.getElementById('resultText');
+
+    const progressArea = document.getElementById('progressArea');
+    const progressBar = document.getElementById('progressBar');
+
+    const toastWrap = document.getElementById('toastWrap');
+
+    let currentPdf = null;
+    let currentPage = 1;
+
+    // 버튼: 파일 선택
+    browseBtn.addEventListener('click', () => fileInput.click());
+
+    // 업로드 존: 클릭/키보드 접근
+    dropZone.addEventListener('click', (e) => {
+        if (e.target && e.target.closest && e.target.closest('button')) return;
+        fileInput.click();
+    });
+    dropZone.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            fileInput.click();
+        }
+    });
+
+    // 드래그 앤 드롭
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('drag-over');
+    });
+    dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+    });
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+
+        const file = e.dataTransfer.files[0];
+        if (file && (file.type.startsWith('image/') || file.type === 'application/pdf')) {
+            fileInput.files = e.dataTransfer.files;
+            handleFileSelection(file);
+        } else {
+            toast('지원되지 않는 파일 형식입니다. 이미지 또는 PDF 파일만 업로드 가능합니다.', 'error');
+        }
+    });
+
+    // input change
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) handleFileSelection(file);
+    });
+
+    // PDF 페이지 컨트롤
+    btnPrev.addEventListener('click', () => changePage(-1));
+    btnNext.addEventListener('click', () => changePage(1));
+
+    // 처리/복사
+    btnProcess.addEventListener('click', processFile);
+    btnCopy.addEventListener('click', copyText);
+
+    // FAQ 토글(하나만 열리게)
+    document.querySelectorAll('.faq-item').forEach(item => {
+        const q = item.querySelector('.faq-question');
+        q.addEventListener('click', () => {
+            const isOpen = item.classList.contains('active');
+            document.querySelectorAll('.faq-item').forEach(x => x.classList.remove('active'));
+            if (!isOpen) item.classList.add('active');
+        });
+    });
+
+    // 상태 표시
+    function setStatus(message, type){
+        uploadStatus.className = 'status show ' + (type === 'error' ? 'error' : 'success');
+        uploadStatus.textContent = message;
+    }
+    function clearStatus(){
+        uploadStatus.className = 'status';
+        uploadStatus.textContent = '';
+    }
+
+    // PDF 미리보기 표시/숨김
+    function hidePdfPreview(){
+        pdfPreview.style.display = 'none';
+        pageControls.classList.remove('show');
+    }
+    function showPdfPreview(){
+        pdfPreview.style.display = 'block';
+    }
+
+    async function handleFileSelection(file) {
+        // reset
+        currentPdf = null;
+        currentPage = 1;
+        clearStatus();
+        hidePdfPreview();
+        resultText.value = '';
+
+        if (!(file.type === 'application/pdf' || file.type.startsWith('image/'))) {
+            setStatus('❌ 지원되지 않는 파일 형식입니다.', 'error');
+            return;
+        }
+
+        setStatus(`✅ 파일 업로드 성공: ${file.name}`, 'success');
+
+        // PDF이면 미리보기 렌더
+        if (file.type === 'application/pdf') {
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                currentPdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                pageInfo.textContent = `${currentPage}/${currentPdf.numPages}`;
+                await renderPdfPage(currentPage);
+                showPdfPreview();
+                if (currentPdf.numPages > 1) pageControls.classList.add('show');
+            } catch (err) {
+                console.error(err);
+                setStatus('❌ PDF 파일 로드 중 오류가 발생했습니다.', 'error');
+            }
+        }
+    }
+
+    async function renderPdfPage(pageNumber){
+        try{
+            const page = await currentPdf.getPage(pageNumber);
+            const viewport = page.getViewport({ scale: 1.5 });
+
+            pdfPreview.width = viewport.width;
+            pdfPreview.height = viewport.height;
+
+            await page.render({
+                canvasContext: pdfPreview.getContext('2d'),
+                viewport
+            }).promise;
+        }catch(err){
+            console.error(err);
+            toast('PDF 페이지 렌더링 중 오류가 발생했습니다.', 'error');
+        }
+    }
+
+    async function changePage(offset){
+        if(!currentPdf) return;
+        const newPage = currentPage + offset;
+        if(newPage < 1 || newPage > currentPdf.numPages) return;
+        currentPage = newPage;
+        pageInfo.textContent = `${currentPage}/${currentPdf.numPages}`;
+        await renderPdfPage(currentPage);
+    }
+
+    function showProgress(show){
+        progressArea.classList.toggle('show', !!show);
+        if(!show){
+            progressBar.style.width = '0%';
+            progressBar.textContent = '0%';
+        }
+    }
+    function setProgress(pct, label){
+        const safe = Math.max(0, Math.min(100, pct));
+        progressBar.style.width = safe + '%';
+        progressBar.textContent = label || (Math.round(safe) + '%');
+    }
+
+    function simulateProgress(duration=3500){
+        let progress = 0;
+        const step = 100 / (duration / 100);
+        const t = setInterval(() => {
+            progress += step;
+            if(progress >= 95){
+                setProgress(95, '처리 중...');
+                clearInterval(t);
+            }else{
+                setProgress(progress, Math.round(progress) + '%');
+            }
+        }, 100);
+        return t;
+    }
+
+    async function processFile(){
+        const file = fileInput.files[0];
+        if(!file){
+            toast('파일을 먼저 선택해주세요.', 'error');
+            return;
+        }
+
+        btnProcess.disabled = true;
+        showProgress(true);
+        resultText.value = '처리 중입니다...';
+        setProgress(0, '0%');
+
+        try{
+            if(file.type === 'application/pdf') {
+                await processPdf();
+            } else {
+                await processImage(file);
+            }
+        }catch(err){
+            console.error(err);
+            resultText.value = '오류가 발생했습니다: ' + (err.message || err);
+            toast('처리 중 오류가 발생했습니다.', 'error');
+        }finally{
+            btnProcess.disabled = false;
+            showProgress(false);
+        }
+    }
+
+    async function processPdf(){
+        if(!currentPdf) throw new Error('PDF가 로드되지 않았습니다.');
+
+        let fullText = '';
+        const totalPages = currentPdf.numPages;
+
+        for(let i=1;i<=totalPages;i++){
+            const page = await currentPdf.getPage(i);
+            const viewport = page.getViewport({ scale: 2.0 });
+
+            const canvas = document.createElement('canvas');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+
+            await page.render({
+                canvasContext: canvas.getContext('2d'),
+                viewport
+            }).promise;
+
+            const base = ((i - 1) / totalPages) * 100;
+            setProgress(base, `페이지 ${i}/${totalPages} 처리 중...`);
+
+            const text = await performOcr(canvas);
+            fullText += `[페이지 ${i}]\n${text}\n\n`;
+
+            const done = (i / totalPages) * 100;
+            setProgress(done, Math.round(done) + '%');
+        }
+
+        resultText.value = fullText.trim();
+        toast('PDF 텍스트 추출이 완료되었습니다.', 'success');
+    }
+
+    function preprocessImage(canvas){
+        const ctx = canvas.getContext('2d');
+        const imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
+        const d = imageData.data;
+
+        for(let i=0;i<d.length;i+=4){
+            const gray = d[i]*0.299 + d[i+1]*0.587 + d[i+2]*0.114;
+            const thr = gray > 140 ? 255 : 0;
+            d[i]=thr; d[i+1]=thr; d[i+2]=thr;
+        }
+        ctx.putImageData(imageData,0,0);
+        return canvas;
+    }
+
+    async function processImage(file){
+        const timer = simulateProgress(4000);
+
+        const worker = await Tesseract.createWorker('kor+eng');
+        await worker.setParameters({
+            tessedit_ocr_engine_mode: Tesseract.OEM.LSTM_ONLY,
+            tessedit_pageseg_mode: Tesseract.PSM.AUTO,
+            preserve_interword_spaces: '1',
+            tessedit_char_whitelist: '',
+        });
+
+        const { data: { text } } = await worker.recognize(file);
+        await worker.terminate();
+
+        clearInterval(timer);
+        setProgress(100, '100%');
+
+        resultText.value = (text || '').trim();
+        toast('이미지 텍스트 추출이 완료되었습니다.', 'success');
+    }
+
+    async function performOcr(canvas){
+        const processed = preprocessImage(canvas);
+
+        const worker = await Tesseract.createWorker('kor+eng');
+        await worker.setParameters({
+            tessedit_ocr_engine_mode: Tesseract.OEM.LSTM_ONLY,
+            tessedit_pageseg_mode: Tesseract.PSM.AUTO,
+            preserve_interword_spaces: '1',
+            tessedit_char_whitelist: '',
+        });
+
+        const { data: { text } } = await worker.recognize(processed);
+        await worker.terminate();
+        return (text || '').trim();
+    }
+
+    async function copyText(){
+        if(!resultText.value){
+            toast('복사할 텍스트가 없습니다.', 'error');
+            return;
+        }
+
+        try{
+            if(navigator.clipboard && window.isSecureContext){
+                await navigator.clipboard.writeText(resultText.value);
+            }else{
+                resultText.focus();
+                resultText.select();
+                document.execCommand('copy');
+            }
+            toast('텍스트가 클립보드에 복사되었습니다.', 'success');
+        }catch(e){
+            toast('복사 중 오류가 발생했습니다.', 'error');
+        }
+    }
+
+    // ✅ 순수 토스트
+    function toast(message, type='success'){
+        const el = document.createElement('div');
+        el.className = 'toast ' + (type === 'error' ? 'error' : 'success');
+
+        const iconText = (type === 'error') ? '!' : '✓';
+        const titleText = (type === 'error') ? '오류' : '완료';
+
+        el.innerHTML = `
+        <div class="icon">${iconText}</div>
+        <div class="content">
+          <div class="title">${titleText}</div>
+          <p class="msg"></p>
+        </div>
+        <button class="close" aria-label="닫기">×</button>
+      `;
+        el.querySelector('.msg').textContent = message;
+
+        const closeBtn = el.querySelector('.close');
+        closeBtn.addEventListener('click', () => removeToast(el));
+
+        toastWrap.appendChild(el);
+
+        // 자동 제거
+        setTimeout(() => removeToast(el), 3000);
+    }
+
+    function removeToast(el){
+        if(!el || el.classList.contains('out')) return;
+        el.classList.add('out');
+        el.addEventListener('animationend', () => el.remove(), { once:true });
+    }
+</script>
+</body>
+</html>

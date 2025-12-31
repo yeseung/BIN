@@ -1,0 +1,758 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>한글 도메인 변환기 | 퓨니코드(Punycode) 변환</title>
+    <meta name="description" content="한글 도메인을 퓨니코드(xn--)로 변환하여 URL 단축 서비스 및 모든 웹 서비스에서 정상적으로 사용하세요." />
+
+    <style>
+        :root{
+            --bg:#0b1020;
+            --panel:#111a33;
+            --panel2:#0f1730;
+            --text:#e9eefc;
+            --muted:#a7b5e6;
+            --border:rgba(255,255,255,.10);
+            --shadow:0 18px 50px rgba(0,0,0,.45);
+            --radius:18px;
+
+            --primary:#5b8cff;
+            --primary2:#3c6fff;
+            --success:#1ec997;
+            --warning:#ffd24d;
+            --danger:#ff5d7a;
+            --info:#35c7ff;
+        }
+
+        *{ box-sizing:border-box; }
+        html,body{ height:100%; }
+        body{
+            margin:0;
+            font-family: ui-sans-serif, system-ui, -apple-system, "Malgun Gothic","Apple SD Gothic Neo", sans-serif;
+            background:
+                    radial-gradient(1200px 700px at 15% 10%, rgba(91,140,255,.18), transparent 55%),
+                    radial-gradient(900px 600px at 85% 15%, rgba(30,201,151,.12), transparent 55%),
+                    radial-gradient(900px 600px at 70% 90%, rgba(255,93,122,.10), transparent 55%),
+                    var(--bg);
+            color:var(--text);
+            line-height:1.5;
+        }
+
+        a{ color:inherit; text-decoration:none; }
+        a:hover{ text-decoration:underline; }
+
+        .container{
+            width:min(980px, 92vw);
+            margin: 36px auto 60px;
+        }
+
+        .grid{
+            display:grid;
+            gap:18px;
+        }
+
+        .card{
+            background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+            border:1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow:hidden;
+        }
+
+        .card-header{
+            padding: 22px 22px 16px;
+            border-bottom:1px solid var(--border);
+            background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+        }
+
+        .title-row{
+            display:flex;
+            gap:12px;
+            align-items:center;
+        }
+
+        .h1{
+            margin:0;
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing:-0.2px;
+        }
+        .sub{
+            margin:8px 0 0;
+            color:var(--muted);
+            font-size: 13.5px;
+        }
+
+        .badge{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            padding:10px 12px;
+            border-radius: 14px;
+            border:1px solid var(--border);
+            background: rgba(53,199,255,.10);
+            color: #d9f6ff;
+            font-size: 13px;
+            margin-top: 14px;
+        }
+
+        .card-body{
+            padding: 18px 22px 22px;
+        }
+
+        label{
+            display:block;
+            font-size: 13px;
+            color: var(--muted);
+            margin: 4px 0 8px;
+        }
+
+        .input{
+            width:100%;
+            padding: 13px 14px;
+            border-radius: 14px;
+            border:1px solid var(--border);
+            background: rgba(0,0,0,.22);
+            color: var(--text);
+            outline: none;
+            transition: border-color .15s ease, transform .05s ease;
+        }
+        .input:focus{
+            border-color: rgba(91,140,255,.75);
+            box-shadow: 0 0 0 4px rgba(91,140,255,.12);
+        }
+
+        .btn-row{
+            display:flex;
+            flex-wrap:wrap;
+            gap:10px;
+            margin-top: 14px;
+        }
+
+        .btn{
+            appearance:none;
+            border:none;
+            cursor:pointer;
+            padding: 12px 14px;
+            border-radius: 14px;
+            color: white;
+            font-weight: 700;
+            letter-spacing: -0.1px;
+            display:inline-flex;
+            align-items:center;
+            gap:10px;
+            transition: transform .05s ease, filter .15s ease, opacity .15s ease;
+            user-select:none;
+        }
+        .btn:active{ transform: translateY(1px); }
+        .btn:disabled{ opacity:.55; cursor:not-allowed; }
+
+        .btn-primary{ background: linear-gradient(180deg, var(--primary), var(--primary2)); }
+        .btn-success{ background: linear-gradient(180deg, #24d9a3, var(--success)); }
+        .btn-ghost{
+            background: rgba(255,255,255,.06);
+            border:1px solid var(--border);
+            color: var(--text);
+        }
+
+        .result{
+            margin-top: 16px;
+            display:none;
+            border:1px solid var(--border);
+            border-radius: 16px;
+            padding: 14px;
+            background: rgba(30,201,151,.08);
+        }
+        .result-head{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            margin-bottom: 10px;
+        }
+        .result-label{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            font-weight: 800;
+        }
+        .result-url{
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            padding: 12px 12px;
+            background: rgba(0,0,0,.22);
+            border:1px solid var(--border);
+            border-radius: 14px;
+            word-break: break-all;
+            user-select: text;
+        }
+
+        .examples{
+            margin-top: 18px;
+            border-top:1px solid var(--border);
+            padding-top: 14px;
+        }
+        .examples h3{
+            margin: 0 0 10px;
+            font-size: 14.5px;
+            color: #dbe6ff;
+            display:flex;
+            align-items:center;
+            gap:10px;
+        }
+        .example-item{
+            border:1px solid var(--border);
+            background: rgba(255,255,255,.04);
+            border-radius: 16px;
+            padding: 12px 12px;
+            margin-top: 10px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+        .example-item strong{ color: var(--text); }
+
+        /* guide */
+        .guide{
+            margin-top: 18px;
+            padding: 0;
+        }
+        .section{
+            padding: 18px 22px 22px;
+            border-top:1px solid var(--border);
+            background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+        }
+        .summary{
+            border:1px solid var(--border);
+            border-radius: 16px;
+            padding: 14px;
+            background: rgba(255,210,77,.09);
+        }
+        .summary h4{
+            margin:0 0 8px;
+            font-size: 14.5px;
+            display:flex;
+            gap:10px;
+            align-items:center;
+        }
+        .summary p{ margin:0; color: #fff3cc; }
+
+        .section h2{
+            margin: 0 0 10px;
+            font-size: 16px;
+            display:flex;
+            align-items:center;
+            gap:10px;
+        }
+        .section p{
+            margin:0 0 12px;
+            color: var(--muted);
+            font-size: 13.5px;
+        }
+
+        .info-box{
+            border:1px solid var(--border);
+            border-radius: 16px;
+            padding: 12px 12px;
+            background: rgba(91,140,255,.10);
+        }
+        .info-box h4{
+            margin:0 0 8px;
+            font-size: 13.5px;
+            color: #dbe6ff;
+        }
+        .info-box ul{
+            margin: 0;
+            padding-left: 18px;
+            color: #d7e1ff;
+            font-size: 13px;
+        }
+        .split{
+            display:grid;
+            gap:12px;
+            grid-template-columns: 1fr;
+        }
+        @media (min-width: 840px){
+            .split{ grid-template-columns: 1fr 1fr; }
+        }
+        .box{
+            border:1px solid var(--border);
+            border-radius: 16px;
+            padding: 12px;
+            background: rgba(255,255,255,.04);
+        }
+        .box h4{
+            margin:0 0 8px;
+            font-size: 13.5px;
+            display:flex;
+            align-items:center;
+            gap:10px;
+        }
+        .box ul{
+            margin:0;
+            padding-left: 18px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        /* accordion */
+        details{
+            border:1px solid var(--border);
+            border-radius: 16px;
+            background: rgba(255,255,255,.04);
+            padding: 0;
+            overflow:hidden;
+            margin-top: 10px;
+        }
+        summary{
+            list-style:none;
+            cursor:pointer;
+            padding: 12px 12px;
+            font-weight: 800;
+            color: var(--text);
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            user-select:none;
+        }
+        summary::-webkit-details-marker{ display:none; }
+        .details-body{
+            padding: 0 12px 12px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+        .chev{
+            transition: transform .15s ease;
+            opacity:.9;
+        }
+        details[open] .chev{ transform: rotate(180deg); }
+
+        /* footer */
+        .footer{
+            margin-top: 16px;
+            color: rgba(255,255,255,.55);
+            font-size: 12.5px;
+            text-align:center;
+        }
+
+        /* tiny icon */
+        .ico{
+            width:18px; height:18px; flex: 0 0 auto;
+            opacity:.95;
+        }
+        .ico.big{ width:20px; height:20px; }
+    </style>
+</head>
+
+<body>
+<main class="container">
+    <section class="card">
+        <header class="card-header">
+            <div class="title-row">
+                <!-- translate icon -->
+                <svg class="ico big" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M4 5h10M9 5v2c0 4-3 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M7 12c1.5 2.5 3.8 4.5 7 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M14 19l3-8 3 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M16 16h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <h1 class="h1">한글 도메인 변환기</h1>
+            </div>
+            <p class="sub">한글 도메인을 퓨니코드(xn--)로 변환하여 URL 단축 서비스에서도 정상적으로 사용하세요.</p>
+
+            <div class="badge" role="note" aria-label="안내">
+                <svg class="ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M12 22a10 10 0 1 0-10-10 10 10 0 0 0 10 10Z" stroke="currentColor" stroke-width="2"/>
+                    <path d="M12 10v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M12 7h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                </svg>
+                <span><strong>안내:</strong> 한글 도메인은 퓨니코드로 변환해야 일부 서비스(API/단축 URL)에서 오류 없이 처리됩니다.</span>
+            </div>
+        </header>
+
+        <div class="card-body">
+            <label for="koreanUrl">
+                한글이 포함된 URL을 입력하세요 (예: https://화환수거.com 또는 화환수거.com)
+            </label>
+            <input
+                    class="input"
+                    type="text"
+                    id="koreanUrl"
+                    inputmode="url"
+                    autocomplete="off"
+                    spellcheck="false"
+                    placeholder="예: https://화환수거.com 또는 화환수거.com"
+            />
+
+            <div class="btn-row">
+                <button class="btn btn-primary" type="button" id="btnConvert">
+                    <svg class="ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M21 12a9 9 0 1 1-2.64-6.36" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M21 4v6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    퓨니코드로 변환하기
+                </button>
+
+                <button class="btn btn-ghost" type="button" id="btnClear" title="입력/결과 지우기">
+                    <svg class="ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M8 6V4h8v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M7 6l1 16h8l1-16" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                    </svg>
+                    지우기
+                </button>
+            </div>
+
+            <!-- result -->
+            <section class="result" id="resultSection" aria-live="polite">
+                <div class="result-head">
+                    <div class="result-label">
+                        <svg class="ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        변환된 URL (퓨니코드)
+                    </div>
+                </div>
+
+                <div class="result-url" id="resultUrl"></div>
+
+                <div class="btn-row" style="margin-top:12px;">
+                    <button class="btn btn-success" type="button" id="btnCopy">
+                        <svg class="ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M9 9h10v12H9z" stroke="currentColor" stroke-width="2"/>
+                            <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        복사하기
+                    </button>
+
+                    <button class="btn btn-primary" type="button" id="btnUrlKr">
+                        <svg class="ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M7 17 17 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M9 7h8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        URL.KR에서 단축하기
+                    </button>
+                </div>
+            </section>
+
+            <!-- examples -->
+            <div class="examples">
+                <h3>
+                    <svg class="ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M12 2a7 7 0 0 0-4 12.75V19a1 1 0 0 0 1.45.9L12 18l2.55 1.9A1 1 0 0 0 16 19v-4.25A7 7 0 0 0 12 2Z" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    변환 예시
+                </h3>
+
+                <div class="example-item">
+                    <div><strong>입력:</strong> <a href="https://화환수거.com" target="_blank" rel="noopener noreferrer">https://화환수거.com</a></div>
+                    <div><strong>변환:</strong> https://xn--9j2b23r56ab8j.com</div>
+                </div>
+
+                <div class="example-item">
+                    <div><strong>입력:</strong> <a href="https://웨딩박람회.info" target="_blank" rel="noopener noreferrer">https://웨딩박람회.info</a></div>
+                    <div><strong>변환:</strong> https://xn--o01b88br3fw4nd6s.info</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- guide -->
+        <div class="guide">
+            <div class="section">
+                <div class="summary">
+                    <h4>
+                        <svg class="ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M12 2l2.5 6.8H22l-5.8 4.2L18.4 22 12 17.8 5.6 22l2.2-8.8L2 8.8h7.5L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                        </svg>
+                        1줄 요약
+                    </h4>
+                    <p class="lead">한글 도메인을 퓨니코드로 변환하면 대부분의 웹 서비스에서 호환성이 확보되고, URL 단축 서비스 이용이 쉬워집니다.</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>
+                    <svg class="ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M12 18h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                        <path d="M10 8a2 2 0 1 1 4 0c0 2-2 2-2 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M12 22a10 10 0 1 0-10-10 10 10 0 0 0 10 10Z" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    퓨니코드란 무엇인가요?
+                </h2>
+                <p><strong>퓨니코드(Punycode)</strong>는 유니코드 문자를 ASCII로 표현하기 위한 방식입니다. 브라우저/서비스가 한글 같은 비라틴 문자를 직접 처리하지 못할 때, <strong>xn--</strong> 형태로 안전하게 전달할 수 있게 해줍니다.</p>
+
+                <div class="info-box">
+                    <h4>변환 원리</h4>
+                    <ul>
+                        <li><strong>입력:</strong> 화환수거.com</li>
+                        <li><strong>변환:</strong> xn--9j2b23r56ab8j.com</li>
+                        <li><strong>결과:</strong> 동일한 웹사이트지만 호환성은 더 높음</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>
+                    <svg class="ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M12 15a3 3 0 1 0-3-3 3 3 0 0 0 3 3Z" stroke="currentColor" stroke-width="2"/>
+                        <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .31 1.7 1.7 0 0 0-.7 1.55V21a2 2 0 0 1-4 0v-.14A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.31-1 1.7 1.7 0 0 0-1.55-.7H2a2 2 0 0 1 0-4h.14A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.7 1.7 0 0 0 8.6 4.6a1.7 1.7 0 0 0 1-.31A1.7 1.7 0 0 0 10.3 2.74V2a2 2 0 0 1 4 0v.14A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.7 1.7 0 0 0 19.4 8.6a1.7 1.7 0 0 0 .31 1 1.7 1.7 0 0 0 1.55.7H22a2 2 0 0 1 0 4h-.14a1.7 1.7 0 0 0-1.55.7 1.7 1.7 0 0 0-.31 1Z"
+                              stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" opacity=".75"/>
+                    </svg>
+                    왜 변환이 필요한가요?
+                </h2>
+                <p><strong>많은 서비스가 ASCII(영문/숫자/기호) 중심으로 URL을 처리</strong>하기 때문에, 한글 도메인은 변환하지 않으면 깨지거나 오류가 날 수 있습니다.</p>
+
+                <div class="split">
+                    <div class="box">
+                        <h4>
+                <span style="display:inline-flex;align-items:center;gap:10px;color:#ffd2d8;">
+                  <svg class="ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                  변환 전 문제점
+                </span>
+                        </h4>
+                        <ul>
+                            <li>URL 단축 서비스 이용 불가</li>
+                            <li>일부 브라우저/앱에서 링크 깨짐</li>
+                            <li>메일/메신저 공유 시 호환성 문제</li>
+                            <li>API 연동 시 인코딩 문제</li>
+                        </ul>
+                    </div>
+
+                    <div class="box">
+                        <h4>
+                <span style="display:inline-flex;align-items:center;gap:10px;color:#c9fff0;">
+                  <svg class="ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  변환 후 해결
+                </span>
+                        </h4>
+                        <ul>
+                            <li>대부분 서비스에서 안정적으로 동작</li>
+                            <li>링크 공유 호환성 증가</li>
+                            <li>개발/서버/도구 연동 편해짐</li>
+                            <li>깨짐/오류 확률 감소</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>
+                    <svg class="ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M9 18h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M10 22h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M12 2a7 7 0 0 0-4 12c.2.2.3.5.3.8V16h8v-1.2c0-.3.1-.6.3-.8A7 7 0 0 0 12 2Z" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    자주 묻는 질문
+                </h2>
+
+                <details open>
+                    <summary>
+                        퓨니코드 변환은 무료인가요?
+                        <svg class="ico chev" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </summary>
+                    <div class="details-body">
+                        <strong>네, 완전히 무료입니다.</strong> 이 페이지는 브라우저에서만 변환하며 제한 없이 사용 가능합니다.
+                    </div>
+                </details>
+
+                <details>
+                    <summary>
+                        모든 웹사이트에서 동작하나요?
+                        <svg class="ico chev" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </summary>
+                    <div class="details-body">
+                        대부분의 환경에서 호환성이 높아집니다. 단, 서비스마다 정책이 달라 <strong>URL 단축</strong> 등 일부 기능은 서비스 정책에 따라 제한될 수 있습니다.
+                    </div>
+                </details>
+
+                <details>
+                    <summary>
+                        변환 과정에서 데이터가 저장되나요?
+                        <svg class="ico chev" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </summary>
+                    <div class="details-body">
+                        아니요. 변환은 <strong>클라이언트(브라우저)에서만</strong> 수행되며 서버로 전송하거나 저장하지 않습니다.
+                    </div>
+                </details>
+
+            </div>
+        </div>
+    </section>
+
+    <div class="footer">© Punycode Converter · Pure CSS + Vanilla JS</div>
+</main>
+
+<script>
+    // =========================
+    // DOM
+    // =========================
+    const elInput = document.getElementById('koreanUrl');
+    const elResultSection = document.getElementById('resultSection');
+    const elResultUrl = document.getElementById('resultUrl');
+
+    const btnConvert = document.getElementById('btnConvert');
+    const btnCopy = document.getElementById('btnCopy');
+    const btnUrlKr = document.getElementById('btnUrlKr');
+    const btnClear = document.getElementById('btnClear');
+
+    // =========================
+    // Helpers
+    // =========================
+    function hasKorean(s){
+        return /[\u1100-\u11FF\u3130-\u318F\uAC00-\uD7A3]/.test(s);
+    }
+
+    // 브라우저의 URL/IDN 처리 기능을 최대 활용해 ASCII(hostname) 얻기
+    // - temp URL을 만들면, 브라우저가 host를 punycode(xn--)로 정규화해주는 경우가 많음
+    function toAsciiHost(label){
+        // label: "화환수거" 같은 단일 라벨 또는 이미 ascii 라벨
+        if (!hasKorean(label)) return label;
+
+        try {
+            // 임시로 label.com 을 URL로 만들면, 브라우저가 hostname을 xn-- 로 바꿔주는 경우가 많음
+            const t = new URL('https://' + label + '.com');
+            const h = t.hostname; // 예: xn--xxxx.com
+            return h.replace(/\.com$/i, '');
+        } catch(e){
+            // 아주 구형/예외 환경 대비: encodeURIComponent 기반 폴백(완전한 punycode는 아님)
+            // 그래도 "깨짐 방지" 목적에 최소한 도움
+            return 'xn--' + encodeURIComponent(label).replace(/%/g,'').toLowerCase();
+        }
+    }
+
+    function normalizeUrl(raw){
+        let url = raw.trim();
+        if (!url) throw new Error('empty');
+        if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+        return url;
+    }
+
+    function convertToPunycode(){
+        const raw = elInput.value;
+        if (!raw.trim()){
+            alert('URL을 입력해주세요.');
+            elInput.focus();
+            return;
+        }
+
+        try{
+            const url = normalizeUrl(raw);
+            const u = new URL(url);
+
+            // host 라벨별 변환 (foo.화환수거.com 같은 케이스도 대응)
+            const parts = u.hostname.split('.');
+            const asciiParts = parts.map(p => toAsciiHost(p));
+            u.hostname = asciiParts.join('.');
+
+            const converted = u.toString();
+            elResultUrl.textContent = converted;
+            elResultSection.style.display = 'block';
+            elResultSection.scrollIntoView({ behavior:'smooth', block:'start' });
+
+        } catch(e){
+            console.error(e);
+            alert('올바른 URL 형식이 아닙니다. 다시 확인해주세요.');
+        }
+    }
+
+    async function copyResult(){
+        const text = (elResultUrl.textContent || '').trim();
+        if (!text) return;
+
+        // Clipboard API
+        try{
+            if (navigator.clipboard && window.isSecureContext){
+                await navigator.clipboard.writeText(text);
+                copySuccess();
+                return;
+            }
+        } catch(e){
+            // fallback
+        }
+
+        fallbackCopy(text);
+    }
+
+    function copySuccess(){
+        const original = btnCopy.innerHTML;
+        btnCopy.innerHTML = `
+        <svg class="ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        복사됨!
+      `;
+        btnCopy.disabled = true;
+
+        setTimeout(() => {
+            btnCopy.innerHTML = original;
+            btnCopy.disabled = false;
+        }, 1400);
+    }
+
+    function fallbackCopy(text){
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.top = '-9999px';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        ta.setSelectionRange(0, text.length);
+
+        try{
+            const ok = document.execCommand('copy');
+            if (ok) copySuccess();
+            else throw new Error('copy failed');
+        } catch(err){
+            console.error(err);
+            prompt('아래 URL을 수동으로 복사해주세요:', text);
+        } finally {
+            document.body.removeChild(ta);
+        }
+    }
+
+    function goToUrlKr(){
+        const text = (elResultUrl.textContent || '').trim();
+        if (!text){
+            alert('먼저 변환을 실행해주세요.');
+            return;
+        }
+        const link = 'https://url.kr?url=' + encodeURIComponent(text);
+        window.open(link, '_blank', 'noopener,noreferrer');
+    }
+
+    function clearAll(){
+        elInput.value = '';
+        elResultUrl.textContent = '';
+        elResultSection.style.display = 'none';
+        elInput.focus();
+    }
+
+    // =========================
+    // Events
+    // =========================
+    btnConvert.addEventListener('click', convertToPunycode);
+    btnCopy.addEventListener('click', copyResult);
+    btnUrlKr.addEventListener('click', goToUrlKr);
+    btnClear.addEventListener('click', clearAll);
+
+    elInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') convertToPunycode();
+    });
+
+    window.addEventListener('load', () => elInput.focus());
+</script>
+</body>
+</html>
