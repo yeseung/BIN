@@ -1,0 +1,2512 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>양육비 자동 계산기</title>
+
+
+    <!-- https://jsulaw.co.kr/childsupportcalc/ -->
+
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👶</text></svg>">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Zhi+Mang+Xing&display=swap" rel="stylesheet">
+
+    <style>
+        /* 폰트 정의 */
+        @font-face {
+            font-family: 'MaruBuri';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-10-21@1.0/MaruBuri-Regular.woff') format('woff');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        :root {
+            --primary-color: #1e293b;
+            --secondary-color: #334155;
+            --accent-color: #0ea5e9;
+            --success-color: #10b981;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-light: #64748b;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --border-color: #d1d5db;
+            --hover-bg: #f1f5f9;
+            --card-shadow: 0 4px 6px -1px rgba(30, 41, 59, 0.1), 0 2px 4px -1px rgba(30, 41, 59, 0.06);
+            --card-shadow-hover: 0 20px 25px -5px rgba(30, 41, 59, 0.15), 0 10px 10px -5px rgba(30, 41, 59, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'MaruBuri', -apple-system, BlinkMacSystemFont, serif;
+        }
+
+        body {
+            background: linear-gradient(to bottom, #f0f4f8 0%, #e2e8f0 100%);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* 전체 배경 패턴 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                    radial-gradient(circle at 20% 80%, rgba(14, 165, 233, 0.04) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 20%, rgba(30, 41, 59, 0.06) 0%, transparent 50%),
+                    radial-gradient(circle at 40% 40%, rgba(16, 185, 129, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Header - 템플릿 스타일 적용 */
+        .header {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid #495057;
+            padding: 0.5rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 40px;
+        }
+
+        .header-left {
+            font-size: 0.875rem;
+            color: #1e293b;
+            line-height: 1.2;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.15rem;
+            text-decoration: none;
+            transition: all 0.2s;
+            padding: 0.5rem;
+            margin: -0.5rem;
+            border-radius: 0.5rem;
+        }
+
+        .header-left:hover {
+            background: rgba(99, 102, 241, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .header-left .main-info {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .header-left strong {
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .header-left .website-info {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.7rem;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        .header-left .website-info i {
+            font-size: 0.65rem;
+        }
+
+        .browser-tip {
+            color: #475569;
+            font-size: 1rem;
+            background: transparent;
+            padding: 0.5rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.5rem;
+        }
+
+        .browser-tip:hover {
+            background: rgba(99, 102, 241, 0.08);
+            transform: rotate(72deg);
+            color: #6366f1;
+        }
+
+        /* 信 서예체 스타일 */
+        .shin-calligraphy-small {
+            font-family: 'Zhi Mang Xing', cursive !important;
+            font-size: 1.2rem;
+            font-weight: 400;
+            display: inline-block;
+            margin: 0 0.1em;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 3rem 1.5rem;
+        }
+
+        /* Page Header - 템플릿 스타일 */
+        .page-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            padding: 2rem 2rem;
+            background: var(--theme-bg-card, rgba(255, 255, 255, 0.85));
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 40px rgba(14, 165, 233, 0.08);
+            border: 1px solid #495057;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle,
+            rgba(14, 165, 233, 0.1) 0%,
+            transparent 70%);
+            animation: float 20s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(-30%, -30%) rotate(0deg); }
+            50% { transform: translate(-20%, -20%) rotate(180deg); }
+        }
+
+        .page-title {
+            font-size: 2.125rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.875rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .page-icon {
+            font-size: 2.125rem;
+            color: var(--accent-color);
+            opacity: 0.9;
+        }
+
+        .page-description {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+            position: relative;
+            z-index: 1;
+            font-weight: 500;
+        }
+
+        /* Form Styles - 템플릿 박스 스타일 */
+        .calculator-form {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid #495057;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid #f3f4f6;
+            position: relative;
+        }
+
+        .form-section:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.08) 0%, rgba(14, 165, 233, 0.05) 100%);
+            padding: 0.875rem 1.25rem;
+            border-radius: 0.625rem;
+            border-left: 3px solid var(--accent-color);
+        }
+
+        .section-title i {
+            font-size: 1.25rem;
+            color: var(--accent-color);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.875rem 1.25rem;
+            border: 2px solid #94a3b8;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            background: #fafbfc;
+            font-weight: 500;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.15);
+            background: white;
+        }
+
+        .form-control::placeholder {
+            color: #cbd5e1;
+            font-weight: 400;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .form-text {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+
+        /* Child Info Item - 템플릿 박스 스타일 적용 */
+        .child-info-item {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #495057;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .child-info-item h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1.25rem;
+            color: var(--primary-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        .child-info-item h3 span {
+            display: flex;
+            align-items: center;
+        }
+
+        .child-info-item h3 i {
+            color: var(--accent-color);
+            font-size: 1.25rem;
+        }
+
+        /* Date Picker */
+        .date-picker-container {
+            margin-top: 0.5rem;
+        }
+
+        .date-step-container {
+            margin-bottom: 1.5rem;
+        }
+
+        .date-dropdowns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .dropdown-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dropdown-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .date-select {
+            padding: 0.75rem 1rem;
+            border: 2px solid #94a3b8;
+            border-radius: 0.5rem;
+            font-size: 0.95rem;
+            background: #fafbfc;
+            cursor: pointer;
+        }
+
+        .date-select:focus:not(:disabled) {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+            background: white;
+        }
+
+        .date-select:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #f1f5f9;
+        }
+
+        .date-day-container {
+            margin-bottom: 1.5rem;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .day-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .day-btn {
+            width: 100%;
+            min-height: 44px;
+            padding: 0.75rem 0.5rem;
+            border: 2px solid #cbd5e1;
+            border-radius: 0.5rem;
+            background: white;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .day-btn:hover:not(:disabled) {
+            border-color: var(--accent-color);
+            background: #f0f9ff;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .day-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            background: #f8fafc;
+            color: #cbd5e1;
+        }
+
+        .day-btn.selected {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            color: white;
+            font-weight: 600;
+        }
+
+        .day-btn.today {
+            border-color: #fbbf24;
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .date-result {
+            background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+            border: 1px solid var(--accent-color);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-top: 1rem;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .selected-date {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            color: var(--accent-color);
+            margin-bottom: 0.75rem;
+        }
+
+        .selected-date i {
+            font-size: 1.1rem;
+        }
+
+        .age-display {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .age-info {
+            text-align: center;
+            padding: 0.75rem;
+            background: white;
+            border-radius: 0.5rem;
+            border: 1px solid #e0e7ff;
+        }
+
+        .age-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        .age-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .age-value.warning {
+            color: #dc2626;
+        }
+
+        .payment-period {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 0.75rem;
+            background: #fef3c7;
+            border-radius: 0.5rem;
+            border: 1px solid #fbbf24;
+            margin-top: 0.5rem;
+        }
+
+        .payment-period .period-label {
+            font-size: 0.85rem;
+            color: #92400e;
+            margin-bottom: 0.25rem;
+        }
+
+        .payment-period .period-value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #92400e;
+        }
+
+        /* Calculate Button */
+        .calculate-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #0ea5e9 0%, #1e293b 100%);
+            color: white;
+            border: none;
+            border-radius: 0.625rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.625rem;
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .calculate-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .calculate-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(14, 165, 233, 0.4);
+        }
+
+        .calculate-btn:hover:not(:disabled)::before {
+            left: 100%;
+        }
+
+        .calculate-btn:active:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+        }
+
+        .calculate-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .calculate-btn i {
+            font-size: 1.25rem;
+        }
+
+        /* Results Section - 템플릿 스타일 */
+        .results-section {
+            display: none;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        .result-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            padding: 1.75rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #495057;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .result-icon {
+            font-size: 2rem;
+            color: var(--accent-color);
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .result-content {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: var(--bg-secondary);
+            border-radius: 0.5rem;
+        }
+
+        .result-label {
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .result-value {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .result-highlight {
+            background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+            border: 1px solid var(--accent-color);
+            padding: 1rem;
+        }
+
+        .result-highlight .result-value {
+            font-size: 1.25rem;
+            color: var(--accent-color);
+        }
+
+        .result-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .summary-item {
+            text-align: center;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .summary-label {
+            display: block;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-value {
+            display: block;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .calculation-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .calculation-table th,
+        .calculation-table td {
+            padding: 1rem;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .calculation-table th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .calculation-table td {
+            background: white;
+        }
+
+        .calculation-table .total-row {
+            background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+            font-weight: 700;
+        }
+
+        .period-info {
+            text-align: center;
+            margin: 1.5rem 0;
+            padding: 1rem;
+            background: #fef3c7;
+            border-radius: 0.5rem;
+            border: 1px solid #fbbf24;
+        }
+
+        .period-info strong {
+            color: #92400e;
+        }
+
+        /* Calculation Notice */
+        .calculation-notice {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.05) 0%, rgba(14, 165, 233, 0.08) 100%);
+            border: 1px solid rgba(14, 165, 233, 0.2);
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            margin-top: 1.5rem;
+        }
+
+        .notice-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 0.95rem;
+        }
+
+        .notice-header i {
+            font-size: 1.1rem;
+            color: var(--accent-color);
+        }
+
+        .notice-content {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .notice-content p {
+            margin: 0 0 0.5rem 0;
+            font-size: 0.9rem;
+        }
+
+        .notice-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        .notice-content strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            flex: 1;
+            min-width: 150px;
+            padding: 0.75rem 1.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .action-btn:hover {
+            background: var(--hover-bg);
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+            transform: translateY(-1px);
+        }
+
+        .action-btn.primary {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .action-btn.primary:hover {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        /* Footer - 템플릿 스타일 */
+        .footer {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid #495057;
+            padding: 1.25rem 0;
+            margin-top: auto;
+            position: relative;
+        }
+
+        .footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg,
+            transparent,
+            var(--accent-color),
+            var(--primary-color),
+            transparent);
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-size: 1rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        .footer-copyright {
+            color: var(--text-light);
+            font-size: 0.75rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            line-height: 1.6;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* 홈 화면 추가 안내 모달 */
+        .home-guide-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .home-guide-modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .home-guide-content {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            padding-top: 60px;
+            max-width: 380px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            position: relative;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 링크 복사 버튼 */
+        .service-link-copy {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            right: 50px;
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            border: 1px solid #0284c7;
+            border-radius: 8px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 12px;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(14, 165, 233, 0.2);
+        }
+
+        .service-link-copy:hover {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            border-color: #0369a1;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 6px rgba(14, 165, 233, 0.3);
+        }
+
+        .service-link-copy:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 3px rgba(14, 165, 233, 0.2);
+        }
+
+        .service-link-copy.copied {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border-color: #059669;
+            box-shadow: 0 2px 5px rgba(16, 185, 129, 0.3);
+        }
+
+        .service-link-copy i {
+            font-size: 14px;
+        }
+
+        .guide-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .guide-header h3 {
+            font-size: 20px;
+            color: var(--primary-color);
+            margin-bottom: 6px;
+            font-weight: 700;
+            padding: 0 30px;
+            line-height: 1.4;
+            text-align: center;
+            display: block;
+        }
+
+        .guide-header p {
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .guide-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+            transition: all 0.2s;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            z-index: 1;
+        }
+
+        .guide-close:hover {
+            background: var(--hover-bg);
+            color: var(--primary-color);
+        }
+
+        .browser-section {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .browser-section h4 {
+            font-size: 14px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .browser-icon {
+            width: 18px;
+            height: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .samsung-icon {
+            background: #1428A0;
+            color: white;
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .chrome-icon {
+            font-size: 16px;
+        }
+
+        .safari-icon {
+            color: #007AFF;
+            font-size: 16px;
+        }
+
+        .guide-steps {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .guide-steps li {
+            font-size: 12px;
+            color: var(--text-secondary);
+            padding: 3px 0;
+            padding-left: 16px;
+            position: relative;
+        }
+
+        .guide-steps li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 10px;
+            width: 3px;
+            height: 3px;
+            background: var(--accent-color);
+            border-radius: 50%;
+        }
+
+        .guide-footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .guide-benefit {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            color: var(--success-color);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* 모바일 대응 */
+        @media (max-width: 599px) {
+            .home-guide-content {
+                padding: 15px;
+                padding-top: 50px;
+            }
+
+            .service-link-copy {
+                font-size: 11px;
+                padding: 6px 10px;
+                top: 10px;
+                left: 15px;
+                right: 45px;
+                gap: 6px;
+            }
+
+            .guide-header h3 {
+                font-size: 18px;
+                padding: 0 20px;
+            }
+
+            .browser-section {
+                padding: 10px;
+                margin-bottom: 12px;
+            }
+
+            .browser-section h4 {
+                font-size: 13px;
+            }
+
+            .guide-steps li {
+                font-size: 11px;
+                padding-left: 14px;
+            }
+
+            .guide-footer {
+                margin-top: 15px;
+                padding-top: 12px;
+            }
+
+            .guide-benefit {
+                font-size: 12px;
+            }
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            body {
+                background-image: none;
+                background-color: var(--bg-secondary);
+            }
+
+            .header,
+            .footer,
+            .home-guide-content {
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+            }
+
+            .page-header,
+            .calculator-form {
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            .main-content {
+                padding: 1rem 0.75rem;
+            }
+
+            .page-header {
+                margin-bottom: 1.5rem;
+                padding: 2rem 1rem;
+            }
+
+            .page-title {
+                font-size: 2rem;
+                flex-direction: row;
+                gap: 0.75rem;
+            }
+
+            .page-icon {
+                font-size: 2rem;
+            }
+
+            .page-description {
+                font-size: 1rem;
+                padding: 0 1rem;
+            }
+
+            .calculator-form {
+                padding: 1.5rem;
+            }
+
+            /* 중요: 모바일에서 result-card 패딩 줄이기 */
+            .result-card {
+                padding: 1rem;
+                overflow: hidden !important; /* 강제 적용 */
+            }
+
+            .result-content {
+                overflow: hidden !important; /* 강제 적용 */
+                width: 100%; /* 너비 제한 */
+            }
+
+            /* 표를 담는 div도 명확히 제어 */
+            .result-content > div {
+                overflow: hidden;
+                width: 100%;
+            }
+
+            .day-grid {
+                grid-template-columns: repeat(7, 1fr);
+                gap: 0.25rem;
+            }
+
+            .day-btn {
+                min-height: 40px;
+                padding: 0.5rem 0.25rem;
+                font-size: 0.85rem;
+            }
+
+            .age-display {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+            }
+
+            .date-dropdowns {
+                gap: 0.75rem;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .footer {
+                padding: 1rem 0;
+            }
+
+            .footer-links {
+                gap: 1.5rem;
+                font-size: 0.875rem;
+            }
+
+            .home-guide-content {
+                padding: 25px 20px;
+            }
+
+            .guide-header h3 {
+                font-size: 20px;
+            }
+
+            .browser-section {
+                padding: 12px;
+            }
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+
+            .header,
+            .browser-tip,
+            .footer-links,
+            .action-buttons,
+            .calculator-form {
+                display: none !important;
+            }
+
+            .results-section {
+                display: block !important;
+            }
+
+            .footer-copyright {
+                border-top: none;
+                padding-top: 1rem;
+                margin-top: 1rem;
+            }
+        }
+    </style>
+
+    <script>
+        // 브라우저 팁 표시 함수
+        function showBrowserTip() {
+            document.getElementById('homeGuideModal').classList.add('show');
+        }
+
+        // 홈 화면 추가 안내 모달 닫기
+        function closeHomeGuide() {
+            document.getElementById('homeGuideModal').classList.remove('show');
+        }
+
+        // 서비스 링크 복사 함수
+        function copyServiceLink() {
+            const serviceUrl = 'https://lawfirm-shin-childsupportcalc.netlify.app/';
+            const copyButton = document.querySelector('.service-link-copy');
+            const originalHTML = copyButton.innerHTML;
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(serviceUrl).then(() => {
+                    copyButton.classList.add('copied');
+                    copyButton.innerHTML = '<i class="fas fa-check"></i><span>복사 완료!</span>';
+
+                    setTimeout(() => {
+                        copyButton.classList.remove('copied');
+                        copyButton.innerHTML = originalHTML;
+                    }, 2000);
+                }).catch(() => {
+                    fallbackCopyService(serviceUrl);
+                });
+            } else {
+                fallbackCopyService(serviceUrl);
+            }
+        }
+
+        function fallbackCopyService(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+
+            try {
+                document.execCommand('copy');
+                const copyButton = document.querySelector('.service-link-copy');
+                const originalHTML = copyButton.innerHTML;
+
+                copyButton.classList.add('copied');
+                copyButton.innerHTML = '<i class="fas fa-check"></i><span>복사 완료!</span>';
+
+                setTimeout(() => {
+                    copyButton.classList.remove('copied');
+                    copyButton.innerHTML = originalHTML;
+                }, 2000);
+            } catch (err) {
+                alert('양육비 자동 계산기 주소: ' + text);
+            }
+
+            document.body.removeChild(textarea);
+        }
+
+        // 홈 포털로 이동 (기기별 분기)
+        function goToPortal() {
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+
+            if (isMobile) {
+                window.open('#', '_blank');
+            } else {
+                window.location.href = '#';
+            }
+        }
+    </script>
+</head>
+<body>
+
+
+<!-- Main Content -->
+<main class="main-content">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-child page-icon"></i>
+            양육비 자동 계산기
+        </h1>
+        <p class="page-description">
+            2021년 서울가정법원 양육비 산정기준표를 기준으로 양육비를 자동 계산합니다.<br>
+            양육자녀 2인 가구 기준 자녀 1인당 평균양육비를 적용합니다.
+        </p>
+    </div>
+
+    <!-- Calculator Form -->
+    <form class="calculator-form" id="calculatorForm">
+        <!-- 부모 정보 섹션 -->
+        <div class="form-section">
+            <h2 class="section-title">
+                <i class="fas fa-users"></i>
+                부모 정보
+            </h2>
+
+            <div class="form-group">
+                <label class="form-label">부모 월 평균 세전 소득</label>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">양육자 월 소득 (세전)</label>
+                        <input type="text" class="form-control income-input" id="custodialIncome"
+                               placeholder="예: 1,800,000" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">비양육자 월 소득 (세전)</label>
+                        <input type="text" class="form-control income-input" id="nonCustodialIncome"
+                               placeholder="예: 2,700,000" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 자녀 정보 섹션 -->
+        <div class="form-section">
+            <h2 class="section-title">
+                <i class="fas fa-baby"></i>
+                자녀 정보
+            </h2>
+
+            <div class="child-info-item">
+                <h3>
+                        <span>
+                            <i class="fas fa-child" style="margin-right: 0.5rem;"></i>
+                            자녀 정보
+                        </span>
+                </h3>
+                <div class="form-group">
+                    <label class="form-label">자녀 생년월일</label>
+
+                    <!-- 날짜 선택 인터페이스 -->
+                    <div class="date-picker-container">
+                        <!-- 1단계: 연도/월 선택 -->
+                        <div class="date-step-container">
+                            <div class="date-dropdowns">
+                                <div class="dropdown-group">
+                                    <label for="birthYear" class="dropdown-label">연도</label>
+                                    <select id="birthYear" class="form-control date-select">
+                                        <option value="">연도 선택</option>
+                                    </select>
+                                </div>
+                                <div class="dropdown-group">
+                                    <label for="birthMonth" class="dropdown-label">월</label>
+                                    <select id="birthMonth" class="form-control date-select" disabled>
+                                        <option value="">월 선택</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2단계: 일자 선택 -->
+                        <div class="date-day-container" id="dayContainer" style="display: none;">
+                            <label class="dropdown-label">일자 선택</label>
+                            <div class="day-grid" id="dayGrid">
+                                <!-- 동적으로 생성됨 -->
+                            </div>
+                        </div>
+
+                        <!-- 선택된 날짜 표시 및 나이 계산 -->
+                        <div class="date-result" id="dateResult" style="display: none;">
+                            <div class="selected-date">
+                                <i class="fas fa-calendar-check"></i>
+                                <span id="selectedDateText"></span>
+                            </div>
+                            <div class="age-display" id="ageDisplay">
+                                <!-- 나이 정보 표시 -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 실제 폼 제출용 hidden input -->
+                    <input type="hidden" id="childBirthdate" name="childBirthdate" required>
+
+                    <small class="form-text text-muted">양육비는 만 19세가 되는 날까지 계산됩니다</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- 계산 버튼 -->
+        <button type="submit" class="calculate-btn" id="calculateBtn">
+            <i class="fas fa-calculator"></i>
+            양육비 계산하기
+        </button>
+    </form>
+
+    <!-- Results Section -->
+    <div class="results-section" id="resultsSection">
+        <!-- 계산 결과 카드 -->
+        <div class="result-card">
+            <div class="result-header">
+                <i class="fas fa-calculator result-icon"></i>
+                <h2 class="result-title">양육비 산정 결과</h2>
+            </div>
+
+            <div class="result-content">
+                <div class="result-item result-highlight">
+                    <span class="result-label">월 표준양육비</span>
+                    <span class="result-value" id="monthlyAmount">0원</span>
+                </div>
+                <div class="result-summary">
+                    <div class="summary-item">
+                        <span class="summary-label">양육자 월 부담액</span>
+                        <span class="summary-value" id="custodialMonthly">0원</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">비양육자 월 부담액</span>
+                        <span class="summary-value" id="nonCustodialMonthly">0원</span>
+                    </div>
+                </div>
+
+                <!-- 산정기준 안내 -->
+                <div class="calculation-notice">
+                    <div class="notice-header">
+                        <i class="fas fa-info-circle"></i>
+                        <span>산정 기준 및 주의사항</span>
+                    </div>
+                    <div class="notice-content">
+                        <p><strong>기준:</strong> 양육자녀 2인 가구 기준 자녀 1인당 평균양육비</p>
+                        <p><strong>조정요소:</strong> 자녀 수에 따른 증감 (1명인 경우 가산, 3명 이상인 경우 감산), 부모의 재산상황, 자녀의 거주지역, 고액의 치료비·교육비 등에 따라 조정될 수 있습니다.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 상세 내역 카드 -->
+        <div class="result-card">
+            <div class="result-header">
+                <i class="fas fa-list-alt result-icon"></i>
+                <h2 class="result-title">산정 근거 및 상세 내역</h2>
+            </div>
+
+            <div class="result-content" id="detailsContent">
+                <!-- 동적으로 생성됨 -->
+            </div>
+        </div>
+
+        <!-- 양육비 계산표 -->
+        <div class="result-card">
+            <div class="result-header">
+                <i class="fas fa-table result-icon"></i>
+                <h2 class="result-title">양육비 계산표</h2>
+            </div>
+
+            <div class="result-content" id="calculationTable">
+                <!-- 동적으로 생성됨 -->
+            </div>
+        </div>
+
+        <!-- 서울가정법원 양육비 산정기준표 -->
+        <div class="result-card">
+            <div class="result-header">
+                <i class="fas fa-gavel result-icon"></i>
+                <h2 class="result-title">2021년 서울가정법원 양육비 산정기준표</h2>
+            </div>
+
+            <div class="result-content" style="overflow: hidden; width: 100%;">
+                <p style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
+                    ※ 양육자녀 2인 가구 기준 자녀 1인당 평균양육비 (단위: 원)
+                </p>
+                <div id="standardTable" style="overflow: hidden; width: 100%; max-width: 100%;">
+                    <!-- 동적으로 생성됨 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons no-print">
+            <button class="action-btn primary" onclick="window.print()">
+                <i class="fas fa-print"></i>
+                인쇄하기
+            </button>
+            <button class="action-btn" onclick="copyResults()">
+                <i class="fas fa-copy"></i>
+                결과 복사
+            </button>
+            <button class="action-btn" onclick="resetCalculator()">
+                <i class="fas fa-redo"></i>
+                다시 계산
+            </button>
+        </div>
+    </div>
+</main>
+
+
+<div class="home-guide-modal" id="homeGuideModal">
+    <div class="home-guide-content">
+        <button class="guide-close" onclick="closeHomeGuide()">&times;</button>
+
+        <!-- 링크 복사 버튼 -->
+        <div class="service-link-copy" onclick="copyServiceLink()">
+            <i class="fas fa-link"></i>
+            <span id="serviceLinkText">양육비 자동 계산기 <strong style="color: #ffffff;">주소 복사</strong></span>
+            <i class="fas fa-external-link-alt" style="font-size: 11px; margin-left: auto; opacity: 0.8;"></i>
+        </div>
+
+        <div class="guide-header">
+            <h3>
+                <span style="display: block; margin-bottom: 5px;">📱 "양육비 자동 계산기"</span>
+                <span style="display: block;">홈 화면에 추가하세요!</span>
+            </h3>
+            <p>앱처럼 편리하게 사용하실 수 있습니다</p>
+        </div>
+
+        <div class="browser-section">
+            <h4>
+                <span class="browser-icon samsung-icon">S</span>
+                삼성 브라우저
+            </h4>
+            <ol class="guide-steps">
+                <li>우측 상단 메뉴(⋮) 터치</li>
+                <li>'홈페이지 추가' 선택</li>
+                <li>이름 확인 후 '추가' 터치</li>
+            </ol>
+        </div>
+
+        <div class="browser-section">
+            <h4>
+                    <span class="browser-icon chrome-icon">
+                        <img src="https://cdn.jsdelivr.net/npm/simple-icons@v6/icons/googlechrome.svg" width="16" height="16" style="filter: invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(118%) contrast(119%);">
+                    </span>
+                Chrome
+            </h4>
+            <ol class="guide-steps">
+                <li>우측 상단 메뉴(⋮) 터치</li>
+                <li>'홈 화면에 추가' 선택</li>
+                <li>이름 확인 후 '추가' 터치</li>
+            </ol>
+        </div>
+
+        <div class="browser-section">
+            <h4>
+                    <span class="browser-icon safari-icon">
+                        <i class="fab fa-safari"></i>
+                    </span>
+                iPhone (Safari)
+            </h4>
+            <ol class="guide-steps">
+                <li>하단 공유 버튼 터치</li>
+                <li>'홈 화면에 추가' 선택</li>
+                <li>이름 확인 후 '추가' 터치</li>
+            </ol>
+        </div>
+
+        <div class="guide-footer">
+            <div class="guide-benefit">
+                <i class="fas fa-check-circle"></i>
+                <span>앱처럼 빠르게 접속할 수 있어요!</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ===== 모든 코드를 DOMContentLoaded 안에 넣습니다 =====
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // 숫자에 쉼표 추가
+        function addCommas(value) {
+            const numericValue = value.replace(/[^0-9]/g, '');
+            return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+
+        // 쉼표 제거하여 숫자만 반환
+        function removeCommas(value) {
+            return value.replace(/,/g, '');
+        }
+
+        // 금액 포맷팅
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('ko-KR').format(amount) + '원';
+        }
+
+        // 날짜 포맷팅
+        function formatDate(date) {
+            const d = new Date(date);
+            return `${d.getFullYear()}. ${String(d.getMonth() + 1).padStart(2, '0')}. ${String(d.getDate()).padStart(2, '0')}.`;
+        }
+
+        // 만 나이 계산
+        function calculateAge(birthDate) {
+            const today = new Date();
+            const birth = new Date(birthDate);
+            let age = today.getFullYear() - birth.getFullYear();
+            const monthDiff = today.getMonth() - birth.getMonth();
+
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+                age--;
+            }
+
+            return age;
+        }
+
+        // 양육비 지급 기간 계산 (개월)
+        function calculatePaymentMonths(birthDate) {
+            const birth = new Date(birthDate);
+            const adultDate = new Date(birth);
+            adultDate.setFullYear(birth.getFullYear() + 19);
+
+            const today = new Date();
+
+            if (today >= adultDate) {
+                return 0;
+            }
+
+            const yearDiff = adultDate.getFullYear() - today.getFullYear();
+            const monthDiff = adultDate.getMonth() - today.getMonth();
+            const dayDiff = adultDate.getDate() - today.getDate();
+
+            let totalMonths = yearDiff * 12 + monthDiff;
+
+            if (dayDiff !== 0) {
+                const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+                totalMonths += dayDiff / daysInMonth;
+            }
+
+            return Math.round(totalMonths * 100) / 100;
+        }
+
+        // 2021년 서울가정법원 양육비 산정기준표
+        const CHILD_SUPPORT_TABLE = {
+            ageGroups: {
+                '0-2': {
+                    ranges: [
+                        { max: 2000000, amount: 621000 },
+                        { max: 3000000, amount: 752000 },
+                        { max: 4000000, amount: 945000 },
+                        { max: 5000000, amount: 1098000 },
+                        { max: 6000000, amount: 1245000 },
+                        { max: 7000000, amount: 1401000 },
+                        { max: 8000000, amount: 1582000 },
+                        { max: 9000000, amount: 1789000 },
+                        { max: 10000000, amount: 1997000 },
+                        { max: 12000000, amount: 2095000 },
+                        { max: Infinity, amount: 2207000 }
+                    ]
+                },
+                '3-5': {
+                    ranges: [
+                        { max: 2000000, amount: 631000 },
+                        { max: 3000000, amount: 759000 },
+                        { max: 4000000, amount: 949000 },
+                        { max: 5000000, amount: 1113000 },
+                        { max: 6000000, amount: 1266000 },
+                        { max: 7000000, amount: 1422000 },
+                        { max: 8000000, amount: 1598000 },
+                        { max: 9000000, amount: 1807000 },
+                        { max: 10000000, amount: 2017000 },
+                        { max: 12000000, amount: 2116000 },
+                        { max: Infinity, amount: 2245000 }
+                    ]
+                },
+                '6-8': {
+                    ranges: [
+                        { max: 2000000, amount: 648000 },
+                        { max: 3000000, amount: 767000 },
+                        { max: 4000000, amount: 959000 },
+                        { max: 5000000, amount: 1140000 },
+                        { max: 6000000, amount: 1292000 },
+                        { max: 7000000, amount: 1479000 },
+                        { max: 8000000, amount: 1614000 },
+                        { max: 9000000, amount: 1850000 },
+                        { max: 10000000, amount: 2065000 },
+                        { max: 12000000, amount: 2137000 },
+                        { max: Infinity, amount: 2312000 }
+                    ]
+                },
+                '9-11': {
+                    ranges: [
+                        { max: 2000000, amount: 667000 },
+                        { max: 3000000, amount: 782000 },
+                        { max: 4000000, amount: 988000 },
+                        { max: 5000000, amount: 1163000 },
+                        { max: 6000000, amount: 1318000 },
+                        { max: 7000000, amount: 1494000 },
+                        { max: 8000000, amount: 1630000 },
+                        { max: 9000000, amount: 1887000 },
+                        { max: 10000000, amount: 2137000 },
+                        { max: 12000000, amount: 2180000 },
+                        { max: Infinity, amount: 2405000 }
+                    ]
+                },
+                '12-14': {
+                    ranges: [
+                        { max: 2000000, amount: 679000 },
+                        { max: 3000000, amount: 790000 },
+                        { max: 4000000, amount: 998000 },
+                        { max: 5000000, amount: 1280000 },
+                        { max: 6000000, amount: 1423000 },
+                        { max: 7000000, amount: 1598000 },
+                        { max: 8000000, amount: 1711000 },
+                        { max: 9000000, amount: 1984000 },
+                        { max: 10000000, amount: 2159000 },
+                        { max: 12000000, amount: 2223000 },
+                        { max: Infinity, amount: 2476000 }
+                    ]
+                },
+                '15-18': {
+                    ranges: [
+                        { max: 2000000, amount: 703000 },
+                        { max: 3000000, amount: 957000 },
+                        { max: 4000000, amount: 1227000 },
+                        { max: 5000000, amount: 1402000 },
+                        { max: 6000000, amount: 1604000 },
+                        { max: 7000000, amount: 1794000 },
+                        { max: 8000000, amount: 1964000 },
+                        { max: 9000000, amount: 2163000 },
+                        { max: 10000000, amount: 2246000 },
+                        { max: 12000000, amount: 2540000 },
+                        { max: Infinity, amount: 2883000 }
+                    ]
+                }
+            }
+        };
+
+        // 양육비 계산
+        function calculateChildSupport(custodialIncome, nonCustodialIncome, birthDate) {
+            const totalIncome = custodialIncome + nonCustodialIncome;
+            const custodialRatio = custodialIncome / totalIncome;
+            const nonCustodialRatio = nonCustodialIncome / totalIncome;
+
+            const age = calculateAge(birthDate);
+            const paymentMonths = calculatePaymentMonths(birthDate);
+
+            // 나이에 따른 구간 결정
+            let ageGroup;
+            if (age <= 2) ageGroup = '0-2';
+            else if (age <= 5) ageGroup = '3-5';
+            else if (age <= 8) ageGroup = '6-8';
+            else if (age <= 11) ageGroup = '9-11';
+            else if (age <= 14) ageGroup = '12-14';
+            else ageGroup = '15-18';
+
+            // 해당 나이대의 소득구간에서 양육비 찾기
+            let standardAmount = 0;
+            const ranges = CHILD_SUPPORT_TABLE.ageGroups[ageGroup].ranges;
+            for (const range of ranges) {
+                if (totalIncome <= range.max) {
+                    standardAmount = range.amount;
+                    break;
+                }
+            }
+
+            const nonCustodialMonthlyAmount = Math.round(standardAmount * nonCustodialRatio);
+            const custodialMonthlyAmount = Math.round(standardAmount * custodialRatio);
+            const totalAmount = Math.round(nonCustodialMonthlyAmount * paymentMonths);
+
+            return {
+                totalIncome,
+                custodialRatio: custodialRatio * 100,
+                nonCustodialRatio: nonCustodialRatio * 100,
+                age,
+                ageGroup,
+                standardAmount,
+                custodialMonthlyAmount,
+                nonCustodialMonthlyAmount,
+                paymentMonths,
+                totalAmount,
+                birthDate,
+                endDate: new Date(new Date(birthDate).setFullYear(new Date(birthDate).getFullYear() + 19))
+            };
+        }
+
+        // 결과 표시
+        function displayResults(result) {
+            // 기본 결과 표시
+            document.getElementById('monthlyAmount').textContent = formatCurrency(result.standardAmount);
+
+            // 양육자/비양육자별 부담액
+            document.getElementById('custodialMonthly').textContent = formatCurrency(result.custodialMonthlyAmount);
+            document.getElementById('nonCustodialMonthly').textContent = formatCurrency(result.nonCustodialMonthlyAmount);
+
+            // 양육비 계산표 생성
+            let tableHTML = `
+                    <div class="period-info">
+                        <strong>양육비 지급 기간: ${formatDate(new Date())} ~ 만 19세가 되는 날(${formatDate(result.endDate)})까지</strong>
+                    </div>
+                    <table class="calculation-table">
+                        <thead>
+                            <tr>
+                                <th>항목</th>
+                                <th>내용</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>자녀 생년월일</td>
+                                <td>${formatDate(result.birthDate)}</td>
+                            </tr>
+                            <tr>
+                                <td>현재 나이</td>
+                                <td>만 ${result.age}세</td>
+                            </tr>
+                            <tr>
+                                <td>지급 종료일</td>
+                                <td>${formatDate(result.endDate)}</td>
+                            </tr>
+                            <tr>
+                                <td>지급 개월수</td>
+                                <td>${result.paymentMonths.toFixed(2)}개월</td>
+                            </tr>
+                            <tr class="total-row">
+                                <td>월 표준양육비</td>
+                                <td>${formatCurrency(result.standardAmount)}</td>
+                            </tr>
+                            <tr>
+                                <td>양육자 월 부담액</td>
+                                <td>${formatCurrency(result.custodialMonthlyAmount)}</td>
+                            </tr>
+                            <tr>
+                                <td>비양육자 월 부담액</td>
+                                <td>${formatCurrency(result.nonCustodialMonthlyAmount)}</td>
+                            </tr>
+                            <tr class="total-row">
+                                <td>총 표준양육비</td>
+                                <td>${formatCurrency(result.totalAmount)}</td>
+                            </tr>
+                            <tr>
+                                <td>양육자 총 부담액</td>
+                                <td>${formatCurrency(Math.round(result.custodialMonthlyAmount * result.paymentMonths))}</td>
+                            </tr>
+                            <tr>
+                                <td>비양육자 총 부담액</td>
+                                <td>${formatCurrency(result.totalAmount)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                `;
+
+            document.getElementById('calculationTable').innerHTML = tableHTML;
+
+            // 상세 내역 생성
+            let detailsHTML = '<strong>1. 월 표준양육비 결정</strong>';
+            detailsHTML += `
+                    <div style="background: var(--bg-secondary); padding: 1rem; margin: 0.75rem 0; border-radius: 0.5rem;">
+                        <div class="result-item">
+                            <span class="result-label">자녀 생년월일</span>
+                            <span class="result-value">${formatDate(result.birthDate)} (현재 만 ${result.age}세)</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">적용 연령구간</span>
+                            <span class="result-value">${result.ageGroup}세 구간</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">부모합산소득</span>
+                            <span class="result-value">${formatCurrency(result.totalIncome)}</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label"><strong>월 표준양육비</strong></span>
+                            <span class="result-value"><strong>${formatCurrency(result.standardAmount)}</strong></span>
+                        </div>
+                    </div>
+                `;
+
+            detailsHTML += '<strong style="margin-top: 1rem; display: block;">2. 양육비 분담비율 결정</strong>';
+            detailsHTML += `
+                    <div style="margin: 0.75rem 0;">
+                        <div class="result-item">
+                            <span class="result-label">양육자 분담비율</span>
+                            <span class="result-value">${result.custodialRatio.toFixed(0)}% (= ${formatCurrency(parseInt(removeCommas(document.getElementById('custodialIncome').value)))} ÷ ${formatCurrency(result.totalIncome)})</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">비양육자 분담비율</span>
+                            <span class="result-value">${result.nonCustodialRatio.toFixed(0)}% (= ${formatCurrency(parseInt(removeCommas(document.getElementById('nonCustodialIncome').value)))} ÷ ${formatCurrency(result.totalIncome)})</span>
+                        </div>
+                    </div>
+                `;
+
+            detailsHTML += '<strong style="margin-top: 1rem; display: block;">3. 각자 부담할 양육비 산정</strong>';
+            detailsHTML += `
+                    <div style="margin: 0.75rem 0;">
+                        <div class="result-item result-highlight" style="margin-bottom: 0.5rem;">
+                            <span class="result-label"><strong>양육자 월 부담액</strong></span>
+                            <span class="result-value"><strong>${formatCurrency(result.custodialMonthlyAmount)}</strong></span>
+                        </div>
+                        <div class="result-item result-highlight">
+                            <span class="result-label"><strong>비양육자 월 부담액</strong></span>
+                            <span class="result-value"><strong>${formatCurrency(result.nonCustodialMonthlyAmount)}</strong></span>
+                        </div>
+                    </div>
+                `;
+
+            document.getElementById('detailsContent').innerHTML = detailsHTML;
+
+            // 서울가정법원 양육비 산정기준표 생성
+            let standardTableHTML = '';
+
+            // 모바일 여부 확인
+            const isMobile = window.innerWidth <= 768;
+
+            // 모바일과 데스크톱 모두 스크롤 컨테이너 적용
+            standardTableHTML = `
+                    <div style="position: relative; width: 100%; max-width: 100%; border: 2px solid #dee2e6; border-radius: 8px; background: white; overflow: hidden; box-sizing: border-box;">
+                        <div style="overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; width: 100%; max-width: 100%;">
+                            <table class="calculation-table" style="font-size: 0.85rem; ${isMobile ? 'width: 1200px;' : 'min-width: 100%;'} table-layout: fixed;">
+                `;
+
+            // 표 헤더 생성
+            standardTableHTML += `
+                        <thead>
+                            <tr>
+                                <th style="background: white; color: black; position: relative; width: ${isMobile ? '120px' : '10%'}; height: 60px; border: 1px solid #dee2e6;">
+                                    <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+                                        <line x1="0" y1="0" x2="100%" y2="100%" stroke="#dee2e6" stroke-width="1"/>
+                                    </svg>
+                                    <div style="position: absolute; top: 8px; right: 8px; font-size: 0.65rem; text-align: right;">부모합산<br>소득(세전)</div>
+                                    <div style="position: absolute; bottom: 8px; left: 8px; font-size: 0.7rem; text-align: left;">자녀<br>만나이</div>
+                                </th>
+                `;
+
+            // 소득 구간 헤더 생성 (현재 적용 구간 확인)
+            const incomeRanges = [
+                { max: 2000000, label: '0~<br>199만' },
+                { max: 3000000, label: '200~<br>299만' },
+                { max: 4000000, label: '300~<br>399만' },
+                { max: 5000000, label: '400~<br>499만' },
+                { max: 6000000, label: '500~<br>599만' },
+                { max: 7000000, label: '600~<br>699만' },
+                { max: 8000000, label: '700~<br>799만' },
+                { max: 9000000, label: '800~<br>899만' },
+                { max: 10000000, label: '900~<br>999만' },
+                { max: 12000000, label: '1000~<br>1199만' },
+                { max: Infinity, label: '1200만<br>이상' }
+            ];
+
+            let currentIncomeIndex = -1;
+            incomeRanges.forEach((range, index) => {
+                if (result.totalIncome <= range.max && currentIncomeIndex === -1) {
+                    currentIncomeIndex = index;
+                }
+
+                // 현재 적용 소득 구간은 더 진한 녹색
+                const bgColor = (index === currentIncomeIndex) ? '#5cb85c' : '#c3e6cb';
+                const textColor = (index === currentIncomeIndex) ? 'white' : 'black';
+                const fontWeight = (index === currentIncomeIndex) ? 'bold' : 'normal';
+                const width = isMobile ? '100px' : 'auto';
+
+                standardTableHTML += `<th style="padding: 8px ${isMobile ? '12px' : '2px'}; font-size: 0.75rem; background: ${bgColor}; color: ${textColor}; font-weight: ${fontWeight}; ${isMobile ? `width: ${width};` : ''}">${range.label}</th>`;
+            });
+
+            standardTableHTML += `
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+            // 나이대별로 행 생성
+            const ageGroups = [
+                { key: '0-2', label: '0~2세', color: '#fef3c7' },
+                { key: '3-5', label: '3~5세', color: '#ffedd5' },
+                { key: '6-8', label: '6~8세', color: '#ffedd5' },
+                { key: '9-11', label: '9~11세', color: '#fef3c7' },
+                { key: '12-14', label: '12~14세', color: '#ffedd5' },
+                { key: '15-18', label: '15~18세', color: '#ffedd5' }
+            ];
+
+            ageGroups.forEach(ageGroup => {
+                let rowClass = '';
+                let ageColor = ageGroup.color;
+
+                // 현재 적용된 나이 구간인 경우 더 진한 색으로
+                if (result.ageGroup === ageGroup.key) {
+                    // 각 색상의 더 진한 버전
+                    if (ageGroup.color === '#fef3c7') ageColor = '#fde68a';  // 연한 노란색 → 진한 노란색
+                    else if (ageGroup.color === '#fed7aa') ageColor = '#fbbf24';  // 연한 주황색 → 진한 주황색
+                    else if (ageGroup.color === '#ffedd5') ageColor = '#fed7aa';  // 연한 베이지 → 진한 베이지
+                }
+
+                standardTableHTML += `<tr>`;
+                standardTableHTML += `<td style="background: ${ageColor}; font-weight: bold; padding: 10px ${isMobile ? '12px' : '4px'}; ${isMobile ? 'width: 120px;' : ''}">${ageGroup.label}</td>`;
+
+                // 각 소득 구간별 금액 (원 제거, 숫자만)
+                CHILD_SUPPORT_TABLE.ageGroups[ageGroup.key].ranges.forEach((range, index) => {
+                    let cellClass = '';
+                    // 현재 적용된 셀 하이라이트
+                    if (result.ageGroup === ageGroup.key && result.totalIncome <= range.max &&
+                        (index === 0 || result.totalIncome > CHILD_SUPPORT_TABLE.ageGroups[ageGroup.key].ranges[index - 1].max)) {
+                        cellClass = `style="background: #0ea5e9; color: white; font-weight: bold; padding: 8px ${isMobile ? '12px' : '2px'}; ${isMobile ? 'width: 100px;' : ''}"`;
+                    } else {
+                        cellClass = `style="padding: 8px ${isMobile ? '12px' : '2px'}; ${isMobile ? 'width: 100px;' : ''}"`;
+                    }
+
+                    // 숫자만 표시 (천단위 콤마)
+                    const amountText = new Intl.NumberFormat('ko-KR').format(range.amount);
+                    standardTableHTML += `<td ${cellClass}>${amountText}</td>`;
+                });
+
+                standardTableHTML += '</tr>';
+            });
+
+            standardTableHTML += `
+                        </tbody>
+                    </table>
+                    </div>
+                `;
+
+            // 스크롤 안내 메시지 (모바일만)
+            if (isMobile) {
+                standardTableHTML += `
+                        <div style="position: absolute; bottom: 5px; right: 10px; font-size: 0.7rem; color: #6c757d; display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.9); padding: 2px 6px; border-radius: 4px;">
+                            <i class="fas fa-arrows-alt-h"></i>
+                            좌우로 스크롤
+                        </div>
+                    `;
+            }
+
+            standardTableHTML += `</div>`;
+
+            standardTableHTML += `
+                    <div class="calculation-notice" style="margin-top: 1rem;">
+                        <div class="notice-header">
+                            <i class="fas fa-info-circle"></i>
+                            <span>참고사항</span>
+                        </div>
+                        <div class="notice-content">
+                            <p>• 위 표는 <strong>양육자녀 2인 가구 기준 자녀 1인당 평균양육비</strong>입니다. (단위: 원)</p>
+                            <p>• 현재 계산에 적용된 구간: <strong style="color: var(--accent-color); background: #e0f2fe; padding: 2px 8px; border-radius: 4px;">부모합산소득 ${formatCurrency(result.totalIncome)} / ${result.ageGroup}세</strong></p>
+                            <p>• 실제 양육비는 자녀 수, 부모의 재산상황, 거주지역, 특별한 의료비·교육비 등을 고려하여 조정될 수 있습니다.</p>
+                        </div>
+                    </div>
+                `;
+
+            document.getElementById('standardTable').innerHTML = standardTableHTML;
+
+            // 모바일에서 해당 셀로 자동 스크롤
+            if (isMobile && currentIncomeIndex >= 0) {
+                setTimeout(() => {
+                    const scrollContainer = document.querySelector('#standardTable .calculation-table').parentElement;
+                    if (scrollContainer) {
+                        // 각 열의 너비가 100px + 패딩이므로
+                        const scrollPosition = Math.max(0, (currentIncomeIndex * 100) - 100);
+                        scrollContainer.scrollLeft = scrollPosition;
+                    }
+                }, 100);
+            }
+
+            // 결과 섹션 표시
+            document.getElementById('resultsSection').style.display = 'block';
+        }
+
+        // 날짜 선택기 클래스
+        class DatePicker {
+            constructor() {
+                this.selectedYear = null;
+                this.selectedMonth = null;
+                this.selectedDay = null;
+                this.today = new Date();
+                this.init();
+            }
+
+            init() {
+                this.populateYears();
+                this.setupEventListeners();
+            }
+
+            populateYears() {
+                const yearSelect = document.getElementById('birthYear');
+                const currentYear = this.today.getFullYear();
+                const startYear = currentYear - 50;
+
+                for (let year = currentYear; year >= startYear; year--) {
+                    const option = document.createElement('option');
+                    option.value = year;
+                    option.textContent = year + '년';
+                    yearSelect.appendChild(option);
+                }
+            }
+
+            populateMonths() {
+                const monthSelect = document.getElementById('birthMonth');
+                monthSelect.innerHTML = '<option value="">월 선택</option>';
+
+                for (let month = 1; month <= 12; month++) {
+                    const option = document.createElement('option');
+                    option.value = month;
+                    option.textContent = month + '월';
+                    monthSelect.appendChild(option);
+                }
+                monthSelect.disabled = false;
+            }
+
+            populateDays() {
+                const dayGrid = document.getElementById('dayGrid');
+                dayGrid.innerHTML = '';
+
+                if (!this.selectedYear || !this.selectedMonth) return;
+
+                const daysInMonth = new Date(this.selectedYear, this.selectedMonth, 0).getDate();
+                const today = this.today;
+
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayBtn = document.createElement('button');
+                    dayBtn.type = 'button';
+                    dayBtn.className = 'day-btn';
+                    dayBtn.textContent = day;
+                    dayBtn.dataset.day = day;
+
+                    // 미래 날짜 비활성화
+                    const currentDate = new Date(this.selectedYear, this.selectedMonth - 1, day);
+                    if (currentDate > today) {
+                        dayBtn.disabled = true;
+                    }
+
+                    // 오늘 날짜 표시
+                    if (currentDate.toDateString() === today.toDateString()) {
+                        dayBtn.classList.add('today');
+                    }
+
+                    dayBtn.addEventListener('click', () => this.selectDay(day));
+                    dayGrid.appendChild(dayBtn);
+                }
+
+                document.getElementById('dayContainer').style.display = 'block';
+            }
+
+            selectDay(day) {
+                this.selectedDay = day;
+
+                // 이전 선택 해제
+                document.querySelectorAll('.day-btn.selected').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+
+                // 현재 선택 표시
+                document.querySelector(`[data-day="${day}"]`).classList.add('selected');
+
+                // 최종 날짜 설정
+                this.setFinalDate();
+            }
+
+            setFinalDate() {
+                if (!this.selectedYear || !this.selectedMonth || !this.selectedDay) return;
+
+                const dateString = `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}-${String(this.selectedDay).padStart(2, '0')}`;
+                document.getElementById('childBirthdate').value = dateString;
+
+                // 선택된 날짜 표시
+                const selectedDate = new Date(this.selectedYear, this.selectedMonth - 1, this.selectedDay);
+                const formatOptions = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' };
+                const formattedDate = selectedDate.toLocaleDateString('ko-KR', formatOptions);
+
+                document.getElementById('selectedDateText').textContent = formattedDate;
+
+                // 나이 계산 및 표시
+                this.displayAgeInfo(selectedDate);
+
+                // 결과 영역 표시
+                document.getElementById('dateResult').style.display = 'block';
+            }
+
+            displayAgeInfo(birthDate) {
+                const today = this.today;
+                const age = this.calculateDetailedAge(birthDate);
+                const paymentMonths = this.calculatePaymentMonths(birthDate);
+
+                let ageHTML = `
+                        <div class="age-info">
+                            <div class="age-label">현재 나이</div>
+                            <div class="age-value ${age.years >= 19 ? 'warning' : ''}">만 ${age.years}세 ${age.months.toFixed(1)}개월</div>
+                        </div>
+                        <div class="age-info">
+                            <div class="age-label">양육비 대상</div>
+                            <div class="age-value ${age.years >= 19 ? 'warning' : ''}">${age.years >= 19 ? '해당없음' : '대상'}</div>
+                        </div>
+                    `;
+
+                if (age.years < 19) {
+                    const endDate = new Date(birthDate);
+                    endDate.setFullYear(birthDate.getFullYear() + 19);
+                    const endDateStr = endDate.toLocaleDateString('ko-KR');
+
+                    ageHTML += `
+                            <div class="payment-period">
+                                <div class="period-label">양육비 지급기간</div>
+                                <div class="period-value">${paymentMonths.toFixed(1)}개월 (${endDateStr}까지)</div>
+                            </div>
+                        `;
+                }
+
+                document.getElementById('ageDisplay').innerHTML = ageHTML;
+            }
+
+            calculateDetailedAge(birthDate) {
+                const today = this.today;
+                let years = today.getFullYear() - birthDate.getFullYear();
+                let months = today.getMonth() - birthDate.getMonth();
+                let days = today.getDate() - birthDate.getDate();
+
+                if (days < 0) {
+                    months--;
+                    const lastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+                    days += lastMonth.getDate();
+                }
+
+                if (months < 0) {
+                    years--;
+                    months += 12;
+                }
+
+                const decimalMonths = months + (days / 30.44);
+
+                return {
+                    years: years,
+                    months: decimalMonths
+                };
+            }
+
+            calculatePaymentMonths(birthDate) {
+                const endDate = new Date(birthDate);
+                endDate.setFullYear(birthDate.getFullYear() + 19);
+
+                const today = this.today;
+                if (today >= endDate) return 0;
+
+                const yearDiff = endDate.getFullYear() - today.getFullYear();
+                const monthDiff = endDate.getMonth() - today.getMonth();
+                const dayDiff = endDate.getDate() - today.getDate();
+
+                let totalMonths = yearDiff * 12 + monthDiff;
+                if (dayDiff !== 0) {
+                    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+                    totalMonths += dayDiff / daysInMonth;
+                }
+
+                return Math.max(0, totalMonths);
+            }
+
+            setupEventListeners() {
+                document.getElementById('birthYear').addEventListener('change', (e) => {
+                    this.selectedYear = parseInt(e.target.value);
+                    if (this.selectedYear) {
+                        this.populateMonths();
+                        this.selectedMonth = null;
+                        this.selectedDay = null;
+                        document.getElementById('birthMonth').value = '';
+                        document.getElementById('dayContainer').style.display = 'none';
+                        document.getElementById('dateResult').style.display = 'none';
+                    }
+                });
+
+                document.getElementById('birthMonth').addEventListener('change', (e) => {
+                    this.selectedMonth = parseInt(e.target.value);
+                    if (this.selectedMonth) {
+                        this.populateDays();
+                        this.selectedDay = null;
+                        document.getElementById('dateResult').style.display = 'none';
+                    }
+                });
+            }
+
+            reset() {
+                this.selectedYear = null;
+                this.selectedMonth = null;
+                this.selectedDay = null;
+                document.getElementById('birthYear').value = '';
+                document.getElementById('birthMonth').value = '';
+                document.getElementById('birthMonth').disabled = true;
+                document.getElementById('dayContainer').style.display = 'none';
+                document.getElementById('dateResult').style.display = 'none';
+                document.getElementById('childBirthdate').value = '';
+            }
+        }
+
+        // 날짜 선택기 인스턴스 생성
+        let datePicker = new DatePicker();
+
+        // 소득 입력 초기화
+        const incomeInputs = document.querySelectorAll('.income-input');
+
+        incomeInputs.forEach(input => {
+            input.addEventListener('input', function(e) {
+                const cursorPosition = e.target.selectionStart;
+                const oldLength = e.target.value.length;
+
+                e.target.value = addCommas(e.target.value);
+
+                const newLength = e.target.value.length;
+                const diff = newLength - oldLength;
+
+                e.target.setSelectionRange(cursorPosition + diff, cursorPosition + diff);
+            });
+        });
+
+        // 폼 제출 처리
+        document.getElementById('calculatorForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // 버튼 로딩 상태
+            const calculateBtn = document.getElementById('calculateBtn');
+            calculateBtn.disabled = true;
+            calculateBtn.innerHTML = '<span class="spinner"></span> 계산 중...';
+
+            // 입력값 가져오기
+            const custodialIncome = parseInt(removeCommas(document.getElementById('custodialIncome').value)) || 0;
+            const nonCustodialIncome = parseInt(removeCommas(document.getElementById('nonCustodialIncome').value)) || 0;
+            const birthDate = document.getElementById('childBirthdate').value;
+
+            // 유효성 검사
+            if (!birthDate) {
+                alert('자녀의 생년월일을 입력해주세요.');
+                calculateBtn.disabled = false;
+                calculateBtn.innerHTML = '<i class="fas fa-calculator"></i> 양육비 계산하기';
+                return;
+            }
+
+            // 미래 날짜 체크
+            if (new Date(birthDate) > new Date()) {
+                alert('생년월일은 오늘 이전 날짜여야 합니다.');
+                calculateBtn.disabled = false;
+                calculateBtn.innerHTML = '<i class="fas fa-calculator"></i> 양육비 계산하기';
+                return;
+            }
+
+            // 계산 수행
+            const result = calculateChildSupport(custodialIncome, nonCustodialIncome, birthDate);
+
+            // 결과 표시
+            setTimeout(() => {
+                displayResults(result);
+
+                // 버튼 원상복구
+                calculateBtn.disabled = false;
+                calculateBtn.innerHTML = '<i class="fas fa-calculator"></i> 양육비 계산하기';
+
+                // 결과 섹션으로 스크롤
+                document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+            }, 500);
+        });
+
+        // 모달 외부 클릭 시 닫기
+        const modal = document.getElementById('homeGuideModal');
+        if (modal) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeHomeGuide();
+                }
+            });
+        }
+
+        // copyResults 함수를 전역 스코프에 노출
+        window.copyResults = function() {
+            const resultText = document.querySelector('.results-section').innerText;
+            navigator.clipboard.writeText(resultText).then(() => {
+                alert('계산 결과가 클립보드에 복사되었습니다.');
+            }).catch(() => {
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = resultText;
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    alert('계산 결과가 클립보드에 복사되었습니다.');
+                } catch (err) {
+                    alert('복사에 실패했습니다. 수동으로 복사해주세요.');
+                }
+                document.body.removeChild(textarea);
+            });
+        };
+
+        // resetCalculator 함수를 전역 스코프에 노출
+        window.resetCalculator = function() {
+            document.getElementById('calculatorForm').reset();
+            document.getElementById('resultsSection').style.display = 'none';
+
+            // 날짜 선택기 초기화
+            if (datePicker) {
+                datePicker.reset();
+            }
+
+            // 스크롤 위로
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+    }); // DOMContentLoaded 끝
+</script>
+</body>
+</html>
+            
