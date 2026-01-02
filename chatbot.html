@@ -1,0 +1,2101 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 법률상담</title>
+
+    <!-- https://jsulaw.co.kr/legalchatbot -->
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Zhi+Mang+Xing&display=swap" rel="stylesheet">
+
+    <style>
+        /* ===== 1. 필수 폰트 정의 ===== */
+        @font-face {
+            font-family: 'MaruBuri';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-10-21@1.0/MaruBuri-Regular.woff') format('woff');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        /* ===== 2. 필수 CSS 변수 정의 ===== */
+        :root {
+            --primary-color: #1e293b;
+            --secondary-color: #334155;
+            --accent-color: #059669;  /* 녹색 톤 유지 */
+            --success-color: #10b981;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-light: #64748b;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --border-color: #e2e8f0;
+            --hover-bg: #f1f5f9;
+            --card-shadow: 0 4px 6px -1px rgba(30, 41, 59, 0.1), 0 2px 4px -1px rgba(30, 41, 59, 0.06);
+        }
+
+        /* ===== 3. 필수 기본 스타일 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'MaruBuri', -apple-system, BlinkMacSystemFont, serif;
+        }
+
+        body {
+            background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* ===== 4. 필수 헤더 스타일 ===== */
+        .header {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 50%, rgba(241, 245, 249, 0.95) 100%);
+            border-bottom: 1px solid rgba(30, 41, 59, 0.1);
+            padding: 0.5rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(30, 41, 59, 0.08);
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 40px;
+        }
+
+        .header-left {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            line-height: 1.2;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.15rem;
+            text-decoration: none;
+            transition: all 0.2s;
+            padding: 0.5rem;
+            margin: -0.5rem;
+            border-radius: 0.5rem;
+        }
+
+
+
+        .header-left .main-info {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .header-left strong {
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .header-left .lawyer-name {
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+        }
+
+        .header-left .website-info {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.7rem;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        .header-left .website-info i {
+            font-size: 0.65rem;
+        }
+
+        .browser-tip {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            background: transparent;
+            padding: 0.5rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.5rem;
+        }
+
+        .browser-tip:hover {
+            background: var(--hover-bg);
+            transform: translateY(-1px);
+            color: var(--primary-color);
+        }
+
+        /* 信 서예체 스타일 */
+        .shin-calligraphy-small {
+            font-family: 'Zhi Mang Xing', cursive !important;
+            font-size: 1.3rem;
+            font-weight: 400;
+            font-style: normal;
+            display: inline-block;
+            margin: 0 0.1em;
+            line-height: 1;
+            vertical-align: baseline;
+            letter-spacing: 0;
+            color: inherit;
+            background: none;
+            -webkit-text-fill-color: initial;
+            position: relative;
+            top: 0.05em;
+        }
+
+        /* ===== 5. 메인 컨텐츠 영역 ===== */
+        .main-content {
+            flex: 1;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 3rem 1.5rem;
+        }
+
+        /* ===== 6. 필수 푸터 스타일 ===== */
+        .footer {
+            background: linear-gradient(135deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.95) 50%, rgba(226, 232, 240, 0.95) 100%);
+            border-top: 1px solid rgba(30, 41, 59, 0.15);
+            padding: 1rem 0;
+            margin-top: auto;
+            position: relative;
+        }
+
+        .footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(30, 41, 59, 0.3), rgba(5, 150, 105, 0.3), transparent);
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-bottom: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 1rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+
+
+        .footer-copyright {
+            color: var(--text-light);
+            font-size: 0.7rem;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--border-color);
+            line-height: 1.5;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+
+
+        /* ===== 8. 필수 홈 화면 추가 안내 모달 ===== */
+        .home-guide-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .home-guide-modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .home-guide-content {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            padding-top: 60px;
+            max-width: 380px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            position: relative;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 링크 복사 버튼 - 서비스별 색상 변경 가능 */
+        .service-link-copy {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            right: 50px;
+            background: linear-gradient(135deg, var(--accent-color) 0%, #1e293b 100%);
+            border: 1px solid var(--accent-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 12px;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        }
+
+
+
+        .service-link-copy.copied {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border-color: #059669;
+        }
+
+        .guide-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .guide-header h3 {
+            font-size: 20px;
+            color: var(--primary-color);
+            margin-bottom: 6px;
+            font-weight: 700;
+            padding: 0 30px;
+            line-height: 1.4;
+        }
+
+        .guide-header p {
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .guide-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+            transition: all 0.2s;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .guide-close:hover {
+            background: var(--hover-bg);
+            color: var(--primary-color);
+        }
+
+        .browser-section {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .browser-section h4 {
+            font-size: 14px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .browser-icon {
+            width: 18px;
+            height: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .samsung-icon {
+            background: #1428A0;
+            color: white;
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .guide-steps {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .guide-steps li {
+            font-size: 12px;
+            color: var(--text-secondary);
+            padding: 3px 0;
+            padding-left: 16px;
+            position: relative;
+        }
+
+        .guide-steps li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 10px;
+            width: 3px;
+            height: 3px;
+            background: var(--accent-color);
+            border-radius: 50%;
+        }
+
+        .guide-footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .guide-benefit {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            color: var(--success-color);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* ===== 9. 페이지 헤더 스타일 (템플릿 기반) ===== */
+        .page-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem 2rem;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 32px rgba(30, 41, 59, 0.12);
+            border: 2px solid rgba(30, 41, 59, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle,
+            rgba(5, 150, 105, 0.1) 0%,
+            transparent 70%);
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(-30%, -30%) rotate(0deg); }
+            50% { transform: translate(-20%, -20%) rotate(180deg); }
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.875rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .page-icon {
+            font-size: 2rem;
+            color: var(--accent-color);
+            opacity: 0.9;
+        }
+
+        .page-description {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+            position: relative;
+            z-index: 1;
+            font-weight: 500;
+        }
+
+        /* ===== 10. 배경 스타일 (깔끔한 전문가 스타일) ===== */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                    radial-gradient(circle at 20% 80%, rgba(5, 150, 105, 0.04) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 20%, rgba(30, 41, 59, 0.06) 0%, transparent 50%),
+                    radial-gradient(circle at 40% 40%, rgba(16, 185, 129, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Mode Selection View */
+        .mode-selection-view {
+            display: block;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* AI 로이 소개 카드 - 템플릿 스타일 적용 */
+        .lawyer-intro {
+            background: linear-gradient(to bottom, rgba(248, 250, 252, 0.95), rgba(255, 255, 255, 0.9));
+            border: 1px solid rgba(30, 41, 59, 0.1);
+            border-radius: 1rem;
+            box-shadow: 0 4px 16px rgba(30, 41, 59, 0.08);
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+
+
+        .lawyer-intro h2 {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .lawyer-intro h2 i {
+            color: var(--accent-color);
+            font-size: 1.25rem;
+        }
+
+        .lawyer-intro p {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Mode Cards - 템플릿 스타일로 개선 */
+        .mode-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .mode-card {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid transparent;
+            border-radius: 1rem;
+            padding: 1.75rem 1.25rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Mode card colors */
+        .mode-card.civil {
+            background: rgba(59, 130, 246, 0.08);
+            border-color: rgba(59, 130, 246, 0.4);
+        }
+
+        .mode-card.family {
+            background: rgba(239, 68, 68, 0.08);
+            border-color: rgba(239, 68, 68, 0.4);
+        }
+
+        .mode-card.criminal {
+            background: rgba(245, 158, 11, 0.08);
+            border-color: rgba(245, 158, 11, 0.4);
+        }
+
+
+
+
+
+
+
+
+
+        .mode-card.selected {
+            transform: translateY(-2px);
+        }
+
+        .mode-card.civil.selected {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: #3b82f6;
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .mode-card.family.selected {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #ef4444;
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+        }
+
+        .mode-card.criminal.selected {
+            background: rgba(245, 158, 11, 0.2);
+            border-color: #f59e0b;
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3);
+        }
+
+        .mode-card.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: var(--accent-color);
+            color: white;
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .mode-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .mode-description {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .desc-short {
+            display: none;
+        }
+
+        /* Start Button - 템플릿 스타일 */
+        .start-button-container {
+            text-align: center;
+            margin-top: 2.5rem;
+        }
+
+        .start-button {
+            background: linear-gradient(135deg, var(--accent-color), #047857);
+            color: white;
+            border: 2px solid rgba(5, 150, 105, 0.3);
+            padding: 0.875rem 2rem;
+            font-size: 1.125rem;
+            font-weight: 600;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-family: 'MaruBuri', serif;
+            box-shadow: 0 4px 16px rgba(5, 150, 105, 0.3);
+        }
+
+
+
+        .start-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Chat View (Initially Hidden) */
+        .chat-view {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            z-index: 1000;
+            flex-direction: column;
+        }
+
+        /* Chat Container for wider screens */
+        @media (min-width: 768px) {
+            .chat-view {
+                background: #f5f5f5;
+            }
+
+            .chat-view > * {
+                max-width: 600px;
+                margin: 0 auto;
+                width: 100%;
+            }
+
+            .chat-header {
+                border-radius: 0 0 1rem 1rem;
+            }
+
+            .chat-messages {
+                background: white;
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            }
+
+            .chat-actions {
+                border-radius: 0.5rem 0.5rem 0 0;
+                box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+            }
+
+            .chat-input-area {
+                box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+            }
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, rgba(6, 95, 70, 0.95), rgba(4, 120, 87, 0.95));
+            color: white;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-title {
+            flex: 1;
+            text-align: right;
+            font-size: 1.125rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            padding-right: 1rem;
+        }
+
+        .chat-back-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+
+
+        /* Chat Messages */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            background: linear-gradient(to bottom, rgba(248, 250, 252, 0.5), rgba(255, 255, 255, 0.9));
+        }
+
+        .message {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .message.lawyer .message-avatar {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            box-shadow: 0 2px 4px rgba(6, 95, 70, 0.3);
+        }
+
+        .message.user .message-avatar {
+            background: #e5e7eb;
+            color: #6b7280;
+        }
+
+        .message-content {
+            flex: 1;
+            max-width: 80%;
+        }
+
+        .message-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+        }
+
+        .message.lawyer .message-name {
+            color: var(--primary-color);
+        }
+
+        .message-text {
+            background: white;
+            padding: 0.875rem 1.125rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            line-height: 1.6;
+            font-size: 0.9375rem;
+            position: relative;
+        }
+
+        .message.lawyer .message-text {
+            background: linear-gradient(to bottom, #ffffff, #f8fafc);
+            border: 1px solid rgba(6, 95, 70, 0.1);
+        }
+
+        .message.user .message-text {
+            background: #dcfce7;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-top: 0.25rem;
+        }
+
+        /* Disclaimer Styles */
+        .disclaimer-box {
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            margin-top: 0.75rem;
+            font-size: 0.875rem;
+            color: #92400e;
+            line-height: 1.5;
+        }
+
+        .disclaimer-box strong {
+            color: #78350f;
+        }
+
+        /* Thinking indicator */
+        .thinking {
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary-color);
+            font-style: italic;
+            padding: 1rem 1.5rem;
+            font-size: 0.875rem;
+        }
+
+        .thinking-dots {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .thinking-dots span {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            animation: thinking 1.4s ease-in-out infinite;
+        }
+
+        .thinking-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .thinking-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes thinking {
+            0%, 80%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Chat Actions */
+        .chat-actions {
+            padding: 0.5rem;
+            background: var(--bg-primary);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 0.5rem;
+            justify-content: space-around;
+        }
+
+        .chat-action-btn {
+            flex: 1;
+            padding: 0.6rem 0.5rem;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            min-width: 0;
+            max-width: 150px;
+        }
+
+
+
+        .chat-action-btn i {
+            font-size: 1.25rem;
+            color: var(--accent-color);
+        }
+
+        .chat-action-btn span {
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 0.8rem;
+        }
+
+        /* Chat Input Area */
+        .chat-input-area {
+            padding: 1rem;
+            background: white;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 0.5rem;
+            align-items: flex-end;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 1.5rem;
+            font-size: 1rem;
+            resize: none;
+            max-height: 120px;
+            line-height: 1.5;
+            outline: none;
+        }
+
+        .chat-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .send-button {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+
+
+        .send-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Summary Message Styles */
+        .summary-message .message-text {
+            background: linear-gradient(to bottom, #f0f4ff, #e8edff);
+            border: 2px solid var(--accent-color);
+            padding: 1.5rem;
+            font-size: 1rem;
+            line-height: 1.8;
+        }
+
+        .summary-text {
+            white-space: pre-wrap;
+        }
+
+        .summary-text strong {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .summary-disclaimer {
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            color: #92400e;
+            line-height: 1.5;
+        }
+
+        .summary-disclaimer strong {
+            color: #78350f;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        /* ===== 11. 반응형 디자인 ===== */
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 1rem 0.75rem;
+            }
+
+            .page-header {
+                margin-bottom: 1.5rem;
+                padding: 2rem 1rem;
+            }
+
+            .page-title {
+                font-size: 1.75rem;
+                gap: 0.625rem;
+            }
+
+            .page-icon {
+                font-size: 1.75rem;
+            }
+
+            .footer-links {
+                gap: 1.5rem;
+                font-size: 0.875rem;
+            }
+
+
+
+            .lawyer-intro {
+                padding: 1.5rem;
+            }
+
+            .lawyer-intro h2 {
+                font-size: 1.5rem;
+            }
+
+            .mode-cards {
+                gap: 0.5rem;
+            }
+
+            .mode-card {
+                padding: 0.75rem 0.5rem;
+            }
+
+            .mode-title {
+                font-size: 0.95rem;
+                margin-bottom: 0.2rem;
+            }
+
+            .mode-description {
+                font-size: 0.75rem;
+                line-height: 1.2;
+            }
+
+            /* Show short description on mobile */
+            .desc-full {
+                display: none;
+            }
+
+            .desc-short {
+                display: block;
+            }
+
+            .mode-card.selected::after {
+                width: 1.25rem;
+                height: 1.25rem;
+                font-size: 0.65rem;
+                top: 0.25rem;
+                right: 0.25rem;
+            }
+
+            .start-button {
+                padding: 0.875rem 2rem;
+                font-size: 1.125rem;
+            }
+
+            .chat-messages {
+                padding: 1rem;
+            }
+
+            .message {
+                gap: 0.5rem;
+                margin-bottom: 1rem;
+            }
+
+            .message-avatar {
+                width: 36px;
+                height: 36px;
+                font-size: 1.125rem;
+            }
+
+            .message-text {
+                padding: 0.75rem 1rem;
+                font-size: 0.875rem;
+            }
+        }
+
+        /* Hide elements when chat is open */
+        body.chat-open .main-content {
+            display: none;
+        }
+
+        body.chat-open .chat-view {
+            display: flex;
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+
+            .header,
+            .browser-tip,
+            .home-button,
+            .footer-links {
+                display: none !important;
+            }
+        }
+    </style>
+
+    <script>
+        // ===== 필수 JavaScript 함수들 =====
+
+        // 브라우저 팁 표시 함수
+        function showBrowserTip() {
+            document.getElementById('homeGuideModal').classList.add('show');
+        }
+
+        // 홈 화면 추가 안내 모달 닫기
+        function closeHomeGuide() {
+            document.getElementById('homeGuideModal').classList.remove('show');
+        }
+
+        // 서비스 링크 복사 함수
+        function copyServiceLink() {
+            const serviceUrl = window.location.href; // 현재 페이지 URL
+            const copyButton = document.querySelector('.service-link-copy');
+            const originalHTML = copyButton.innerHTML;
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(serviceUrl).then(() => {
+                    // 복사 성공 시 버튼 상태 변경
+                    copyButton.classList.add('copied');
+                    copyButton.innerHTML = '<i class="fas fa-check"></i><span>복사 완료!</span>';
+
+                    // 2초 후 원래 상태로 복원
+                    setTimeout(() => {
+                        copyButton.classList.remove('copied');
+                        copyButton.innerHTML = originalHTML;
+                    }, 2000);
+                }).catch(() => {
+                    fallbackCopyService(serviceUrl);
+                });
+            } else {
+                fallbackCopyService(serviceUrl);
+            }
+        }
+
+        function fallbackCopyService(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+
+            try {
+                document.execCommand('copy');
+                const copyButton = document.querySelector('.service-link-copy');
+                const originalHTML = copyButton.innerHTML;
+
+                copyButton.classList.add('copied');
+                copyButton.innerHTML = '<i class="fas fa-check"></i><span>복사 완료!</span>';
+
+                setTimeout(() => {
+                    copyButton.classList.remove('copied');
+                    copyButton.innerHTML = originalHTML;
+                }, 2000);
+            } catch (err) {
+                alert('AI 로이와 법률상담 주소: ' + text);
+            }
+
+            document.body.removeChild(textarea);
+        }
+
+
+        // Gemini API Configuration with Multiple Keys
+        const API_KEYS = [
+            'AIzaSyCZbMiJT_pnP8ip0xdBjG0v0UAhrJQAOrk'
+            // 'AIzaSyBw-yzwAQ9Fat3uIKONgZA21td-3z4VS2k',
+            // 'AIzaSyD_98IrGAH2AfjXVjnNgfsGwPrhA-8BSs8',
+            // 'AIzaSyCkPGcXOah7j0rUKnrcDMvghyPVLcApxvc'
+        ];
+        const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+
+        // API Key Management
+        let currentKeyIndex = 0;
+        let keyUsageCount = {}; // 각 키의 사용 횟수 추적
+
+        // Initialize key usage count
+        API_KEYS.forEach((key, index) => {
+            keyUsageCount[index] = 0;
+        });
+
+        // Get current API key
+        function getCurrentApiKey() {
+            return API_KEYS[currentKeyIndex];
+        }
+
+        // Switch to next API key
+        function switchToNextApiKey() {
+            const previousIndex = currentKeyIndex;
+            currentKeyIndex = (currentKeyIndex + 1) % API_KEYS.length;
+            console.log(`API 키 전환: ${previousIndex} → ${currentKeyIndex}`);
+            return getCurrentApiKey();
+        }
+
+        // Check if error is quota related
+        function isQuotaError(error) {
+            const errorMessage = error.message || error.toString().toLowerCase();
+            return errorMessage.includes('quota') ||
+                errorMessage.includes('limit') ||
+                errorMessage.includes('429') ||
+                errorMessage.includes('rate limit') ||
+                errorMessage.includes('resource has been exhausted');
+        }
+
+        // Global Variables
+        let conversationHistory = [];
+        let currentMood = null;
+        let selectedMoodCard = null;
+
+        // AI Lawyer Patterns
+        const lawyerPatterns = {
+            opening: {
+                civil: `안녕하세요, AI 법률비서입니다.
+어떤 민사 문제로 고민이 있으신가요? 계약, 손해배상, 부동산, 채권채무 등 편하게 말씀해 주세요.
+
+대화가 중간에 끊어질 경우, '계속'이라 기재하면 이어서 설명합니다.
+
+※ 중요안내: 저는 AI 기반 일반 법률 정보 제공 서비스입니다. 제공되는 모든 정보는 법적 효력이 없고 정확성을 보장하지 않으므로 참고용으로만 활용해 주시기 바랍니다. 중요한 결정은 반드시 변호사와 상담 후 진행하세요.`,
+
+                family: `안녕하세요, AI 법률비서입니다.
+가족 관련 법률 문제로 찾아주셨군요. 이혼, 양육권, 상속 등 어떤 도움이 필요하신가요?
+
+대화가 중간에 끊어질 경우, '계속'이라 기재하면 이어서 설명합니다.
+
+※ 중요안내: 저는 AI 기반 일반 법률 정보 제공 서비스입니다. 제공되는 모든 정보는 법적 효력이 없고 정확성을 보장하지 않으므로 참고용으로만 활용해 주시기 바랍니다. 중요한 결정은 반드시 변호사와 상담 후 진행하세요.`,
+
+                criminal: `안녕하세요, AI 법률비서입니다.
+형사 문제로 걱정이 많으신가요? 고소, 고발, 피의자, 피해자 상담 등 상황을 들려주세요.
+
+대화가 중간에 끊어질 경우, '계속'이라 기재하면 이어서 설명합니다.
+
+※ 중요안내: 저는 AI 기반 일반 법률 정보 제공 서비스입니다. 제공되는 모든 정보는 법적 효력이 없고 정확성을 보장하지 않으므로 참고용으로만 활용해 주시기 바랍니다. 중요한 결정은 반드시 변호사와 상담 후 진행하세요.`
+            },
+
+            systemPrompts: {
+                civil: `너는 AI 법률비서야. 민사 분야 상담을 진행해. 다음을 지켜:
+
+1. 정중하고 전문적인 어투 사용 ("~하시는 것이 좋겠습니다", "~로 보입니다")
+2. 복잡한 법률 용어는 쉽게 풀어서 설명
+3. 구체적인 법적 조언보다는 일반적인 법률 정보와 방향 제시
+4. 관련 법조문은 언급하되, 쉽게 설명
+5. 절대 구체적인 판례번호를 만들지 말고, "~한 판례가 있습니다" 정도로만 언급
+6. 추가 정보가 필요하면 구체적으로 질문
+7. 항상 전문 변호사 상담의 필요성 강조
+8. 민사소송법, 민법 등 관련 법률 중심으로 설명
+9. 소멸시효, 관할, 절차 등 실무적 내용 포함
+10. 답변 끝에는 다음 단계나 준비사항 안내
+11. 절대 마크다운 문법 사용하지 말고 일반 텍스트로만 응답 (*, **, #, -, 등 모든 마크다운 기호 금지)
+12. 사용자가 '계속'이라고 입력하면 이전 답변의 연장선에서 추가 설명 제공
+13. 응답에 HTML 코드나 특수 태그 절대 포함하지 않음
+14. 응답에 법률사무소 정보나 연락처 절대 포함하지 않음 (순수한 법률 정보만 제공)`,
+
+                family: `너는 AI 법률비서야. 가사 분야 상담을 진행해. 다음을 지켜:
+
+1. 감정적으로 예민한 사안임을 인지하고 공감적이면서도 객관적인 태도 유지
+2. 이혼, 양육권, 양육비, 상속 등 가족법 중심 상담
+3. 자녀의 복리를 최우선으로 고려
+4. 재산분할, 위자료 등 경제적 문제는 일반적 기준 제시
+5. 가사소송법, 민법(가족편) 중심으로 설명
+6. 협의와 조정의 중요성 강조
+7. 절대 구체적인 판례번호 생성 금지
+8. 증거 수집의 중요성과 방법 안내
+9. 가정법원의 역할과 절차 설명
+10. 정서적 지원 기관 정보도 함께 제공
+11. 절대 마크다운 문법 사용하지 말고 일반 텍스트로만 응답 (*, **, #, -, 등 모든 마크다운 기호 금지)
+12. 사용자가 '계속'이라고 입력하면 이전 답변의 연장선에서 추가 설명 제공
+13. 응답에 HTML 코드나 특수 태그 절대 포함하지 않음
+14. 응답에 법률사무소 정보나 연락처 절대 포함하지 않음 (순수한 법률 정보만 제공)`,
+
+                criminal: `너는 AI 법률비서야. 형사 분야 상담을 진행해. 다음을 지켜:
+
+1. 형사 절차의 심각성을 인지시키되 과도한 불안 조성 금지
+2. 피의자/피고인의 권리와 피해자의 권리 균형있게 설명
+3. 수사 단계별 대응 방법 구체적 안내
+4. 형법, 형사소송법 중심으로 설명
+5. 증거보전의 중요성 강조
+6. 절대 구체적인 판례번호 생성 금지
+7. 공소시효, 형량 등은 일반적 기준만 제시
+8. 변호인 선임의 중요성과 시기 안내
+9. 합의, 고소 취하 등 실무적 내용 포함
+10. 긴급한 경우 즉시 변호사 상담 권유
+11. 절대 마크다운 문법 사용하지 말고 일반 텍스트로만 응답 (*, **, #, -, 등 모든 마크다운 기호 금지)
+12. 사용자가 '계속'이라고 입력하면 이전 답변의 연장선에서 추가 설명 제공
+13. 응답에 HTML 코드나 특수 태그 절대 포함하지 않음
+14. 응답에 법률사무소 정보나 연락처 절대 포함하지 않음 (순수한 법률 정보만 제공)`
+            },
+
+            moodIcons: {
+                civil: '📋',
+                family: '👨‍👩‍👧‍👦',
+                criminal: '🚨'
+            }
+        };
+
+        // Mode Selection
+        function selectMode(mood, card) {
+            // Remove previous selection
+            if (selectedMoodCard) {
+                selectedMoodCard.classList.remove('selected');
+            }
+
+            // Add selection to clicked card
+            card.classList.add('selected');
+            selectedMoodCard = card;
+            currentMood = mood;
+
+            // Enable start button
+            document.getElementById('startChatButton').disabled = false;
+        }
+
+        // Start Chat
+        function startChat() {
+            if (!currentMood) return;
+
+            // Show chat view
+            document.body.classList.add('chat-open');
+
+            // Clear previous conversation
+            conversationHistory = [];
+            document.getElementById('chatMessages').innerHTML = '';
+
+            // Add lawyer's opening message
+            const opening = lawyerPatterns.opening[currentMood];
+            addMessage('lawyer', opening, true); // true for disclaimer
+            conversationHistory.push({role: 'assistant', content: opening});
+
+            // Focus on input
+            document.getElementById('userInput').focus();
+        }
+
+        // Exit Chat
+        function exitChat() {
+            document.body.classList.remove('chat-open');
+        }
+
+        // Handle textarea auto-resize
+        document.addEventListener('DOMContentLoaded', function() {
+            const textarea = document.getElementById('userInput');
+            if (textarea) {
+                textarea.addEventListener('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+                });
+
+                // Handle Enter key
+                textarea.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                    }
+                });
+            }
+
+            // 모달 외부 클릭 시 닫기
+            const modal = document.getElementById('homeGuideModal');
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeHomeGuide();
+                    }
+                });
+            }
+        });
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            // Disable input while processing
+            input.disabled = true;
+            document.getElementById('sendButton').disabled = true;
+
+            // Add user message
+            addMessage('user', message);
+            conversationHistory.push({role: 'user', content: message});
+
+            // Clear input and reset height
+            input.value = '';
+            input.style.height = 'auto';
+
+            // Show thinking indicator
+            document.getElementById('thinkingIndicator').style.display = 'flex';
+
+            try {
+                // Call Gemini API
+                const response = await callGeminiAPI(message);
+
+                // Hide thinking indicator
+                document.getElementById('thinkingIndicator').style.display = 'none';
+
+                // Add lawyer's response
+                addMessage('lawyer', response);
+                conversationHistory.push({role: 'assistant', content: response});
+
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('thinkingIndicator').style.display = 'none';
+                addMessage('lawyer', '죄송합니다. 일시적인 오류가 발생했습니다. 다시 한 번 말씀해 주시겠습니까?');
+            } finally {
+                // Re-enable input
+                input.disabled = false;
+                document.getElementById('sendButton').disabled = false;
+                input.focus();
+            }
+        }
+
+        async function callGeminiAPI(userMessage) {
+            // Get the appropriate system prompt
+            const systemPrompt = lawyerPatterns.systemPrompts[currentMood];
+
+            if (!systemPrompt) {
+                console.error('No system prompt found for mood:', currentMood);
+                throw new Error('Invalid mood selected');
+            }
+
+            // Prepend system prompt to first message if this is the start of conversation
+            let modifiedMessage = userMessage;
+            if (conversationHistory.length === 1) { // Only opening message exists
+                modifiedMessage = systemPrompt + "\n\n사용자: " + userMessage;
+            }
+
+            const messages = conversationHistory.slice(1).map(msg => ({
+                role: msg.role === 'assistant' ? 'model' : 'user',
+                parts: [{text: msg.content}]
+            }));
+
+            // Add current message
+            messages.push({
+                role: 'user',
+                parts: [{text: modifiedMessage}]
+            });
+
+            const requestBody = {
+                contents: messages,
+                generationConfig: {
+                    temperature: 0.7,
+                    maxOutputTokens: 8192,
+                    topP: 0.9,
+                    topK: 40
+                }
+            };
+
+            // Try API call with current key, retry with next key if quota exceeded
+            let maxRetries = API_KEYS.length;
+            let lastError = null;
+
+            for (let attempt = 0; attempt < maxRetries; attempt++) {
+                try {
+                    const currentKey = getCurrentApiKey();
+                    keyUsageCount[currentKeyIndex]++;
+
+                    const response = await fetch(`${API_URL}?key=${currentKey}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.text();
+                        console.error(`API Error Response (Key ${currentKeyIndex}):`, errorData);
+
+                        // Check if it's a quota error
+                        if (response.status === 429 || errorData.includes('quota') || errorData.includes('limit')) {
+                            console.log(`API 키 ${currentKeyIndex} 한도 도달, 다음 키로 전환`);
+                            switchToNextApiKey();
+                            lastError = new Error(`API key ${currentKeyIndex} quota exceeded`);
+                            continue; // Try next key
+                        }
+
+                        throw new Error('API request failed: ' + errorData);
+                    }
+
+                    const data = await response.json();
+                    console.log(`API 호출 성공 (Key ${currentKeyIndex}, 사용횟수: ${keyUsageCount[currentKeyIndex]})`);
+                    return data.candidates[0].content.parts[0].text;
+
+                } catch (error) {
+                    console.error(`API 호출 실패 (Key ${currentKeyIndex}):`, error);
+
+                    if (isQuotaError(error) && attempt < maxRetries - 1) {
+                        console.log(`할당량 오류 감지, API 키 전환 (${currentKeyIndex} → ${(currentKeyIndex + 1) % API_KEYS.length})`);
+                        switchToNextApiKey();
+                        lastError = error;
+                        continue; // Try next key
+                    }
+
+                    lastError = error;
+                    break;
+                }
+            }
+
+            // If all keys failed, throw the last error
+            throw lastError || new Error('모든 API 키에서 요청이 실패했습니다.');
+        }
+
+        function addMessage(sender, text, isOpening = false) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+
+            const time = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+
+            // Only process disclaimer and contact info for opening messages
+            let mainText = text;
+            let disclaimerHtml = '';
+            let contactHtml = '';
+
+            if (isOpening) {
+                // Split text to separate disclaimer and contact info if it's opening message
+                let disclaimerText = '';
+                let contactInfo = '';
+
+                if (text.includes('※')) {
+                    const parts = text.split('※');
+                    mainText = parts[0].trim();
+                    const remainingText = '※' + parts[1];
+
+                    if (remainingText.includes('법률사무소')) {
+                        const contactParts = remainingText.split('법률사무소');
+                        disclaimerText = contactParts[0].trim();
+                        contactInfo = '법률사무소' + contactParts[1];
+                    } else {
+                        disclaimerText = remainingText;
+                    }
+                }
+
+                if (disclaimerText) {
+                    disclaimerHtml = `<div class="disclaimer-box"><strong>※ 중요안내</strong><br>${escapeHtml(disclaimerText.replace('※ 중요안내:', '').trim())}</div>`;
+                }
+
+                if (contactInfo) {
+                    contactHtml = `
+                        <div style="text-align: center; margin-top: 1rem; padding: 1rem; background: #f0f4ff; border-radius: 0.5rem;">
+                            <div style="color: #059669; font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem;">#</div>
+                            <div>
+                                <a href="#" style="color: #059669; text-decoration: none; margin-right: 1rem;">
+                                    <i class="fas fa-phone"></i> ####-####
+                                </a>
+                                <a href="#" target="_blank" style="color: #059669; text-decoration: none;">
+                                    <i class="fas fa-map-marker-alt"></i> 위치찾기
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            messageDiv.innerHTML = `
+                <div class="message-avatar">
+                    ${sender === 'lawyer' ? '<i class="fas fa-user-tie"></i>' : '<i class="fas fa-user"></i>'}
+                </div>
+                <div class="message-content">
+                    <div class="message-name">${sender === 'lawyer' ? 'AI 법률비서' : '나'}</div>
+                    <div class="message-text">
+                        ${escapeHtml(mainText)}
+                        ${disclaimerHtml}
+                        ${contactHtml}
+                    </div>
+                    <div class="message-time">${time}</div>
+                </div>
+            `;
+
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            let html = div.innerHTML;
+
+            // 마크다운 문법을 HTML로 변환
+            // 1. 코드 블록 처리 (먼저 처리하여 다른 마크다운과 충돌 방지)
+            html = html.replace(/```([\s\S]*?)```/g, '<pre style="background: #f1f5f9; padding: 12px; border-radius: 6px; overflow-x: auto; margin: 8px 0;"><code>$1</code></pre>');
+            html = html.replace(/`([^`]+)`/g, '<code style="background: #f1f5f9; padding: 2px 4px; border-radius: 3px; font-family: monospace; color: #e11d48;">$1</code>');
+
+            // 2. 볼드 처리 (**text** 또는 __text__)
+            html = html.replace(/\*\*([^\*]+?)\*\*/g, '<strong style="color: #1e293b;">$1</strong>');
+            html = html.replace(/__([^_]+?)__/g, '<strong style="color: #1e293b;">$1</strong>');
+
+            // 3. 이탤릭 처리 (*text* 또는 _text_) - 단일 문자는 제외
+            html = html.replace(/\*([^*\s][^*]*?[^*\s]|\w)\*/g, '<em style="color: #059669;">$1</em>');
+            html = html.replace(/_([^_\s][^_]*?[^_\s]|\w)_/g, '<em style="color: #059669;">$1</em>');
+
+            // 4. 링크 처리 [text](url)
+            html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color: #059669; text-decoration: underline;">$1</a>');
+
+            // 5. 제목 처리 (### text)
+            html = html.replace(/^### (.+)$/gm, '<h3 style="color: #1e293b; font-size: 1.1em; font-weight: 600; margin: 12px 0 6px 0;">$1</h3>');
+            html = html.replace(/^## (.+)$/gm, '<h2 style="color: #1e293b; font-size: 1.2em; font-weight: 700; margin: 16px 0 8px 0;">$1</h2>');
+            html = html.replace(/^# (.+)$/gm, '<h1 style="color: #1e293b; font-size: 1.3em; font-weight: 800; margin: 20px 0 10px 0;">$1</h1>');
+
+            // 6. 리스트 처리
+            // 이미 • 기호가 있는 경우 - 기호 중복 없이 그대로 유지, list-style 제거
+            html = html.replace(/^• (.+)$/gm, '<li style="margin: 4px 0; padding-left: 8px; list-style: none;">$1</li>');
+            // 순서 없는 리스트 (- item 또는 * item) - • 기호 추가, list-style 제거
+            html = html.replace(/^[\-\*] (.+)$/gm, '<li style="margin: 4px 0; padding-left: 8px; list-style: none;">• $1</li>');
+            // 순서 있는 리스트 (1. item)
+            html = html.replace(/^\d+\. (.+)$/gm, '<li style="margin: 4px 0; padding-left: 8px; list-style-type: decimal;">$1</li>');
+
+            // 7. 인용문 처리 (> text)
+            html = html.replace(/^> (.+)$/gm, '<blockquote style="border-left: 4px solid #059669; padding-left: 12px; margin: 8px 0; color: #475569; font-style: italic;">$1</blockquote>');
+
+            // 8. 구분선 처리 (---)
+            html = html.replace(/^---$/gm, '<hr style="border: none; border-top: 1px solid #e2e8f0; margin: 16px 0;">');
+
+            // 9. 줄바꿈 처리
+            html = html.replace(/\n/g, '<br>');
+
+            return html;
+        }
+
+        // Show consultation summary
+        async function showSummary() {
+            if (conversationHistory.length < 4) {
+                alert('조금 더 상담을 진행한 후에 요약서를 생성할 수 있습니다.');
+                return;
+            }
+
+            document.getElementById('thinkingIndicator').style.display = 'flex';
+
+            try {
+                const summaryPrompt = `너는 AI 법률비서야. 다음 상담 내용을 정리해서 요약서를 작성해줘. 반드시 아래 형식을 지켜:
+
+📋 법률 상담 요약서
+
+🔍 상담 내용:
+• (상담자의 주요 상황과 질문을 2-3문장으로 요약)
+
+⚖️ 법적 쟁점:
+1. (핵심 법률 쟁점 1)
+2. (핵심 법률 쟁점 2)
+3. (핵심 법률 쟁점 3) (있는 경우)
+
+💡 검토 의견:
+• (각 쟁점에 대한 일반적인 법률 정보와 방향성 제시, 3-4문장)
+
+📌 다음 단계:
+1. (구체적으로 준비하거나 확인해야 할 사항)
+2. (진행 가능한 법적 절차나 방법)
+3. (주의사항이나 기한 등)
+
+상담내용: ${conversationHistory.map(m => `${m.role}: ${m.content}`).join('\n')}`;
+
+                const response = await callGeminiAPIForSummary(summaryPrompt);
+
+                document.getElementById('thinkingIndicator').style.display = 'none';
+
+                // Create special summary message
+                addSummaryMessage(response);
+
+            } catch (error) {
+                document.getElementById('thinkingIndicator').style.display = 'none';
+                addMessage('lawyer', '죄송합니다. 요약서 생성 중 오류가 발생했습니다.');
+            }
+        }
+
+        // Add special formatted summary message
+        function addSummaryMessage(text) {
+            const messagesContainer = document.getElementById('chatMessages');
+
+            // First message: Summary content without disclaimer
+            const summaryDiv = document.createElement('div');
+            summaryDiv.className = 'message lawyer summary-message';
+
+            const time = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+
+            summaryDiv.innerHTML = `
+                <div class="message-avatar">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <div class="message-content">
+                    <div class="message-name">상담 요약서</div>
+                    <div class="message-text summary-text">${formatSummaryText(text)}</div>
+                    <div class="message-time">${time}</div>
+                </div>
+            `;
+
+            messagesContainer.appendChild(summaryDiv);
+
+            // Second message: Important notice (same as opening message)
+            const disclaimerDiv = document.createElement('div');
+            disclaimerDiv.className = 'message lawyer';
+
+            const time2 = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+
+            const disclaimerText = `※ 중요안내: 저는 AI 기반 일반 법률 정보 제공 서비스입니다. 제공되는 모든 정보는 법적 효력이 없고 정확성을 보장하지 않으므로 참고용으로만 활용해 주시기 바랍니다. 중요한 결정은 반드시 변호사와 상담 후 진행하세요.`;
+
+            const disclaimerHtml = `<div class="disclaimer-box"><strong>※ 중요안내</strong><br>${escapeHtml(disclaimerText.replace('※ 중요안내:', '').trim())}</div>`;
+
+            const contactHtml = `
+                <div style="text-align: center; margin-top: 1rem; padding: 1rem; background: #f0fdf4; border-radius: 0.5rem;">
+                    <div style="color: #059669; font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem;">#</div>
+                    <div>
+                        <a href="#" style="color: #059669; text-decoration: none; margin-right: 1rem;">
+                            <i class="fas fa-phone"></i> ####-####
+                        </a>
+                        <a href="#" target="_blank" style="color: #059669; text-decoration: none;">
+                            <i class="fas fa-map-marker-alt"></i> 위치찾기
+                        </a>
+                    </div>
+                </div>
+            `;
+
+            disclaimerDiv.innerHTML = `
+                <div class="message-avatar">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+                <div class="message-content">
+                    <div class="message-name">AI 법률비서</div>
+                    <div class="message-text">
+                        ${disclaimerHtml}
+                        ${contactHtml}
+                    </div>
+                    <div class="message-time">${time2}</div>
+                </div>
+            `;
+
+            messagesContainer.appendChild(disclaimerDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            // Save both to history
+            conversationHistory.push({role: 'assistant', content: text});
+            conversationHistory.push({role: 'assistant', content: disclaimerText});
+        }
+
+        // Format summary text with proper HTML
+        function formatSummaryText(text) {
+            // escapeHtml 함수와 동일한 마크다운 변환 적용
+            return escapeHtml(text);
+        }
+
+        // Reset conversation
+        function resetConversation() {
+            if (confirm('정말 새로운 상담을 시작하시겠습니까?\n현재 상담 내용은 모두 사라집니다.')) {
+                // Clear messages
+                document.getElementById('chatMessages').innerHTML = '';
+                conversationHistory = [];
+
+                // Add new opening
+                const opening = lawyerPatterns.opening[currentMood];
+                addMessage('lawyer', opening, true);
+                conversationHistory.push({role: 'assistant', content: opening});
+            }
+        }
+
+        // Helper function for summary API call
+        async function callGeminiAPIForSummary(prompt) {
+            const requestBody = {
+                contents: [{
+                    role: 'user',
+                    parts: [{text: prompt}]
+                }],
+                generationConfig: {
+                    temperature: 0.5,
+                    maxOutputTokens: 8192,
+                    topP: 0.9,
+                    topK: 40
+                }
+            };
+
+            // Try API call with current key, retry with next key if quota exceeded
+            let maxRetries = API_KEYS.length;
+            let lastError = null;
+
+            for (let attempt = 0; attempt < maxRetries; attempt++) {
+                try {
+                    const currentKey = getCurrentApiKey();
+                    keyUsageCount[currentKeyIndex]++;
+
+                    const response = await fetch(`${API_URL}?key=${currentKey}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.text();
+                        console.error(`Summary API Error Response (Key ${currentKeyIndex}):`, errorData);
+
+                        // Check if it's a quota error
+                        if (response.status === 429 || errorData.includes('quota') || errorData.includes('limit')) {
+                            console.log(`요약 API - 키 ${currentKeyIndex} 한도 도달, 다음 키로 전환`);
+                            switchToNextApiKey();
+                            lastError = new Error(`Summary API key ${currentKeyIndex} quota exceeded`);
+                            continue; // Try next key
+                        }
+
+                        throw new Error('Summary API request failed: ' + errorData);
+                    }
+
+                    const data = await response.json();
+                    console.log(`요약 API 호출 성공 (Key ${currentKeyIndex})`);
+                    return data.candidates[0].content.parts[0].text;
+
+                } catch (error) {
+                    console.error(`요약 API 호출 실패 (Key ${currentKeyIndex}):`, error);
+
+                    if (isQuotaError(error) && attempt < maxRetries - 1) {
+                        console.log(`요약 API 할당량 오류 감지, 키 전환`);
+                        switchToNextApiKey();
+                        lastError = error;
+                        continue; // Try next key
+                    }
+
+                    lastError = error;
+                    break;
+                }
+            }
+
+            // If all keys failed, throw the last error
+            throw lastError || new Error('모든 API 키에서 요약 요청이 실패했습니다.');
+        }
+    </script>
+</head>
+<body>
+<!-- 필수: 헤더 -->
+<header class="header">
+    <div class="header-container">
+        <a href="https://jsulaw.co.kr/" class="header-left">
+            <div class="main-info">
+                <strong>#<span class="shin-calligraphy-small">#</span></strong>
+                <span class="lawyer-name">변호사 #</span>
+            </div>
+            <div class="website-info">
+                <i class="fas fa-home"></i>
+                <span>#</span>
+            </div>
+        </a>
+        <div class="browser-tip" onclick="showBrowserTip()">
+            <i class="fas fa-star"></i>
+        </div>
+    </div>
+</header>
+
+<!-- 메인 콘텐츠 영역 -->
+<main class="main-content">
+    <!-- 선택적: 서비스 페이지 헤더 -->
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-robot page-icon"></i>
+            AI 법률상담
+        </h1>
+        <p class="page-description">
+            AI 법률비서와 법적 고민을 상담하세요
+        </p>
+    </div>
+
+    <!-- Mode Selection View -->
+    <div class="mode-selection-view">
+        <!-- Lawyer Introduction -->
+        <div class="lawyer-intro">
+            <h2>"AI 법률비서입니다"</h2>
+            <p>
+                상담을 원하시는 분야를 선택해 주세요.
+            </p>
+        </div>
+
+        <!-- Mode Cards -->
+        <div class="mode-cards">
+            <div class="mode-card civil" data-mood="civil" onclick="selectMode('civil', this)">
+                <h3 class="mode-title">민사</h3>
+                <p class="mode-description">
+                    <span class="desc-full">계약, 손해배상, 부동산<br>채권채무, 임대차 등</span>
+                    <span class="desc-short">계약, 부동산, 채권...</span>
+                </p>
+            </div>
+
+            <div class="mode-card family" data-mood="family" onclick="selectMode('family', this)">
+                <h3 class="mode-title">가사</h3>
+                <p class="mode-description">
+                    <span class="desc-full">이혼, 양육권, 양육비<br>상속, 유언, 재산분할 등</span>
+                    <span class="desc-short">이혼, 상속, 양육권...</span>
+                </p>
+            </div>
+
+            <div class="mode-card criminal" data-mood="criminal" onclick="selectMode('criminal', this)">
+                <h3 class="mode-title">형사</h3>
+                <p class="mode-description">
+                    <span class="desc-full">고소, 고발, 형사합의<br>피의자, 피해자 상담 등</span>
+                    <span class="desc-short">고소, 고발, 형사...</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Start Button -->
+        <div class="start-button-container">
+            <button class="start-button" id="startChatButton" onclick="startChat()" disabled>
+                <i class="fas fa-comments"></i>
+                상담 시작하기
+            </button>
+        </div>
+    </div>
+</main>
+
+<!-- Chat View (Initially Hidden) -->
+<div class="chat-view">
+    <div class="chat-header">
+        <button class="chat-back-button" onclick="exitChat()">
+            <i class="fas fa-chevron-left"></i>
+            이전페이지로
+        </button>
+        <div class="chat-title">
+            <i class="fas fa-robot" style="font-size: 1rem;"></i>
+            AI 법률상담
+        </div>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+        <!-- Messages will be dynamically added here -->
+    </div>
+
+    <div class="thinking" id="thinkingIndicator">
+        <span>#가 검토하고 있습니다</span>
+        <div class="thinking-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+
+    <div class="chat-input-area">
+            <textarea
+                    class="chat-input"
+                    id="userInput"
+                    placeholder="법률 고민을 자세히 들려주세요..."
+                    rows="1"
+            ></textarea>
+        <button class="send-button" id="sendButton" onclick="sendMessage()">
+            <i class="fas fa-paper-plane"></i>
+        </button>
+    </div>
+
+    <div class="chat-actions no-print">
+        <button class="chat-action-btn" onclick="showSummary()">
+            <i class="fas fa-clipboard-list"></i>
+            <span>상담 요약서</span>
+        </button>
+        <button class="chat-action-btn" onclick="resetConversation()">
+            <i class="fas fa-sync-alt"></i>
+            <span>새 상담 시작</span>
+        </button>
+    </div>
+</div>
+
+<!-- 필수: 푸터 -->
+<footer class="footer">
+    <div class="footer-container">
+        <div class="footer-links">
+            <a href="#" target="_blank">
+                <i class="fas fa-globe"></i>
+                홈페이지
+            </a>
+            <a href="#">
+                <i class="fas fa-phone"></i>
+                전화상담
+            </a>
+            <a href="#" target="_blank">
+                <i class="fas fa-map-marker-alt"></i>
+                오시는길
+            </a>
+        </div>
+        <p class="footer-copyright">
+            이 웹 프로그램의 저작권은 법률사무소 <span class="shin-calligraphy-small">#</span>에 있으며, 자유롭게 공유 및 배포하실 수 있습니다.<br>
+            단, 각 프로그램의 결과는 법적 효력을 갖지 않으며 정확성을 보장하지 않으므로 참고용으로만 활용해 주시기 바랍니다.<br>
+            © 2025 # <span class="shin-calligraphy-small">#</span>. All rights reserved.
+        </p>
+    </div>
+</footer>
+
+
+<!-- 필수: 홈 화면 추가 안내 모달 -->
+<div class="home-guide-modal" id="homeGuideModal">
+    <div class="home-guide-content">
+        <button class="guide-close" onclick="closeHomeGuide()">&times;</button>
+
+        <!-- 링크 복사 버튼 -->
+        <div class="service-link-copy" onclick="copyServiceLink()">
+            <i class="fas fa-link"></i>
+            <span id="serviceLinkText">AI 법률상담 <strong style="color: #ffffff;">주소 복사</strong></span>
+            <i class="fas fa-external-link-alt" style="font-size: 11px; margin-left: auto; opacity: 0.8;"></i>
+        </div>
+
+        <div class="guide-header">
+            <h3>
+                <span style="display: block; margin-bottom: 5px;">📱 "AI 법률상담"</span>
+                <span style="display: block;">홈 화면에 추가하세요!</span>
+            </h3>
+            <p>앱처럼 편리하게 사용하실 수 있습니다</p>
+        </div>
+
+        <div class="browser-section">
+            <h4>
+                <span class="browser-icon samsung-icon">S</span>
+                삼성 브라우저
+            </h4>
+            <ol class="guide-steps">
+                <li>우측 상단 메뉴(⋮) 터치</li>
+                <li>'홈페이지 추가' 선택</li>
+                <li>이름 확인 후 '추가' 터치</li>
+            </ol>
+        </div>
+
+        <div class="browser-section">
+            <h4>
+                    <span class="browser-icon chrome-icon">
+                        <img src="https://cdn.jsdelivr.net/npm/simple-icons@v6/icons/googlechrome.svg" width="16" height="16" style="filter: invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(118%) contrast(119%);">
+                    </span>
+                Chrome
+            </h4>
+            <ol class="guide-steps">
+                <li>우측 상단 메뉴(⋮) 터치</li>
+                <li>'홈 화면에 추가' 선택</li>
+                <li>이름 확인 후 '추가' 터치</li>
+            </ol>
+        </div>
+
+        <div class="browser-section">
+            <h4>
+                    <span class="browser-icon safari-icon">
+                        <i class="fab fa-safari"></i>
+                    </span>
+                iPhone (Safari)
+            </h4>
+            <ol class="guide-steps">
+                <li>하단 공유 버튼 터치</li>
+                <li>'홈 화면에 추가' 선택</li>
+                <li>이름 확인 후 '추가' 터치</li>
+            </ol>
+        </div>
+
+        <div class="guide-footer">
+            <div class="guide-benefit">
+                <i class="fas fa-check-circle"></i>
+                <span>앱처럼 빠르게 접속할 수 있어요!</span>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
