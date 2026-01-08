@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta property="og:title" content="🎮 카드 뒤집기 게임">
+    <meta property="og:description" content="친구와 함께 즐기는 메모리 게임! 최고 기록에 도전하세요!">
+    <meta property="og:image" content="https://via.placeholder.com/512x512/4A90E2/FFFFFF?text=Card+Game">
+    <title>🎮 카드 뒤집기 게임</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 15px;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .score-item {
+            text-align: center;
+        }
+
+        .score-value {
+            font-size: 24px;
+            display: block;
+            margin-top: 5px;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            aspect-ratio: 1;
+            background: linear-gradient(45deg, #4A90E2, #7B68EE);
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 30px;
+            transition: all 0.3s ease;
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+        }
+
+        .card.flipped {
+            background: linear-gradient(45deg, #56CCF2, #2F80ED);
+            transform: rotateY(180deg);
+        }
+
+        .card.matched {
+            background: linear-gradient(45deg, #11998e, #38ef7d);
+            animation: bounce 0.5s ease;
+            pointer-events: none;
+        }
+
+        .card-content {
+            display: none;
+        }
+
+        .card.flipped .card-content,
+        .card.matched .card-content {
+            display: block;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+            min-width: 120px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .share-button {
+            background: linear-gradient(135deg, #FEE140 0%, #FA709A 100%);
+        }
+
+        .game-over {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 10px;
+            color: white;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .game-over.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .card {
+                font-size: 24px;
+            }
+
+            button {
+                font-size: 14px;
+                padding: 10px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="game-container">
+    <h1>🎮 카드 뒤집기 게임</h1>
+
+    <div class="score-board">
+        <div class="score-item">
+            <span>시간</span>
+            <span class="score-value" id="timer">0</span>
+        </div>
+        <div class="score-item">
+            <span>이동</span>
+            <span class="score-value" id="moves">0</span>
+        </div>
+        <div class="score-item">
+            <span>최고기록</span>
+            <span class="score-value" id="best">-</span>
+        </div>
+    </div>
+
+    <div class="game-over" id="gameOver">
+        <h2>🎉 축하합니다!</h2>
+        <p id="finalScore"></p>
+    </div>
+
+    <div class="game-board" id="gameBoard"></div>
+
+    <div class="controls">
+        <button onclick="startGame()">🔄 새 게임</button>
+        <button class="share-button" onclick="shareGame()">💬 카톡 공유</button>
+    </div>
+</div>
+
+<script>
+    const emojis = ['🎈', '🎨', '🎭', '🎪', '🎯', '🎲', '🎸', '🎺'];
+    let cards = [];
+    let flippedCards = [];
+    let matchedPairs = 0;
+    let moves = 0;
+    let timer = 0;
+    let timerInterval;
+    let gameStarted = false;
+
+    function initGame() {
+        const gameBoard = document.getElementById('gameBoard');
+        gameBoard.innerHTML = '';
+        cards = [...emojis, ...emojis].sort(() => Math.random() - 0.5);
+
+        cards.forEach((emoji, index) => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.dataset.index = index;
+            card.dataset.emoji = emoji;
+            card.innerHTML = `<span class="card-content">${emoji}</span>`;
+            card.addEventListener('click', flipCard);
+            gameBoard.appendChild(card);
+        });
+    }
+
+    function flipCard() {
+        if (!gameStarted) {
+            startTimer();
+            gameStarted = true;
+        }
+
+        if (flippedCards.length === 2) return;
+        if (this.classList.contains('flipped')) return;
+        if (this.classList.contains('matched')) return;
+
+        this.classList.add('flipped');
+        flippedCards.push(this);
+
+        if (flippedCards.length === 2) {
+            moves++;
+            document.getElementById('moves').textContent = moves;
+            checkMatch();
+        }
+    }
+
+    function checkMatch() {
+        const [card1, card2] = flippedCards;
+        const match = card1.dataset.emoji === card2.dataset.emoji;
+
+        setTimeout(() => {
+            if (match) {
+                card1.classList.add('matched');
+                card2.classList.add('matched');
+                matchedPairs++;
+
+                if (matchedPairs === emojis.length) {
+                    endGame();
+                }
+            } else {
+                card1.classList.remove('flipped');
+                card2.classList.remove('flipped');
+            }
+            flippedCards = [];
+        }, 600);
+    }
+
+    function startTimer() {
+        timerInterval = setInterval(() => {
+            timer++;
+            document.getElementById('timer').textContent = timer;
+        }, 1000);
+    }
+
+    function stopTimer() {
+        clearInterval(timerInterval);
+    }
+
+    function startGame() {
+        stopTimer();
+        timer = 0;
+        moves = 0;
+        matchedPairs = 0;
+        flippedCards = [];
+        gameStarted = false;
+
+        document.getElementById('timer').textContent = '0';
+        document.getElementById('moves').textContent = '0';
+        document.getElementById('gameOver').classList.remove('show');
+
+        initGame();
+    }
+
+    function endGame() {
+        stopTimer();
+        const score = moves + Math.floor(timer / 2);
+        const bestScore = localStorage.getItem('bestScore');
+
+        if (!bestScore || score < parseInt(bestScore)) {
+            localStorage.setItem('bestScore', score.toString());
+            document.getElementById('best').textContent = score;
+        }
+
+        document.getElementById('finalScore').textContent =
+            `시간: ${timer}초 | 이동: ${moves}회 | 점수: ${score}점`;
+        document.getElementById('gameOver').classList.add('show');
+    }
+
+    function shareGame() {
+        const bestScore = localStorage.getItem('bestScore') || '아직 없음';
+        const shareText = `🎮 카드 뒤집기 게임\n\n나의 최고 기록: ${bestScore}점\n\n친구에게 게임 파일을 보내주세요!`;
+
+        // Clipboard API 사용 (최신 브라우저)
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(shareText).then(() => {
+                alert('✅ 복사 완료!\n\n카카오톡에 붙여넣기(Ctrl+V) 하세요.\n게임 파일(memory_card_game.html)도 함께 전송해주세요!');
+            }).catch(() => {
+                fallbackCopy(shareText);
+            });
+        } else {
+            fallbackCopy(shareText);
+        }
+    }
+
+    function fallbackCopy(text) {
+        // 구형 브라우저용 복사 방법
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'absolute';
+        textarea.style.left = '-9999px';
+        textarea.style.top = '0';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+
+        try {
+            const successful = document.execCommand('copy');
+            if (successful) {
+                alert('✅ 복사 완료!\n\n카카오톡에 붙여넣기(Ctrl+V) 하세요.\n게임 파일(memory_card_game.html)도 함께 전송해주세요!');
+            } else {
+                alert('❌ 자동 복사 실패\n\n아래 내용을 직접 복사해주세요:\n\n' + text);
+            }
+        } catch (err) {
+            alert('❌ 자동 복사 실패\n\n아래 내용을 직접 복사해주세요:\n\n' + text);
+        }
+
+        document.body.removeChild(textarea);
+    }
+
+    window.onload = () => {
+        const bestScore = localStorage.getItem('bestScore');
+        if (bestScore) {
+            document.getElementById('best').textContent = bestScore;
+        }
+        startGame();
+    };
+</script>
+</body>
+</html>
