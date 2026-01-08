@@ -1,0 +1,756 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>이미지 크기 변환기 - Image Resizer</title>
+
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --panel:#ffffff;
+            --text:#0f172a;
+            --muted:#64748b;
+            --border:#e5e7eb;
+            --shadow: 0 16px 50px rgba(15,23,42,.10);
+            --radius:18px;
+
+            --brand:#2563eb;
+            --brand2:#60a5fa;
+
+            --success:#16a34a;
+            --danger:#ef4444;
+
+            --ring: rgba(37,99,235,.14);
+        }
+
+        *{ box-sizing:border-box; }
+        html,body{ height:100%; }
+        body{
+            margin:0;
+            font-family: ui-sans-serif, system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", Segoe UI, Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.55;
+        }
+
+        .container{
+            width: min(1100px, 100%);
+            margin: 0 auto;
+            padding: 22px 16px 42px;
+        }
+
+        .header{
+            text-align:center;
+            padding: 18px 0 10px;
+        }
+        .header h1{
+            margin:0 0 6px;
+            font-size: 26px;
+            font-weight: 950;
+            letter-spacing: .2px;
+        }
+        .header p{
+            margin:0;
+            color: var(--muted);
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .main-content{
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .upload-section, .controls-section, .preview-section{
+            background: var(--panel);
+            border: 1px solid rgba(229,231,235,.9);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 16px;
+        }
+
+        .section-title{
+            margin: 0 0 12px;
+            font-weight: 950;
+            font-size: 15px;
+        }
+
+        /* Upload area */
+        .upload-area{
+            border: 1px dashed rgba(100,116,139,.45);
+            background: linear-gradient(180deg, #ffffff, #fbfbfd);
+            border-radius: 18px;
+            padding: 18px 14px;
+            text-align:center;
+            cursor:pointer;
+            transition: border-color .15s ease, transform .05s ease, background .15s ease;
+            user-select:none;
+        }
+        .upload-area:hover{
+            border-color: rgba(37,99,235,.55);
+            background: linear-gradient(180deg, #ffffff, #f8fafc);
+        }
+        .upload-area.dragover{
+            border-color: rgba(37,99,235,.8);
+            box-shadow: 0 0 0 6px var(--ring);
+            transform: translateY(-1px);
+        }
+        .upload-icon{
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        .upload-text{
+            font-weight: 900;
+            margin-bottom: 4px;
+        }
+        .upload-hint{
+            color: var(--muted);
+            font-weight: 700;
+            font-size: 12px;
+        }
+        .file-input{ display:none; }
+
+        /* Controls */
+        .control-group{ margin: 14px 0; }
+        .control-label{
+            display:block;
+            font-weight: 900;
+            font-size: 13px;
+            margin-bottom: 8px;
+            color:#334155;
+        }
+
+        .size-presets{
+            display:flex;
+            flex-wrap:wrap;
+            gap: 8px;
+        }
+        .preset-btn{
+            padding: 9px 10px;
+            border-radius: 14px;
+            border: 1px solid rgba(229,231,235,.9);
+            background:#fff;
+            font-weight: 900;
+            font-size: 12px;
+            cursor:pointer;
+            transition: background .15s ease, transform .05s ease, border-color .15s ease;
+            user-select:none;
+        }
+        .preset-btn:hover{ background:#f9fafb; }
+        .preset-btn:active{ transform: translateY(1px); }
+        .preset-btn.active{
+            border-color: rgba(37,99,235,.55);
+            background: rgba(37,99,235,.08);
+        }
+
+        .dimension-inputs{
+            display:flex;
+            gap: 8px;
+            align-items:center;
+        }
+
+        .control-input{
+            width: 100%;
+            border: 1px solid rgba(229,231,235,.95);
+            border-radius: 14px;
+            padding: 10px 12px;
+            font-weight: 800;
+            font-size: 14px;
+            outline:none;
+            transition: box-shadow .15s ease, border-color .15s ease;
+        }
+        .control-input:focus{
+            border-color: rgba(37,99,235,.7);
+            box-shadow: 0 0 0 6px var(--ring);
+        }
+
+        .lock-icon{
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            border: 1px solid rgba(229,231,235,.9);
+            background:#fff;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            cursor:pointer;
+            user-select:none;
+            transition: background .15s ease, transform .05s ease;
+            font-size: 18px;
+        }
+        .lock-icon:hover{ background:#f9fafb; }
+        .lock-icon:active{ transform: translateY(1px); }
+        .lock-icon.locked{
+            border-color: rgba(37,99,235,.55);
+            background: rgba(37,99,235,.08);
+        }
+
+        .format-selector{
+            display:flex;
+            gap: 8px;
+            flex-wrap:wrap;
+        }
+        .format-btn{
+            padding: 9px 12px;
+            border-radius: 14px;
+            border: 1px solid rgba(229,231,235,.9);
+            background:#fff;
+            font-weight: 950;
+            font-size: 12px;
+            cursor:pointer;
+            user-select:none;
+            transition: background .15s ease, transform .05s ease, border-color .15s ease;
+        }
+        .format-btn:hover{ background:#f9fafb; }
+        .format-btn:active{ transform: translateY(1px); }
+        .format-btn.active{
+            border-color: rgba(37,99,235,.55);
+            background: rgba(37,99,235,.08);
+        }
+
+        /* Buttons */
+        .btn{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap: 8px;
+            padding: 11px 14px;
+            border-radius: 16px;
+            border: 1px solid transparent;
+            cursor:pointer;
+            font-weight: 950;
+            font-size: 13px;
+            user-select:none;
+            transition: transform .05s ease, background .15s ease, border-color .15s ease, opacity .15s ease;
+        }
+        .btn:active{ transform: translateY(1px); }
+        .btn-primary{
+            background: var(--brand);
+            color:#fff;
+            box-shadow: 0 14px 30px rgba(37,99,235,.20);
+        }
+        .btn-primary:hover{ background:#1d4ed8; }
+        .btn-success{
+            background: var(--success);
+            color:#fff;
+            box-shadow: 0 14px 30px rgba(22,163,74,.18);
+        }
+        .btn-success:hover{ background:#15803d; }
+        .btn[disabled]{
+            opacity: .55;
+            cursor:not-allowed;
+            box-shadow:none;
+        }
+
+        /* Preview */
+        .preview-section{
+            margin-top: 12px;
+        }
+        .hidden{ display:none !important; }
+
+        .preview-container{
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .preview-box{
+            border: 1px solid rgba(229,231,235,.9);
+            border-radius: 18px;
+            padding: 12px;
+            background: linear-gradient(180deg, #ffffff, #fbfbfd);
+        }
+        .preview-title{
+            font-weight: 950;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+        .preview-image{
+            width:100%;
+            height: 300px;
+            object-fit: contain;
+            border-radius: 16px;
+            border: 1px solid rgba(229,231,235,.9);
+            background:#fff;
+        }
+        .image-info{
+            margin-top: 10px;
+            color: var(--muted);
+            font-weight: 800;
+            font-size: 12px;
+            text-align:center;
+        }
+
+        .progress-bar{
+            height: 10px;
+            border-radius: 999px;
+            background: rgba(100,116,139,.15);
+            overflow:hidden;
+            margin-top: 12px;
+            border: 1px solid rgba(229,231,235,.9);
+        }
+        .progress-fill{
+            height:100%;
+            width:0%;
+            background: linear-gradient(90deg, var(--brand), var(--brand2));
+            border-radius: 999px;
+            transition: width .12s ease;
+        }
+
+        .download-section{
+            display:flex;
+            justify-content:center;
+            margin-top: 14px;
+        }
+
+        /* Toast */
+        .toast{
+            position: fixed;
+            left: 50%;
+            bottom: 18px;
+            transform: translateX(-50%) translateY(10px);
+            opacity: 0;
+            background: rgba(255,255,255,.92);
+            border: 1px solid rgba(229,231,235,.9);
+            box-shadow: 0 16px 50px rgba(15,23,42,.14);
+            border-radius: 16px;
+            padding: 12px 14px;
+            font-weight: 900;
+            font-size: 13px;
+            color: #0f172a;
+            transition: opacity .2s ease, transform .2s ease;
+            z-index: 9999;
+            max-width: calc(100% - 24px);
+            text-align:center;
+        }
+        .toast.show{
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        .toast.success{
+            border-color: rgba(22,163,74,.25);
+        }
+        .toast.error{
+            border-color: rgba(239,68,68,.25);
+        }
+
+        @media (max-width: 960px){
+            .main-content{ grid-template-columns: 1fr; }
+            .preview-container{ grid-template-columns: 1fr; }
+            .preview-image{ height: 280px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🖼️ 이미지 크기 변환기</h1>
+        <p>이미지를 원하는 크기로 쉽고 빠르게 변환하세요</p>
+    </div>
+
+    <div class="main-content">
+        <!-- 업로드 -->
+        <div class="upload-section">
+            <h2 class="section-title">📁 이미지 업로드</h2>
+
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📷</div>
+                <div class="upload-text">이미지를 드래그하거나 클릭하여 업로드</div>
+                <div class="upload-hint">JPG, PNG, WebP 지원 (최대 10MB)</div>
+                <input type="file" id="fileInput" class="file-input" accept="image/*" />
+            </div>
+
+            <div style="margin-top: 1rem; text-align: center;">
+                <button class="btn btn-primary" type="button" id="pickFileBtn">📁 파일 선택</button>
+            </div>
+        </div>
+
+        <!-- 설정 -->
+        <div class="controls-section">
+            <h2 class="section-title">⚙️ 변환 설정</h2>
+
+            <div class="control-group">
+                <label class="control-label">📐 크기 프리셋</label>
+                <div class="size-presets" id="presetWrap">
+                    <div class="preset-btn" data-width="100" data-height="100">100×100</div>
+                    <div class="preset-btn" data-width="200" data-height="200">200×200</div>
+                    <div class="preset-btn" data-width="300" data-height="300">300×300</div>
+                    <div class="preset-btn" data-width="500" data-height="500">500×500</div>
+                    <div class="preset-btn" data-width="800" data-height="600">800×600</div>
+                    <div class="preset-btn" data-width="1024" data-height="768">1024×768</div>
+                    <div class="preset-btn" data-width="1920" data-height="1080">1920×1080</div>
+                    <div class="preset-btn" data-width="custom" data-height="custom">사용자 정의</div>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">📏 사용자 정의 크기</label>
+                <div class="dimension-inputs">
+                    <input type="number" id="widthInput" class="control-input" placeholder="너비" min="1" max="5000" />
+                    <div class="lock-icon locked" id="lockIcon" title="비율 고정">🔒</div>
+                    <input type="number" id="heightInput" class="control-input" placeholder="높이" min="1" max="5000" />
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">📄 출력 포맷</label>
+                <div class="format-selector">
+                    <div class="format-btn active" data-format="jpeg">JPEG</div>
+                    <div class="format-btn" data-format="png">PNG</div>
+                    <div class="format-btn" data-format="webp">WebP</div>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">🎨 품질 설정</label>
+                <input type="range" id="qualitySlider" class="control-input" min="10" max="100" value="85"
+                       style="margin-bottom: .5rem;" />
+                <div style="text-align: center; font-size: .9rem; color: var(--muted); font-weight:800;">
+                    품질: <span id="qualityValue">85</span>%
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="resizeBtn" style="width:100%; margin-top: 6px;" disabled>
+                🔄 이미지 변환
+            </button>
+        </div>
+    </div>
+
+    <!-- 미리보기 -->
+    <div class="preview-section hidden" id="previewSection">
+        <h2 class="section-title">👁️ 미리보기</h2>
+
+        <div class="preview-container">
+            <div class="preview-box">
+                <div class="preview-title">원본 이미지</div>
+                <img id="originalPreview" class="preview-image" alt="원본 이미지" />
+                <div class="image-info" id="originalInfo"></div>
+            </div>
+
+            <div class="preview-box">
+                <div class="preview-title">변환된 이미지</div>
+                <img id="resizedPreview" class="preview-image hidden" alt="변환된 이미지" />
+                <div class="image-info" id="resizedInfo"></div>
+
+                <div class="progress-bar hidden" id="progressBar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="download-section hidden" id="downloadSection">
+            <button class="btn btn-success" id="downloadBtn">💾 다운로드</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ===== Global State =====
+    let originalImage = null;
+    let resizedImage = null;
+    let aspectRatio = 1;
+    let isLocked = true;
+    let currentFormat = 'jpeg';
+    let originalFileName = 'image';
+
+    // ===== DOM =====
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const pickFileBtn = document.getElementById('pickFileBtn');
+
+    const widthInput = document.getElementById('widthInput');
+    const heightInput = document.getElementById('heightInput');
+    const lockIcon = document.getElementById('lockIcon');
+
+    const qualitySlider = document.getElementById('qualitySlider');
+    const qualityValue = document.getElementById('qualityValue');
+
+    const resizeBtn = document.getElementById('resizeBtn');
+
+    const previewSection = document.getElementById('previewSection');
+    const originalPreview = document.getElementById('originalPreview');
+    const resizedPreview = document.getElementById('resizedPreview');
+    const originalInfo = document.getElementById('originalInfo');
+    const resizedInfo = document.getElementById('resizedInfo');
+
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+
+    const downloadSection = document.getElementById('downloadSection');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    // ===== Helpers =====
+    function showToast(message, type='success'){
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        requestAnimationFrame(() => toast.classList.add('show'));
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 250);
+        }, 2800);
+    }
+
+    function formatFileSize(bytes){
+        if (!bytes || bytes <= 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes','KB','MB','GB'];
+        const i = Math.floor(Math.log(bytes)/Math.log(k));
+        return (bytes / Math.pow(k,i)).toFixed(i === 0 ? 0 : 2) + ' ' + sizes[i];
+    }
+
+    function guessBaseName(filename){
+        if (!filename) return 'image';
+        const lastDot = filename.lastIndexOf('.');
+        if (lastDot <= 0) return filename;
+        return filename.slice(0, lastDot);
+    }
+
+    function setPresetActive(el){
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+    }
+
+    function setFormatActive(el){
+        document.querySelectorAll('.format-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+    }
+
+    // ===== File Handling =====
+    function processFile(file){
+        if (!file.type.startsWith('image/')){
+            showToast('이미지 파일만 업로드할 수 있습니다.', 'error');
+            return;
+        }
+        if (file.size > 10 * 1024 * 1024){
+            showToast('파일 크기는 10MB 이하여야 합니다.', 'error');
+            return;
+        }
+
+        originalFileName = guessBaseName(file.name);
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                originalImage = img;
+                aspectRatio = img.width / img.height;
+
+                originalPreview.src = e.target.result;
+                originalInfo.textContent = `${img.width} × ${img.height} px (${formatFileSize(file.size)})`;
+
+                widthInput.value = img.width;
+                heightInput.value = img.height;
+
+                previewSection.classList.remove('hidden');
+                resizeBtn.disabled = false;
+
+                // reset result UI
+                resizedImage = null;
+                resizedPreview.classList.add('hidden');
+                downloadSection.classList.add('hidden');
+                resizedInfo.textContent = '';
+
+                showToast('이미지가 성공적으로 업로드되었습니다.', 'success');
+            };
+            img.onerror = () => showToast('이미지 로드에 실패했습니다.', 'error');
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // ===== Dimension Handling =====
+    function handleWidthChange(){
+        if (!originalImage) return;
+        if (!isLocked) return;
+
+        const w = parseInt(widthInput.value, 10);
+        if (w > 0){
+            heightInput.value = Math.max(1, Math.round(w / aspectRatio));
+        }
+    }
+
+    function handleHeightChange(){
+        if (!originalImage) return;
+        if (!isLocked) return;
+
+        const h = parseInt(heightInput.value, 10);
+        if (h > 0){
+            widthInput.value = Math.max(1, Math.round(h * aspectRatio));
+        }
+    }
+
+    function toggleLock(){
+        isLocked = !isLocked;
+        lockIcon.textContent = isLocked ? '🔒' : '🔓';
+        lockIcon.classList.toggle('locked', isLocked);
+        lockIcon.title = isLocked ? '비율 고정' : '비율 해제';
+        showToast(isLocked ? '비율 고정: ON' : '비율 고정: OFF', 'success');
+    }
+
+    // ===== Resize =====
+    function handleResize(){
+        if (!originalImage) return;
+
+        const width = parseInt(widthInput.value, 10);
+        const height = parseInt(heightInput.value, 10);
+        const quality = Math.min(1, Math.max(0.1, parseInt(qualitySlider.value, 10) / 100));
+
+        if (!width || !height || width <= 0 || height <= 0){
+            showToast('올바른 크기를 입력해주세요.', 'error');
+            return;
+        }
+        if (width > 5000 || height > 5000){
+            showToast('최대 크기는 5000px 입니다.', 'error');
+            return;
+        }
+
+        // UI
+        progressBar.classList.remove('hidden');
+        progressFill.style.width = '0%';
+        resizedPreview.classList.add('hidden');
+        downloadSection.classList.add('hidden');
+        resizedInfo.textContent = '';
+
+        // fake progress
+        let p = 0;
+        const t = setInterval(() => {
+            p = Math.min(95, p + 9);
+            progressFill.style.width = p + '%';
+        }, 60);
+
+        setTimeout(() => {
+            try{
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+
+                canvas.width = width;
+                canvas.height = height;
+
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                ctx.clearRect(0,0,width,height);
+                ctx.drawImage(originalImage, 0, 0, width, height);
+
+                const mimeType =
+                          currentFormat === 'png' ? 'image/png' :
+                              currentFormat === 'webp' ? 'image/webp' : 'image/jpeg';
+
+                const dataURL = canvas.toDataURL(mimeType, quality);
+
+                clearInterval(t);
+                progressFill.style.width = '100%';
+
+                resizedImage = dataURL;
+                resizedPreview.src = dataURL;
+                resizedPreview.classList.remove('hidden');
+
+                const estimatedSize = Math.round(dataURL.length * 0.75);
+                resizedInfo.textContent = `${width} × ${height} px (약 ${formatFileSize(estimatedSize)})`;
+
+                setTimeout(() => {
+                    progressBar.classList.add('hidden');
+                    downloadSection.classList.remove('hidden');
+                }, 180);
+
+                showToast('이미지 변환이 완료되었습니다.', 'success');
+            }catch(err){
+                clearInterval(t);
+                console.error(err);
+                progressBar.classList.add('hidden');
+                showToast('이미지 변환 중 오류가 발생했습니다.', 'error');
+            }
+        }, 350);
+    }
+
+    // ===== Download =====
+    function handleDownload(){
+        if (!resizedImage) return;
+
+        const w = widthInput.value || 'w';
+        const h = heightInput.value || 'h';
+        const ext = (currentFormat === 'jpeg') ? 'jpg' : currentFormat;
+
+        const a = document.createElement('a');
+        a.download = `${originalFileName}_${w}x${h}.${ext}`;
+        a.href = resizedImage;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        showToast('이미지가 다운로드되었습니다.', 'success');
+    }
+
+    // ===== Events =====
+    document.addEventListener('DOMContentLoaded', () => {
+        // Upload events
+        fileInput.addEventListener('change', (e) => {
+            const f = e.target.files && e.target.files[0];
+            if (f) processFile(f);
+        });
+
+        pickFileBtn.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
+        uploadArea.addEventListener('dragenter', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        uploadArea.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const f = e.dataTransfer.files && e.dataTransfer.files[0];
+            if (f) processFile(f);
+        });
+
+        // Dimension
+        widthInput.addEventListener('input', handleWidthChange);
+        heightInput.addEventListener('input', handleHeightChange);
+        lockIcon.addEventListener('click', toggleLock);
+
+        // Presets
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                setPresetActive(btn);
+                const w = btn.dataset.width;
+                const h = btn.dataset.height;
+                if (w !== 'custom' && h !== 'custom'){
+                    widthInput.value = w;
+                    heightInput.value = h;
+                }
+            });
+        });
+
+        // Formats
+        document.querySelectorAll('.format-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                setFormatActive(btn);
+                currentFormat = btn.dataset.format;
+            });
+        });
+
+        // Quality
+        qualitySlider.addEventListener('input', () => {
+            qualityValue.textContent = qualitySlider.value;
+        });
+
+        // Resize & download
+        resizeBtn.addEventListener('click', handleResize);
+        downloadBtn.addEventListener('click', handleDownload);
+    });
+</script>
+</body>
+</html>
