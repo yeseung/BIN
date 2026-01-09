@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GitHub Profile Finder</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --panel:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --line:#e5e7eb;
+      --shadow:0 18px 60px rgba(2,6,23,.10);
+      --radius:18px;
+
+      --accent:#2563eb;
+      --accent-2:#1d4ed8;
+      --ok:#16a34a;
+      --warn:#f59e0b;
+      --bad:#ef4444;
+
+      --focus:rgba(37,99,235,.16);
+      --chip:#f8fafc;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Apple SD Gothic Neo","Malgun Gothic", sans-serif;
+      color:var(--text);
+      background:
+              radial-gradient(1100px 700px at 18% 0%, #f3f6ff, #ffffff 55%) fixed;
+    }
+
+    .container{
+      width:min(980px, 100%);
+      margin:0 auto;
+      padding:22px;
+      min-height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .card{
+      width:100%;
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:22px;
+    }
+
+    .header{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:16px;
+      flex-wrap:wrap;
+      padding-bottom:14px;
+      border-bottom:1px solid var(--line);
+      margin-bottom:14px;
+    }
+
+    h1{
+      margin:0;
+      font-size:22px;
+      letter-spacing:-0.02em;
+    }
+    .sub{
+      margin-top:6px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.45;
+    }
+
+    .searchBox{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin:16px 0 8px;
+    }
+
+    .input{
+      flex: 1 1 320px;
+      height:44px;
+      padding:0 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      outline:none;
+      font-size:15px;
+      background:#fff;
+      transition: box-shadow .15s, border-color .15s;
+    }
+    .input:focus{
+      border-color:#bfdbfe;
+      box-shadow:0 0 0 6px var(--focus);
+    }
+
+    .btn{
+      height:44px;
+      padding:0 14px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:#fff;
+      cursor:pointer;
+      font-weight:800;
+      transition: transform .05s, background .15s, border-color .15s;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      user-select:none;
+    }
+    .btn:active{ transform: translateY(1px); }
+    .btn-primary{
+      background: linear-gradient(180deg, var(--accent), var(--accent-2));
+      color:#fff;
+      border-color: transparent;
+    }
+    .btn-primary:hover{ filter: brightness(1.02); }
+    .btn:disabled{
+      opacity:.6;
+      cursor:not-allowed;
+      transform:none;
+    }
+
+    .hint{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      color:var(--muted);
+      font-size:12px;
+      margin-bottom:14px;
+    }
+    .kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      background: #f1f5f9;
+      border:1px solid #e2e8f0;
+      padding:2px 8px;
+      border-radius:10px;
+      color:#334155;
+    }
+
+    .details{
+      display:none;
+      margin-top:14px;
+      border-top:1px solid var(--line);
+      padding-top:16px;
+    }
+
+    .profile{
+      display:grid;
+      grid-template-columns: 120px 1fr;
+      gap:16px;
+      align-items:start;
+    }
+
+    .avatar{
+      width:120px;
+      height:120px;
+      border-radius:22px;
+      border:1px solid var(--line);
+      overflow:hidden;
+      background:#f8fafc;
+      box-shadow:0 12px 30px rgba(2,6,23,.08);
+    }
+    .avatar img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .profile-details h2{
+      margin:0;
+      font-size:20px;
+      letter-spacing:-0.02em;
+    }
+    .username{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-weight:700;
+    }
+    .bio{
+      margin:10px 0 0;
+      color:#334155;
+      line-height:1.6;
+      word-break:keep-all;
+    }
+
+    .row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:12px;
+      align-items:center;
+    }
+
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      background:var(--chip);
+      border:1px solid var(--line);
+      padding:8px 10px;
+      border-radius:999px;
+      font-size:13px;
+      color:#334155;
+    }
+    .chip b{ color:var(--text); }
+
+    .stats{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap:10px;
+      margin-top:12px;
+    }
+    .stat{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px;
+    }
+    .stat-name{
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:8px;
+    }
+    .stat-value{
+      font-size:18px;
+      font-weight:900;
+    }
+
+    .media{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:10px;
+      margin-top:12px;
+    }
+    .media-item{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:10px 12px;
+      background:#fff;
+      color:#334155;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    .media-item a{
+      color:var(--accent);
+      text-decoration:none;
+      font-weight:700;
+    }
+    .media-item a:hover{ text-decoration:underline; }
+
+    .actions{
+      margin-top:12px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .btn-ghost{
+      background:#fff;
+      border:1px solid var(--line);
+      color:var(--text);
+      font-weight:800;
+    }
+
+    .state{
+      margin-top:10px;
+      display:none;
+      padding:10px 12px;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--muted);
+      line-height:1.5;
+    }
+
+    .state.loading{ display:block; }
+    .state.error{
+      display:block;
+      border-color: rgba(239,68,68,.25);
+      background: rgba(239,68,68,.06);
+      color:#991b1b;
+    }
+
+    @media (max-width: 720px){
+      .profile{ grid-template-columns: 1fr; }
+      .avatar{ width:100px; height:100px; border-radius:20px; }
+      .stats{ grid-template-columns: 1fr; }
+      .media{ grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+<div class="container">
+  <div class="card">
+    <div class="header">
+      <div>
+        <h1>GitHub Profile Finder</h1>
+        <div class="sub">GitHub 아이디를 검색하면 프로필 정보를 카드로 보여줍니다. (순수 HTML/CSS/JS)</div>
+      </div>
+    </div>
+
+    <div class="searchBox">
+      <input
+              type="text"
+              id="searchInput"
+              class="input"
+              placeholder="Github 아이디를 검색해주세요. (예: torvalds)"
+              spellcheck="false"
+              autocapitalize="off"
+              autocomplete="off"
+      />
+      <button id="searchBtn" class="btn btn-primary" type="button">
+        🔎 검색
+      </button>
+    </div>
+
+    <div class="hint">
+      <div>빠른 검색: <span class="kbd">Enter</span></div>
+      <div>Tip: API 제한이 있을 수 있어요(익명 요청은 rate limit 존재)</div>
+    </div>
+
+    <div id="stateBox" class="state"></div>
+
+    <div class="details" id="result"></div>
+  </div>
+</div>
+
+<script>
+  const $ = (sel) => document.querySelector(sel);
+
+  const searchInput = $("#searchInput");
+  const searchBtn = $("#searchBtn");
+  const detailsContainer = $("#result");
+  const stateBox = $("#stateBox");
+
+  const safeText = (v) => (v == null || v === "" ? "" : String(v));
+  const fmtNum = (n) => (typeof n === "number" ? n.toLocaleString() : safeText(n));
+
+  const normalizeUrl = (url) => {
+    const v = safeText(url).trim();
+    if (!v) return "";
+    if (/^https?:\/\//i.test(v)) return v;
+    return "https://" + v;
+  };
+
+  function setState(type, msg){
+    if (!msg){
+      stateBox.className = "state";
+      stateBox.textContent = "";
+      return;
+    }
+    stateBox.className = "state " + type;
+    stateBox.textContent = msg;
+  }
+
+  function showResult(){
+    detailsContainer.style.display = "block";
+  }
+  function hideResult(){
+    detailsContainer.style.display = "none";
+    detailsContainer.innerHTML = "";
+  }
+
+  async function searchGithub(){
+    const username = safeText(searchInput.value).trim();
+    if (!username){
+      setState("error", "아이디를 입력해주세요.");
+      hideResult();
+      searchInput.focus();
+      return;
+    }
+
+    // UI
+    setState("loading", "불러오는 중...");
+    hideResult();
+    searchBtn.disabled = true;
+
+    try{
+      const res = await fetch(`https://api.github.com/users/${encodeURIComponent(username)}`, {
+        headers: { "Accept": "application/vnd.github+json" }
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok){
+        const msg = data && data.message ? data.message : "요청에 실패했습니다.";
+        setState("error", msg);
+        return;
+      }
+
+      // data mapping
+      const name = data.name || data.login;
+      const login = data.login;
+      const bio = data.bio || "Account doesn't have a bio.";
+      const avatar = data.avatar_url;
+
+      const blogUrl = normalizeUrl(data.blog);
+      const profileUrl = data.html_url;
+
+      const location = data.location || "Not Available";
+      const twitter = data.twitter_username ? ("@" + data.twitter_username) : "Not Available";
+      const company = data.company || "Not Available";
+
+      detailsContainer.innerHTML = `
+          <div class="profile">
+            <div class="avatar" aria-label="avatar">
+              <img src="${avatar}" alt="${login} avatar" />
+            </div>
+
+            <div class="profile-details">
+              <h2 class="name">${name}</h2>
+              <div class="username">@${login}</div>
+              <div class="bio">${bio}</div>
+
+              <div class="row">
+                <span class="chip">📦 Public Repos <b>${fmtNum(data.public_repos)}</b></span>
+                <span class="chip">👥 Followers <b>${fmtNum(data.followers)}</b></span>
+                <span class="chip">➡️ Following <b>${fmtNum(data.following)}</b></span>
+              </div>
+
+              <div class="stats" aria-label="stats">
+                <div class="stat">
+                  <div class="stat-name">Public Gists</div>
+                  <div class="stat-value">${fmtNum(data.public_gists)}</div>
+                </div>
+                <div class="stat">
+                  <div class="stat-name">Created</div>
+                  <div class="stat-value">${safeText(data.created_at).slice(0,10) || "-"}</div>
+                </div>
+                <div class="stat">
+                  <div class="stat-name">Updated</div>
+                  <div class="stat-value">${safeText(data.updated_at).slice(0,10) || "-"}</div>
+                </div>
+              </div>
+
+              <div class="media" aria-label="media">
+                <div class="media-item">📍 ${location}</div>
+                <div class="media-item">🏢 ${company}</div>
+                <div class="media-item">
+                  🧾 ${
+              blogUrl
+                      ? `<a href="${blogUrl}" target="_blank" rel="noopener noreferrer">${safeText(data.blog)}</a>`
+                      : "Not Available"
+      }
+                </div>
+                <div class="media-item">🐦 ${twitter}</div>
+              </div>
+
+              <div class="actions">
+                <a class="btn btn-ghost" href="${profileUrl}" target="_blank" rel="noopener noreferrer">GitHub 프로필 열기</a>
+                <a class="btn btn-ghost" href="${profileUrl}?tab=repositories" target="_blank" rel="noopener noreferrer">레포지토리 보기</a>
+              </div>
+            </div>
+          </div>
+        `;
+
+      showResult();
+      setState("", "");
+    }catch(err){
+      setState("error", "네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.");
+    }finally{
+      searchBtn.disabled = false;
+    }
+  }
+
+  // 버튼 클릭
+  searchBtn.addEventListener("click", searchGithub);
+
+  // Enter로 검색
+  searchInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter"){
+      e.preventDefault();
+      searchGithub();
+    }
+  });
+
+  // 첫 포커스
+  window.addEventListener("load", () => searchInput.focus());
+</script>
+</body>
+</html>

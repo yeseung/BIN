@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tic-tac-toe</title>
+
+    <style>
+        :root{
+            --bg:#ffffff;
+            --panel:#ffffff;
+            --text:#0f172a;
+            --muted:#64748b;
+            --line:#e5e7eb;
+            --shadow:0 18px 60px rgba(2,6,23,.10);
+            --radius:18px;
+
+            --x:#2563eb;
+            --o:#ef4444;
+            --hover:rgba(2,6,23,.04);
+            --focus:rgba(37,99,235,.18);
+        }
+
+        *{ box-sizing:border-box; }
+        html,body{ height:100%; }
+        body{
+            margin:0;
+            font-family: ui-sans-serif, system-ui, -apple-system, "Apple SD Gothic Neo","Malgun Gothic", sans-serif;
+            color:var(--text);
+            background:
+                    radial-gradient(1100px 700px at 18% 0%, #f3f6ff, #ffffff 55%) fixed;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:20px;
+        }
+
+        .app{
+            width:min(520px, 100%);
+            background:var(--panel);
+            border:1px solid var(--line);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            overflow:hidden;
+        }
+
+        .top{
+            padding:16px 16px 10px;
+            border-bottom:1px solid var(--line);
+            display:flex;
+            align-items:flex-start;
+            justify-content:space-between;
+            gap:12px;
+        }
+
+        .title{
+            margin:0;
+            font-weight:900;
+            letter-spacing:-0.02em;
+            font-size:18px;
+        }
+        .sub{
+            margin:6px 0 0;
+            color:var(--muted);
+            font-size:12px;
+            line-height:1.4;
+        }
+
+        .badge{
+            font-size:12px;
+            padding:6px 10px;
+            border-radius:999px;
+            border:1px solid var(--line);
+            background:#f8fafc;
+            color:#334155;
+            white-space:nowrap;
+            user-select:none;
+        }
+        .badge .x{ color:var(--x); font-weight:900; }
+        .badge .o{ color:var(--o); font-weight:900; }
+
+        .content{
+            padding:16px;
+            display:grid;
+            gap:14px;
+            justify-items:center;
+        }
+
+        .board{
+            width:min(360px, 100%);
+            aspect-ratio:1 / 1;
+            display:grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap:10px;
+            padding:10px;
+            border:1px solid var(--line);
+            border-radius:20px;
+            background:#fff;
+            box-shadow: inset 0 2px 0 rgba(2,6,23,.02);
+            touch-action: manipulation;
+        }
+
+        .cell{
+            width: 105px;
+            height: 105px;
+            border:1px solid var(--line);
+            border-radius:18px;
+            background:#f8fafc;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:64px;
+            font-weight:1000;
+            cursor:pointer;
+            user-select:none;
+            transition: transform .05s, background .15s, box-shadow .15s, border-color .15s;
+            position:relative;
+        }
+        .cell:hover{ background:#f1f5f9; }
+        .cell:active{ transform: translateY(1px); }
+        .cell:focus{
+            outline:none;
+            box-shadow:0 0 0 6px var(--focus);
+            border-color:#bfdbfe;
+        }
+        .cell.x, .cell.circle{
+            cursor:default;
+            background:#fff;
+        }
+
+        /* X, O 그리기 (텍스트 대신 CSS로 그리는 느낌 유지) */
+        .cell.x::before{
+            content:"X";
+            color:var(--x);
+        }
+        .cell.circle::before{
+            content:"O";
+            color:var(--o);
+        }
+
+        /* 다음 턴 호버 안내 */
+        .board.x .cell:not(.x):not(.circle):hover::before{
+            content:"X";
+            color:rgba(37,99,235,.25);
+        }
+        .board.circle .cell:not(.x):not(.circle):hover::before{
+            content:"O";
+            color:rgba(239,68,68,.25);
+        }
+
+        .actions{
+            width:min(360px, 100%);
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:10px;
+            flex-wrap:wrap;
+        }
+
+        .btn{
+            height:44px;
+            padding:0 14px;
+            border-radius:14px;
+            border:1px solid var(--line);
+            background:#ffffff;
+            cursor:pointer;
+            font-weight:800;
+            transition: transform .05s, background .15s, box-shadow .15s;
+        }
+        .btn:hover{ background:#f8fafc; }
+        .btn:active{ transform: translateY(1px); }
+        .btn.primary{
+            background:#2563eb;
+            border-color:transparent;
+            color:#fff;
+        }
+        .btn.primary:hover{ filter: brightness(1.02); }
+
+        .status{
+            color:var(--muted);
+            font-size:13px;
+        }
+        .status strong{
+            color:var(--text);
+        }
+
+        /* 결과 모달 */
+        .winning-message{
+            position:fixed;
+            inset:0;
+            display:none;
+            align-items:center;
+            justify-content:center;
+            background:rgba(2,6,23,.45);
+            padding:20px;
+            z-index:9999;
+        }
+        .winning-message.show{ display:flex; }
+
+        .modal{
+            width:min(420px, 100%);
+            background:#fff;
+            border:1px solid var(--line);
+            border-radius:22px;
+            box-shadow:var(--shadow);
+            padding:18px;
+        }
+        .modal h2{
+            margin:0;
+            font-size:18px;
+            font-weight:1000;
+            letter-spacing:-0.02em;
+        }
+        .modal p{
+            margin:8px 0 0;
+            color:var(--muted);
+            font-size:13px;
+            line-height:1.4;
+        }
+        .modal .row{
+            margin-top:14px;
+            display:flex;
+            gap:10px;
+            justify-content:flex-end;
+            flex-wrap:wrap;
+        }
+    </style>
+</head>
+
+<body>
+<div class="app">
+    <div class="top">
+        <div>
+            <p class="title">Tic-tac-toe</p>
+            <p class="sub">3×3 보드에서 <b>X</b>와 <b>O</b>가 번갈아 두는 미니 게임</p>
+        </div>
+        <div class="badge">현재 턴: <span id="turnBadge"><span class="x">X</span></span></div>
+    </div>
+
+    <div class="content">
+        <div class="board" id="board" aria-label="tic tac toe board">
+            <div class="cell" data-cell tabindex="0"></div>
+            <div class="cell" data-cell tabindex="0"></div>
+            <div class="cell" data-cell tabindex="0"></div>
+            <div class="cell" data-cell tabindex="0"></div>
+            <div class="cell" data-cell tabindex="0"></div>
+            <div class="cell" data-cell tabindex="0"></div>
+            <div class="cell" data-cell tabindex="0"></div>
+            <div class="cell" data-cell tabindex="0"></div>
+            <div class="cell" data-cell tabindex="0"></div>
+        </div>
+
+        <div class="actions">
+            <div class="status">
+                상태: <strong id="statusText">게임 진행 중</strong>
+            </div>
+            <button class="btn primary" id="restartButton">다시하기</button>
+        </div>
+    </div>
+</div>
+
+<!-- 결과 모달 -->
+<div class="winning-message" id="winningMessage" role="dialog" aria-modal="true">
+    <div class="modal">
+        <h2 data-winning-message-text>결과</h2>
+        <p id="resultSub"> </p>
+        <div class="row">
+            <button class="btn" id="closeModalBtn">닫기</button>
+            <button class="btn primary" id="modalRestartBtn">다시하기</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const X_CLASS = "x";
+    const CIRCLE_CLASS = "circle";
+
+    const WINNING_COMBINATIONS = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8],
+        [0, 3, 6],
+        [1, 4, 7],
+        [2, 5, 8],
+        [0, 4, 8],
+        [2, 4, 6]
+    ];
+
+    const cellElements = Array.from(document.querySelectorAll("[data-cell]"));
+    const board = document.getElementById("board");
+    const winningMessageElement = document.getElementById("winningMessage");
+    const restartButton = document.getElementById("restartButton");
+    const modalRestartBtn = document.getElementById("modalRestartBtn");
+    const closeModalBtn = document.getElementById("closeModalBtn");
+    const winningMessageTextElement = document.querySelector("[data-winning-message-text]");
+
+    const statusText = document.getElementById("statusText");
+    const turnBadge = document.getElementById("turnBadge");
+    const resultSub = document.getElementById("resultSub");
+
+    let circleTurn = false;
+
+    startGame();
+
+    restartButton.addEventListener("click", startGame);
+    modalRestartBtn.addEventListener("click", () => {
+        winningMessageElement.classList.remove("show");
+        startGame();
+    });
+    closeModalBtn.addEventListener("click", () => winningMessageElement.classList.remove("show"));
+
+    // 키보드 접근성: Enter/Space로 클릭 처리
+    cellElements.forEach((cell) => {
+        cell.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                cell.click();
+            }
+        });
+    });
+
+    function startGame() {
+        circleTurn = false;
+
+        cellElements.forEach(cell => {
+            cell.classList.remove(X_CLASS);
+            cell.classList.remove(CIRCLE_CLASS);
+            cell.replaceWith(cell.cloneNode(true)); // once+이벤트 초기화 깔끔하게
+        });
+
+        // 다시 가져오기(클론으로 교체했으니)
+        const freshCells = Array.from(document.querySelectorAll("[data-cell]"));
+        freshCells.forEach((cell) => {
+            cell.setAttribute("tabindex", "0");
+            cell.addEventListener("click", handleClick, { once: true });
+            cell.addEventListener("keydown", (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    cell.click();
+                }
+            });
+        });
+
+        // 전역 참조 갱신
+        cellElements.length = 0;
+        freshCells.forEach(c => cellElements.push(c));
+
+        setBoardHoverClass();
+        winningMessageElement.classList.remove("show");
+
+        statusText.textContent = "게임 진행 중";
+        updateTurnBadge();
+    }
+
+    function handleClick(e) {
+        const cell = e.target;
+        const currentClass = circleTurn ? CIRCLE_CLASS : X_CLASS;
+
+        placeMark(cell, currentClass);
+
+        if (checkWin(currentClass)) {
+            endGame(false);
+        } else if (isDraw()) {
+            endGame(true);
+        } else {
+            swapTurns();
+            setBoardHoverClass();
+            updateTurnBadge();
+        }
+    }
+
+    function endGame(draw) {
+        if (draw) {
+            winningMessageTextElement.innerText = "비겼어요!";
+            resultSub.textContent = "다시 한 판 가볼까요?";
+            statusText.textContent = "무승부";
+        } else {
+            const winner = circleTurn ? "O" : "X";
+            winningMessageTextElement.innerText = `${winner}가 이겼어요!`;
+            resultSub.textContent = "승리 축하합니다 🎉";
+            statusText.textContent = `${winner} 승리`;
+        }
+        winningMessageElement.classList.add("show");
+    }
+
+    function isDraw() {
+        return cellElements.every(cell =>
+            cell.classList.contains(X_CLASS) || cell.classList.contains(CIRCLE_CLASS)
+        );
+    }
+
+    function placeMark(cell, currentClass) {
+        cell.classList.add(currentClass);
+    }
+
+    function swapTurns() {
+        circleTurn = !circleTurn;
+    }
+
+    function setBoardHoverClass() {
+        board.classList.remove(X_CLASS);
+        board.classList.remove(CIRCLE_CLASS);
+        board.classList.add(circleTurn ? CIRCLE_CLASS : X_CLASS);
+    }
+
+    function updateTurnBadge() {
+        if (circleTurn) {
+            turnBadge.innerHTML = '<span class="o">O</span>';
+        } else {
+            turnBadge.innerHTML = '<span class="x">X</span>';
+        }
+    }
+
+    function checkWin(currentClass) {
+        return WINNING_COMBINATIONS.some(combination =>
+            combination.every(index =>
+                cellElements[index].classList.contains(currentClass)
+            )
+        );
+    }
+</script>
+</body>
+</html>

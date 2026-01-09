@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calculator</title>
+    <style>
+        :root{
+            --bg:#ffffff;
+            --panel:#ffffff;
+            --text:#0f172a;
+            --muted:#64748b;
+            --line:#e5e7eb;
+            --shadow:0 18px 60px rgba(2,6,23,.10);
+            --radius:18px;
+
+            --accent:#2563eb;
+            --accent2:#1d4ed8;
+            --danger:#ef4444;
+            --ok:#16a34a;
+            --btn:#f8fafc;
+            --btnHover:#f1f5f9;
+            --op:#eef2ff;
+            --opText:#1e40af;
+
+            --focus:rgba(37,99,235,.18);
+        }
+
+        *{ box-sizing:border-box; }
+        html,body{ height:100%; }
+        body{
+            margin:0;
+            font-family: ui-sans-serif, system-ui, -apple-system, "Apple SD Gothic Neo","Malgun Gothic", sans-serif;
+            color:var(--text);
+            background:
+                    radial-gradient(1100px 700px at 18% 0%, #f3f6ff, #ffffff 55%) fixed;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:20px;
+        }
+
+        .wrapper{
+            width:min(420px, 100%);
+            background:var(--panel);
+            border:1px solid var(--line);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            overflow:hidden;
+        }
+
+        .top{
+            padding:16px 16px 10px;
+            border-bottom:1px solid var(--line);
+            display:flex;
+            align-items:flex-start;
+            justify-content:space-between;
+            gap:12px;
+        }
+
+        .title{
+            font-weight:900;
+            letter-spacing:-0.02em;
+            margin:0;
+            font-size:16px;
+        }
+        .hint{
+            margin:6px 0 0;
+            color:var(--muted);
+            font-size:12px;
+            line-height:1.4;
+        }
+
+        .kbd{
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size:11px;
+            background:#f1f5f9;
+            border:1px solid #e2e8f0;
+            padding:2px 7px;
+            border-radius:10px;
+            color:#334155;
+            white-space:nowrap;
+        }
+
+        .screen{
+            margin:16px;
+            border:1px solid var(--line);
+            border-radius:18px;
+            padding:16px 14px;
+            background:#fff;
+            text-align:right;
+            box-shadow: inset 0 2px 0 rgba(2,6,23,.02);
+        }
+
+        .screen .expr{
+            color:var(--muted);
+            font-size:12px;
+            min-height:16px;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            white-space:nowrap;
+        }
+        .screen .value{
+            margin-top:6px;
+            font-weight:900;
+            font-size:34px;
+            letter-spacing:-0.03em;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            white-space:nowrap;
+        }
+
+        .calc-buttons{
+            padding:14px 14px 18px;
+            display:grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap:10px;
+        }
+
+        button.calc-button{
+            height:54px;
+            border-radius:16px;
+            border:1px solid var(--line);
+            background:var(--btn);
+            color:var(--text);
+            font-size:18px;
+            font-weight:800;
+            cursor:pointer;
+            transition: transform .05s, background .15s, box-shadow .15s;
+            user-select:none;
+        }
+        button.calc-button:hover{ background:var(--btnHover); }
+        button.calc-button:active{ transform: translateY(1px); }
+
+        button.calc-button:focus{
+            outline:none;
+            box-shadow:0 0 0 6px var(--focus);
+            border-color:#bfdbfe;
+        }
+
+        .btn-op{
+            background:var(--op);
+            color:var(--opText);
+            border-color:#dbeafe;
+        }
+        .btn-op:hover{ background:#e0e7ff; }
+
+        .btn-eq{
+            background:linear-gradient(180deg, var(--accent), var(--accent2));
+            color:#fff;
+            border-color:transparent;
+        }
+        .btn-eq:hover{ filter: brightness(1.02); }
+
+        .btn-danger{
+            background:#fff1f2;
+            color:#9f1239;
+            border-color:#ffe4e6;
+        }
+        .btn-danger:hover{ background:#ffe4e6; }
+
+        .span-2{ grid-column: span 2; }
+        .span-3{ grid-column: span 3; }
+
+        .footer{
+            padding:0 16px 16px;
+            color:var(--muted);
+            font-size:12px;
+            display:flex;
+            justify-content:space-between;
+            gap:10px;
+            flex-wrap:wrap;
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrapper" aria-label="calculator">
+    <div class="top">
+        <div>
+            <p class="title">Calculator</p>
+            <p class="hint">
+                키보드: <span class="kbd">0-9</span> <span class="kbd">+ - * /</span>
+                <span class="kbd">Enter</span> <span class="kbd">Backspace</span> <span class="kbd">Esc</span>
+            </p>
+        </div>
+        <div class="kbd" title="부호 바꾸기">±</div>
+    </div>
+
+    <section class="screen" aria-live="polite">
+        <div class="expr" id="expr"> </div>
+        <div class="value" id="screen">0</div>
+    </section>
+
+    <section class="calc-buttons" id="buttons">
+        <button class="calc-button btn-danger span-2" data-key="C">C</button>
+        <button class="calc-button" data-key="←">←</button>
+        <button class="calc-button btn-op" data-key="÷">÷</button>
+
+        <button class="calc-button" data-key="7">7</button>
+        <button class="calc-button" data-key="8">8</button>
+        <button class="calc-button" data-key="9">9</button>
+        <button class="calc-button btn-op" data-key="×">×</button>
+
+        <button class="calc-button" data-key="4">4</button>
+        <button class="calc-button" data-key="5">5</button>
+        <button class="calc-button" data-key="6">6</button>
+        <button class="calc-button btn-op" data-key="−">−</button>
+
+        <button class="calc-button" data-key="1">1</button>
+        <button class="calc-button" data-key="2">2</button>
+        <button class="calc-button" data-key="3">3</button>
+        <button class="calc-button btn-op" data-key="+">+</button>
+
+        <button class="calc-button" data-key="±">±</button>
+        <button class="calc-button" data-key="0">0</button>
+        <button class="calc-button" data-key=".">.</button>
+        <button class="calc-button btn-eq" data-key="=">=</button>
+    </section>
+
+    <div class="footer">
+        <span>순수 HTML/CSS/JS</span>
+        <span>소수점 · 연속연산 · 부호(±)</span>
+    </div>
+</div>
+
+<script>
+    // ===== State =====
+    let runningTotal = 0;
+    let buffer = "0";
+    let previousOperator = null;
+    let hasJustEvaluated = false;
+
+    const screenEl = document.getElementById("screen");
+    const exprEl = document.getElementById("expr");
+    const buttons = document.getElementById("buttons");
+
+    // ===== Helpers =====
+    const isNumberKey = (v) => /^[0-9]$/.test(v);
+
+    function render() {
+        screenEl.textContent = buffer;
+    }
+
+    function setExpr(text) {
+        exprEl.textContent = text || " ";
+    }
+
+    function resetAll() {
+        runningTotal = 0;
+        buffer = "0";
+        previousOperator = null;
+        hasJustEvaluated = false;
+        setExpr("");
+        render();
+    }
+
+    function handleNumber(numStr) {
+        if (hasJustEvaluated) {
+            // '=' 직후 숫자를 누르면 새 입력 시작
+            buffer = "0";
+            hasJustEvaluated = false;
+            previousOperator = null;
+            runningTotal = 0;
+            setExpr("");
+        }
+
+        if (buffer === "0") buffer = numStr;
+        else buffer += numStr;
+    }
+
+    function handleDot() {
+        if (hasJustEvaluated) {
+            buffer = "0";
+            hasJustEvaluated = false;
+            previousOperator = null;
+            runningTotal = 0;
+            setExpr("");
+        }
+        if (!buffer.includes(".")) buffer += ".";
+    }
+
+    function backspace() {
+        if (hasJustEvaluated) return; // 계산 직후엔 백스페이스 무시(원하면 지우기 가능)
+        if (buffer.length <= 1) buffer = "0";
+        else buffer = buffer.slice(0, -1);
+    }
+
+    function toggleSign() {
+        if (buffer === "0") return;
+        if (buffer.startsWith("-")) buffer = buffer.slice(1);
+        else buffer = "-" + buffer;
+    }
+
+    function flushOperation(intBuffer) {
+        switch (previousOperator) {
+            case "+": runningTotal += intBuffer; break;
+            case "−":
+            case "-": runningTotal -= intBuffer; break;
+            case "×":
+            case "*": runningTotal *= intBuffer; break;
+            case "÷":
+            case "/": runningTotal /= intBuffer; break;
+        }
+    }
+
+    function handleMath(op) {
+        if (buffer === "0" && runningTotal === 0) {
+            previousOperator = op;
+            return;
+        }
+
+        const current = parseFloat(buffer);
+
+        if (previousOperator === null) {
+            runningTotal = current;
+        } else {
+            flushOperation(current);
+        }
+
+        previousOperator = op;
+        buffer = "0";
+        hasJustEvaluated = false;
+
+        const prettyOp = op === "*" ? "×" : op === "/" ? "÷" : op;
+        setExpr(`${runningTotal} ${prettyOp}`);
+    }
+
+    function evaluate() {
+        if (previousOperator === null) return;
+
+        const current = parseFloat(buffer);
+        flushOperation(current);
+
+        // NaN/Infinity 방지 처리
+        if (!Number.isFinite(runningTotal)) {
+            buffer = "Error";
+            runningTotal = 0;
+            previousOperator = null;
+            hasJustEvaluated = true;
+            setExpr("");
+            render();
+            return;
+        }
+
+        buffer = String(runningTotal);
+        runningTotal = 0;
+        previousOperator = null;
+        hasJustEvaluated = true;
+        setExpr("");
+    }
+
+    function buttonClick(value) {
+        // value 정규화
+        const v = String(value).trim();
+
+        if (isNumberKey(v)) {
+            handleNumber(v);
+        } else {
+            switch (v) {
+                case "C": resetAll(); return;
+                case "←": backspace(); break;
+                case ".": handleDot(); break;
+                case "±": toggleSign(); break;
+                case "=": evaluate(); break;
+                case "+": case "-": case "−":
+                case "*": case "×":
+                case "/": case "÷":
+                    // 화면에 표시되는 기호와 키보드 기호 혼용 처리
+                    handleMath(v);
+                    break;
+                default:
+                    // 아무것도 안 함
+                    break;
+            }
+        }
+        render();
+    }
+
+    // ===== UI Events =====
+    buttons.addEventListener("click", (e) => {
+        const btn = e.target.closest("button");
+        if (!btn) return;
+        buttonClick(btn.dataset.key || btn.textContent);
+    });
+
+    // ===== Keyboard Support =====
+    window.addEventListener("keydown", (e) => {
+        const key = e.key;
+
+        if (key >= "0" && key <= "9") return buttonClick(key);
+
+        if (key === "Enter") { e.preventDefault(); return buttonClick("="); }
+        if (key === "Backspace") { e.preventDefault(); return buttonClick("←"); }
+        if (key === "Escape") { e.preventDefault(); return buttonClick("C"); }
+
+        if (key === ".") return buttonClick(".");
+        if (key === "+") return buttonClick("+");
+        if (key === "-") return buttonClick("−");
+        if (key === "*") return buttonClick("×");
+        if (key === "/") return buttonClick("÷");
+    });
+
+    // init
+    resetAll();
+</script>
+</body>
+</html>
