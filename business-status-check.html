@@ -1,0 +1,293 @@
+<!-- business-status-check.html -->
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>사업자상태조회</title>
+
+    <style>
+        :root{
+            --bg:#f6f7fb; --card:#fff; --text:#111827; --muted:#6b7280;
+            --border:#e5e7eb; --shadow:0 10px 30px rgba(0,0,0,.06);
+            --primary:#22c55e; --primary-hover:#16a34a; --danger:#ef4444;
+            --radius:18px;
+        }
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+            background:var(--bg);
+            color:var(--text);
+        }
+        .wrap{ max-width:980px; margin:40px auto; padding:0 18px; }
+        .card{
+            background:var(--card);
+            border:1px solid var(--border);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            overflow:hidden;
+        }
+        .card-header{ padding:26px 26px 18px; border-bottom:1px solid var(--border); }
+        .title{ margin:0; font-size:28px; letter-spacing:-0.02em; }
+        .card-body{ padding:26px; }
+        .notice{ margin:0 0 14px; color:var(--danger); font-weight:700; }
+        .field{ margin-top:10px; }
+        .input{
+            width:100%; padding:18px 16px; font-size:18px;
+            border-radius:14px; border:1px solid var(--border);
+            outline:none; background:#f3f4f6; transition:.15s ease;
+        }
+        .input:focus{
+            background:#fff;
+            border-color:rgba(34,197,94,.6);
+            box-shadow:0 0 0 4px rgba(34,197,94,.12);
+        }
+        .help{ margin:10px 2px 0; color:var(--muted); font-size:14px; line-height:1.5; }
+        .actions{ margin-top:18px; }
+        .btn{
+            width:100%; border:0; border-radius:14px;
+            padding:18px 16px; font-size:18px; font-weight:800;
+            cursor:pointer; background:var(--primary); color:#fff; transition:.15s ease;
+        }
+        .btn:hover{ background:var(--primary-hover); }
+        .btn:disabled{ opacity:.7; cursor:not-allowed; }
+
+        .statusbar{ margin-top:14px; font-size:14px; color:var(--muted); min-height:20px; }
+        .spinner{
+            display:inline-block; width:14px; height:14px;
+            border:2px solid rgba(17,24,39,.2);
+            border-top-color: rgba(17,24,39,.6);
+            border-radius:999px; vertical-align:-2px; margin-right:8px;
+            animation:spin .8s linear infinite;
+        }
+        @keyframes spin{ to{ transform:rotate(360deg);} }
+
+        .result{
+            margin-top:18px;
+            border-top:1px solid var(--border);
+            padding-top:18px;
+            display:none;
+        }
+        .result-grid{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:10px 18px;
+        }
+        .row{
+            padding:12px;
+            border:1px solid var(--border);
+            border-radius:14px;
+            background:#fff;
+        }
+        .label{ display:block; font-size:13px; color:var(--muted); margin-bottom:4px; }
+        .value{ font-size:16px; font-weight:800; color:var(--text); word-break:break-word; }
+
+        .end{ border-color:rgba(239,68,68,.25); background:rgba(239,68,68,.04); }
+        .end .value{ color:var(--danger); }
+
+        @media (max-width:720px){
+            .result-grid{ grid-template-columns:1fr; }
+            .title{ font-size:24px; }
+            .input, .btn{ font-size:16px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <section class="card" aria-label="사업자상태조회">
+        <header class="card-header">
+            <h1 class="title">사업자상태조회</h1>
+        </header>
+
+        <div class="card-body">
+            <p class="notice">"-"을 제외한 사업자번호만 입력해주세요.</p>
+
+            <form id="frm" autocomplete="off">
+                <div class="field">
+                    <input class="input"
+                           type="text"
+                           name="ntsbsm_b_no"
+                           id="bno"
+                           inputmode="numeric"
+                           maxlength="12"
+                           placeholder="사업자번호를 입력하세요. 예)3451201768" />
+                    <div class="help">
+                        • 숫자만 입력됩니다(하이픈 입력 시 자동 제거).<br/>
+                        • 일반적으로 10자리 사업자번호를 사용합니다.
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button class="btn" type="submit" id="btnSubmit">조회</button>
+                </div>
+            </form>
+
+            <div class="statusbar" id="statusbar" aria-live="polite"></div>
+
+            <section class="result" id="resultBox">
+                <div class="result-grid" id="resultText"></div>
+            </section>
+        </div>
+    </section>
+</div>
+
+<script>
+    // ===== 설정: ODcloud API URL (서비스키는 운영용에서 프론트 노출 금지 권장) =====
+    const ODCLOUD_URL =
+              "https://api.odcloud.kr/api/nts-businessman/v1/status" +
+              "?serviceKey=본인키_URL인코딩값";
+
+    // ===== 유틸 =====
+    function onlyDigits(str){ return String(str||"").replace(/\D/g, ""); }
+    function escapeHtml(str){
+        return String(str)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+    function setLoading(on){ document.getElementById("btnSubmit").disabled = on; }
+    function setStatus(msg, loading=false){
+        const el = document.getElementById("statusbar");
+        if(!msg){ el.textContent=""; return; }
+        el.innerHTML = loading
+            ? `<span class="spinner" aria-hidden="true"></span>${escapeHtml(msg)}`
+            : escapeHtml(msg);
+    }
+
+    // API 응답에서 우리가 쓸 필드명들을 최대한 유연하게 매핑
+    function pick(item, keys){
+        for(const k of keys){
+            if(item && item[k] != null && item[k] !== "") return item[k];
+        }
+        return "";
+    }
+
+    function renderResultFromApi(result){
+        const resultBox = document.getElementById("resultBox");
+        const resultText = document.getElementById("resultText");
+
+        // ODcloud 응답은 보통 result.data 가 배열
+        const list = Array.isArray(result?.data) ? result.data : [];
+
+        if(list.length === 0){
+            resultText.innerHTML = "";
+            resultBox.style.display = "none";
+            return;
+        }
+
+        let html = "";
+        list.forEach(item => {
+            // 응답 필드명이 환경마다 다를 수 있어 후보를 여러 개 둠
+            const bno = pick(item, ["b_no","ntsbsm_b_no"]);
+            const stt = pick(item, ["b_stt","ntsbsm_b_stt","tax_type_cd","tax_type"]);
+            const sttTxt = pick(item, ["b_stt_cd","b_stt","ntsbsm_b_stt"]); // 안전망
+            const tax = pick(item, ["tax_type","ntsbsm_tax_type","tax_type_cd","tax_type_nm"]);
+            const end = pick(item, ["end_dt","ntsbsm_end_dt"]);
+
+            html += `
+        <div class="row">
+          <span class="label">사업자번호</span>
+          <span class="value">${escapeHtml(bno)}</span>
+        </div>
+        <div class="row">
+          <span class="label">납세자상태</span>
+          <span class="value">${escapeHtml(sttTxt || stt)}</span>
+        </div>
+        <div class="row">
+          <span class="label">과세유형</span>
+          <span class="value">${escapeHtml(tax)}</span>
+        </div>
+      `;
+
+            if(end){
+                html += `
+          <div class="row end">
+            <span class="label">폐업일</span>
+            <span class="value">${escapeHtml(end)}</span>
+          </div>
+        `;
+            }
+        });
+
+        resultText.innerHTML = html;
+        resultBox.style.display = "block";
+    }
+
+    // ===== 핵심: fetch (JSON POST) =====
+    async function dataRead(){
+        const bnoInput = document.getElementById("bno");
+        bnoInput.value = onlyDigits(bnoInput.value);
+
+        const bno = bnoInput.value.trim();
+        if(!bno){
+            alert("사업자번호를 입력해주세요.");
+            bnoInput.focus();
+            return;
+        }
+        if(bno.length !== 10){
+            alert("사업자번호는 보통 10자리입니다. 확인 후 다시 입력해주세요.");
+            bnoInput.focus();
+            return;
+        }
+
+        setLoading(true);
+        setStatus("조회 중입니다...", true);
+
+        try{
+            const res = await fetch(ODCLOUD_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json; charset=UTF-8"
+                },
+                body: JSON.stringify({ b_no: [bno] })
+            });
+
+            // 200이어도 에러 메시지가 올 수 있어서 일단 JSON 파싱
+            const result = await res.json();
+
+            // ODcloud는 success 플래그가 없을 수 있어요.
+            // status_code / message 등을 보고 판단 + data 유무 확인
+            if(!res.ok){
+                console.error("HTTP ERROR", res.status, result);
+                alert(result?.message || "조회에 실패했습니다.");
+                setStatus("");
+                return;
+            }
+
+            // data 렌더
+            renderResultFromApi(result);
+
+            // 입력 초기화
+            bnoInput.value = "";
+            setStatus("조회가 완료되었습니다.");
+        }catch(err){
+            console.error(err);
+            alert("서버 통신 중 오류가 발생했습니다.");
+            setStatus("");
+        }finally{
+            setLoading(false);
+        }
+    }
+
+    // ===== 이벤트 =====
+    (function init(){
+        const form = document.getElementById("frm");
+        const bnoInput = document.getElementById("bno");
+
+        bnoInput.addEventListener("input", () => {
+            const cleaned = onlyDigits(bnoInput.value);
+            if(bnoInput.value !== cleaned) bnoInput.value = cleaned;
+        });
+
+        form.addEventListener("submit", (e) => {
+            e.preventDefault();
+            dataRead();
+        });
+    })();
+</script>
+</body>
+</html>
