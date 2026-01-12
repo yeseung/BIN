@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>한글을 영타로 변환</title>
+    <meta name="description" content="한글(두벌식)을 쿼티 영타 키입력 문자열로 변환합니다. 바닐라 JS + 순수 CSS." />
+
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --line:#e5e7eb;
+            --shadow: 0 14px 40px rgba(0,0,0,.08);
+            --radius: 16px;
+            --primary:#111827;
+            --primary2:#374151;
+            --focus:#93c5fd;
+        }
+
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: ui-sans-serif, system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+            color:var(--text);
+            background: var(--bg);
+        }
+
+        .wrap{
+            max-width: 920px;
+            margin: 0 auto;
+            padding: 28px 16px 60px;
+        }
+
+        .header{
+            display:flex;
+            flex-direction:column;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .title{
+            display:flex;
+            align-items:center;
+            gap: 10px;
+            margin:0;
+            font-size: 28px;
+            letter-spacing:-.02em;
+        }
+        .badge{
+            width: 36px;
+            height: 36px;
+            display:grid;
+            place-items:center;
+            border-radius: 12px;
+            background:#fff;
+            border:1px solid var(--line);
+            box-shadow: 0 10px 20px rgba(0,0,0,.05);
+        }
+        .sub{
+            margin:0;
+            color:var(--muted);
+            font-size:14px;
+            line-height:1.6;
+        }
+
+        .card{
+            background: var(--card);
+            border:1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow:hidden;
+        }
+
+        .cardHead{
+            padding: 14px 16px;
+            border-bottom:1px solid var(--line);
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap: 10px;
+        }
+
+        .cardHead h2{
+            margin:0;
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing:-.01em;
+        }
+
+        .pill{
+            font-size:12px;
+            color:#0f172a;
+            background:#f1f5f9;
+            border: 1px solid #e2e8f0;
+            padding: 6px 10px;
+            border-radius: 999px;
+            white-space:nowrap;
+        }
+
+        .cardBody{
+            padding: 16px;
+        }
+
+        .grid{
+            display:grid;
+            grid-template-columns: 1fr;
+            gap: 14px;
+        }
+
+        @media (min-width: 900px){
+            .grid{
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        label{
+            display:block;
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .input, .textarea{
+            width:100%;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 12px 12px;
+            font-size: 16px;
+            background:#fff;
+            outline:none;
+            transition: box-shadow .15s ease, border-color .15s ease;
+        }
+        .textarea{
+            min-height: 220px;
+            resize: vertical;
+            line-height:1.6;
+        }
+        .input:focus, .textarea:focus{
+            border-color: var(--focus);
+            box-shadow: 0 0 0 4px rgba(147,197,253,.35);
+        }
+
+        .actions{
+            display:flex;
+            flex-wrap:wrap;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .btn{
+            border:1px solid var(--line);
+            background:#fff;
+            color: var(--text);
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 800;
+            cursor:pointer;
+            user-select:none;
+        }
+        .btn.primary{
+            background: var(--primary);
+            color:#fff;
+            border-color: transparent;
+        }
+        .btn.primary:hover{ background: var(--primary2); }
+        .btn:active{ transform: translateY(1px); }
+
+        .help{
+            margin-top: 12px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            background:#f8fafc;
+            border:1px solid #e2e8f0;
+            color:#334155;
+            font-size: 13px;
+            line-height:1.6;
+        }
+
+        .footer{
+            margin-top: 16px;
+            color: var(--muted);
+            font-size: 12px;
+            text-align:center;
+        }
+
+        .toast{
+            position: fixed;
+            left:50%;
+            bottom: 18px;
+            transform: translateX(-50%);
+            background: rgba(17,24,39,.92);
+            color:#fff;
+            padding: 10px 12px;
+            border-radius: 999px;
+            font-size: 13px;
+            box-shadow: 0 14px 35px rgba(0,0,0,.2);
+            opacity:0;
+            pointer-events:none;
+            transition: opacity .18s ease, transform .18s ease;
+        }
+        .toast.show{
+            opacity:1;
+            transform: translateX(-50%) translateY(-2px);
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <header class="header">
+        <h1 class="title"><span class="badge">⌨️</span> 한글을 영타로</h1>
+        <p class="sub">
+            설명: <b>두벌식 한글</b>을 <b>쿼티(QWERTY) 영타 키입력</b> 문자열로 바꿔줍니다.<br/>
+            예: <code>가나</code> → <code>rksk</code>
+        </p>
+    </header>
+
+    <section class="card">
+        <div class="cardHead">
+            <h2>변환기</h2>
+            <span class="pill">Vanilla JS · Pure CSS</span>
+        </div>
+
+        <div class="cardBody">
+            <div class="grid">
+                <div>
+                    <label for="inText">IN (한글)</label>
+                    <textarea id="inText" class="textarea" placeholder="예) 가나 / 스마트폰에서 비번 입력용 등"></textarea>
+
+                    <div class="actions">
+                        <button class="btn primary" id="btnConvert" type="button">변환하기</button>
+                        <button class="btn" id="btnClear" type="button">비우기</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="outText">OUT (영타)</label>
+                    <textarea id="outText" class="textarea" placeholder="변환 결과가 여기에 표시됩니다." readonly></textarea>
+
+                    <div class="actions">
+                        <button class="btn" id="btnCopy" type="button">결과 복사</button>
+                        <button class="btn" id="btnSwap" type="button">IN ↔ OUT</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="help">
+                ✅ 팁<br/>
+                - 한글이 아닌 문자는 그대로 유지됩니다.<br/>
+                - “결과 복사”로 클립보드에 바로 복사할 수 있어요.<br/>
+                - 변환 규칙은 <b>두벌식 자모 → QWERTY 키</b> 매핑입니다.
+            </div>
+        </div>
+    </section>
+
+    <div class="footer">
+        광고(AdSense) / Bootstrap 완전 제거 · 단일 파일 예시: <code>hangul-to-qwerty.html</code>
+    </div>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+    // ==========================================================
+    // 한글 자소 분해 + (자소 -> 두벌식 QWERTY) 변환 (한 파일 통합)
+    // ==========================================================
+
+    // 1) 자소 -> 영타 매핑 테이블
+    const MATCH = {
+        "ㄱ":"r","ㄲ":"R","ㄴ":"s","ㄷ":"e","ㄸ":"E","ㄹ":"f","ㅁ":"a","ㅂ":"q","ㅃ":"Q","ㅅ":"t","ㅆ":"T","ㅇ":"d","ㅈ":"w","ㅉ":"W","ㅊ":"c","ㅋ":"z","ㅌ":"x","ㅍ":"v","ㅎ":"g",
+        "ㅏ":"k","ㅐ":"o","ㅑ":"i","ㅒ":"O","ㅓ":"j","ㅔ":"p","ㅕ":"u","ㅖ":"P","ㅗ":"h","ㅘ":"hk","ㅙ":"ho","ㅚ":"hl","ㅛ":"y","ㅜ":"n","ㅝ":"nj","ㅞ":"np","ㅟ":"nl","ㅠ":"b","ㅡ":"m","ㅢ":"ml","ㅣ":"l",
+        "ㄳ":"rt","ㄵ":"sw","ㄶ":"sg","ㄺ":"fr","ㄻ":"fa","ㄼ":"fq","ㄽ":"ft","ㄾ":"fx","ㄿ":"fv","ㅀ":"fg","ㅄ":"qt"
+    };
+
+    function krJamoToQwerty(jamo){
+        return (MATCH[jamo]) ? MATCH[jamo] : jamo;
+    }
+
+    // 2) 한글 음절을 (초/중/종) 자소로 분해
+    function js_han_split_int(ch){
+        const char_st = 44032; // '가'
+        const char_ed = 55203; // '힣' 근처
+        if(!ch) return false;
+
+        const code = ch.charCodeAt(0);
+        if(code < char_st || code > char_ed) return false;
+
+        let n = code - char_st;
+        const cho = Math.floor(n / 588);
+        n = n % 588;
+        const jung = Math.floor(n / 28);
+        const jong = n % 28;
+        return [cho, jung, jong];
+    }
+
+    function js_han_split_han(ch){
+        const arr_1st = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+        const arr_2nd = ['ㅏ','ㅐ','ㅑ','ㅒ','ㅓ','ㅔ','ㅕ','ㅖ','ㅗ','ㅘ','ㅙ','ㅚ','ㅛ','ㅜ','ㅝ','ㅞ','ㅟ','ㅠ','ㅡ','ㅢ','ㅣ'];
+        const arr_3th = ['','ㄱ','ㄲ','ㄳ','ㄴ','ㄵ','ㄶ','ㄷ','ㄹ','ㄺ','ㄻ','ㄼ','ㄽ','ㄾ','ㄿ','ㅀ','ㅁ','ㅂ','ㅄ','ㅅ','ㅆ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+
+        const idx = js_han_split_int(ch);
+        if(idx === false) return ch;
+
+        return [arr_1st[idx[0]], arr_2nd[idx[1]], arr_3th[idx[2]]];
+    }
+
+    function js_han_split_string(str){
+        const out = [];
+        for(let i=0; i<str.length; i++){
+            out.push(js_han_split_han(str.charAt(i)));
+        }
+        return out;
+    }
+
+    // 3) 전체 문자열 변환
+    function convert_kr2en_words(words){
+        const arr = js_han_split_string(words);
+        const rarr = [];
+        for(let i=0; i<arr.length; i++){
+            const t = arr[i];
+            if(Array.isArray(t)){
+                for(let j=0; j<t.length; j++){
+                    const jamo = t[j];
+                    if(jamo) rarr.push(krJamoToQwerty(jamo));
+                }
+            }else{
+                // 한글 음절이 아닌 문자 (영문/숫자/특수문자 등)
+                rarr.push(t);
+            }
+        }
+        return rarr.join("");
+    }
+
+    // ==========================================================
+    // UI
+    // ==========================================================
+    const $in = document.getElementById("inText");
+    const $out = document.getElementById("outText");
+    const $toast = document.getElementById("toast");
+
+    function showToast(msg){
+        $toast.textContent = msg;
+        $toast.classList.add("show");
+        setTimeout(()=> $toast.classList.remove("show"), 1300);
+    }
+
+    function convertNow(){
+        $out.value = convert_kr2en_words($in.value || "");
+        showToast("변환 완료!");
+    }
+
+    document.getElementById("btnConvert").addEventListener("click", convertNow);
+
+    document.getElementById("btnClear").addEventListener("click", ()=>{
+        $in.value = "";
+        $out.value = "";
+        $in.focus();
+        showToast("초기화!");
+    });
+
+    document.getElementById("btnCopy").addEventListener("click", async ()=>{
+        const text = $out.value || "";
+        if(!text){
+            showToast("복사할 내용이 없어요");
+            return;
+        }
+        try{
+            await navigator.clipboard.writeText(text);
+            showToast("복사 완료!");
+        }catch(e){
+            // fallback
+            $out.focus();
+            $out.select();
+            try{
+                document.execCommand("copy");
+                showToast("복사 완료!");
+            }catch(err){
+                showToast("복사 실패");
+            }
+            window.getSelection?.().removeAllRanges?.();
+        }
+    });
+
+    document.getElementById("btnSwap").addEventListener("click", ()=>{
+        const a = $in.value;
+        $in.value = $out.value;
+        $out.value = a;
+        showToast("교환 완료!");
+    });
+
+    // Enter(Ctrl+Enter)로 변환
+    $in.addEventListener("keydown", (e)=>{
+        if((e.ctrlKey || e.metaKey) && e.key === "Enter"){
+            convertNow();
+        }
+    });
+</script>
+</body>
+</html>
