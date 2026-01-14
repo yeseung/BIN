@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>바이오리듬 계산기</title>
+    <meta name="description" content="생년월일과 기준일로 신체/감정/지성 바이오리듬을 계산하고 그래프로 확인하는 순수 HTML/CSS/JS 바이오리듬 계산기" />
+
+    <style>
+        :root{
+            --bg:#ffffff;
+            --panel:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --border:#e5e7eb;
+            --shadow: 0 10px 30px rgba(0,0,0,.06);
+            --radius: 16px;
+
+            --focus:#2563eb;
+
+            /* 라인 색 (그래프/뱃지) */
+            --p:#ef4444;   /* 신체 */
+            --e:#3b82f6;   /* 감정 */
+            --i:#10b981;   /* 지성 */
+        }
+
+        *{ box-sizing:border-box; }
+        html,body{ height:100%; }
+        body{
+            margin:0;
+            background:var(--bg);
+            color:var(--text);
+            font-family: ui-sans-serif, system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", Segoe UI, Roboto, Arial, sans-serif;
+            line-height:1.45;
+        }
+
+        .wrap{
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 28px 16px 56px;
+        }
+
+        header{
+            display:flex;
+            align-items:flex-start;
+            justify-content:space-between;
+            gap:16px;
+            margin-bottom: 18px;
+        }
+        .title{
+            font-size: 26px;
+            margin:0;
+            letter-spacing:-.2px;
+        }
+        .subtitle{
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .card{
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .grid{
+            display:grid;
+            grid-template-columns: 1fr;
+            gap: 14px;
+        }
+        @media (min-width: 920px){
+            .grid{
+                grid-template-columns: 360px 1fr;
+                align-items:start;
+            }
+        }
+
+        .card-head{
+            padding: 16px 16px 0;
+        }
+        .card-title{
+            margin:0;
+            font-size: 16px;
+            letter-spacing:-.2px;
+        }
+        .card-desc{
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .card-body{
+            padding: 16px;
+        }
+
+        .form{
+            display:grid;
+            gap: 12px;
+        }
+
+        label{
+            display:block;
+            font-size: 13px;
+            color: var(--muted);
+            margin: 0 0 6px;
+        }
+
+        input[type="date"]{
+            width:100%;
+            padding: 12px 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background:#fff;
+            color: var(--text);
+            outline: none;
+            font-size: 14px;
+        }
+        input[type="date"]:focus{
+            border-color: rgba(37,99,235,.55);
+            box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+        }
+
+        .row{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+        }
+        .btn{
+            appearance:none;
+            border: 1px solid var(--border);
+            background:#fff;
+            color: var(--text);
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            cursor:pointer;
+            transition: transform .04s ease, box-shadow .12s ease, border-color .12s ease;
+            user-select:none;
+        }
+        .btn:hover{
+            border-color: #d1d5db;
+            box-shadow: 0 8px 18px rgba(0,0,0,.06);
+        }
+        .btn:active{
+            transform: translateY(1px);
+        }
+        .btn.primary{
+            border-color: rgba(37,99,235,.35);
+            background: rgba(37,99,235,.08);
+        }
+        .btn.primary:hover{
+            border-color: rgba(37,99,235,.55);
+        }
+
+        .hint{
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        .stats{
+            display:grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        @media (min-width: 520px){
+            .stats{
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .stat{
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 12px 12px;
+            background:#fff;
+            min-height: 88px;
+        }
+        .stat-top{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+            margin-bottom: 8px;
+        }
+        .badge{
+            font-size: 12px;
+            padding: 5px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background:#fff;
+            color: var(--text);
+            white-space:nowrap;
+        }
+        .badge.p{ border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.08); color:#991b1b; }
+        .badge.e{ border-color: rgba(59,130,246,.35); background: rgba(59,130,246,.08); color:#1e3a8a; }
+        .badge.i{ border-color: rgba(16,185,129,.35); background: rgba(16,185,129,.08); color:#065f46; }
+
+        .value{
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing:-.2px;
+        }
+        .meta{
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .canvas-wrap{
+            padding: 10px 16px 16px;
+        }
+
+        .chart-toolbar{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            flex-wrap:wrap;
+            margin-bottom: 10px;
+        }
+        .small{
+            font-size: 12px;
+            color: var(--muted);
+        }
+        .legend{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            align-items:center;
+        }
+        .dot{
+            width:10px;
+            height:10px;
+            border-radius: 999px;
+            display:inline-block;
+            margin-right:6px;
+            vertical-align:middle;
+        }
+        .dot.p{ background: var(--p); }
+        .dot.e{ background: var(--e); }
+        .dot.i{ background: var(--i); }
+
+        canvas{
+            width: 100%;
+            height: 320px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background:#fff;
+            display:block;
+        }
+
+        .footer{
+            margin-top: 14px;
+            color: var(--muted);
+            font-size: 12px;
+            text-align:center;
+        }
+
+        .error{
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(239,68,68,.25);
+            background: rgba(239,68,68,.06);
+            color:#7f1d1d;
+            font-size: 13px;
+            display:none;
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <header>
+        <div>
+            <h1 class="title">바이오리듬 계산기</h1>
+            <p class="subtitle">생년월일과 기준일로 <b>신체(23)</b> · <b>감정(28)</b> · <b>지성(33)</b> 바이오리듬을 계산합니다. (Bootstrap/Adsense 없음)</p>
+        </div>
+    </header>
+
+    <div class="grid">
+        <!-- 입력 카드 -->
+        <section class="card">
+            <div class="card-head">
+                <h2 class="card-title">입력</h2>
+                <p class="card-desc">생년월일과 기준일을 선택한 뒤 “계산하기”를 누르세요.</p>
+            </div>
+            <div class="card-body">
+                <form class="form" onsubmit="return false;">
+                    <div>
+                        <label for="birth">생년월일</label>
+                        <input id="birth" type="date" />
+                    </div>
+                    <div>
+                        <label for="target">기준일</label>
+                        <input id="target" type="date" />
+                        <div class="hint">기준일 기본값은 오늘입니다.</div>
+                    </div>
+
+                    <div class="row">
+                        <button class="btn primary" id="btnCalc" type="button">계산하기</button>
+                        <button class="btn" id="btnToday" type="button">기준일: 오늘</button>
+                        <button class="btn" id="btnDemo" type="button">예시 입력</button>
+                        <button class="btn" id="btnReset" type="button">초기화</button>
+                    </div>
+
+                    <div class="error" id="errorBox"></div>
+                </form>
+
+                <div class="stats" aria-live="polite">
+                    <div class="stat">
+                        <div class="stat-top">
+                            <div class="badge p">신체 · 23일</div>
+                            <div class="small" id="pState">-</div>
+                        </div>
+                        <div class="value" id="pValue">—</div>
+                        <div class="meta" id="pMeta">-</div>
+                    </div>
+
+                    <div class="stat">
+                        <div class="stat-top">
+                            <div class="badge e">감정 · 28일</div>
+                            <div class="small" id="eState">-</div>
+                        </div>
+                        <div class="value" id="eValue">—</div>
+                        <div class="meta" id="eMeta">-</div>
+                    </div>
+
+                    <div class="stat">
+                        <div class="stat-top">
+                            <div class="badge i">지성 · 33일</div>
+                            <div class="small" id="iState">-</div>
+                        </div>
+                        <div class="value" id="iValue">—</div>
+                        <div class="meta" id="iMeta">-</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 그래프 카드 -->
+        <section class="card">
+            <div class="card-head">
+                <h2 class="card-title">그래프 (±15일)</h2>
+                <p class="card-desc">기준일을 중심으로 31일 범위(15일 전 ~ 15일 후)를 보여줍니다.</p>
+            </div>
+            <div class="canvas-wrap">
+                <div class="chart-toolbar">
+                    <div class="legend">
+                        <span class="small"><span class="dot p"></span>신체</span>
+                        <span class="small"><span class="dot e"></span>감정</span>
+                        <span class="small"><span class="dot i"></span>지성</span>
+                    </div>
+                    <div class="small" id="rangeInfo">-</div>
+                </div>
+                <canvas id="chart" width="980" height="320"></canvas>
+                <div class="hint" style="margin-top:10px">
+                    값은 -100 ~ +100 범위(%)로 표시됩니다. 0 근처는 “전환 구간”으로 보는 경우가 많습니다.
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="footer">
+        © Biorhythm Calculator (Vanilla JS + Pure CSS)
+    </div>
+</div>
+
+<script>
+    // ===== 유틸 =====
+    const $ = (sel) => document.querySelector(sel);
+
+    function pad2(n){ return String(n).padStart(2, "0"); }
+    function toISODate(d){
+        return d.getFullYear() + "-" + pad2(d.getMonth()+1) + "-" + pad2(d.getDate());
+    }
+    function parseDateLocal(iso){
+        // input[type=date]는 로컬 기준 날짜 문자열(YYYY-MM-DD)
+        // Date(iso) 사용 시 UTC 변환 이슈가 생길 수 있어 직접 생성
+        if (!iso) return null;
+        const [y,m,dd] = iso.split("-").map(Number);
+        if (!y || !m || !dd) return null;
+        return new Date(y, m-1, dd, 0, 0, 0, 0);
+    }
+    function dayDiff(d1, d2){
+        // d2 - d1 (일)
+        const ms = 24 * 60 * 60 * 1000;
+        return Math.round((d2.getTime() - d1.getTime()) / ms);
+    }
+    function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+    function biorhythmValue(days, period){
+        // sin(2π * days / period) * 100
+        return Math.sin((2 * Math.PI * days) / period) * 100;
+    }
+    function fmtPct(v){
+        const s = (v >= 0 ? "+" : "") + v.toFixed(1) + "%";
+        return s;
+    }
+    function stateLabel(v){
+        const av = Math.abs(v);
+        if (av < 5) return "전환";
+        if (v > 0) return "상승";
+        return "하강";
+    }
+
+    // ===== DOM =====
+    const birthEl = $("#birth");
+    const targetEl = $("#target");
+    const errorBox = $("#errorBox");
+
+    const pValue = $("#pValue"), eValue = $("#eValue"), iValue = $("#iValue");
+    const pState = $("#pState"), eState = $("#eState"), iState = $("#iState");
+    const pMeta  = $("#pMeta"),  eMeta  = $("#eMeta"),  iMeta  = $("#iMeta");
+
+    const canvas = $("#chart");
+    const ctx = canvas.getContext("2d");
+    const rangeInfo = $("#rangeInfo");
+
+    // ===== 초기값 =====
+    (function init(){
+        const today = new Date();
+        targetEl.value = toISODate(today);
+
+        $("#btnToday").addEventListener("click", () => {
+            targetEl.value = toISODate(new Date());
+            run();
+        });
+
+        $("#btnDemo").addEventListener("click", () => {
+            // 예시: 1990-01-01
+            birthEl.value = "1990-01-01";
+            targetEl.value = toISODate(new Date());
+            run();
+        });
+
+        $("#btnReset").addEventListener("click", () => {
+            birthEl.value = "";
+            targetEl.value = toISODate(new Date());
+            setError("");
+            clearStats();
+            drawEmpty();
+        });
+
+        $("#btnCalc").addEventListener("click", run);
+
+        // 값 변경 시 즉시 반영(선택)
+        birthEl.addEventListener("change", run);
+        targetEl.addEventListener("change", run);
+
+        clearStats();
+        drawEmpty();
+    })();
+
+    function setError(msg){
+        if (!msg){
+            errorBox.style.display = "none";
+            errorBox.textContent = "";
+            return;
+        }
+        errorBox.style.display = "block";
+        errorBox.textContent = msg;
+    }
+
+    function clearStats(){
+        pValue.textContent = "—"; eValue.textContent = "—"; iValue.textContent = "—";
+        pState.textContent = "-"; eState.textContent = "-"; iState.textContent = "-";
+        pMeta.textContent  = "-"; eMeta.textContent  = "-"; iMeta.textContent  = "-";
+        rangeInfo.textContent = "-";
+    }
+
+    // ===== 핵심 실행 =====
+    function run(){
+        const birth = parseDateLocal(birthEl.value);
+        const target = parseDateLocal(targetEl.value);
+
+        if (!birth || !target){
+            setError("");
+            clearStats();
+            drawEmpty();
+            return;
+        }
+
+        if (target.getTime() < birth.getTime()){
+            setError("기준일이 생년월일보다 빠릅니다. 날짜를 확인해주세요.");
+            clearStats();
+            drawEmpty();
+            return;
+        }
+
+        setError("");
+
+        const days = dayDiff(birth, target);
+
+        const p = biorhythmValue(days, 23);
+        const e = biorhythmValue(days, 28);
+        const i = biorhythmValue(days, 33);
+
+        pValue.textContent = fmtPct(p);
+        eValue.textContent = fmtPct(e);
+        iValue.textContent = fmtPct(i);
+
+        pState.textContent = stateLabel(p);
+        eState.textContent = stateLabel(e);
+        iState.textContent = stateLabel(i);
+
+        pMeta.textContent = `D+${days} (생일로부터 ${days}일)`;
+        eMeta.textContent = `D+${days} (생일로부터 ${days}일)`;
+        iMeta.textContent = `D+${days} (생일로부터 ${days}일)`;
+
+        drawChart(birth, target);
+    }
+
+    // ===== 차트 =====
+    function drawEmpty(){
+        // 캔버스를 CSS 크기에 맞게 선명하게 리사이즈 (DPR 대응)
+        resizeCanvasForDPR();
+
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        // 안내 텍스트
+        ctx.fillStyle = "#6b7280";
+        ctx.font = "14px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+        ctx.fillText("생년월일과 기준일을 입력하면 그래프가 표시됩니다.", 16, 28);
+
+        drawAxes();
+    }
+
+    function resizeCanvasForDPR(){
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        const w = Math.max(320, Math.floor(rect.width));
+        const h = Math.max(220, Math.floor(rect.height));
+
+        canvas.width  = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    window.addEventListener("resize", () => {
+        // 입력값이 있으면 다시 그림
+        const birth = parseDateLocal(birthEl.value);
+        const target = parseDateLocal(targetEl.value);
+        if (birth && target && target.getTime() >= birth.getTime()){
+            drawChart(birth, target);
+        } else {
+            drawEmpty();
+        }
+    });
+
+    function drawAxes(){
+        const rect = canvas.getBoundingClientRect();
+        const w = rect.width;
+        const h = rect.height;
+
+        const padL = 42, padR = 14, padT = 14, padB = 34;
+        const x0 = padL, y0 = padT;
+        const x1 = w - padR, y1 = h - padB;
+
+        // 배경선
+        ctx.strokeStyle = "#e5e7eb";
+        ctx.lineWidth = 1;
+
+        // 수평 격자 (-100, -50, 0, 50, 100)
+        const levels = [-100, -50, 0, 50, 100];
+        for (const lv of levels){
+            const y = mapY(lv, y0, y1);
+            ctx.beginPath();
+            ctx.moveTo(x0, y);
+            ctx.lineTo(x1, y);
+            ctx.stroke();
+
+            ctx.fillStyle = "#6b7280";
+            ctx.font = "12px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+            ctx.fillText(String(lv), 8, y + 4);
+        }
+
+        // 테두리
+        ctx.strokeStyle = "#e5e7eb";
+        ctx.beginPath();
+        ctx.rect(x0, y0, x1-x0, y1-y0);
+        ctx.stroke();
+    }
+
+    function mapX(idx, count, x0, x1){
+        if (count <= 1) return x0;
+        return x0 + (idx * (x1 - x0)) / (count - 1);
+    }
+    function mapY(val, y0, y1){
+        // val: -100..100  -> y: y1..y0 (반전)
+        const t = (val + 100) / 200;
+        return y1 - t * (y1 - y0);
+    }
+
+    function drawLine(series, color, x0, x1, y0, y1){
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let k=0; k<series.length; k++){
+            const x = mapX(k, series.length, x0, x1);
+            const y = mapY(series[k], y0, y1);
+            if (k === 0) ctx.moveTo(x,y);
+            else ctx.lineTo(x,y);
+        }
+        ctx.stroke();
+    }
+
+    function drawChart(birth, target){
+        resizeCanvasForDPR();
+
+        const rect = canvas.getBoundingClientRect();
+        const w = rect.width;
+        const h = rect.height;
+
+        const padL = 42, padR = 14, padT = 14, padB = 34;
+        const x0 = padL, y0 = padT;
+        const x1 = w - padR, y1 = h - padB;
+
+        // 날짜 범위
+        const center = target;
+        const start = new Date(center.getFullYear(), center.getMonth(), center.getDate() - 15);
+        const end   = new Date(center.getFullYear(), center.getMonth(), center.getDate() + 15);
+
+        rangeInfo.textContent = `${toISODate(start)} ~ ${toISODate(end)} (기준일: ${toISODate(center)})`;
+
+        // 시리즈 만들기
+        const daysCount = 31;
+        const pSeries = [];
+        const eSeries = [];
+        const iSeries = [];
+
+        for (let k=0; k<daysCount; k++){
+            const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + k);
+            const diff = dayDiff(birth, d);
+
+            // 생일 이전 날짜는 계산 의미가 애매하니 클램프(또는 빈값 처리) 가능
+            // 여기서는 diff가 음수면 0으로 처리
+            const safeDiff = Math.max(0, diff);
+
+            pSeries.push(biorhythmValue(safeDiff, 23));
+            eSeries.push(biorhythmValue(safeDiff, 28));
+            iSeries.push(biorhythmValue(safeDiff, 33));
+        }
+
+        // draw
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        drawAxes();
+
+        // 라인
+        drawLine(pSeries, getComputedStyle(document.documentElement).getPropertyValue("--p").trim() || "#ef4444", x0, x1, y0, y1);
+        drawLine(eSeries, getComputedStyle(document.documentElement).getPropertyValue("--e").trim() || "#3b82f6", x0, x1, y0, y1);
+        drawLine(iSeries, getComputedStyle(document.documentElement).getPropertyValue("--i").trim() || "#10b981", x0, x1, y0, y1);
+
+        // 기준일 세로선 (가운데 k=15)
+        const midIdx = 15;
+        const midX = mapX(midIdx, daysCount, x0, x1);
+        ctx.strokeStyle = "#111827";
+        ctx.globalAlpha = 0.18;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(midX, y0);
+        ctx.lineTo(midX, y1);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+
+        // 하단 날짜 라벨 (간단히 5개)
+        ctx.fillStyle = "#6b7280";
+        ctx.font = "12px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+        const labelIdxs = [0, 7, 15, 23, 30];
+        for (const idx of labelIdxs){
+            const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + idx);
+            const x = mapX(idx, daysCount, x0, x1);
+            const txt = (d.getMonth()+1) + "/" + d.getDate();
+            ctx.fillText(txt, x - 14, h - 12);
+        }
+    }
+</script>
+</body>
+</html>
