@@ -1,0 +1,831 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fibonacci Calculator | 피보나치 수열 표 생성기</title>
+    <meta name="description" content="피보나치 수열을 N항까지 계산하고 표(인덱스, 값, 비율, 누적합)를 생성합니다. 바닐라 자바스크립트 + 순수 CSS." />
+
+    <style>
+        :root{
+            --bg:#ffffff;
+            --text:#0f172a;
+            --muted:#64748b;
+            --border:#e5e7eb;
+            --card:#ffffff;
+            --soft:#f8fafc;
+            --shadow: 0 10px 30px rgba(15,23,42,.06);
+            --radius:16px;
+            --primary:#2563eb;
+            --primary-hover:#1d4ed8;
+            --danger:#ef4444;
+            --ok:#10b981;
+            --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            background:var(--bg);
+            color:var(--text);
+            font-family: ui-sans-serif, system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+            line-height:1.5;
+        }
+
+        .wrap{
+            max-width: 1060px;
+            margin: 0 auto;
+            padding: 28px 16px 70px;
+        }
+
+        header{
+            display:flex;
+            align-items:flex-end;
+            justify-content:space-between;
+            gap:16px;
+            padding: 10px 0 18px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .title{
+            display:flex;
+            flex-direction:column;
+            gap:6px;
+        }
+
+        h1{
+            margin:0;
+            font-size: 22px;
+            letter-spacing:-.2px;
+        }
+        .sub{
+            margin:0;
+            color:var(--muted);
+            font-size: 13px;
+        }
+
+        .badge{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            padding: 8px 12px;
+            border:1px solid var(--border);
+            background: var(--soft);
+            border-radius: 999px;
+            color: var(--muted);
+            font-size: 12px;
+            white-space:nowrap;
+        }
+        .dot{
+            width:8px; height:8px; border-radius:50%;
+            background: var(--ok);
+            display:inline-block;
+        }
+
+        .grid{
+            display:grid;
+            grid-template-columns: 380px 1fr;
+            gap: 18px;
+            margin-top: 18px;
+        }
+
+        @media (max-width: 980px){
+            .grid{ grid-template-columns: 1fr; }
+        }
+
+        .card{
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow:hidden;
+        }
+
+        .card-hd{
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            background: #fff;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap: 12px;
+        }
+
+        .card-hd h2{
+            margin:0;
+            font-size: 15px;
+        }
+        .card-hd .small{
+            color:var(--muted);
+            font-size:12px;
+            white-space:nowrap;
+        }
+
+        .card-bd{
+            padding: 16px;
+        }
+
+        .row{
+            display:flex;
+            gap: 10px;
+            align-items:flex-end;
+            flex-wrap:wrap;
+        }
+
+        label{
+            display:block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .field{
+            flex:1;
+            min-width: 170px;
+        }
+
+        input[type="number"], input[type="text"], select{
+            width:100%;
+            height: 42px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            outline: none;
+            background:#fff;
+            color: var(--text);
+            font-size: 14px;
+        }
+        input[type="number"]:focus, input[type="text"]:focus, select:focus{
+            border-color: rgba(37,99,235,.6);
+            box-shadow: 0 0 0 4px rgba(37,99,235,.10);
+        }
+
+        .hint{
+            margin-top: 10px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .btns{
+            display:flex;
+            gap: 10px;
+            flex-wrap:wrap;
+            margin-top: 12px;
+        }
+
+        button{
+            height: 42px;
+            padding: 0 14px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background:#fff;
+            color:var(--text);
+            cursor:pointer;
+            font-size: 14px;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap:8px;
+        }
+
+        .btn-primary{
+            background: var(--primary);
+            border-color: var(--primary);
+            color:#fff;
+        }
+        .btn-primary:hover{ background: var(--primary-hover); border-color: var(--primary-hover); }
+
+        .btn-ghost{
+            background:#fff;
+        }
+        .btn-danger{
+            border-color: rgba(239,68,68,.35);
+            color: var(--danger);
+            background: #fff;
+        }
+
+        .btn-danger:hover{
+            border-color: rgba(239,68,68,.55);
+            box-shadow: 0 0 0 4px rgba(239,68,68,.08);
+        }
+
+        .mini{
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 10px;
+            display:flex;
+            gap: 10px;
+            flex-wrap:wrap;
+            align-items:center;
+        }
+
+        .mono{
+            font-family: var(--mono);
+            font-size: 12px;
+            background: var(--soft);
+            border: 1px solid var(--border);
+            padding: 6px 10px;
+            border-radius: 999px;
+            color: #334155;
+        }
+
+        /* table */
+        .table-wrap{
+            overflow:auto;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background:#fff;
+        }
+
+        table{
+            width:100%;
+            border-collapse: collapse;
+            min-width: 760px;
+        }
+
+        thead th{
+            position: sticky;
+            top: 0;
+            background: #fff;
+            z-index: 2;
+            border-bottom: 1px solid var(--border);
+            color:#334155;
+            font-weight: 600;
+            font-size: 12px;
+            text-align: left;
+            padding: 10px 12px;
+            white-space:nowrap;
+        }
+
+        tbody td{
+            border-bottom: 1px solid var(--border);
+            padding: 10px 12px;
+            font-size: 13px;
+            white-space:nowrap;
+        }
+
+        tbody tr:hover td{
+            background: var(--soft);
+        }
+
+        td.num, th.num{
+            text-align:right;
+            font-family: var(--mono);
+        }
+        td.formula{
+            font-family: var(--mono);
+            font-size: 12px;
+            color:#1f2937;
+            max-width: 520px;
+            overflow:hidden;
+            text-overflow: ellipsis;
+        }
+
+        .stat{
+            display:grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 14px;
+        }
+        @media (max-width: 520px){
+            .stat{ grid-template-columns: 1fr; }
+        }
+        .stat .box{
+            border:1px solid var(--border);
+            border-radius: 14px;
+            padding: 12px;
+            background:#fff;
+        }
+        .stat .k{
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+        .stat .v{
+            font-family: var(--mono);
+            font-size: 14px;
+            color:#0f172a;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            white-space:nowrap;
+        }
+
+        .alert{
+            margin-top: 12px;
+            border: 1px solid rgba(239,68,68,.35);
+            background: rgba(239,68,68,.06);
+            color: #991b1b;
+            padding: 10px 12px;
+            border-radius: 14px;
+            font-size: 13px;
+            display:none;
+        }
+
+        footer{
+            margin-top: 18px;
+            color: var(--muted);
+            font-size: 12px;
+            text-align:center;
+        }
+
+        .sr-only{
+            position:absolute;
+            width:1px;height:1px;
+            padding:0;margin:-1px;
+            overflow:hidden;clip:rect(0,0,0,0);
+            border:0;
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <header>
+        <div class="title">
+            <h1>피보나치 수열 계산기</h1>
+            <p class="sub">N항까지 피보나치 수열을 계산하고, 표(값/비율/누적합/수식)를 생성합니다. (바닐라 JS · 순수 CSS)</p>
+        </div>
+        <div class="badge" title="광고/부트스트랩 제거 버전">
+            <span class="dot" aria-hidden="true"></span>
+            광고(AdSense) 없음 · Bootstrap 없음
+        </div>
+    </header>
+
+    <section class="grid">
+        <!-- controls -->
+        <div class="card">
+            <div class="card-hd">
+                <h2>입력</h2>
+                <div class="small">즉시 계산 가능</div>
+            </div>
+            <div class="card-bd">
+                <div class="row">
+                    <div class="field">
+                        <label for="n">몇 항까지 계산할까요? (N)</label>
+                        <input id="n" type="number" min="1" max="2000" step="1" value="40" inputmode="numeric" />
+                        <div class="hint">권장: 1 ~ 2000 (너무 큰 값은 표 렌더링이 느려질 수 있어요)</div>
+                    </div>
+
+                    <div class="field">
+                        <label for="mode">표시 방식</label>
+                        <select id="mode">
+                            <option value="bigint" selected>정확한 정수(BigInt)</option>
+                            <option value="number">일반 숫자(Number) (큰 N에서 오차 가능)</option>
+                        </select>
+                        <div class="hint">BigInt는 매우 큰 피보나치 값도 정확하게 계산합니다.</div>
+                    </div>
+
+                    <div class="field">
+                        <label for="start">시작 정의</label>
+                        <select id="start">
+                            <option value="0,1" selected>F(0)=0, F(1)=1 (일반)</option>
+                            <option value="1,1">F(1)=1, F(2)=1 (대중적 표기)</option>
+                        </select>
+                        <div class="hint">표기 방식에 맞게 선택하세요.</div>
+                    </div>
+                </div>
+
+                <div class="btns">
+                    <button class="btn-primary" id="btnRun" type="button">표 생성</button>
+                    <button class="btn-ghost" id="btnCopy" type="button">표 CSV 복사</button>
+                    <button class="btn-ghost" id="btnDownload" type="button">CSV 다운로드</button>
+                    <button class="btn-danger" id="btnClear" type="button">초기화</button>
+                </div>
+
+                <div class="mini">
+                    <span class="mono" id="renderInfo">Rows: 0</span>
+                    <span class="mono" id="timeInfo">Time: -</span>
+                </div>
+
+                <div class="alert" id="alert" role="alert" aria-live="polite"></div>
+
+                <div class="stat">
+                    <div class="box">
+                        <div class="k">마지막 항</div>
+                        <div class="v" id="lastTerm">-</div>
+                    </div>
+                    <div class="box">
+                        <div class="k">누적합</div>
+                        <div class="v" id="sumTerm">-</div>
+                    </div>
+                    <div class="box">
+                        <div class="k">마지막 비율 (F(n)/F(n-1))</div>
+                        <div class="v" id="ratioTerm">-</div>
+                    </div>
+                    <div class="box">
+                        <div class="k">메모</div>
+                        <div class="v" id="noteTerm">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- table -->
+        <div class="card">
+            <div class="card-hd">
+                <h2>피보나치 수열 표</h2>
+                <div class="small">스크롤/정렬(수동) · 복사/다운로드 지원</div>
+            </div>
+            <div class="card-bd">
+                <div class="table-wrap" aria-label="피보나치 표 영역">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th class="num">Index</th>
+                            <th class="num">F(n)</th>
+                            <th class="num">F(n-1)</th>
+                            <th class="num">Ratio</th>
+                            <th class="num">Cumulative Sum</th>
+                            <th>Formula</th>
+                        </tr>
+                        </thead>
+                        <tbody id="tbody">
+                        <tr>
+                            <td colspan="6" style="padding:14px;color:var(--muted);font-size:13px;">
+                                왼쪽에서 N을 입력한 뒤 <b>표 생성</b>을 눌러주세요.
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <footer>
+                    Tip) Ratio는 n이 커질수록 황금비(약 1.618...)에 가까워집니다.
+                </footer>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script>
+    // ===== DOM =====
+    const $n = document.getElementById("n");
+    const $mode = document.getElementById("mode");
+    const $start = document.getElementById("start");
+
+    const $btnRun = document.getElementById("btnRun");
+    const $btnCopy = document.getElementById("btnCopy");
+    const $btnDownload = document.getElementById("btnDownload");
+    const $btnClear = document.getElementById("btnClear");
+
+    const $tbody = document.getElementById("tbody");
+    const $alert = document.getElementById("alert");
+
+    const $renderInfo = document.getElementById("renderInfo");
+    const $timeInfo = document.getElementById("timeInfo");
+
+    const $lastTerm = document.getElementById("lastTerm");
+    const $sumTerm = document.getElementById("sumTerm");
+    const $ratioTerm = document.getElementById("ratioTerm");
+    const $noteTerm = document.getElementById("noteTerm");
+
+    // ===== Utils =====
+    function showAlert(msg){
+        $alert.textContent = msg;
+        $alert.style.display = "block";
+    }
+    function hideAlert(){
+        $alert.textContent = "";
+        $alert.style.display = "none";
+    }
+
+    function clampInt(v, min, max){
+        const n = parseInt(v, 10);
+        if (Number.isNaN(n)) return null;
+        return Math.min(max, Math.max(min, n));
+    }
+
+    function safeRatio(a, b){
+        // a/b (string)
+        if (b === 0n) return "-";
+        // ratio는 사람이 읽기 좋게 number로 (근사)
+        const approx = Number(a) / Number(b);
+        if (!Number.isFinite(approx)) return "~";
+        return approx.toFixed(12).replace(/0+$/,'').replace(/\.$/,'');
+    }
+
+    function toText(x){
+        // BigInt -> string / number -> string
+        return (typeof x === "bigint") ? x.toString() : String(x);
+    }
+
+    function downloadText(filename, text){
+        const blob = new Blob([text], { type: "text/csv;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    }
+
+    async function copyToClipboard(text){
+        if (navigator.clipboard && window.isSecureContext){
+            await navigator.clipboard.writeText(text);
+            return true;
+        }
+        // fallback
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "fixed";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand("copy");
+        ta.remove();
+        return ok;
+    }
+
+    // ===== Core Fibonacci =====
+    function generateRows(N, mode, startMode){
+        // startMode:
+        // - "0,1": indices 0..N, show F(0)=0, F(1)=1 => total rows = N+1
+        // - "1,1": indices 1..N, show F(1)=1, F(2)=1 => total rows = N
+        const useBigInt = (mode === "bigint");
+
+        // define base
+        let indexStart, a, b; // a=prev, b=curr
+        if (startMode === "0,1"){
+            indexStart = 0;
+            a = useBigInt ? 0n : 0;
+            b = useBigInt ? 1n : 1;
+        } else {
+            // 1,1
+            indexStart = 1;
+            a = useBigInt ? 1n : 1; // F(1)
+            b = useBigInt ? 1n : 1; // F(2)
+        }
+
+        const rows = [];
+        let sum = useBigInt ? 0n : 0;
+
+        // first row
+        if (startMode === "0,1"){
+            // row for F(0)=0
+            rows.push({
+                idx: 0,
+                fn: useBigInt ? 0n : 0,
+                prev: useBigInt ? 0n : 0,
+                ratio: "-",
+                sum: (sum += (useBigInt ? 0n : 0)),
+                formula: "F(0)=0"
+            });
+            if (N === 0) return { rows, sum };
+            // row for F(1)=1
+            rows.push({
+                idx: 1,
+                fn: useBigInt ? 1n : 1,
+                prev: useBigInt ? 0n : 0,
+                ratio: "-",
+                sum: (sum += (useBigInt ? 1n : 1)),
+                formula: "F(1)=1"
+            });
+            // continue from n=2
+            let prev = useBigInt ? 0n : 0;
+            let curr = useBigInt ? 1n : 1;
+            for (let n = 2; n <= N; n++){
+                const next = useBigInt ? (prev + curr) : (prev + curr);
+                const r = useBigInt ? safeRatio(next, curr) : (curr === 0 ? "-" : (next / curr).toFixed(12).replace(/0+$/,'').replace(/\.$/,''));
+                sum = useBigInt ? (sum + next) : (sum + next);
+                rows.push({
+                    idx: n,
+                    fn: next,
+                    prev: curr,
+                    ratio: r,
+                    sum,
+                    formula: `F(${n}) = F(${n-1}) + F(${n-2})`
+                });
+                prev = curr;
+                curr = next;
+            }
+            return { rows, sum };
+        } else {
+            // "1,1": rows for 1..N
+            // row for F(1)=1
+            rows.push({
+                idx: 1,
+                fn: useBigInt ? 1n : 1,
+                prev: useBigInt ? 0n : 0,
+                ratio: "-",
+                sum: (sum += (useBigInt ? 1n : 1)),
+                formula: "F(1)=1"
+            });
+            if (N === 1) return { rows, sum };
+
+            // row for F(2)=1
+            rows.push({
+                idx: 2,
+                fn: useBigInt ? 1n : 1,
+                prev: useBigInt ? 1n : 1,
+                ratio: "1",
+                sum: (sum += (useBigInt ? 1n : 1)),
+                formula: "F(2)=1"
+            });
+
+            let prev = useBigInt ? 1n : 1; // F(1)
+            let curr = useBigInt ? 1n : 1; // F(2)
+            for (let n = 3; n <= N; n++){
+                const next = useBigInt ? (prev + curr) : (prev + curr);
+                const r = useBigInt ? safeRatio(next, curr) : (curr === 0 ? "-" : (next / curr).toFixed(12).replace(/0+$/,'').replace(/\.$/,''));
+                sum = useBigInt ? (sum + next) : (sum + next);
+                rows.push({
+                    idx: n,
+                    fn: next,
+                    prev: curr,
+                    ratio: r,
+                    sum,
+                    formula: `F(${n}) = F(${n-1}) + F(${n-2})`
+                });
+                prev = curr;
+                curr = next;
+            }
+            return { rows, sum };
+        }
+    }
+
+    function renderTable(rows){
+        const frag = document.createDocumentFragment();
+
+        for (const r of rows){
+            const tr = document.createElement("tr");
+
+            const tdIdx = document.createElement("td");
+            tdIdx.className = "num";
+            tdIdx.textContent = r.idx;
+
+            const tdFn = document.createElement("td");
+            tdFn.className = "num";
+            tdFn.textContent = toText(r.fn);
+
+            const tdPrev = document.createElement("td");
+            tdPrev.className = "num";
+            tdPrev.textContent = toText(r.prev);
+
+            const tdRatio = document.createElement("td");
+            tdRatio.className = "num";
+            tdRatio.textContent = r.ratio;
+
+            const tdSum = document.createElement("td");
+            tdSum.className = "num";
+            tdSum.textContent = toText(r.sum);
+
+            const tdFormula = document.createElement("td");
+            tdFormula.className = "formula";
+            tdFormula.title = r.formula;
+            tdFormula.textContent = r.formula;
+
+            tr.appendChild(tdIdx);
+            tr.appendChild(tdFn);
+            tr.appendChild(tdPrev);
+            tr.appendChild(tdRatio);
+            tr.appendChild(tdSum);
+            tr.appendChild(tdFormula);
+
+            frag.appendChild(tr);
+        }
+
+        $tbody.innerHTML = "";
+        $tbody.appendChild(frag);
+    }
+
+    function toCSV(rows){
+        const header = ["index","fib","prev","ratio","sum","formula"].join(",");
+        const lines = rows.map(r => {
+            // CSV 안전 처리(따옴표/콤마 대비)
+            const esc = (v) => {
+                const s = String(v ?? "");
+                if (/[",\n]/.test(s)) return `"${s.replaceAll('"','""')}"`;
+                return s;
+            };
+            return [
+                esc(r.idx),
+                esc(toText(r.fn)),
+                esc(toText(r.prev)),
+                esc(r.ratio),
+                esc(toText(r.sum)),
+                esc(r.formula),
+            ].join(",");
+        });
+        return [header, ...lines].join("\n");
+    }
+
+    function resetUI(){
+        $tbody.innerHTML = `
+        <tr>
+          <td colspan="6" style="padding:14px;color:var(--muted);font-size:13px;">
+            왼쪽에서 N을 입력한 뒤 <b>표 생성</b>을 눌러주세요.
+          </td>
+        </tr>
+      `;
+        $renderInfo.textContent = "Rows: 0";
+        $timeInfo.textContent = "Time: -";
+        $lastTerm.textContent = "-";
+        $sumTerm.textContent = "-";
+        $ratioTerm.textContent = "-";
+        $noteTerm.textContent = "-";
+        hideAlert();
+    }
+
+    // ===== Events =====
+    let lastRows = [];
+
+    function run(){
+        hideAlert();
+
+        const rawN = $n.value;
+        const n = clampInt(rawN, 0, 2000);
+        if (n === null){
+            showAlert("N 값이 올바르지 않습니다. 숫자를 입력해주세요.");
+            return;
+        }
+
+        const mode = $mode.value;
+        const start = $start.value;
+
+        // start에 따라 최소 허용 조정
+        if (start === "1,1" && n < 1){
+            showAlert("F(1)=1 방식에서는 N은 최소 1 이상이어야 합니다.");
+            return;
+        }
+        if (start === "0,1" && n < 0){
+            showAlert("F(0)=0 방식에서는 N은 최소 0 이상이어야 합니다.");
+            return;
+        }
+
+        const t0 = performance.now();
+        const { rows, sum } = generateRows(n, mode, start);
+        const t1 = performance.now();
+
+        lastRows = rows;
+        renderTable(rows);
+
+        $renderInfo.textContent = `Rows: ${rows.length}`;
+        $timeInfo.textContent = `Time: ${(t1 - t0).toFixed(1)} ms`;
+
+        const last = rows[rows.length - 1];
+        $lastTerm.textContent = `F(${last.idx}) = ${toText(last.fn)}`;
+        $sumTerm.textContent = toText(sum);
+
+        // ratio: 마지막 행 ratio
+        $ratioTerm.textContent = last.ratio;
+
+        const note = (mode === "bigint")
+            ? "BigInt 모드: 큰 수 정확"
+            : "Number 모드: 큰 N에서 오차 가능";
+        $noteTerm.textContent = note;
+    }
+
+    $btnRun.addEventListener("click", run);
+
+    // Enter로 실행
+    $n.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") run();
+    });
+
+    $btnCopy.addEventListener("click", async () => {
+        hideAlert();
+        if (!lastRows.length){
+            showAlert("복사할 데이터가 없습니다. 먼저 표를 생성해주세요.");
+            return;
+        }
+        const csv = toCSV(lastRows);
+        try{
+            const ok = await copyToClipboard(csv);
+            if (ok) showAlert("CSV가 클립보드에 복사되었습니다.");
+            else showAlert("복사에 실패했습니다. (브라우저 권한을 확인해주세요)");
+        }catch(err){
+            showAlert("복사에 실패했습니다. (브라우저 권한을 확인해주세요)");
+        }
+        // 알림을 오류처럼 보이지 않게 테두리 색만 유지하되, 메시지는 표시
+        $alert.style.borderColor = "rgba(16,185,129,.35)";
+        $alert.style.background = "rgba(16,185,129,.06)";
+        $alert.style.color = "#065f46";
+    });
+
+    $btnDownload.addEventListener("click", () => {
+        hideAlert();
+        if (!lastRows.length){
+            showAlert("다운로드할 데이터가 없습니다. 먼저 표를 생성해주세요.");
+            return;
+        }
+        const csv = toCSV(lastRows);
+        const n = $n.value || "N";
+        downloadText(`fibonacci_${n}.csv`, csv);
+    });
+
+    $btnClear.addEventListener("click", () => {
+        $n.value = 40;
+        $mode.value = "bigint";
+        $start.value = "0,1";
+        lastRows = [];
+        resetUI();
+    });
+
+    // 첫 화면 초기화
+    resetUI();
+</script>
+</body>
+</html>
