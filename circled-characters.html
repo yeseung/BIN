@@ -1,0 +1,572 @@
+<!--
+파일명(영어) 예시:
+- circled-characters.html
+- special-characters-collection.html
+- enclosed-alphanumerics.html
+- circled-number-symbols.html
+- special-symbols-gallery.html
+-->
+
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>원문자/원형문자/괄호문자/특수문자 모음</title>
+
+    <!-- ✅ Adsense 완전 제거 / ✅ Bootstrap 완전 제거 / ✅ 순수 CSS / ✅ Vanilla JS -->
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --border:#e5e7eb;
+            --primary:#2563eb;
+            --primary-hover:#1d4ed8;
+            --ring:rgba(37,99,235,.18);
+            --radius:16px;
+            --shadow:0 12px 35px rgba(17,24,39,.08);
+        }
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: ui-sans-serif, system-ui, -apple-system, "Malgun Gothic","Apple SD Gothic Neo", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+        .container{
+            max-width: 1040px;
+            margin: 42px auto;
+            padding: 0 16px;
+        }
+        .card{
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow:hidden;
+        }
+        .header{
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg,#fff 0%,#fbfcff 100%);
+            display:flex;
+            align-items:flex-start;
+            justify-content:space-between;
+            gap: 12px;
+        }
+        .title{
+            margin:0;
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: -0.2px;
+        }
+        .subtitle{
+            margin: 6px 0 0;
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+        .badge{
+            font-size: 12px;
+            color:#0f172a;
+            background:#eef2ff;
+            border:1px solid #c7d2fe;
+            padding:6px 10px;
+            border-radius: 999px;
+            white-space:nowrap;
+            height: fit-content;
+        }
+
+        .body{ padding: 20px; }
+
+        .toolbar{
+            display:flex;
+            flex-wrap:wrap;
+            gap: 10px;
+            align-items:center;
+            justify-content:space-between;
+            margin-bottom: 14px;
+        }
+        .left, .right{
+            display:flex;
+            gap: 10px;
+            align-items:center;
+            flex-wrap:wrap;
+        }
+
+        .input{
+            display:flex;
+            align-items:center;
+            gap: 8px;
+            border:1px solid var(--border);
+            background:#fff;
+            border-radius: 12px;
+            padding: 10px 12px;
+            min-width: 260px;
+            box-shadow: 0 1px 0 rgba(0,0,0,.02);
+        }
+        .input span{
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 900;
+        }
+        input[type="text"]{
+            border:0;
+            outline:0;
+            width: 260px;
+            font-size: 13px;
+            background: transparent;
+        }
+
+        .btn{
+            height: 40px;
+            padding: 0 14px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background:#fff;
+            font-weight: 900;
+            font-size: 13px;
+            cursor:pointer;
+            user-select:none;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap: 8px;
+        }
+        .btn.primary{
+            background: var(--primary);
+            border-color: transparent;
+            color:#fff;
+        }
+        .btn.primary:hover{ background: var(--primary-hover); }
+
+        .grid{
+            display:grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        @media (max-width: 900px){
+            .grid{ grid-template-columns: 1fr; }
+            input[type="text"]{ width: 200px; }
+            .input{ min-width: 220px; }
+        }
+
+        details{
+            border:1px solid var(--border);
+            border-radius: 14px;
+            background:#fff;
+            overflow:hidden;
+        }
+        summary{
+            padding: 12px 14px;
+            cursor:pointer;
+            user-select:none;
+            font-weight: 900;
+            font-size: 14px;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap: 10px;
+            background:#fbfdff;
+            border-bottom: 1px solid var(--border);
+        }
+        summary::-webkit-details-marker{ display:none; }
+
+        .pill{
+            font-size: 12px;
+            color:#0f172a;
+            background:#f1f5f9;
+            border:1px solid #e2e8f0;
+            padding:4px 8px;
+            border-radius: 999px;
+            white-space:nowrap;
+        }
+
+        .content{
+            padding: 14px;
+        }
+
+        .chars{
+            display:flex;
+            flex-wrap:wrap;
+            gap: 8px;
+        }
+        .chip{
+            display:inline-flex;
+            align-items:center;
+            gap: 8px;
+            padding: 8px 10px;
+            border:1px solid var(--border);
+            border-radius: 12px;
+            background:#fff;
+            cursor:pointer;
+            transition: transform .08s ease, box-shadow .12s ease, border-color .12s ease;
+            user-select:none;
+            max-width: 100%;
+        }
+        .chip:hover{
+            border-color: #cbd5e1;
+            box-shadow: 0 10px 25px rgba(17,24,39,.06);
+            transform: translateY(-1px);
+        }
+        .glyph{
+            font-size: 18px;
+            line-height: 1;
+        }
+        .code{
+            font-size: 12px;
+            color: var(--muted);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            white-space:nowrap;
+        }
+
+        .note{
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.7;
+        }
+        .note b{ color:#f59e0b; }
+
+        .toast{
+            position: fixed;
+            left: 50%;
+            bottom: 18px;
+            transform: translateX(-50%);
+            background: rgba(17,24,39,.92);
+            color:#fff;
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            max-width: 92vw;
+            display:none;
+            box-shadow: 0 14px 40px rgba(0,0,0,.25);
+        }
+
+        a.link{
+            color:#0f766e;
+            text-decoration:none;
+            font-weight: 900;
+        }
+        a.link:hover{ text-decoration: underline; }
+
+        .wide{ grid-column: 1 / -1; }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <section class="card">
+        <header class="header">
+            <div>
+                <h1 class="title">원문자 / 원형문자 / 괄호문자 / 특수문자 모음</h1>
+                <p class="subtitle">
+                    원하는 문자를 <b>클릭하면 복사</b>됩니다. (브라우저 기본 클립보드 사용)
+                </p>
+            </div>
+            <div class="badge">Vanilla JS · Pure CSS</div>
+        </header>
+
+        <div class="body">
+            <div class="toolbar">
+                <div class="left">
+                    <div class="input">
+                        <span>검색</span>
+                        <input id="q" type="text" placeholder="예) 숫자, 한글, 영어, 원문자, 괄호..." />
+                    </div>
+                    <button class="btn" id="btnClear" type="button">검색 초기화</button>
+                </div>
+                <div class="right">
+                    <button class="btn primary" id="btnCopyAll" type="button">현재 화면 문자만 모아 복사</button>
+                </div>
+            </div>
+
+            <div class="grid" id="grid"></div>
+
+            <div class="note">
+                <b>참고</b>: 일부 “원문자/음각문자”는 폰트/OS에 따라 표시가 다를 수 있습니다.
+                링크(원문자, 괄호문자 이외의 숫자):
+                <a class="link" href="http://xn--vj1b09xs1b16ct2c.com/share/cCode/special_character.php/#Arabic_figures" target="_blank" rel="noopener">special_character.php/#Arabic_figures</a>
+            </div>
+        </div>
+    </section>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+    /*********************************************************
+     * 데이터: 사용자가 준 문자들을 "그대로" 묶어서 제공
+     * - 각 아이템은 "표시 문자" + "설명/코드"
+     * - HTML 엔티티(예: &#12881;)는 JS에서 실제 문자로 변환해서 표시
+     *********************************************************/
+    function decodeEntities(s){
+        var t = document.createElement("textarea");
+        t.innerHTML = s;
+        return t.value;
+    }
+
+    var groups = [
+        {
+            title: "12345 아라비아 숫자 원문자 (1~20)",
+            hint: "① ~ ⑳",
+            items: "① ② ③ ④ ⑤ ⑥ ⑦ ⑧ ⑨ ⑩ ⑪ ⑫ ⑬ ⑭ ⑮ ⑯ ⑰ ⑱ ⑲ ⑳".split(" ")
+        },
+        {
+            title: "16 또는 20 이상 ~ 50 아라비아숫자 원문자 (HTML 엔티티)",
+            hint: "&#12881; ...",
+            items: decodeEntities("&#12881;&#32;&#12882;&#32;&#12883;&#32;&#12884;&#32;&#12885;&#32;&#12886;&#32;&#12887;&#32;&#12888;&#32;&#12889;&#32;&#12890;&#32;&#12891;&#32;&#12892;&#32;&#12893;&#32;&#12894;&#32;&#12895;&#32;&#12977;&#32;&#12978;&#32;&#12979;&#32;&#12980;&#32;&#12981;&#32;&#12982;&#32;&#12983;&#32;&#12984;&#32;&#12985;&#32;&#12986;&#32;&#12987;&#32;&#12988;&#32;&#12989;&#32;&#12990;&#32;&#12991;").split(" ")
+        },
+        {
+            title: "두줄 이중 동그라미(쌍동그라미) 원문자",
+            hint: "⓵ ~ ⓾",
+            items: "⓵ ⓶ ⓷ ⓸ ⓹ ⓺ ⓻ ⓼ ⓽ ⓾".split(" ")
+        },
+        {
+            title: "1~20 아라비아숫자 음각문자/음각원문자 (혼합)",
+            hint: "①~",
+            items: decodeEntities("&#9471;&#32;&#10102;&#32;&#10103;&#32;&#10104;&#32;&#10105;&#32;&#10106;&#32;&#10107;&#32;&#10108;&#32;&#10109;&#32;&#10110;&#32;&#10111;&#32;&#9451;&#32;&#9452;&#32;&#9453;&#32;&#9454;&#32;&#9455;&#32;&#9456;&#32;&#9457;&#32;&#9458;&#32;&#9459;&#32;&#9460;").split(" ")
+        },
+        {
+            title: "12345 아라비아 숫자 괄호문자",
+            hint: "⑴ ~ ⒂",
+            items: "⑴ ⑵ ⑶ ⑷ ⑸ ⑹ ⑺ ⑻ ⑼ ⑽ ⑾ ⑿ ⒀ ⒁ ⒂".split(" ")
+        },
+        {
+            title: "한글 ㄱㄴㄷㄹ 초성 원문자",
+            hint: "㉠ ~ ㉭",
+            items: "㉠ ㉡ ㉢ ㉣ ㉤ ㉥ ㉦ ㉧ ㉨ ㉩ ㉪ ㉫ ㉬ ㉭".split(" ")
+        },
+        {
+            title: "한글 ㄱㄴㄷㄹ 초성 괄호문자",
+            hint: "㈀ ~ ㈍",
+            items: "㈀ ㈁ ㈂ ㈃ ㈄ ㈅ ㈆ ㈇ ㈈ ㈉ ㈊ ㈋ ㈌ ㈍".split(" ")
+        },
+        {
+            title: "한글 가나다라 원문자",
+            hint: "㉮ ~ ㉾",
+            items: "㉮ ㉯ ㉰ ㉱ ㉲ ㉳ ㉴ ㉵ ㉶ ㉷ ㉸ ㉹ ㉺ ㉻ ㉼ ㉽ ㉾".split(" ")
+        },
+        {
+            title: "한글 가나다라 괄호문자 (㈜ 포함)",
+            hint: "㈎ ~ ㈞, ㈜",
+            items: "㈎ ㈏ ㈐ ㈑ ㈒ ㈓ ㈔ ㈕ ㈖ ㈗ ㈘ ㈙ ㈚ ㈛ ㈝ ㈞ ㈜".split(" ")
+        },
+        {
+            title: "영어 소문자 알파벳 원문자",
+            hint: "ⓐ ~ ⓩ",
+            items: "ⓐ ⓑ ⓒ ⓓ ⓔ ⓕ ⓖ ⓗ ⓘ ⓙ ⓚ ⓛ ⓜ ⓝ ⓞ ⓟ ⓠ ⓡ ⓢ ⓣ ⓤ ⓥ ⓦ ⓧ ⓨ ⓩ".split(" ")
+        },
+        {
+            title: "영어 대문자 알파벳 원문자",
+            hint: "Ⓐ ~ Ⓩ",
+            items: "Ⓐ Ⓑ Ⓒ Ⓓ Ⓔ Ⓕ Ⓖ Ⓗ Ⓘ Ⓙ Ⓚ Ⓛ Ⓜ Ⓝ Ⓞ Ⓟ Ⓠ Ⓡ Ⓢ Ⓣ Ⓤ Ⓥ Ⓦ Ⓧ Ⓨ Ⓩ".split(" ")
+        },
+        {
+            title: "영어 대문자 음각문자(표시 가능한 경우만)",
+            hint: "🅐 ~ 🅩",
+            items: "🅐🅑🅒🅓🅔🅕🅖🅗🅘🅙🅚🅛🅜🅝🅞🅟🅠🅡🅢🅣🅤🅥🅦🅧🅨🅩".split("")
+        },
+        {
+            title: "영어 소문자 알파벳 괄호문자",
+            hint: "⒜ ~ ⒵",
+            items: "⒜ ⒝ ⒞ ⒟ ⒠ ⒡ ⒢ ⒣ ⒤ ⒥ ⒦ ⒧ ⒨ ⒩ ⒪ ⒫ ⒬ ⒭ ⒮ ⒯ ⒰ ⒱ ⒲ ⒳ ⒴ ⒵".split(" ")
+        },
+        {
+            title: "한문 아라비아 숫자 원문자 (엔티티)",
+            hint: "&#12928; ...",
+            items: decodeEntities("&#12928;&#32;&#12929;&#32;&#12930;&#32;&#12931;&#32;&#12932;&#32;&#12933;&#32;&#12934;&#32;&#12935;&#32;&#12936;&#32;&#12937;").split(" ")
+        },
+        {
+            title: "한문 아라비아 숫자 괄호문자 (엔티티)",
+            hint: "&#12832; ...",
+            items: decodeEntities("&#12832;&#32;&#12833;&#32;&#12834;&#32;&#12835;&#32;&#12836;&#32;&#12837;&#32;&#12838;&#32;&#12839;&#32;&#12840;&#32;&#12841;").split(" ")
+        },
+        {
+            title: "한문 월화수목금토일 원문자 (엔티티)",
+            hint: "&#12938; ...",
+            items: decodeEntities("&#12938;&#32;&#12939;&#32;&#12940;&#32;&#12941;&#32;&#12942;&#32;&#12943;&#32;&#12944;").split(" ")
+        },
+        {
+            title: "한문 요일/기타 괄호문자 + 회사표기",
+            hint: "㈱ ㈲ ...",
+            items: decodeEntities("&#12842;&#32;&#12843;&#32;&#12844;&#32;&#12845;&#32;&#12846;&#32;&#12847;&#32;&#12848;").split(" ")
+            .concat("㈱ ㈲ ㈳ ㈴ ㈵ ㈶ ㈷ ㈸ ㈹ ㈺ ㈻ ㈼ ㈽ ㈾ ㈿ ㉀ ㉁ ㉂ ㉃".split(" "))
+        },
+        {
+            title: "그외 한문 원문자(엔티티 + 몇 개 추가)",
+            hint: "&#12945; ...",
+            items: decodeEntities("&#12945;&#32;&#12946;&#32;&#12947;&#32;&#12948;&#32;&#12949;&#32;&#12950;&#32;&#12951;&#32;&#12952;&#32;&#12953;&#32;&#12954;&#32;&#12955;&#32;&#12956;&#32;&#12957;&#32;&#12958;&#32;&#12959;&#32;&#12960;&#32;&#12961;&#32;&#12962;&#32;&#12963;&#32;&#12964;&#32;&#12965;&#32;&#12966;&#32;&#12967;&#32;&#12968;&#32;&#12969;&#32;&#12970;&#32;&#12971;&#32;&#12972;&#32;&#12973;&#32;&#12974;&#32;&#12975;&#32;&#12976;").split(" ")
+            .concat("㉄ ㉅ ㉆ ㉇".split(" "))
+        },
+        {
+            title: "일어(일본어) 가다까나 원문자 (엔티티)",
+            hint: "&#13008; ...",
+            items: decodeEntities("&#13008;&#32;&#13009;&#32;&#13010;&#32;&#13011;&#32;&#13012;&#32;&#13013;&#32;&#13014;&#32;&#13015;&#32;&#13016;&#32;&#13017;&#32;&#13018;&#32;&#13019;&#32;&#13020;&#32;&#13021;&#32;&#13022;&#32;&#13023;&#32;&#13024;&#32;&#13025;&#32;&#13026;&#32;&#13027;&#32;&#13028;&#32;&#13029;&#32;&#13030;&#32;&#13031;&#32;&#13032;&#32;&#13033;&#32;&#13034;&#32;&#13035;&#32;&#13036;&#32;&#13037;&#32;&#13038;&#32;&#13039;&#32;&#13040;&#32;&#13041;&#32;&#13042;&#32;&#13043;&#32;&#13044;&#32;&#13045;&#32;&#13046;&#32;&#13047;&#32;&#13048;&#32;&#13049;&#32;&#13050;&#32;&#13051;&#32;&#13052;&#32;&#13053;&#32;&#13054;").split(" ")
+        },
+        {
+            title: "검은 사각형에 동그라미 숫자",
+            hint: "㉈ ~ ㉏",
+            items: "㉈ ㉉ ㉊ ㉋ ㉌ ㉍ ㉎ ㉏".split(" ")
+        },
+        {
+            title: "특수문자 원문자(일부)",
+            hint: "㉿ © ® ⊕ ⊗ ...",
+            items: ("㉿ © ® ⊕ ⊗ ° ∅ ∝ ∞ " +
+                "· • ● ⬤ … ¤ ⊖ ⊘ " +
+                "◐ ◑ ＠ ○ ● ◎ ⊙ ◌ ◍ ◉ ◯ " +
+                "⭕ ⁰ ㅇ").split(" ").filter(Boolean)
+        },
+        {
+            title: "정사각형/박스/도형 문자(일부)",
+            hint: "▤ ▥ ▦ ...",
+            items: ("▤ ▥ ▦ ▧ ▨ ▩ ▣ □ ■ ◆ ◇ ◈ ▒ ▓ ░").split(" ")
+        }
+    ];
+
+    /*********************************************************
+     * UI 렌더
+     *********************************************************/
+    var grid = document.getElementById("grid");
+    var q = document.getElementById("q");
+    var btnClear = document.getElementById("btnClear");
+    var btnCopyAll = document.getElementById("btnCopyAll");
+
+    function toast(msg){
+        var t = document.getElementById("toast");
+        t.textContent = msg;
+        t.style.display = "block";
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(function(){ t.style.display="none"; }, 1500);
+    }
+
+    function codePointHex(ch){
+        var cp = ch.codePointAt(0);
+        return "U+" + cp.toString(16).toUpperCase();
+    }
+
+    function render(filter){
+        grid.innerHTML = "";
+
+        var f = (filter || "").trim().toLowerCase();
+
+        groups.forEach(function(g, gi){
+            // group-level filter: title/hint match OR any item match
+            var groupMatch = !f ||
+                (g.title.toLowerCase().includes(f)) ||
+                (g.hint && g.hint.toLowerCase().includes(f));
+
+            var items = g.items || [];
+            var visibleItems = items.filter(function(ch){
+                if (!ch) return false;
+                if (!f) return true;
+                return groupMatch || ch.includes(filter) || codePointHex(ch).toLowerCase().includes(f);
+            });
+
+            if (!visibleItems.length) return;
+
+            var details = document.createElement("details");
+            details.open = gi < 2; // 위 2개 정도는 기본 펼침
+
+            var summary = document.createElement("summary");
+            summary.innerHTML = "<span>" + escapeHtml(g.title) + "</span><span class='pill'>" + visibleItems.length + "개</span>";
+            details.appendChild(summary);
+
+            var content = document.createElement("div");
+            content.className = "content";
+
+            var chars = document.createElement("div");
+            chars.className = "chars";
+
+            visibleItems.forEach(function(ch){
+                var chip = document.createElement("div");
+                chip.className = "chip";
+                chip.setAttribute("data-char", ch);
+
+                // 일부(🅐🅑...)는 split("")로 들어와서 공백 없이 붙기 때문에
+                // chip을 클릭하면 해당 '단일 문자'만 복사되도록 처리
+                chip.innerHTML =
+                    "<span class='glyph'>" + escapeHtml(ch) + "</span>" +
+                    "<span class='code'>" + escapeHtml(codePointHex(ch)) + "</span>";
+
+                chip.addEventListener("click", function(){
+                    copyText(ch);
+                });
+
+                chars.appendChild(chip);
+            });
+
+            content.appendChild(chars);
+            details.appendChild(content);
+
+            grid.appendChild(details);
+        });
+    }
+
+    function escapeHtml(str){
+        return String(str)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    async function copyText(text){
+        try{
+            if (navigator.clipboard && navigator.clipboard.writeText){
+                await navigator.clipboard.writeText(text);
+            } else {
+                var ta = document.createElement("textarea");
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand("copy");
+                document.body.removeChild(ta);
+            }
+            toast("복사됨: " + text);
+        }catch(e){
+            console.error(e);
+            toast("복사 실패");
+        }
+    }
+
+    function copyAllVisible(){
+        var chars = [];
+        // 현재 렌더된 chip들만 수집
+        document.querySelectorAll(".chip").forEach(function(el){
+            var c = el.getAttribute("data-char");
+            if (c) chars.push(c);
+        });
+        if (!chars.length){
+            toast("복사할 문자가 없습니다.");
+            return;
+        }
+        copyText(chars.join(" "));
+    }
+
+    // 이벤트
+    q.addEventListener("input", function(){
+        render(this.value);
+    });
+
+    btnClear.addEventListener("click", function(){
+        q.value = "";
+        render("");
+        q.focus();
+        toast("검색을 초기화했습니다.");
+    });
+
+    btnCopyAll.addEventListener("click", function(){
+        copyAllVisible();
+    });
+
+    // 초기 렌더
+    render("");
+</script>
+</body>
+</html>
