@@ -1,0 +1,651 @@
+<!--
+파일명(영어) 예시:
+- unix-timestamp-converter.html
+- timestamp-unix-time-converter.html
+- unix-time-date-converter.html
+- epoch-time-converter.html
+-->
+
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>타임스탬프 ↔ 유닉스타임 변환기</title>
+
+    <!-- ✅ Adsense 완전 제거 / ✅ Bootstrap 완전 제거 / ✅ 순수 CSS / ✅ Vanilla JS -->
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --border:#e5e7eb;
+            --shadow:0 12px 35px rgba(17,24,39,.08);
+            --radius:16px;
+
+            --primary:#2563eb;
+            --primary-hover:#1d4ed8;
+
+            --good:#16a34a;
+            --warn:#f59e0b;
+            --bad:#dc2626;
+
+            --focus: rgba(37,99,235,.18);
+        }
+
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: ui-sans-serif, system-ui, -apple-system, "Malgun Gothic","Apple SD Gothic Neo", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+        .container{
+            max-width: 980px;
+            margin: 42px auto;
+            padding: 0 16px;
+        }
+        .card{
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow:hidden;
+        }
+        .header{
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg,#fff 0%,#fbfcff 100%);
+            display:flex;
+            align-items:flex-start;
+            justify-content:space-between;
+            gap: 12px;
+        }
+        h1{
+            margin:0;
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: -0.2px;
+        }
+        .sub{
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .badge{
+            font-size: 12px;
+            background:#eef2ff;
+            border:1px solid #c7d2fe;
+            padding:6px 10px;
+            border-radius:999px;
+            white-space:nowrap;
+            height: fit-content;
+            color:#0f172a;
+            font-weight: 900;
+        }
+
+        .body{ padding: 18px 20px 22px; }
+
+        .mode{
+            display:flex;
+            flex-wrap:wrap;
+            gap: 10px 14px;
+            align-items:center;
+            margin-bottom: 14px;
+        }
+        .radio{
+            display:flex;
+            align-items:center;
+            gap: 10px;
+            padding: 10px 12px;
+            border:1px solid var(--border);
+            border-radius: 14px;
+            background:#fff;
+            cursor:pointer;
+            user-select:none;
+        }
+        .radio input{
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+            cursor:pointer;
+        }
+        .radio b{
+            font-size: 13px;
+        }
+        .radio small{
+            display:block;
+            margin-top: 2px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .grid{
+            /*display:grid;*/
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+        .panel{
+            border:1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px;
+            background:#fff;
+        }
+        .panel h2{
+            margin:0 0 10px;
+            font-size: 14px;
+            font-weight: 900;
+            color:#0f172a;
+        }
+        .row{
+            display:flex;
+            gap: 10px;
+            flex-wrap:wrap;
+            align-items:end;
+        }
+        .field{
+            display:flex;
+            flex-direction:column;
+            gap:6px;
+            min-width: 110px;
+            flex: 1;
+        }
+        .field label{
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 900;
+        }
+        input[type="text"], input[type="number"]{
+            width: 100%;
+            height: 42px;
+            border:1px solid var(--border);
+            border-radius: 12px;
+            padding: 0 12px;
+            font-size: 14px;
+            outline: none;
+            background:#fff;
+            transition: box-shadow .12s ease, border-color .12s ease;
+        }
+        input[type="text"]:focus, input[type="number"]:focus{
+            border-color: #93c5fd;
+            box-shadow: 0 0 0 5px var(--focus);
+        }
+
+        .actions{
+            display:flex;
+            flex-wrap:wrap;
+            gap: 10px;
+            align-items:center;
+            margin-top: 12px;
+        }
+        .btn{
+            height: 42px;
+            padding: 0 14px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background:#fff;
+            font-weight: 900;
+            font-size: 13px;
+            cursor:pointer;
+            user-select:none;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap: 8px;
+        }
+        .btn.primary{
+            background: var(--primary);
+            border-color: transparent;
+            color:#fff;
+        }
+        .btn.primary:hover{ background: var(--primary-hover); }
+        .btn.ghost{ background:#fff; }
+        .btn.ghost:hover{ background:#f8fafc; }
+
+        .result{
+            margin-top: 14px;
+            border:1px dashed #cbd5e1;
+            background:#fbfdff;
+            border-radius: 14px;
+            padding: 12px;
+            display:grid;
+            gap: 10px;
+        }
+        .kv{
+            display:flex;
+            justify-content:space-between;
+            gap: 12px;
+            align-items:center;
+            padding: 10px 10px;
+            border-radius: 12px;
+            background:#fff;
+            border:1px solid var(--border);
+        }
+        .kv .k{
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 900;
+            white-space:nowrap;
+        }
+        .kv .v{
+            font-size: 13px;
+            font-weight: 900;
+            text-align:right;
+            word-break: break-word;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            color:#0f172a;
+        }
+
+        .note{
+            margin-top: 18px;
+            padding: 14px;
+            background:#fff;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            color:#0f172a;
+            line-height: 1.7;
+            font-size: 13px;
+        }
+        .note b{ font-weight: 900; }
+        .note .muted{ color: var(--muted); }
+
+        .toast{
+            position: fixed;
+            left: 50%;
+            bottom: 18px;
+            transform: translateX(-50%);
+            background: rgba(17,24,39,.92);
+            color:#fff;
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            max-width: 92vw;
+            display:none;
+            box-shadow: 0 14px 40px rgba(0,0,0,.25);
+        }
+
+        .hidden{ display:none !important; }
+
+        @media (max-width: 860px){
+            .grid{ grid-template-columns: 1fr; }
+            .field{ min-width: 90px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <section class="card">
+        <header class="header">
+            <div>
+                <h1>타임스탬프 날짜 ↔ 유닉스타임 날짜 변환기</h1>
+                <p class="sub">로컬 시간(브라우저 기준)으로 변환합니다. 필요하면 <b>UTC 기준</b>도 버튼으로 바로 확인할 수 있습니다.</p>
+            </div>
+            <div class="badge">Vanilla JS · Pure CSS</div>
+        </header>
+
+        <div class="body">
+            <div class="mode" role="radiogroup" aria-label="변환 모드">
+                <label class="radio">
+                    <input type="radio" name="mode" value="dateToUnix" checked />
+                    <div>
+                        <b>날짜 → 유닉스타임</b>
+                        <small>YYYY-MM-DD HH:mm:ss 입력</small>
+                    </div>
+                </label>
+
+                <label class="radio">
+                    <input type="radio" name="mode" value="unixToDate" />
+                    <div>
+                        <b>유닉스타임 → 날짜</b>
+                        <small>초(s) 또는 밀리초(ms) 자동 감지</small>
+                    </div>
+                </label>
+            </div>
+
+            <div class="grid">
+                <!-- 날짜 -> 유닉스타임 -->
+                <div class="panel" id="panelDate">
+                    <h2>날짜를 유닉스타임 값으로 변경</h2>
+
+                    <div class="row" style="margin-bottom:10px;">
+                        <div class="field">
+                            <label for="yy">년(YYYY)</label>
+                            <input id="yy" type="number" inputmode="numeric" min="0" max="9999" placeholder="2026" />
+                        </div>
+                        <div class="field">
+                            <label for="mm">월(MM)</label>
+                            <input id="mm" type="number" inputmode="numeric" min="1" max="12" placeholder="01" />
+                        </div>
+                        <div class="field">
+                            <label for="dd">일(DD)</label>
+                            <input id="dd" type="number" inputmode="numeric" min="1" max="31" placeholder="15" />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="field">
+                            <label for="hh">시(HH)</label>
+                            <input id="hh" type="number" inputmode="numeric" min="0" max="23" placeholder="12" />
+                        </div>
+                        <div class="field">
+                            <label for="mi">분(mm)</label>
+                            <input id="mi" type="number" inputmode="numeric" min="0" max="59" placeholder="29" />
+                        </div>
+                        <div class="field">
+                            <label for="ss">초(ss)</label>
+                            <input id="ss" type="number" inputmode="numeric" min="0" max="59" placeholder="40" />
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <button class="btn primary" id="btnConvertDate" type="button">변환하기</button>
+                        <button class="btn ghost" id="btnNow" type="button">지금</button>
+                        <button class="btn ghost" id="btnYearAgo" type="button">1년 전</button>
+                        <button class="btn ghost" id="btnYearLater" type="button">1년 후</button>
+                    </div>
+
+                    <div class="result" id="resultDate" aria-live="polite">
+                        <div class="kv">
+                            <div class="k">● Timestamp</div>
+                            <div class="v" id="outTimestamp">-</div>
+                        </div>
+                        <div class="kv">
+                            <div class="k">● Unix Time (s)</div>
+                            <div class="v" id="outUnix">-</div>
+                        </div>
+                        <div class="kv">
+                            <div class="k">● Unix Time (ms)</div>
+                            <div class="v" id="outUnixMs">-</div>
+                        </div>
+                        <div class="kv">
+                            <div class="k">● UTC (ISO)</div>
+                            <div class="v" id="outUtcIso">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 유닉스타임 -> 날짜 -->
+                <div class="panel" id="panelUnix">
+                    <h2>유닉스타임을 날짜로 변경</h2>
+
+                    <div class="row">
+                        <div class="field" style="min-width: 240px;">
+                            <label for="unixInput">Unix Time</label>
+                            <input id="unixInput" type="text" inputmode="numeric" placeholder="예) 1768447780 또는 1768447780000" />
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <button class="btn primary" id="btnConvertUnix" type="button">변환하기</button>
+                        <button class="btn ghost" id="btnCopyUnixResult" type="button">결과 복사</button>
+                    </div>
+
+                    <div class="result" id="resultUnix" aria-live="polite">
+                        <div class="kv">
+                            <div class="k">● Local Timestamp</div>
+                            <div class="v" id="outLocalFromUnix">-</div>
+                        </div>
+                        <div class="kv">
+                            <div class="k">● UTC (ISO)</div>
+                            <div class="v" id="outUtcFromUnix">-</div>
+                        </div>
+                        <div class="kv">
+                            <div class="k">● 입력 단위</div>
+                            <div class="v" id="outUnixUnit">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="note">
+                <b>유닉스시간(UNIX TIME), 유닉스타임이란?</b><br/>
+                <span class="muted">1970-01-01 00:00:00 (UTC)</span>부터 경과한 초(Seconds)를 의미합니다. (윤초는 무시)<br/><br/>
+
+                <b>타임스탬프(Timestamp)란?</b><br/>
+                특정 시각을 나타내는 문자열입니다. 예) <span class="muted">2005-10-30T10:45:00Z</span>, <span class="muted">Sat Jul 23 02:16:57 2005</span>, <span class="muted">1256953732</span> (유닉스 시간)
+            </div>
+        </div>
+    </section>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+    // ===== utils =====
+    function pad2(n){
+        n = String(n);
+        return n.length >= 2 ? n : ("0" + n);
+    }
+    function toast(msg){
+        var t = document.getElementById("toast");
+        t.textContent = msg;
+        t.style.display = "block";
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(function(){ t.style.display="none"; }, 1500);
+    }
+    async function copyText(text){
+        try{
+            if (navigator.clipboard && navigator.clipboard.writeText){
+                await navigator.clipboard.writeText(text);
+            } else {
+                var ta = document.createElement("textarea");
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand("copy");
+                document.body.removeChild(ta);
+            }
+            toast("복사 완료");
+        }catch(e){
+            console.error(e);
+            toast("복사 실패");
+        }
+    }
+
+    function formatLocal(dt){
+        // YYYY년 MM월 DD일 HH시 mm분 ss초
+        return dt.getFullYear() + "년 " +
+            pad2(dt.getMonth()+1) + "월 " +
+            pad2(dt.getDate()) + "일 " +
+            pad2(dt.getHours()) + "시 " +
+            pad2(dt.getMinutes()) + "분 " +
+            pad2(dt.getSeconds()) + "초";
+    }
+
+    function toIsoUtc(dt){
+        return dt.toISOString(); // UTC
+    }
+
+    function safeInt(v){
+        if (v === "" || v === null || typeof v === "undefined") return NaN;
+        return Number(v);
+    }
+
+    function isValidDateParts(y,m,d,hh,mi,ss){
+        if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return false;
+        if (!Number.isFinite(hh) || !Number.isFinite(mi) || !Number.isFinite(ss)) return false;
+
+        if (m < 1 || m > 12) return false;
+        if (d < 1 || d > 31) return false;
+        if (hh < 0 || hh > 23) return false;
+        if (mi < 0 || mi > 59) return false;
+        if (ss < 0 || ss > 59) return false;
+
+        // 실제 달력 검증(예: 2월 30일)
+        var dt = new Date(y, m-1, d, hh, mi, ss, 0);
+        return dt.getFullYear() === y &&
+            dt.getMonth() === (m-1) &&
+            dt.getDate() === d &&
+            dt.getHours() === hh &&
+            dt.getMinutes() === mi &&
+            dt.getSeconds() === ss;
+    }
+
+    // ===== elements =====
+    var modeEls = Array.prototype.slice.call(document.querySelectorAll('input[name="mode"]'));
+    var panelDate = document.getElementById("panelDate");
+    var panelUnix = document.getElementById("panelUnix");
+
+    var yy = document.getElementById("yy");
+    var mm = document.getElementById("mm");
+    var dd = document.getElementById("dd");
+    var hh = document.getElementById("hh");
+    var mi = document.getElementById("mi");
+    var ss = document.getElementById("ss");
+
+    var outTimestamp = document.getElementById("outTimestamp");
+    var outUnix = document.getElementById("outUnix");
+    var outUnixMs = document.getElementById("outUnixMs");
+    var outUtcIso = document.getElementById("outUtcIso");
+
+    var unixInput = document.getElementById("unixInput");
+    var outLocalFromUnix = document.getElementById("outLocalFromUnix");
+    var outUtcFromUnix = document.getElementById("outUtcFromUnix");
+    var outUnixUnit = document.getElementById("outUnixUnit");
+
+    // ===== mode switch =====
+    function setMode(mode){
+        // mode: dateToUnix | unixToDate
+        if (mode === "unixToDate"){
+            panelDate.classList.add("hidden");
+            panelUnix.classList.remove("hidden");
+        } else {
+            panelUnix.classList.add("hidden");
+            panelDate.classList.remove("hidden");
+        }
+    }
+    modeEls.forEach(function(el){
+        el.addEventListener("change", function(){
+            setMode(this.value);
+        });
+    });
+
+    // ===== init default (현재 시간 넣기) =====
+    function fillFromDate(dt){
+        yy.value = dt.getFullYear();
+        mm.value = pad2(dt.getMonth()+1);
+        dd.value = pad2(dt.getDate());
+        hh.value = pad2(dt.getHours());
+        mi.value = pad2(dt.getMinutes());
+        ss.value = pad2(dt.getSeconds());
+    }
+    fillFromDate(new Date());
+
+    // ===== date -> unix =====
+    function convertDate(){
+        var y = safeInt(yy.value);
+        var m = safeInt(mm.value);
+        var d = safeInt(dd.value);
+        var H = safeInt(hh.value);
+        var M = safeInt(mi.value);
+        var S = safeInt(ss.value);
+
+        if (!isValidDateParts(y,m,d,H,M,S)){
+            toast("날짜/시간 값을 확인해주세요.");
+            return;
+        }
+
+        var dt = new Date(y, m-1, d, H, M, S, 0); // 로컬 기준
+        var ms = dt.getTime();
+        var unix = Math.floor(ms / 1000);
+
+        outTimestamp.textContent = formatLocal(dt);
+        outUnix.textContent = String(unix);
+        outUnixMs.textContent = String(ms);
+        outUtcIso.textContent = toIsoUtc(dt);
+    }
+
+    document.getElementById("btnConvertDate").addEventListener("click", convertDate);
+
+    // Enter로 변환
+    [yy,mm,dd,hh,mi,ss].forEach(function(el){
+        el.addEventListener("keydown", function(e){
+            if (e.key === "Enter"){
+                e.preventDefault();
+                convertDate();
+            }
+        });
+    });
+
+    // now / year ago / year later
+    document.getElementById("btnNow").addEventListener("click", function(){
+        fillFromDate(new Date());
+        convertDate();
+    });
+    document.getElementById("btnYearAgo").addEventListener("click", function(){
+        var dt = new Date();
+        dt.setFullYear(dt.getFullYear() - 1);
+        fillFromDate(dt);
+        convertDate();
+    });
+    document.getElementById("btnYearLater").addEventListener("click", function(){
+        var dt = new Date();
+        dt.setFullYear(dt.getFullYear() + 1);
+        fillFromDate(dt);
+        convertDate();
+    });
+
+    // ===== unix -> date =====
+    function detectUnitAndParse(raw){
+        // 숫자만 추출
+        var s = String(raw || "").trim();
+        if (!s) return {ok:false, msg:"유닉스타임을 입력해주세요."};
+
+        // 공백/콤마 제거, +/-
+        s = s.replace(/,/g,"");
+        if (!/^[+-]?\d+$/.test(s)) return {ok:false, msg:"숫자만 입력해주세요."};
+
+        var n = Number(s);
+        if (!Number.isFinite(n)) return {ok:false, msg:"값이 너무 큽니다."};
+
+        // 13자리 이상이면 ms로, 그 외는 s로 처리(실무에서 흔한 방식)
+        var absLen = String(Math.abs(n)).length;
+        var unit = (absLen >= 13) ? "ms" : "s";
+        var ms = (unit === "ms") ? n : (n * 1000);
+
+        return {ok:true, unit:unit, ms:ms};
+    }
+
+    function convertUnix(){
+        var parsed = detectUnitAndParse(unixInput.value);
+        if (!parsed.ok){
+            toast(parsed.msg);
+            return;
+        }
+        var dt = new Date(parsed.ms);
+        if (isNaN(dt.getTime())){
+            toast("유효한 유닉스타임이 아닙니다.");
+            return;
+        }
+        outLocalFromUnix.textContent = formatLocal(dt);
+        outUtcFromUnix.textContent = toIsoUtc(dt);
+        outUnixUnit.textContent = (parsed.unit === "ms") ? "밀리초(ms)로 인식" : "초(s)로 인식";
+    }
+
+    document.getElementById("btnConvertUnix").addEventListener("click", convertUnix);
+
+    unixInput.addEventListener("keydown", function(e){
+        if (e.key === "Enter"){
+            e.preventDefault();
+            convertUnix();
+        }
+    });
+
+    document.getElementById("btnCopyUnixResult").addEventListener("click", function(){
+        var a = outLocalFromUnix.textContent;
+        var b = outUtcFromUnix.textContent;
+        if (a === "-" && b === "-") return toast("먼저 변환해주세요.");
+        var text = "Local: " + a + "\nUTC: " + b;
+        copyText(text);
+    });
+
+    // ===== start state =====
+    setMode("dateToUnix");
+    convertDate(); // 최초 결과 표시
+</script>
+</body>
+</html>
