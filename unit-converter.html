@@ -1,0 +1,687 @@
+<!--
+파일명(영어) 예시:
+- unit-converter.html
+- measurement-converter.html
+- unit-conversion-tool.html
+- unit-calculator.html
+-->
+
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>도량형 환산 | Unit Converter</title>
+
+    <!-- ✅ Bootstrap 제거 / ✅ Adsense 제거 / ✅ 순수 CSS -->
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --border:#e5e7eb;
+            --primary:#2563eb;
+            --primary-hover:#1d4ed8;
+            --ring:rgba(37,99,235,.25);
+            --radius:16px;
+            --shadow:0 12px 35px rgba(17,24,39,.08);
+        }
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: ui-sans-serif, system-ui, -apple-system, "Malgun Gothic","Apple SD Gothic Neo", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+        .container{
+            max-width: 860px;
+            margin: 48px auto;
+            padding: 0 16px;
+        }
+        .card{
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow:hidden;
+        }
+        .card-header{
+            padding: 18px 20px;
+            border-bottom:1px solid var(--border);
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+        }
+        .title{
+            margin:0;
+            font-size: 20px;
+            letter-spacing: -0.2px;
+        }
+        .subtitle{
+            margin:0;
+            font-size: 12px;
+            color: var(--muted);
+        }
+        .badge{
+            font-size: 12px;
+            color:#0f172a;
+            background:#eef2ff;
+            border:1px solid #c7d2fe;
+            padding:6px 10px;
+            border-radius: 999px;
+            white-space:nowrap;
+        }
+
+        .card-body{
+            padding: 20px;
+        }
+
+        .grid{
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        @media (max-width: 720px){
+            .grid{ grid-template-columns: 1fr; }
+        }
+
+        .field{
+            display:flex;
+            flex-direction:column;
+            gap: 8px;
+        }
+        label{
+            font-size: 13px;
+            color: var(--muted);
+        }
+        input[type="text"], input[type="number"], select, textarea{
+            width:100%;
+            height: 44px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: #fff;
+            padding: 0 12px;
+            font-size: 15px;
+            outline:none;
+            transition: box-shadow .15s ease, border-color .15s ease;
+        }
+        input:focus, select:focus, textarea:focus{
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--ring);
+        }
+
+        .actions{
+            display:flex;
+            gap: 10px;
+            margin-top: 14px;
+        }
+        .btn{
+            height: 44px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background:#fff;
+            color: var(--text);
+            font-weight: 700;
+            font-size: 14px;
+            padding: 0 14px;
+            cursor:pointer;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap:8px;
+            user-select:none;
+        }
+        .btn.primary{
+            background: var(--primary);
+            color:#fff;
+            border-color: transparent;
+        }
+        .btn.primary:hover{ background: var(--primary-hover); }
+        .btn:hover{ filter: brightness(0.98); }
+        .btn:disabled{ opacity: .55; cursor:not-allowed; }
+
+        .result{
+            margin-top: 18px;
+            padding: 16px;
+            border: 1px dashed #cbd5e1;
+            border-radius: 12px;
+            background:#fbfdff;
+            display:flex;
+            flex-direction:column;
+            gap:8px;
+        }
+        .result .label{
+            font-size: 12px;
+            color: var(--muted);
+        }
+        .result output{
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: .2px;
+            word-break: break-all;
+        }
+
+        .help{
+            margin-top: 14px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
+            border-top:1px solid var(--border);
+            padding-top: 14px;
+        }
+        .help b{ color:#f59e0b; }
+
+        .toast{
+            position: fixed;
+            left:50%;
+            bottom: 18px;
+            transform: translateX(-50%);
+            background: rgba(17,24,39,.92);
+            color:#fff;
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            max-width: 92vw;
+            display:none;
+            box-shadow: 0 14px 40px rgba(0,0,0,.25);
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <section class="card">
+        <header class="card-header">
+            <div>
+                <h1 class="title">도량형 환산</h1>
+                <p class="subtitle">길이 · 무게 · 넓이 · 부피 · 압력 · 온도 · 속도 · 연비 · 데이터</p>
+            </div>
+            <div class="badge">순수 CSS · Vanilla JS</div>
+        </header>
+
+        <div class="card-body">
+            <div class="grid">
+                <div class="field">
+                    <label for="sValue">변환할 값</label>
+                    <input
+                            id="sValue"
+                            type="text"
+                            inputmode="decimal"
+                            placeholder="숫자만 입력하세요. 예) 123.45"
+                            autocomplete="off"
+                    />
+                </div>
+
+                <div class="field">
+                    <label for="sFrom">현재 단위</label>
+                    <select id="sFrom"></select>
+                </div>
+
+                <div class="field">
+                    <label for="sTo">변환할 단위</label>
+                    <select id="sTo">
+                        <option value="">- 단위를 선택하세요 -</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>작업</label>
+                    <div class="actions">
+                        <button id="btnConvert" class="btn primary" type="button">변환하기</button>
+                        <button id="btnSwap" class="btn" type="button">⇄ 바꾸기</button>
+                        <button id="btnReset" class="btn" type="button">초기화</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="result">
+                <div class="label">결과</div>
+                <output id="resultText">-</output>
+            </div>
+
+            <div class="help">
+                <b>단위변환</b>: 변환할 값에 숫자 입력 → 현재단위 및 변환할 단위를 선택 → <b>변환하기</b>를 누르면 단위가 변환됩니다.
+            </div>
+        </div>
+    </section>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+    /***********************
+     * 1) 단위 테이블 (원본 기반)
+     ***********************/
+    var unitTable = new Array();
+
+    // length
+    unitTable[0] = new Array(
+        Array('',"- 단위를 선택하세요 -",""),
+        Array('',"- 길이 --------------",""),
+        Array(1000000, "밀리미터", "mm"),
+        Array(100000, "센티미터", "cm"),
+        Array(1000, "미터", "m"),
+        Array(1, "킬로미터", "km"),
+        Array(39370.0789, "인치", "inch"),
+        Array(3280.84, "피트", "ft"),
+        Array(1093.613, "야드", "yd"),
+        Array(0.62137, "마일", "mile"),
+        Array(3300, "자", "尺"),
+        Array(550, "간", "間"),
+        Array(9.17, "정", "町"),
+        Array(2.546, "리", "里"),
+        Array(0.539957, "해리", "海里")
+    );
+
+    // weight
+    unitTable[1] = new Array(
+        Array('',"- 단위를 선택하세요 -",""),
+        Array('',"- 무게 --------------",""),
+        Array(1000000, "밀리그램", "mg"),
+        Array(1000, "그램", "g"),
+        Array(1, "킬로그램", "kg"),
+        Array(0.001, "톤", "ton"),
+        Array(0.000001, "킬로톤", "kt"),
+        Array(15432, "그레인", "grain"),
+        Array(35.273, "온스", "oz"),
+        Array(2.20459, "파운드", "lb"),
+        Array(266.666, "돈", null),
+        Array(1.6666, "근", null),
+        Array(0.26666, "관", null),
+        Array(26.6666, "냥", null)
+    );
+
+    // area
+    unitTable[2] = new Array(
+        Array('',"- 단위를 선택하세요 -",""),
+        Array('',"- 넓이 --------------",""),
+        Array(9917.4, "제곱미터", "m²"),
+        Array(0.009917, "제곱킬로미터", "㎦"),
+        Array(99.174, "아르", "a"),
+        Array(106794, "제곱피트", "ft²"),
+        Array(11861, "제곱야드", "yd²"),
+        Array(2.4506, "에이커", "acre"),
+        Array(0.99174, "헥타아르", "ha"),
+        Array(108000, "평방자", null),
+        Array(3000, "평", null),
+        Array(10, "단보", null),
+        Array(1, "정보", null)
+    );
+
+    // volume
+    unitTable[3] = new Array(
+        Array('',"- 단위를 선택하세요 -",""),
+        Array('',"- 부피 --------------",""),
+        Array(1000, "씨씨", "cc"),
+        Array(1000, "밀리리터", "㎖"),
+        Array(10, "데시리터", "㎗"),
+        Array(1, "리터", "ℓ"),
+        Array(1000, "입방센치", "cm³"),
+        Array(0.001, "입방미터", "m³"),
+        Array(61.027, "입방인치", "in³"),
+        Array(0.03531, "입방피트", "ft³"),
+        Array(0.00130, "입방야드", "yd³"),
+        Array(0.26418, "갤런", "gallon"),
+        Array(0.00629326, "배럴", "bbl"),
+        Array(33.814022, "온스", "oz"),
+        Array(5.54352, "홉", null),
+        Array(0.554352, "되", null),
+        Array(0.0554352, "말", null)
+    );
+
+    // pressure
+    unitTable[4] = new Array(
+        Array('',"- 단위를 선택하세요 -",""),
+        Array('',"- 압력 --------------",""),
+        Array(1, "기압", "atm"),
+        Array(101325, "파스칼", "Pa"),
+        Array(1013.25, "헥토파스칼", "hPa"),
+        Array(101.325, "킬로파스칼", "kPa"),
+        Array(0.101325, "메가파스칼", "MPa"),
+        Array(1013250, "다인/cm²", "dyne/cm²"),
+        Array(1013.25,"밀리바", "mb"),
+        Array(1.01325,"바", "bar"),
+        Array(1.033227, "평방센티미터당킬로그램중", "kgf/cm²"),
+        Array(14.695949, "프사이", "psi"),
+        Array(760, "수은주밀리미터", "mmHg"),
+        Array(29.92126, "수은주인치", "inchHg"),
+        Array(10332.274528, "수주밀리미터", "mmH₂O"),
+        Array(406.782188, "inchH₂O", "inchH₂O")
+    );
+
+    // temperature
+    unitTable[5] = new Array(
+        Array('',"- 단위를 선택하세요 -",""),
+        Array('',"- 온도 --------------",""),
+        Array(null, "섭씨온도", "℃"),
+        Array(null, "화씨온도", "℉"),
+        Array(null, "절대온도", "K"),
+        Array(null, "랭킨온도", "°R")
+    );
+
+    // speed
+    unitTable[6] = new Array(
+        Array('',"- 단위를 선택하세요 -",""),
+        Array('',"- 속도 --------------",""),
+        Array('1', "초당 미터","m/s"),
+        Array('3600', "시간당 미터","m/h"),
+        Array('0.001', "초당 킬로미터","km/s"),
+        Array('3.6', "시간당 킬로미터","km/h"),
+        Array('39.3700787402', "초당 인치","in/s"),
+        Array('141732.28346457', "시간당 인치","in/h"),
+        Array('3.280839895', "초당 피트","ft/s"),
+        Array('11811.023622047', "시간당 피트","ft/h"),
+        Array('0.0006213712', "초당 마일","mi/s"),
+        Array('2.2369362920544025', "시간당 마일","mi/h"),
+        Array('1.9438444924', "노트", "kn"),
+        Array('0.0029411765', "마하", "mach")
+    );
+
+    // Fuel efficiency
+    unitTable[7] = new Array(
+        Array('',"- 단위를 선택하세요 -",""),
+        Array('',"- 연비 --------------",""),
+        Array('1', "km/ℓ","km/l"),
+        Array('2.3521458333', "mi/g","mi/g"),
+        Array(null, "ℓ/100km","l/100km")
+    );
+
+    // Data
+    unitTable[8] = new Array(
+        Array('',"- 단위를 선택하세요 -",""),
+        Array('',"- 데이터양 --------------",""),
+        Array('8388608',"비트","bit"),
+        Array('1048576',"바이트","B"),
+        Array('1024',"킬로바이트","KB"),
+        Array('1',"메가바이트","MB"),
+        Array('0.0009765625',"기가바이트","GB"),
+        Array('0.00000095367',"테라바이트","TB"),
+        Array('0.0000000009313225746',"페타바이트","PB"),
+        Array('0.0000000000009094947017',"엑사바이트","EB")
+    );
+
+    /***********************
+     * 2) 유틸
+     ***********************/
+    function $(id){ return document.getElementById(id); }
+
+    function toast(msg){
+        var t = $("toast");
+        t.textContent = msg;
+        t.style.display = "block";
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(function(){ t.style.display="none"; }, 1700);
+    }
+
+    function sanitizeNumberInput(str){
+        // 허용: 숫자, 소수점 1개, 앞의 +/-
+        str = String(str || "").trim();
+        // 콤마 제거
+        str = str.replace(/,/g, "");
+        // 숫자/./+/- 외 제거
+        str = str.replace(/[^0-9.\-+]/g, "");
+        // 소수점 여러 개면 첫 번째만 남김
+        var parts = str.split(".");
+        if (parts.length > 2){
+            str = parts.shift() + "." + parts.join("");
+        }
+        // +/-(부호) 여러 개면 첫 번째만
+        str = str.replace(/(?!^)[\+\-]/g, "");
+        return str;
+    }
+
+    function formatResultNumber(n){
+        // 6자리 반올림 후, 천단위 콤마
+        var x = Math.round(n * 1000000) / 1000000;
+        var s = String(x);
+        // 과학 표기나 너무 긴 경우는 그대로
+        if (s.indexOf("e") !== -1 || s.indexOf("E") !== -1) return s;
+
+        var sign = "";
+        if (s[0] === "-"){ sign="-"; s=s.slice(1); }
+
+        var a = s.split(".");
+        var intPart = a[0];
+        var decPart = a.length > 1 ? a[1] : "";
+
+        intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+        return sign + intPart + (decPart ? "." + decPart : "");
+    }
+
+    /***********************
+     * 3) 핵심 변환 로직 (원본 기반, 안정화)
+     ***********************/
+    function unitCalc(type, from, to, value){
+        var table = unitTable[type];
+        if (!table) return -1;
+
+        var fromIndex = -1, toIndex = -1;
+
+        value = parseFloat(value);
+        if (isNaN(value)) return -1;
+
+        // find from/to
+        for (var i=0; i<table.length; i++){
+            if (table[i][1] === from || table[i][2] === from) { fromIndex = i; break; }
+        }
+        for (var j=0; j<table.length; j++){
+            if (table[j][1] === to || table[j][2] === to) { toIndex = j; break; }
+        }
+        if (fromIndex === -1 || toIndex === -1) return -1;
+
+        var result;
+
+        // 연비(7) 예외
+        if (String(type) === "7"){
+            if ((from==="km/ℓ" && to==="ℓ/100km") || (from==="ℓ/100km" && to==="km/ℓ")){
+                result = 100 / value;
+            } else if ((from==="km/ℓ" && to==="km/ℓ") || (from==="ℓ/100km" && to==="ℓ/100km")){
+                result = value;
+            } else if ((from==="ℓ/100km" && to==="mi/g") || (from==="mi/g" && to==="ℓ/100km")){
+                result = 2.3521458333 * 100 / value;
+            } else {
+                result = (parseFloat(table[toIndex][0]) / parseFloat(table[fromIndex][0])) * value;
+            }
+        }
+        // 온도(5) 예외
+        else if (String(type) === "5"){
+            // table[5] 구조:
+            // [0] placeholder, [1] header, [2] 섭씨, [3] 화씨, [4] K, [5] 랭킨
+            // fromIndex/toIndex는 위 인덱스 그대로.
+            // convert to Kelvin
+            var k;
+            if (fromIndex === 2){          // C
+                k = value + 273.15;
+            } else if (fromIndex === 3){   // F
+                k = (value - 32) * 5/9 + 273.15;
+            } else if (fromIndex === 4){   // K
+                k = value;
+            } else if (fromIndex === 5){   // Rankine
+                k = value * 5/9;
+            } else {
+                return -1;
+            }
+
+            // Kelvin -> target
+            if (toIndex === 2){
+                result = k - 273.15;
+            } else if (toIndex === 3){
+                result = (k - 273.15) * 9/5 + 32;
+            } else if (toIndex === 4){
+                result = k;
+            } else if (toIndex === 5){
+                result = k * 9/5;
+            } else {
+                return -1;
+            }
+        }
+        // 일반
+        else{
+            result = (parseFloat(table[toIndex][0]) / parseFloat(table[fromIndex][0])) * value;
+        }
+
+        // normalize
+        result = Math.round(result * 1000000) / 1000000;
+        return result;
+    }
+
+    function detectTypeByFrom(from){
+        // 현재 단위가 어느 카테고리에 속하는지 찾기
+        for (var i=0; i<unitTable.length; i++){
+            for (var j=0; j<unitTable[i].length; j++){
+                if (unitTable[i][j][1] === from) return i;
+            }
+        }
+        return 0;
+    }
+
+    /***********************
+     * 4) Select 구성
+     ***********************/
+    function listFrom(){
+        var fromObject = $("sFrom");
+        fromObject.innerHTML = "";
+        fromObject.options[0] = new Option("- 단위를 선택하세요 -", "");
+
+        var cnt = 1;
+        for (var i=0; i<unitTable.length; i++){
+            for (var j=1; j<unitTable[i].length; j++){
+                var name = unitTable[i][j][1];
+                var abbr = unitTable[i][j][2];
+                var text = name + (abbr ? " ("+abbr+")" : "");
+                fromObject.options[cnt++] = new Option(text, name);
+            }
+        }
+    }
+
+    function selectFromOptions(){
+        var fromObject = $("sFrom");
+        var ffrom = fromObject.value;
+
+        var toObject = $("sTo");
+        if (!ffrom){
+            toObject.innerHTML = "";
+            toObject.options[0] = new Option("- 단위를 선택하세요 -", "");
+            return;
+        }
+
+        var type = detectTypeByFrom(ffrom);
+
+        // to options
+        toObject.innerHTML = "";
+        var cnt = 0;
+        // unitTable[type][1]은 header라 건너뛰기, [0] placeholder는 포함
+        for (var i=0; i<unitTable[type].length; i++){
+            if (i === 1) continue; // header skip
+            var name = unitTable[type][i][1];
+            var abbr = unitTable[type][i][2];
+            var text = name + (abbr ? " ("+abbr+")" : "");
+            toObject.options[cnt++] = new Option(text, name);
+        }
+
+        // 기본값: 첫 항목(placeholder)
+        toObject.selectedIndex = 0;
+    }
+
+    /***********************
+     * 5) 실행(화면)
+     ***********************/
+    function getToUnitSuffixText(){
+        var toSelect = $("sTo");
+        var text = toSelect.options[toSelect.selectedIndex] ? toSelect.options[toSelect.selectedIndex].text : "";
+        // "단위명 (약어)" 형태면 괄호 내용만 붙여주기
+        var m = text.match(/\(([^)]+)\)/);
+        return m ? m[1] : "";
+    }
+
+    function convertNow(){
+        var raw = $("sValue").value;
+        raw = sanitizeNumberInput(raw);
+        $("sValue").value = raw;
+
+        if (!raw){
+            toast("변환할 값을 입력해주세요.");
+            return;
+        }
+
+        var from = $("sFrom").value;
+        var to = $("sTo").value;
+
+        if (!from || from.substr(0,1) === "-"){
+            toast("현재 단위를 선택해주세요.");
+            return;
+        }
+        if (!to || to.substr(0,1) === "-"){
+            toast("변환할 단위를 선택해주세요.");
+            return;
+        }
+
+        var type = detectTypeByFrom(from);
+        var result = unitCalc(type, from, to, raw);
+        if (result === -1 || isNaN(result)){
+            toast("변환에 실패했습니다.");
+            return;
+        }
+
+        var suffix = getToUnitSuffixText();
+        var out = formatResultNumber(result) + (suffix ? (" " + suffix) : "");
+        $("resultText").textContent = out;
+    }
+
+    function swapUnits(){
+        var from = $("sFrom").value;
+        var to = $("sTo").value;
+        if (!from || !to) { toast("단위를 먼저 선택해주세요."); return; }
+
+        // from을 to로 바꾸려면: fromSelect는 전체 목록이므로 그대로 set 가능
+        $("sFrom").value = to;
+        selectFromOptions(); // to 목록 재구성
+        $("sTo").value = from;
+
+        toast("단위를 바꿨습니다.");
+    }
+
+    function resetAll(){
+        $("sValue").value = "";
+        $("sFrom").value = "";
+        $("sTo").innerHTML = "";
+        $("sTo").options[0] = new Option("- 단위를 선택하세요 -", "");
+        $("resultText").textContent = "-";
+        toast("초기화했습니다.");
+    }
+
+    /***********************
+     * 6) 이벤트 바인딩
+     ***********************/
+    (function init(){
+        listFrom();
+        $("sFrom").addEventListener("change", function(){
+            selectFromOptions();
+            $("resultText").textContent = "-";
+        });
+
+        $("btnConvert").addEventListener("click", convertNow);
+        $("btnSwap").addEventListener("click", swapUnits);
+        $("btnReset").addEventListener("click", resetAll);
+
+        // 엔터로 변환
+        $("sValue").addEventListener("keydown", function(e){
+            if (e.key === "Enter"){
+                e.preventDefault();
+                convertNow();
+            }
+        });
+
+        // 입력 중 숫자만 유지(소수/부호 허용)
+        $("sValue").addEventListener("input", function(){
+            var v = sanitizeNumberInput(this.value);
+            if (this.value !== v) this.value = v;
+        });
+    })();
+</script>
+</body>
+</html>
