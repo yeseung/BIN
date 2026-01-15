@@ -1,0 +1,519 @@
+<!--
+파일명(영어) 예시:
+- character-counter.html
+- letter-counter.html
+- text-counter-tool.html
+- word-byte-counter.html
+- writing-length-checker.html
+-->
+
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>글자수 · 단어수 · 바이트 계산기</title>
+
+    <!-- ✅ Adsense 완전 제거 / ✅ Bootstrap 완전 제거 / ✅ 순수 CSS / ✅ Vanilla JS -->
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --border:#e5e7eb;
+            --primary:#2563eb;
+            --primary-hover:#1d4ed8;
+            --ring:rgba(37,99,235,.18);
+            --radius:16px;
+            --shadow:0 12px 35px rgba(17,24,39,.08);
+        }
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: ui-sans-serif, system-ui, -apple-system, "Malgun Gothic","Apple SD Gothic Neo", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+        .container{
+            max-width: 980px;
+            margin: 42px auto;
+            padding: 0 16px;
+        }
+        .card{
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow:hidden;
+        }
+        .header{
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg,#fff 0%,#fbfcff 100%);
+            display:flex;
+            align-items:flex-start;
+            justify-content:space-between;
+            gap: 12px;
+        }
+        .title{
+            margin:0;
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: -0.2px;
+        }
+        .subtitle{
+            margin: 6px 0 0;
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+        .badge{
+            font-size: 12px;
+            color:#0f172a;
+            background:#eef2ff;
+            border:1px solid #c7d2fe;
+            padding:6px 10px;
+            border-radius: 999px;
+            white-space:nowrap;
+            height: fit-content;
+        }
+
+        .body{ padding: 20px; }
+
+        .stats-grid{
+            display:grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .stats-card{
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: #fff;
+            overflow:hidden;
+        }
+        .stats-head{
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap: 10px;
+            background:#fbfdff;
+        }
+        .stats-head h3{
+            margin:0;
+            font-size: 14px;
+            font-weight: 900;
+        }
+        .stats-head .small{
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        table{
+            width:100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        td{
+            padding: 10px 12px;
+            border-top: 1px solid var(--border);
+            vertical-align: middle;
+        }
+        tr:first-child td{ border-top: none; }
+
+        .k{
+            color: var(--muted);
+            width: 22%;
+            font-weight: 800;
+        }
+        .v{
+            font-weight: 900;
+            color: var(--text);
+        }
+
+        .tag{
+            display:inline-flex;
+            align-items:center;
+            gap:6px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background:#fff;
+            font-size: 12px;
+            color:#0f172a;
+            white-space:nowrap;
+        }
+        .tag.orange{ border-color:#fed7aa; background:#fff7ed; color:#9a3412; }
+        .tag.purple{ border-color:#e9d5ff; background:#faf5ff; color:#6b21a8; }
+        .tag.teal{ border-color:#99f6e4; background:#f0fdfa; color:#115e59; }
+        .tag.pink{ border-color:#fbcfe8; background:#fdf2f8; color:#9d174d; }
+
+        textarea{
+            width:100%;
+            min-height: 170px;
+            resize: none;
+            overflow: hidden;
+            padding: 14px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background:#fff;
+            font-size: 14px;
+            line-height: 1.7;
+            outline:none;
+            transition: box-shadow .15s ease, border-color .15s ease;
+        }
+        textarea:focus{
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--ring);
+        }
+
+        .actions{
+            margin-top: 12px;
+            display:flex;
+            gap: 10px;
+            flex-wrap:wrap;
+        }
+        .btn{
+            height: 42px;
+            padding: 0 14px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background:#fff;
+            font-weight: 900;
+            font-size: 13px;
+            cursor:pointer;
+            user-select:none;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap: 8px;
+        }
+        .btn.primary{
+            background: var(--primary);
+            border-color: transparent;
+            color:#fff;
+        }
+        .btn.primary:hover{ background: var(--primary-hover); }
+
+        .help{
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.7;
+        }
+        .help b{ color:#f59e0b; }
+
+        .toast{
+            position: fixed;
+            left: 50%;
+            bottom: 18px;
+            transform: translateX(-50%);
+            background: rgba(17,24,39,.92);
+            color:#fff;
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            max-width: 92vw;
+            display:none;
+            box-shadow: 0 14px 40px rgba(0,0,0,.25);
+        }
+        .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <section class="card">
+        <header class="header">
+            <div>
+                <h1 class="title">영어 · 일어 · 한자 · 한글 글자수세기</h1>
+                <p class="subtitle">
+                    글자수 / 단어(어절) / 라인 / 바이트(기본 2byte, 3byte 기준, 생기부 기준)까지 한 번에 계산합니다.
+                </p>
+            </div>
+            <div class="badge">Vanilla JS · Pure CSS</div>
+        </header>
+
+        <div class="body">
+            <!-- 결과 1 -->
+            <div class="stats-grid">
+                <section class="stats-card">
+                    <div class="stats-head">
+                        <h3>요약</h3>
+                        <div class="small">최대 <span id="maxLenLabel" class="mono"></span>자</div>
+                    </div>
+                    <div id="countResult"></div>
+                </section>
+
+                <!-- 결과 2 -->
+                <section class="stats-card">
+                    <div class="stats-head">
+                        <h3>언어별 글자수</h3>
+                        <div class="small">한글/영어/숫자/일어/한문/그외</div>
+                    </div>
+                    <div id="countResult2"></div>
+                </section>
+            </div>
+
+            <!-- 입력 -->
+            <textarea id="letterCounter" spellcheck="true" placeholder="텍스트를 입력해주세요."></textarea>
+            <textarea id="textareaHidden" aria-hidden="true" tabindex="-1" style="position:absolute;top:-9999px;left:-9999px;height:0;opacity:0;"></textarea>
+
+            <div class="actions">
+                <button class="btn primary" id="btnTest" type="button">테스트 문장 넣기</button>
+                <button class="btn" id="btnClear" type="button">초기화</button>
+                <button class="btn" id="btnCopy" type="button">입력 텍스트 복사</button>
+            </div>
+
+            <div class="help">
+                <b>팁</b>: 공백 포함/제거, 공백 0.5자 계산, 한일중국어 3byte, 생기부 기준(엔터 2byte + 동양권 3byte)까지 같이 확인할 수 있습니다.
+            </div>
+        </div>
+    </section>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+    /**********************
+     * 설정
+     **********************/
+    var maxLength = 300000;
+
+    var textEl = document.getElementById("letterCounter");
+    var hiddenEl = document.getElementById("textareaHidden");
+    var countResult = document.getElementById("countResult");
+    var countResult2 = document.getElementById("countResult2");
+    document.getElementById("maxLenLabel").textContent = maxLength.toLocaleString();
+
+    /**********************
+     * Toast
+     **********************/
+    function toast(msg){
+        var t = document.getElementById("toast");
+        t.textContent = msg;
+        t.style.display = "block";
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(function(){ t.style.display="none"; }, 1500);
+    }
+
+    /**********************
+     * 테이블 렌더
+     **********************/
+    function renderSummaryTable(o){
+        return (
+            `<table>
+  <tr>
+    <td class="k"><span class="tag">공백 포함</span></td>
+    <td class="v"><span class="mono">${o.blank.toLocaleString()}</span> 글자</td>
+    <td class="v"><span class="mono">${o.len.toLocaleString()}</span> byte</td>
+    <td class="k" style="text-align:right;"><span class="tag purple">공백 0.5자 계산</span></td>
+  </tr>
+  <tr>
+    <td class="k"><span class="tag">공백 제거</span></td>
+    <td class="v"><span class="mono">${o.noblank.toLocaleString()}</span> 글자</td>
+    <td class="v"><span class="mono">${o.len2.toLocaleString()}</span> byte</td>
+    <td class="v" style="text-align:right;"><span class="mono">${o.space.toLocaleString()}</span> 글자</td>
+  </tr>
+  <tr>
+    <td class="k"><span class="tag orange">단어 수</span></td>
+    <td class="v"><span class="mono">${o.word.toLocaleString()}</span> 어절</td>
+    <td class="k" style="text-align:right;"><span class="tag pink">한일중국어 3byte</span></td>
+    <td class="k" style="text-align:right;"><span class="tag teal">교육부 생기부 기준</span></td>
+  </tr>
+  <tr>
+    <td class="k"><span class="tag orange" style="border-color:#fecaca;background:#fff1f2;color:#9f1239;">라인 수</span></td>
+    <td class="v"><span class="mono">${o.line.toLocaleString()}</span> 줄</td>
+    <td class="v"><span class="mono">${o.threeByte.toLocaleString()}</span> byte</td>
+    <td class="v" style="text-align:right;"><span class="mono">${o.enter.toLocaleString()}</span> byte</td>
+  </tr>
+</table>`
+        );
+    }
+
+    function renderLangTable(o){
+        return (
+            `<table>
+  <tr>
+    <td class="k" style="text-align:center;"><b>한글</b></td><td class="v"><span class="mono">${o.kor.toLocaleString()}</span> 글자</td>
+    <td class="k" style="text-align:center;"><b>영어</b></td><td class="v"><span class="mono">${o.eng.toLocaleString()}</span> 글자</td>
+    <td class="k" style="text-align:center;"><b>숫자</b></td><td class="v"><span class="mono">${o.numeral.toLocaleString()}</span> 글자</td>
+  </tr>
+  <tr>
+    <td class="k" style="text-align:center;"><b>일어</b></td><td class="v"><span class="mono">${o.jap.toLocaleString()}</span> 글자</td>
+    <td class="k" style="text-align:center;"><b>한문</b></td><td class="v"><span class="mono">${o.chi.toLocaleString()}</span> 글자</td>
+    <td class="k" style="text-align:center;"><b>그외</b></td><td class="v"><span class="mono">${o.etc.toLocaleString()}</span> 글자</td>
+  </tr>
+</table>`
+        );
+    }
+
+    function renderAll(val){
+        var o = letterCounting(val || "");
+        countResult.innerHTML = renderSummaryTable(o);
+        countResult2.innerHTML = renderLangTable(o);
+    }
+
+    /**********************
+     * 글자수 계산 (원본 로직 기반)
+     **********************/
+    function letterCounting(val){
+        var pattern_kor = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/;
+        var pattern_eng = /[a-zA-Z]/;
+        var pattern_jap = /[\u3040-\u309F]|[\u30A0-\u30FF]|[\u31F0-\u31FF]/;
+        var pattern_chi = /[\u3000\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]/;
+        var pattern_numeral = /[0-9]/;
+
+        var counting = val.match(/\S+/g);
+        var counting2 = val.replace(/\s+/g, '');
+
+        // 라인 수(빈 값이면 0)
+        var lines = val ? val.split(/\r\n|\n|\r/).length : 0;
+
+        // 공백 카운트
+        var spacenum = 0;
+
+        // 기본 2byte 계산(원본 방식)
+        var len = 0, kor = 0, eng = 0, jap = 0, chi = 0, numeral = 0;
+
+        for (var i=0; i<val.length; i++){
+            var temp = val.charAt(i);
+
+            // escape 길이 6이면(대부분 한글/동양권) +1 추가 후 +1 => 2
+            // 그 외는 +1 => 1
+            if (escape(temp).length === 6) { len++; }
+            len++;
+
+            if (temp === " ") { spacenum++; }
+
+            if (pattern_kor.test(temp)) kor++;
+            if (pattern_eng.test(temp)) eng++;
+            if (pattern_jap.test(temp)) jap++;
+            if (pattern_chi.test(temp)) chi++;
+            if (pattern_numeral.test(temp)) numeral++;
+        }
+
+        // 공백 제거 byte(기본 2byte 계산)
+        var len2 = 0;
+        for (var j=0; j<counting2.length; j++){
+            if (escape(counting2.charAt(j)).length === 6) { len2++; }
+            len2++;
+        }
+
+        // 3byte 기준(원본의 charCodeAt >> 11 규칙)
+        var threeByte = 0, ii = 0, chr;
+        for (threeByte=ii=0; (chr = val.charCodeAt(ii++)); ){
+            threeByte += chr >> 11 ? 3 : chr >> 7 ? 2 : 1;
+        }
+
+        // 생기부 기준: 엔터(줄바꿈) 2byte 처리 느낌을 반영
+        // 원본은 enters = (lines-1) + threeByte 로 계산 (줄바꿈 1byte 가산)
+        // 여기서는 원본 유지(호환 목적)
+        var enters = (lines <= 1) ? threeByte : ((lines - 1) + threeByte);
+
+        // 공백 0.5자 계산: 원본 spacenum = (val.length - (spacenum/2))
+        var spaceHalf = (val.length - (spacenum / 2));
+
+        // 최대 길이 제한
+        if (val.length > maxLength){
+            alert("최대 " + maxLength.toLocaleString() + "자까지 입력 가능합니다.");
+            textEl.value = val.substring(0, maxLength);
+            val = textEl.value;
+        }
+
+        return {
+            blank: val.length,
+            noblank: val.replace(/\s+/g, '').length,
+            word: counting ? counting.length : 0,
+            line: lines,
+            enter: enters,
+            len: len,
+            len2: len2,
+            threeByte: threeByte,
+            space: spaceHalf,
+            kor: kor,
+            eng: eng,
+            jap: jap,
+            chi: chi,
+            numeral: numeral,
+            etc: val.length - kor - eng - jap - chi - numeral
+        };
+    }
+
+    /**********************
+     * 자동 높이 조절 (순수 JS)
+     **********************/
+    function autosize(textarea){
+        // hiddenEl에 동일 스타일 적용하면 더 정확하지만, 여기선 단순 버전
+        textarea.style.height = "auto";
+        textarea.style.height = (textarea.scrollHeight) + "px";
+    }
+
+    /**********************
+     * 테스트 문장
+     **********************/
+    var sampleText =
+            `이곳에 텍스트를 입력하세요.
+한글 : ㄱㄴㄷㄹ ㅁㅂㅅㅇ ㄲㅃㅄㅉㄻ 가나다라 마바사 아자차카 ㅏㅣㅜㅔㅗ ㅞㅙ
+漢文 : 苛斂誅求 佳人薄命 刻骨難忘 刻骨痛恨 各自圖生 各自無齒
+ひらがな : あいうえお かきくけこ さしすせそ たちつてと なにぬねの はひふへほ
+かたかな : カキクケコ ガギグゲゴ サシスセソ ザジズゼゾ タチツテト ダヂヅデド
+Alphabet : abcdefg hijklmn opqrstu vwxyz ABCDEFG HIJKLMN OPQRSTU VWXYZ
+원문자 및 숫자 : ①②③④⑤ ㊻㊼㊽㊾㊿ ㊀㊁㊂㊃㊄ ㊊㊋㊌㊍㊎㊏㊐ 0123456789`;
+
+    /**********************
+     * 이벤트
+     **********************/
+    textEl.addEventListener("input", function(){
+        renderAll(this.value);
+        autosize(this);
+    });
+
+    document.getElementById("btnTest").addEventListener("click", function(){
+        textEl.value = sampleText;
+        renderAll(textEl.value);
+        autosize(textEl);
+        textEl.focus();
+        toast("테스트 문장을 넣었습니다.");
+    });
+
+    document.getElementById("btnClear").addEventListener("click", function(){
+        textEl.value = "";
+        renderAll("");
+        autosize(textEl);
+        toast("초기화했습니다.");
+    });
+
+    document.getElementById("btnCopy").addEventListener("click", async function(){
+        var v = textEl.value || "";
+        if (!v.trim()){
+            toast("복사할 텍스트가 없습니다.");
+            return;
+        }
+        try{
+            if (navigator.clipboard && navigator.clipboard.writeText){
+                await navigator.clipboard.writeText(v);
+            } else {
+                // fallback
+                textEl.select();
+                document.execCommand("copy");
+                window.getSelection().removeAllRanges();
+            }
+            toast("텍스트를 복사했습니다.");
+        }catch(e){
+            console.error(e);
+            toast("복사 실패");
+        }
+    });
+
+    // 초기 렌더(빈 값)
+    renderAll("");
+    autosize(textEl);
+</script>
+</body>
+</html>
