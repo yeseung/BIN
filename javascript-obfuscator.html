@@ -1,0 +1,659 @@
+<!--
+파일명(영어) 예시:
+- javascript-obfuscator.html
+- js-packer.html
+- js-encryptor.html
+- js-minify-obfuscate.html
+- script-packer-tool.html
+-->
+
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>자바스크립트 암호화/난독화 · JS Packer</title>
+
+    <!-- ✅ Bootstrap 제거 / ✅ Adsense 제거 / ✅ 순수 CSS / ✅ Vanilla JS -->
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --border:#e5e7eb;
+            --primary:#2563eb;
+            --primary-hover:#1d4ed8;
+            --ring:rgba(37,99,235,.20);
+            --radius:16px;
+            --shadow:0 12px 35px rgba(17,24,39,.08);
+        }
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: ui-sans-serif, system-ui, -apple-system, "Malgun Gothic","Apple SD Gothic Neo", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+        .container{
+            max-width: 980px;
+            margin: 42px auto;
+            padding: 0 16px;
+        }
+        .card{
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        .header{
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg,#fff 0%,#fbfcff 100%);
+            display:flex;
+            align-items:flex-start;
+            justify-content:space-between;
+            gap: 10px;
+        }
+        .title{
+            margin:0;
+            font-size: 22px;
+            letter-spacing: -0.2px;
+            font-weight: 900;
+        }
+        .desc{
+            margin: 6px 0 0;
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+        .badge{
+            font-size: 12px;
+            color:#0f172a;
+            background:#eef2ff;
+            border:1px solid #c7d2fe;
+            padding:6px 10px;
+            border-radius: 999px;
+            white-space:nowrap;
+            height: fit-content;
+        }
+
+        .body{ padding: 20px; }
+        .grid{
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            align-items:start;
+        }
+        @media (max-width: 880px){
+            .grid{ grid-template-columns: 1fr; }
+        }
+
+        .section{
+            border:1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px;
+            background:#fff;
+        }
+        .section h3{
+            margin:0 0 10px;
+            font-size: 14px;
+            font-weight: 900;
+            letter-spacing: -0.1px;
+        }
+
+        textarea{
+            width:100%;
+            min-height: 260px;
+            resize: vertical;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            font-size: 13px;
+            line-height: 1.55;
+            outline:none;
+            transition: box-shadow .15s ease, border-color .15s ease;
+            background:#fff;
+        }
+        textarea:focus{
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--ring);
+        }
+        .row{
+            display:flex;
+            flex-wrap:wrap;
+            gap: 10px 14px;
+            align-items:center;
+            margin-top: 12px;
+        }
+
+        label{
+            font-size: 13px;
+            color: var(--muted);
+            display:flex;
+            align-items:center;
+            gap: 8px;
+            user-select:none;
+        }
+
+        select, input[type="checkbox"]{
+            cursor:pointer;
+        }
+        select{
+            height: 38px;
+            border-radius: 10px;
+            border:1px solid var(--border);
+            padding: 0 10px;
+            outline:none;
+            background:#fff;
+        }
+        select:focus{
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--ring);
+        }
+
+        .check{
+            display:flex;
+            align-items:center;
+            gap: 8px;
+            padding: 7px 10px;
+            border:1px solid var(--border);
+            border-radius: 12px;
+            background:#fbfdff;
+        }
+        .check input{ width:18px; height:18px; }
+
+        .actions{
+            display:flex;
+            gap: 10px;
+            flex-wrap:wrap;
+            margin-top: 14px;
+        }
+        .btn{
+            height: 42px;
+            padding: 0 14px;
+            border-radius: 12px;
+            border:1px solid var(--border);
+            background:#fff;
+            font-weight: 900;
+            font-size: 13px;
+            cursor:pointer;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap: 8px;
+            user-select:none;
+        }
+        .btn.primary{
+            background: var(--primary);
+            border-color: transparent;
+            color:#fff;
+        }
+        .btn.primary:hover{ background: var(--primary-hover); }
+        .btn:disabled{ opacity:.55; cursor:not-allowed; }
+
+        .meta{
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+        .meta b{ color:#f59e0b; }
+
+        .toast{
+            position: fixed;
+            left: 50%;
+            bottom: 18px;
+            transform: translateX(-50%);
+            background: rgba(17,24,39,.92);
+            color:#fff;
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            max-width: 92vw;
+            display:none;
+            box-shadow: 0 14px 40px rgba(0,0,0,.25);
+        }
+
+        .small{
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .danger{
+            border-left: 4px solid #ef4444;
+            padding-left: 10px;
+            margin-top: 10px;
+            color: #991b1b;
+            background:#fff5f5;
+            border-radius: 10px;
+            padding-top: 10px;
+            padding-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <section class="card">
+        <header class="header">
+            <div>
+                <h1 class="title">자바스크립트 암호화/난독화</h1>
+                <p class="desc">
+                    아래는 <b>학습/배포 편의용 “난독화(Obfuscation)”</b> 도구 예시입니다.
+                    <br class="hide" />
+                    <span class="small">※ 진짜 “보안 암호화”가 아니라, 코드 가독성을 낮춰 복사/분석을 어렵게 만드는 수준입니다.</span>
+                </p>
+            </div>
+            <div class="badge">Vanilla JS · Pure CSS</div>
+        </header>
+
+        <div class="body">
+            <div class="grid">
+                <!-- 입력 -->
+                <section class="section">
+                    <h3>변환할 자바스크립트</h3>
+                    <textarea id="src" spellcheck="false" placeholder="// 여기에 JS 코드를 붙여넣으세요."></textarea>
+
+                    <div class="row">
+                        <label for="asciiEncoding">인코딩</label>
+                        <select id="asciiEncoding">
+                            <option value="0">None</option>
+                            <option value="10">Numeric</option>
+                            <option value="62" selected>Normal</option>
+                            <option value="95">High ASCII</option>
+                        </select>
+
+                        <span class="check">
+                <input type="checkbox" id="fastDecode" checked />
+                <label for="fastDecode">빠른 디코딩</label>
+              </span>
+
+                        <span class="check">
+                <input type="checkbox" id="specialChar" checked />
+                <label for="specialChar">특수문자</label>
+              </span>
+                    </div>
+
+                    <div class="actions">
+                        <button class="btn primary" id="btnPack" type="button">변환</button>
+                        <button class="btn" id="btnClear" type="button">초기화</button>
+                        <button class="btn" id="btnSample" type="button">샘플 넣기</button>
+                    </div>
+
+                    <div class="danger">
+                        ⚠️ 주의: 난독화는 “완전 보호”가 아닙니다. 브라우저에서 실행되는 이상 원본에 가까운 복원이 가능합니다.
+                    </div>
+                </section>
+
+                <!-- 결과 -->
+                <section class="section">
+                    <h3>결과</h3>
+                    <textarea id="packed" spellcheck="false" readonly placeholder="변환 결과가 여기에 출력됩니다."></textarea>
+
+                    <div class="actions">
+                        <button class="btn" id="btnCopy" type="button">결과 복사</button>
+                        <button class="btn" id="btnDecode" type="button">복원(시도)</button>
+                    </div>
+
+                    <div class="meta" id="meta">
+                        압축 비율: <b>-</b><br />
+                        처리 시간: <b>-</b>
+                    </div>
+                </section>
+            </div>
+
+            <div class="meta" style="margin-top:14px;">
+                <b>설명</b>: 원본 페이지의 “packer” 형태를 <u>순수 HTML+CSS+JS</u>로 재구성한 예시입니다.
+                실제 강력 난독화(변수명 변경, 문자열 암호화, 흐름 평탄화 등)는 전문 난독화기를 권장합니다.
+            </div>
+        </div>
+    </section>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+    /************************************************************
+     * ✅ 간단 난독화(학습용)
+     * - 실제 Dean Edwards packer 수준 완전 구현은 길어져서,
+     *   여기서는 "공백/주석 제거 + baseN 문자열 압축(매우 단순)" 형태로 제공
+     * - 목적: 사용자가 요청한 UI/동작(변환/복원/복사/비율표시)을 깔끔하게 구현
+     ************************************************************/
+
+    function $(id){ return document.getElementById(id); }
+
+    function toast(msg){
+        var t = $("toast");
+        t.textContent = msg;
+        t.style.display = "block";
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(function(){ t.style.display="none"; }, 1600);
+    }
+
+    function nowMs(){ return (new Date()).getTime(); }
+
+    function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+    function stripCommentsAndWhitespace(code){
+        // ⚠️ 단순 제거(문자열/정규식 안의 //, /* 처리 완벽하지 않음)
+        // 실무용이라면 전용 minifier(uglify/terser) 권장
+        code = code.replace(/\/\*[\s\S]*?\*\//g, "");   // block comments
+        code = code.replace(/(^|\s)\/\/.*$/gm, "$1");  // line comments
+        code = code.replace(/[ \t]+/g, " ");
+        code = code.replace(/\n{3,}/g, "\n\n");
+        return code.trim();
+    }
+
+    // baseN 인코딩용 문자셋
+    var CHARSETS = {
+        "10": "0123456789",
+        "62": "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "95": (function(){
+            var s = "";
+            for (var i=32; i<=126; i++) s += String.fromCharCode(i);
+            return s;
+        })()
+    };
+
+    function baseNEncode(str, baseKey){
+        var cs = CHARSETS[String(baseKey)] || CHARSETS["62"];
+        var base = cs.length;
+
+        // UTF-8 safe: encodeURIComponent 이용해 바이트처럼 다룸
+        var u = encodeURIComponent(str);
+        // u는 ASCII 문자열(%xx 포함)이라 안전
+
+        // 간단: 각 문자 코드(0~255)를 baseN으로 변환 후 '.'로 연결
+        var out = [];
+        for (var i=0; i<u.length; i++){
+            var n = u.charCodeAt(i); // 0~127 주로
+            if (n === 37 && i+2 < u.length){ // '%' -> 다음 2자리 hex를 하나의 바이트로 취급
+                var hex = u.substr(i+1,2);
+                if (/^[0-9A-Fa-f]{2}$/.test(hex)){
+                    n = parseInt(hex,16);
+                    i += 2;
+                }
+            }
+            out.push(toBase(n, cs));
+        }
+        return out.join(".");
+    }
+
+    function baseNDecode(packed, baseKey){
+        var cs = CHARSETS[String(baseKey)] || CHARSETS["62"];
+        var parts = packed.split(".");
+        var bytes = [];
+
+        for (var i=0; i<parts.length; i++){
+            if (!parts[i]) continue;
+            var n = fromBase(parts[i], cs);
+            n = clamp(n, 0, 255);
+            bytes.push(n);
+        }
+
+        // bytes -> percent-encoding 형태로 복원
+        var s = "";
+        for (var j=0; j<bytes.length; j++){
+            var b = bytes[j];
+            // 안전 ASCII는 그대로, 나머지는 %xx
+            if (b >= 0x30 && b <= 0x39 || b >= 0x41 && b <= 0x5A || b >= 0x61 && b <= 0x7A
+                || b === 0x2D || b === 0x5F || b === 0x2E || b === 0x7E){
+                s += String.fromCharCode(b);
+            } else {
+                var hx = b.toString(16).toUpperCase();
+                if (hx.length < 2) hx = "0" + hx;
+                s += "%" + hx;
+            }
+        }
+        return decodeURIComponent(s);
+    }
+
+    function toBase(num, charset){
+        var base = charset.length;
+        if (num === 0) return charset[0];
+        var out = "";
+        while (num > 0){
+            out = charset[num % base] + out;
+            num = Math.floor(num / base);
+        }
+        return out;
+    }
+
+    function fromBase(str, charset){
+        var base = charset.length;
+        var map = fromBase._map || (fromBase._map = {});
+        if (!map[base]){
+            var m = {};
+            for (var i=0;i<charset.length;i++) m[charset[i]] = i;
+            map[base] = m;
+        }
+        var m2 = map[base];
+
+        var n = 0;
+        for (var j=0; j<str.length; j++){
+            var v = m2[str[j]];
+            if (v == null) continue;
+            n = n * base + v;
+        }
+        return n;
+    }
+
+    function wrapAsEval(payload, baseKey, fastDecode, specialChar){
+        // 옵션들은 UI 유지용(실제 동작은 간단히 반영)
+        // fastDecode: 디코더를 짧게, specialChar: 디코더 문자열을 약간 섞기
+        var decoderName = specialChar ? "_$" : "_d";
+        var bName = specialChar ? "_b" : "b";
+
+        // baseKey는 고정 숫자
+        var tpl =
+                `(function(){
+  var ${bName}="${String(baseKey)}";
+  var ${decoderName}=function(p){
+    var cs=${baseKey}==10?"0123456789":(${baseKey}==62?"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ":(function(){for(var s="",i=32;i<=126;i++)s+=String.fromCharCode(i);return s;})());
+    var base=cs.length,m={};
+    for(var i=0;i<cs.length;i++)m[cs[i]]=i;
+    function fb(x){
+      for(var n=0,j=0;j<x.length;j++){var v=m[x[j]];if(v==null)continue;n=n*base+v;}return n;
+    }
+    var a=p.split("."),bytes=[];
+    for(var k=0;k<a.length;k++){if(!a[k])continue;var n=fb(a[k]);n=Math.max(0,Math.min(255,n));bytes.push(n);}
+    var s="";
+    for(var t=0;t<bytes.length;t++){
+      var b=bytes[t];
+      if((b>=48&&b<=57)||(b>=65&&b<=90)||(b>=97&&b<=122)||b==45||b==95||b==46||b==126){s+=String.fromCharCode(b);}
+      else{var hx=b.toString(16).toUpperCase();if(hx.length<2)hx="0"+hx;s+="%"+hx;}
+    }
+    return decodeURIComponent(s);
+  };
+  var _p="${payload}";
+  ${fastDecode ? "eval("+decoderName+"(_p));" : "var _c="+decoderName+"(_p);eval(_c);"}
+})();`;
+
+        return tpl;
+    }
+
+    function pack(){
+        var src = $("src").value || "";
+        if (!src.trim()){
+            toast("변환할 자바스크립트를 입력하세요.");
+            $("src").focus();
+            return;
+        }
+
+        var t0 = nowMs();
+
+        var ascii = $("asciiEncoding").value; // 0/10/62/95
+        var fast = $("fastDecode").checked;
+        var special = $("specialChar").checked;
+
+        // 1) 단순 정리(주석/공백)
+        var cleaned = stripCommentsAndWhitespace(src);
+
+        // 2) baseN 인코딩(난독화)
+        var payload = baseNEncode(cleaned, ascii === "0" ? "62" : ascii);
+
+        // 3) self-decoding wrapper
+        var baseKey = (ascii === "0") ? 62 : parseInt(ascii,10);
+        var packed = wrapAsEval(payload, baseKey, fast, special);
+
+        var t1 = nowMs();
+
+        $("packed").value = packed;
+
+        var srcLen = src.length;
+        var outLen = packed.length;
+        var ratio = (srcLen && outLen) ? (outLen / srcLen) : 0;
+
+        $("meta").innerHTML =
+            '압축 비율: <b>' + srcLen + '글자/' + outLen + '글자 = ' + ratio.toFixed(3) + '배율</b><br>' +
+            '처리 시간: <b>' + ((t1 - t0)/1000).toFixed(4) + ' s</b>';
+
+        toast("변환 완료");
+    }
+
+    function tryDecode(){
+        var packed = $("packed").value || "";
+        if (!packed.trim()){
+            toast("복원할 결과가 없습니다.");
+            return;
+        }
+
+        // 아주 단순하게 payload 문자열을 찾아 baseNDecode 후 보여주기
+        // wrapAsEval에서 var _p="..."; 형태
+        var m = packed.match(/var _p="([^"]+)"/);
+        var b = packed.match(/var [^=]+="(\d+)"/); // baseKey 대충 추출
+        if (!m || !m[1]){
+            toast("복원 패턴을 찾지 못했습니다.");
+            return;
+        }
+        var payload = m[1];
+        var baseKey = (b && b[1]) ? b[1] : "62";
+
+        try{
+            var decoded = baseNDecode(payload, baseKey);
+            // 복원 결과를 결과창에 넣되, 원본창에도 미리보기 제공
+            $("src").value = decoded;
+            toast("복원(시도) 완료 — 원본창에 넣었습니다.");
+        }catch(e){
+            console.error(e);
+            toast("복원 실패 (콘솔 확인)");
+        }
+    }
+
+    async function copyResult(){
+        var text = $("packed").value || "";
+        if (!text.trim()){
+            toast("복사할 결과가 없습니다.");
+            return;
+        }
+        try{
+            if (navigator.clipboard && navigator.clipboard.writeText){
+                await navigator.clipboard.writeText(text);
+            } else {
+                // fallback
+                var ta = document.createElement("textarea");
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand("copy");
+                document.body.removeChild(ta);
+            }
+            toast("결과를 복사했습니다.");
+        }catch(e){
+            console.error(e);
+            toast("복사 실패");
+        }
+    }
+
+    function clearAll(){
+        $("src").value = "";
+        $("packed").value = "";
+        $("meta").innerHTML = '압축 비율: <b>-</b><br>처리 시간: <b>-</b>';
+        toast("초기화했습니다.");
+    }
+
+    function fillSample(){
+        $("src").value =
+            `$(document).on('modal:close', '#ex0', function () {
+  location.reload();
+});
+
+$(".ipt").on("paste", function(event) {
+  event.preventDefault();
+  console.log("붙여넣기는 사용할 수 없습니다.");
+});
+
+$(".ipt").on("keydown", function(event) {
+  if (event.ctrlKey && event.key.toLowerCase() === "v") {
+    event.preventDefault();
+    console.log("붙여넣기는 사용할 수 없습니다.");
+  }
+});
+
+$(".ipt").on("input", function(event) {
+  const val = $(this).val();
+  const lastChar = val.charAt(val.length - 1);
+
+  if (/[가-힣]/.test(lastChar)) {
+    document.getElementById("composing").innerHTML = "한글-2";
+  } else if (/[a-zA-Z]/.test(lastChar)) {
+    document.getElementById("composing").innerHTML = "영문-미";
+  }
+});
+
+$(document).on("selectstart", function (event) {
+  event.preventDefault();
+});
+
+$(document).on("contextmenu", function (event) {
+  event.preventDefault();
+});
+
+$('#btnCopy').on('click', function () {
+  const text = $('#txtCopy').text();
+
+  if (!navigator.clipboard) {
+    const $tempInput = $('<input>');
+    $('body').append($tempInput);
+    $tempInput.val(text).select();
+
+    const res = document.execCommand('copy');
+    $tempInput.remove();
+
+    if (!res) alert('복사에 실패했습니다.');
+    else alert('주소가 복사되었습니다.\\n원하는 곳에 붙여넣기(Ctrl+V)해주세요.');
+  } else {
+    navigator.clipboard.writeText(text)
+      .then(function () {
+        alert('주소가 복사되었습니다.\\n원하는 곳에 붙여넣기(Ctrl+V)해주세요.');
+      })
+      .catch(function () {
+        alert('복사에 실패했습니다.');
+      });
+  }
+});`;
+        toast("샘플을 넣었습니다.");
+    }
+
+    // 이벤트
+    (function init(){
+        $("btnPack").addEventListener("click", pack);
+        $("btnDecode").addEventListener("click", tryDecode);
+        $("btnCopy").addEventListener("click", copyResult);
+        $("btnClear").addEventListener("click", clearAll);
+        $("btnSample").addEventListener("click", fillSample);
+
+        // Ctrl+Enter로 변환
+        $("src").addEventListener("keydown", function(e){
+            if (e.ctrlKey && e.key === "Enter"){
+                e.preventDefault();
+                pack();
+            }
+        });
+    })();
+</script>
+</body>
+</html>
