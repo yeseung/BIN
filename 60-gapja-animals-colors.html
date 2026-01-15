@@ -1,0 +1,571 @@
+<!--
+파일명(영어) 예시:
+- sexagenary-animals-colors.html
+- 60-gapja-animals-colors.html
+- zodiac-animals-by-year.html
+- ganji-animal-color-table.html
+- korean-sexagenary-cycle.html
+-->
+
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>60갑자 연도별 12지신 동물의 띠별 색상 (2004~2063)</title>
+
+    <!-- ✅ Adsense 완전 제거 / ✅ Bootstrap 완전 제거 / ✅ 순수 CSS / ✅ Vanilla JS -->
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --border:#e5e7eb;
+            --shadow:0 12px 35px rgba(17,24,39,.08);
+            --radius:16px;
+
+            --primary:#2563eb;
+            --primary-hover:#1d4ed8;
+
+            --chip:#f1f5f9;
+            --chip-border:#e2e8f0;
+
+            --blue:#2563eb;
+            --red:#dc2626;
+            --yellow:#f59e0b;
+            --black:#111827;
+            --white:#f8fafc;
+        }
+
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: ui-sans-serif, system-ui, -apple-system, "Malgun Gothic","Apple SD Gothic Neo", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+        .container{
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 0 16px;
+        }
+        .card{
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow:hidden;
+        }
+        .header{
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg,#fff 0%,#fbfcff 100%);
+            display:flex;
+            justify-content:space-between;
+            align-items:flex-start;
+            gap: 12px;
+        }
+        h1{
+            margin:0;
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: -0.2px;
+        }
+        .sub{
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .badge{
+            font-size: 12px;
+            background:#eef2ff;
+            border:1px solid #c7d2fe;
+            padding:6px 10px;
+            border-radius:999px;
+            white-space:nowrap;
+            height: fit-content;
+            color:#0f172a;
+            font-weight: 900;
+        }
+
+        .body{ padding: 18px 20px 20px; }
+
+        .toolbar{
+            display:flex;
+            flex-wrap:wrap;
+            align-items:center;
+            justify-content:space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .left, .right{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+
+        .input{
+            display:flex;
+            align-items:center;
+            gap: 8px;
+            border:1px solid var(--border);
+            background:#fff;
+            border-radius: 12px;
+            padding: 10px 12px;
+            min-width: 280px;
+            box-shadow: 0 1px 0 rgba(0,0,0,.02);
+        }
+        .input span{
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 900;
+        }
+        input[type="text"]{
+            border:0;
+            outline:0;
+            width: 260px;
+            font-size: 13px;
+            background: transparent;
+        }
+
+        .btn{
+            height: 40px;
+            padding: 0 14px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background:#fff;
+            font-weight: 900;
+            font-size: 13px;
+            cursor:pointer;
+            user-select:none;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap: 8px;
+        }
+        .btn.primary{
+            background: var(--primary);
+            border-color: transparent;
+            color:#fff;
+        }
+        .btn.primary:hover{ background: var(--primary-hover); }
+
+        .filters{
+            display:flex;
+            flex-wrap:wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .chip{
+            padding: 8px 10px;
+            border-radius: 999px;
+            border:1px solid var(--chip-border);
+            background: var(--chip);
+            font-size: 12px;
+            font-weight: 900;
+            color:#0f172a;
+            cursor:pointer;
+            user-select:none;
+            display:inline-flex;
+            align-items:center;
+            gap: 8px;
+        }
+        .chip[aria-pressed="true"]{
+            background:#e0e7ff;
+            border-color:#c7d2fe;
+            color:#1e3a8a;
+        }
+        .chip .dot{
+            width:10px; height:10px; border-radius:999px;
+            border:1px solid rgba(0,0,0,.08);
+            background:#94a3b8;
+        }
+        .dot.blue{ background: var(--blue); }
+        .dot.red{ background: var(--red); }
+        .dot.yellow{ background: var(--yellow); }
+        .dot.black{ background: var(--black); }
+        .dot.white{ background: #fff; border-color:#cbd5e1; }
+
+        .meta{
+            display:flex;
+            flex-wrap:wrap;
+            justify-content:space-between;
+            align-items:center;
+            gap: 10px;
+            margin: 8px 0 12px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .table-wrap{
+            border:1px solid var(--border);
+            border-radius: 14px;
+            overflow:hidden;
+            background:#fff;
+        }
+        table{
+            width:100%;
+            border-collapse:collapse;
+            font-size: 14px;
+        }
+        thead th{
+            position: sticky;
+            top: 0;
+            background:#fbfdff;
+            z-index: 1;
+            text-align:left;
+            padding: 12px 12px;
+            border-bottom:1px solid var(--border);
+            font-weight: 900;
+            color:#0f172a;
+            white-space:nowrap;
+        }
+        tbody td{
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+        tbody tr:hover{ background:#f8fafc; }
+        tbody tr:last-child td{ border-bottom:0; }
+
+        .mono{
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            font-size: 13px;
+            color:#0f172a;
+            white-space:nowrap;
+        }
+
+        .tag{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border:1px solid var(--border);
+            background:#fff;
+            font-weight: 900;
+            font-size: 12px;
+            white-space:nowrap;
+        }
+        .tag.blue{ color:#fff; border-color: transparent; background: var(--blue); }
+        .tag.red{ color:#fff; border-color: transparent; background: var(--red); }
+        .tag.yellow{ color:#0f172a; border-color: transparent; background: var(--yellow); }
+        .tag.black{ color:#fff; border-color: transparent; background: var(--black); }
+        .tag.white{ color:#0f172a; background: #fff; border-color:#cbd5e1; }
+
+        .actions{
+            display:flex;
+            gap: 8px;
+            align-items:center;
+            justify-content:flex-end;
+            white-space:nowrap;
+        }
+        .mini{
+            height: 34px;
+            padding: 0 10px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+
+        .toast{
+            position: fixed;
+            left: 50%;
+            bottom: 18px;
+            transform: translateX(-50%);
+            background: rgba(17,24,39,.92);
+            color:#fff;
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            max-width: 92vw;
+            display:none;
+            box-shadow: 0 14px 40px rgba(0,0,0,.25);
+        }
+
+        @media (max-width: 860px){
+            input[type="text"]{ width: 200px; }
+            .input{ min-width: 240px; }
+            thead th:nth-child(3),
+            tbody td:nth-child(3){ display:none; } /* 모바일에서 간지(갑/신) 컬럼 숨김 */
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <section class="card">
+        <header class="header">
+            <div>
+                <h1>60갑자 연도별 12지신 동물의 띠별 색상 (2004~2063)</h1>
+                <p class="sub">검색/필터 후, 행의 <b>복사</b> 버튼으로 한 줄을 클립보드에 복사할 수 있습니다.</p>
+            </div>
+            <div class="badge">Vanilla JS · Pure CSS</div>
+        </header>
+
+        <div class="body">
+            <div class="toolbar">
+                <div class="left">
+                    <div class="input">
+                        <span>검색</span>
+                        <input id="q" type="text" placeholder="예) 2024, 청룡, 푸른, 호랑이, 갑진년..." />
+                    </div>
+                    <button class="btn" id="btnClear" type="button">초기화</button>
+                </div>
+                <div class="right">
+                    <button class="btn primary" id="btnCopyVisible" type="button">현재 결과 전체 복사</button>
+                </div>
+            </div>
+
+            <div class="filters" id="filters">
+                <button class="chip" data-color="all" aria-pressed="true" type="button"><span class="dot"></span>전체</button>
+                <button class="chip" data-color="blue" aria-pressed="false" type="button"><span class="dot blue"></span>푸른/청</button>
+                <button class="chip" data-color="red" aria-pressed="false" type="button"><span class="dot red"></span>붉은</button>
+                <button class="chip" data-color="yellow" aria-pressed="false" type="button"><span class="dot yellow"></span>황금</button>
+                <button class="chip" data-color="white" aria-pressed="false" type="button"><span class="dot white"></span>흰/백</button>
+                <button class="chip" data-color="black" aria-pressed="false" type="button"><span class="dot black"></span>검은/흑</button>
+            </div>
+
+            <div class="meta">
+                <div id="metaLeft">총 60개</div>
+                <div id="metaRight">정렬: 연도 오름차순</div>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th style="width:90px;">연도</th>
+                        <th style="width:110px;">간지</th>
+                        <th style="width:140px;">천간·지지</th>
+                        <th>색상·동물(별칭)</th>
+                        <th style="width:140px; text-align:right;">복사</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+    // ===== 데이터(이미지 기준 2004~2063) =====
+    var rows = [
+        {year:2004, ganji:"갑신년", gan:"갑(甲)", ji:"신(申)", label:"푸른원숭이"},
+        {year:2005, ganji:"을유년", gan:"을(乙)", ji:"유(酉)", label:"푸른닭"},
+        {year:2006, ganji:"병술년", gan:"병(丙)", ji:"술(戌)", label:"붉은개"},
+        {year:2007, ganji:"정해년", gan:"정(丁)", ji:"해(亥)", label:"붉은돼지"},
+        {year:2008, ganji:"무자년", gan:"무(戊)", ji:"자(子)", label:"황금쥐"},
+        {year:2009, ganji:"기축년", gan:"기(己)", ji:"축(丑)", label:"황금소"},
+        {year:2010, ganji:"경인년", gan:"경(庚)", ji:"인(寅)", label:"범(백호랑이,백호)"},
+        {year:2011, ganji:"신묘년", gan:"신(辛)", ji:"묘(卯)", label:"흰토끼"},
+        {year:2012, ganji:"임진년", gan:"임(壬)", ji:"진(辰)", label:"검은용 흑룡"},
+        {year:2013, ganji:"계사년", gan:"계(癸)", ji:"사(巳)", label:"검은뱀"},
+        {year:2014, ganji:"갑오년", gan:"갑(甲)", ji:"오(午)", label:"푸른말"},
+        {year:2015, ganji:"을미년", gan:"을(乙)", ji:"미(未)", label:"푸른양"},
+        {year:2016, ganji:"병신년", gan:"병(丙)", ji:"신(申)", label:"붉은원숭이"},
+        {year:2017, ganji:"정유년", gan:"정(丁)", ji:"유(酉)", label:"붉은닭"},
+        {year:2018, ganji:"무술년", gan:"무(戊)", ji:"술(戌)", label:"황금개"},
+        {year:2019, ganji:"기해년", gan:"기(己)", ji:"해(亥)", label:"황금돼지"},
+        {year:2020, ganji:"경자년", gan:"경(庚)", ji:"자(子)", label:"흰쥐"},
+        {year:2021, ganji:"신축년", gan:"신(辛)", ji:"축(丑)", label:"흰소"},
+        {year:2022, ganji:"임인년", gan:"임(壬)", ji:"인(寅)", label:"흑범(검은호랑이)"},
+        {year:2023, ganji:"계묘년", gan:"계(癸)", ji:"묘(卯)", label:"검은토끼"},
+        {year:2024, ganji:"갑진년", gan:"갑(甲)", ji:"진(辰)", label:"푸른용, 청룡(청용)"},
+        {year:2025, ganji:"을사년", gan:"을(乙)", ji:"사(巳)", label:"푸른뱀(청사)"},
+        {year:2026, ganji:"병오년", gan:"병(丙)", ji:"오(午)", label:"붉은말"},
+        {year:2027, ganji:"정미년", gan:"정(丁)", ji:"미(未)", label:"붉은양"},
+        {year:2028, ganji:"무신년", gan:"무(戊)", ji:"신(申)", label:"황금원숭이"},
+        {year:2029, ganji:"기유년", gan:"기(己)", ji:"유(酉)", label:"황금닭"},
+        {year:2030, ganji:"경술년", gan:"경(庚)", ji:"술(戌)", label:"흰개"},
+        {year:2031, ganji:"신해년", gan:"신(辛)", ji:"해(亥)", label:"흰돼지"},
+        {year:2032, ganji:"임자년", gan:"임(壬)", ji:"자(子)", label:"검은쥐"},
+        {year:2033, ganji:"계축년", gan:"계(癸)", ji:"축(丑)", label:"검은소 흑소"},
+
+        {year:2034, ganji:"갑인년", gan:"갑(甲)", ji:"인(寅)", label:"푸른범(푸른호랑이)"},
+        {year:2035, ganji:"을묘년", gan:"을(乙)", ji:"묘(卯)", label:"푸른토끼"},
+        {year:2036, ganji:"병진년", gan:"병(丙)", ji:"진(辰)", label:"붉은용"},
+        {year:2037, ganji:"정사년", gan:"정(丁)", ji:"사(巳)", label:"붉은뱀"},
+        {year:2038, ganji:"무오년", gan:"무(戊)", ji:"오(午)", label:"황금말"},
+        {year:2039, ganji:"기미년", gan:"기(己)", ji:"미(未)", label:"황금양"},
+        {year:2040, ganji:"경신년", gan:"경(庚)", ji:"신(申)", label:"흰원숭이"},
+        {year:2041, ganji:"신유년", gan:"신(辛)", ji:"유(酉)", label:"흰닭"},
+        {year:2042, ganji:"임술년", gan:"임(壬)", ji:"술(戌)", label:"검은개"},
+        {year:2043, ganji:"계해년", gan:"계(癸)", ji:"해(亥)", label:"검은돼지"},
+        {year:2044, ganji:"갑자년", gan:"갑(甲)", ji:"자(子)", label:"푸른쥐"},
+        {year:2045, ganji:"을축년", gan:"을(乙)", ji:"축(丑)", label:"푸른소"},
+        {year:2046, ganji:"병인년", gan:"병(丙)", ji:"인(寅)", label:"붉은범(붉은호랑이)"},
+        {year:2047, ganji:"정묘년", gan:"정(丁)", ji:"묘(卯)", label:"붉은토끼"},
+        {year:2048, ganji:"무진년", gan:"무(戊)", ji:"진(辰)", label:"황금용"},
+        {year:2049, ganji:"기사년", gan:"기(己)", ji:"사(巳)", label:"황금뱀"},
+        {year:2050, ganji:"경오년", gan:"경(庚)", ji:"오(午)", label:"흰말"},
+        {year:2051, ganji:"신미년", gan:"신(辛)", ji:"미(未)", label:"흰양"},
+        {year:2052, ganji:"임신년", gan:"임(壬)", ji:"신(申)", label:"검은원숭이"},
+        {year:2053, ganji:"계유년", gan:"계(癸)", ji:"유(酉)", label:"검은닭"},
+        {year:2054, ganji:"갑술년", gan:"갑(甲)", ji:"술(戌)", label:"푸른개"},
+        {year:2055, ganji:"을해년", gan:"을(乙)", ji:"해(亥)", label:"푸른돼지"},
+        {year:2056, ganji:"병자년", gan:"병(丙)", ji:"자(子)", label:"붉은쥐"},
+        {year:2057, ganji:"정축년", gan:"정(丁)", ji:"축(丑)", label:"붉은소"},
+        {year:2058, ganji:"무인년", gan:"무(戊)", ji:"인(寅)", label:"범(황금호랑이)"},
+        {year:2059, ganji:"기묘년", gan:"기(己)", ji:"묘(卯)", label:"황금토끼"},
+        {year:2060, ganji:"경진년", gan:"경(庚)", ji:"진(辰)", label:"흰용 백룡"},
+        {year:2061, ganji:"신사년", gan:"신(辛)", ji:"사(巳)", label:"흰뱀(백사)"},
+        {year:2062, ganji:"임오년", gan:"임(壬)", ji:"오(午)", label:"검은말"},
+        {year:2063, ganji:"계미년", gan:"계(癸)", ji:"미(未)", label:"검은양"}
+    ];
+
+    // ===== 색상 분류 =====
+    function getColorKey(label){
+        var s = String(label || "");
+        if (s.includes("푸른") || s.includes("청")) return "blue";
+        if (s.includes("붉은")) return "red";
+        if (s.includes("황금")) return "yellow";
+        if (s.includes("흰") || s.includes("백")) return "white";
+        if (s.includes("검은") || s.includes("흑")) return "black";
+        return "all";
+    }
+    function colorName(k){
+        return ({blue:"푸른/청", red:"붉은", yellow:"황금", white:"흰/백", black:"검은/흑"})[k] || "기타";
+    }
+
+    // ===== UI =====
+    var tbody = document.getElementById("tbody");
+    var q = document.getElementById("q");
+    var btnClear = document.getElementById("btnClear");
+    var btnCopyVisible = document.getElementById("btnCopyVisible");
+    var metaLeft = document.getElementById("metaLeft");
+    var filters = document.getElementById("filters");
+
+    var state = { color:"all", query:"" };
+
+    function toast(msg){
+        var t = document.getElementById("toast");
+        t.textContent = msg;
+        t.style.display = "block";
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(function(){ t.style.display="none"; }, 1500);
+    }
+
+    async function copyText(text){
+        try{
+            if (navigator.clipboard && navigator.clipboard.writeText){
+                await navigator.clipboard.writeText(text);
+            } else {
+                var ta = document.createElement("textarea");
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand("copy");
+                document.body.removeChild(ta);
+            }
+            toast("복사 완료");
+        }catch(e){
+            console.error(e);
+            toast("복사 실패");
+        }
+    }
+
+    function tagClass(colorKey){
+        return "tag " + (["blue","red","yellow","white","black"].includes(colorKey) ? colorKey : "");
+    }
+
+    function rowToLine(r){
+        // 한 줄 복사 포맷(원하면 여기만 바꾸면 됨)
+        return r.year + "년 / " + r.ganji + " / " + r.gan + " " + r.ji + " / " + r.label;
+    }
+
+    function matchRow(r, query){
+        if (!query) return true;
+        var t = (r.year + " " + r.ganji + " " + r.gan + " " + r.ji + " " + r.label).toLowerCase();
+        return t.includes(query.toLowerCase());
+    }
+
+    function getVisible(){
+        var list = rows.slice().sort(function(a,b){ return a.year - b.year; });
+        if (state.color !== "all"){
+            list = list.filter(function(r){ return getColorKey(r.label) === state.color; });
+        }
+        if (state.query){
+            list = list.filter(function(r){ return matchRow(r, state.query); });
+        }
+        return list;
+    }
+
+    function render(){
+        var list = getVisible();
+        metaLeft.textContent = "표시: " + list.length + " / 60";
+
+        tbody.innerHTML = "";
+        list.forEach(function(r){
+            var colorKey = getColorKey(r.label);
+            var tr = document.createElement("tr");
+
+            tr.innerHTML = ""
+                + "<td class='mono'>" + r.year + "년</td>"
+                + "<td class='mono'>" + r.ganji + "</td>"
+                + "<td class='mono'>" + r.gan + " · " + r.ji + "</td>"
+                + "<td><span class='" + tagClass(colorKey) + "' title='" + colorName(colorKey) + "'>"
+                + r.label.replaceAll("<","&lt;").replaceAll(">","&gt;")
+                + "</span></td>"
+                + "<td>"
+                + "  <div class='actions'>"
+                + "    <button class='btn mini' type='button' data-copy='row'>한 줄 복사</button>"
+                + "  </div>"
+                + "</td>";
+
+            tr.querySelector("[data-copy='row']").addEventListener("click", function(){
+                copyText(rowToLine(r));
+            });
+
+            tbody.appendChild(tr);
+        });
+    }
+
+    // 검색
+    q.addEventListener("input", function(){
+        state.query = this.value.trim();
+        render();
+    });
+
+    // 초기화
+    btnClear.addEventListener("click", function(){
+        state.query = "";
+        state.color = "all";
+        q.value = "";
+        // 필터 버튼 상태
+        filters.querySelectorAll(".chip").forEach(function(btn){
+            btn.setAttribute("aria-pressed", btn.dataset.color === "all" ? "true" : "false");
+        });
+        render();
+        q.focus();
+        toast("초기화 완료");
+    });
+
+    // 필터
+    filters.addEventListener("click", function(e){
+        var btn = e.target.closest(".chip");
+        if (!btn) return;
+
+        var color = btn.dataset.color || "all";
+        state.color = color;
+
+        filters.querySelectorAll(".chip").forEach(function(b){
+            b.setAttribute("aria-pressed", (b.dataset.color === color) ? "true" : "false");
+        });
+
+        render();
+    });
+
+    // 현재 결과 전체 복사
+    btnCopyVisible.addEventListener("click", function(){
+        var list = getVisible();
+        if (!list.length) return toast("복사할 결과가 없습니다.");
+        var text = list.map(rowToLine).join("\n");
+        copyText(text);
+    });
+
+    // 최초 렌더
+    render();
+</script>
+</body>
+</html>
