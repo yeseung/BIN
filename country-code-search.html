@@ -5,9 +5,17 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>국가코드 검색기 | ISO, 국가번호, 수도, 통화코드, 국제 전화 코드</title>
-    <meta name="description" content="ISO(Alpha-2/3/숫자), 수도, 통화코드, 국제전화코드 등 248개국 국가코드를 가장 빠르게 검색하세요." />
-    <meta name="keywords" content="국가코드, ISO 3166-1, Alpha-2, Alpha-3, 국제전화코드, 통화코드, 수도, 국가번호, ccTLD" />
+    <title>국가코드 검색기 | ISO(Alpha-2/3), 숫자코드, 지역(UN)</title>
+
+    <!--
+    https://restcountries.eu/
+    https://api.first.org/v1/get-countries
+    https://github.com/toddmotto/public-apis
+    https://github.com/lukes/ISO-3166-Countries-with-Regional-Codes
+    -->
+
+    <meta name="description" content="ISO 3166-1 Alpha-2/3, 숫자코드, ISO 3166-2, UN 지역/권역 코드까지 빠르게 검색하세요." />
+    <meta name="keywords" content="국가코드, ISO 3166-1, alpha-2, alpha-3, numeric, ISO 3166-2, region, sub-region" />
     <meta name="robots" content="index,follow" />
     <meta name="theme-color" content="#ffffff" />
 
@@ -23,14 +31,11 @@
             --primary:#2563eb;
             --primary2:#1d4ed8;
             --ok:#16a34a;
-            --warn:#f59e0b;
-            --danger:#ef4444;
             --radius:16px;
             --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
             --sans: ui-sans-serif, system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", Roboto, Arial, sans-serif;
         }
         *{ box-sizing:border-box; }
-        html,body{ height:100%; }
         body{
             margin:0;
             font-family: var(--sans);
@@ -38,7 +43,6 @@
             color: var(--text);
             line-height: 1.5;
         }
-
         .wrap{
             max-width: 1080px;
             margin: 0 auto;
@@ -46,30 +50,22 @@
         }
 
         /* Header */
-        .hero{
-            display:flex;
-            gap:14px;
-            align-items:flex-start;
-            justify-content:space-between;
-            flex-wrap:wrap;
-            margin-bottom: 16px;
-        }
+        .hero{ margin-bottom: 14px; }
         .title{
             font-size: 26px;
             letter-spacing:-.02em;
             margin:0;
         }
         .subtitle{
-            margin:8px 0 0;
+            margin:10px 0 0;
             color: var(--muted);
-            max-width: 820px;
+            max-width: 860px;
         }
         .badges{
             display:flex;
-            gap:8px;
             flex-wrap:wrap;
-            align-items:center;
-            margin-top: 10px;
+            gap:8px;
+            margin-top: 12px;
         }
         .badge{
             display:inline-flex;
@@ -84,45 +80,36 @@
             font-size: 12px;
             white-space: nowrap;
         }
-        .dot{
-            width:8px;height:8px;border-radius:99px;background:var(--ok);
-        }
+        .dot{ width:8px;height:8px;border-radius:99px;background:var(--ok); }
 
-        /* Search panel */
+        /* Panel */
         .panel{
             border:1px solid var(--border);
             border-radius: var(--radius);
-            background: var(--panel);
+            background:#fff;
             box-shadow: var(--shadow);
             padding: 16px;
-            margin-top: 12px;
         }
         .row{
             display:grid;
             grid-template-columns: 1fr auto;
-            gap: 10px;
-            align-items: start;
+            gap:10px;
+            align-items:start;
         }
         @media (max-width: 720px){
             .row{ grid-template-columns: 1fr; }
         }
-
-        .inputWrap{
-            position:relative;
-        }
+        .inputWrap{ position:relative; }
         .label{
             display:flex;
-            align-items:center;
             justify-content:space-between;
+            gap:10px;
             margin: 0 0 8px;
             font-size: 13px;
             color: var(--muted);
         }
-        .helpTiny{
-            font-size:12px;
-            color: var(--muted);
-            opacity:.9;
-        }
+        .helpTiny{ font-size:12px; color: var(--muted); opacity:.95; }
+
         input[type="text"]{
             width:100%;
             padding: 14px 14px;
@@ -138,12 +125,7 @@
             box-shadow: 0 0 0 4px rgba(37,99,235,.10);
         }
 
-        .btns{
-            display:flex;
-            gap:10px;
-            justify-content:flex-end;
-            flex-wrap:wrap;
-        }
+        .btns{ display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
         .btn{
             cursor:pointer;
             border:1px solid var(--border);
@@ -152,13 +134,11 @@
             border-radius: 14px;
             padding: 12px 14px;
             font-size: 14px;
-            transition: transform .05s ease, box-shadow .15s, border-color .15s;
             box-shadow: var(--shadow2);
             user-select:none;
+            transition: transform .05s ease, box-shadow .15s, border-color .15s;
         }
-        .btn:hover{
-            border-color: rgba(2,6,23,.16);
-        }
+        .btn:hover{ border-color: rgba(2,6,23,.16); }
         .btn:active{ transform: translateY(1px); }
         .btnPrimary{
             border-color: rgba(37,99,235,.25);
@@ -170,7 +150,7 @@
             box-shadow: 0 10px 24px rgba(37,99,235,.18);
         }
 
-        /* Autocomplete dropdown */
+        /* Autocomplete */
         .ac{
             position:absolute;
             z-index: 30;
@@ -188,7 +168,7 @@
             border-bottom:1px solid var(--border);
             color: var(--muted);
             font-size: 12px;
-            background: #fafafa;
+            background:#fafafa;
             display:flex;
             justify-content:space-between;
             gap:12px;
@@ -200,65 +180,39 @@
             display:flex;
             align-items:center;
             justify-content:space-between;
-            gap: 12px;
+            gap:12px;
         }
         .acItem:hover{ background:#f8fafc; }
-        .acLeft{
-            display:flex;
-            flex-direction:column;
-            gap:2px;
-            min-width: 0;
-        }
-        .acTitle{
-            font-weight: 700;
-            font-size: 14px;
-            white-space:nowrap;
-            overflow:hidden;
-            text-overflow:ellipsis;
-        }
-        .acSub{
-            color: var(--muted);
-            font-size: 12px;
-            white-space:nowrap;
-            overflow:hidden;
-            text-overflow:ellipsis;
-        }
-        .acRight{
-            display:flex;
-            gap:6px;
-            align-items:center;
-            flex-shrink:0;
-        }
+        .acLeft{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+        .acTitle{ font-weight:700; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .acSub{ color:var(--muted); font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
         .pill{
             font-family: var(--mono);
             font-size: 12px;
             padding: 4px 8px;
             border:1px solid var(--border);
-            border-radius: 999px;
+            border-radius:999px;
             color: var(--muted);
             background:#fff;
+            flex-shrink:0;
         }
 
-        /* Results */
+        /* Meta bar */
         .metaBar{
             margin-top: 14px;
             display:flex;
             justify-content:space-between;
             align-items:center;
-            gap: 10px;
+            gap:10px;
             flex-wrap:wrap;
             color: var(--muted);
             font-size: 13px;
         }
-        .count{
-            display:flex; gap:10px; align-items:center; flex-wrap:wrap;
-        }
+        .count{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
         .count strong{ color: var(--text); }
-        .hint{
-            color: var(--muted);
-            font-size: 12px;
-        }
+        .hint{ color: var(--muted); font-size: 12px; }
 
+        /* Results */
         .grid{
             margin-top: 12px;
             display:grid;
@@ -287,18 +241,7 @@
             font-size: 16px;
             letter-spacing:-.01em;
         }
-        .cardTitle small{
-            font-weight: 600;
-            color: var(--muted);
-            margin-left: 8px;
-            font-size: 12px;
-        }
-        .codes{
-            display:flex;
-            flex-wrap:wrap;
-            gap:6px;
-            align-items:center;
-        }
+        .codes{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
         .code{
             font-family: var(--mono);
             font-size: 12px;
@@ -309,51 +252,31 @@
             color: var(--text);
         }
         .code b{ color: var(--primary2); }
-        .cardBody{
-            padding: 12px 14px 14px;
-        }
+        .cardBody{ padding: 12px 14px 14px; }
 
         .kv{
             display:grid;
-            grid-template-columns: 170px 1fr;
+            grid-template-columns: 180px 1fr;
             gap: 10px 14px;
             padding: 8px 0;
             border-bottom:1px dashed #eef2f7;
         }
         .kv:last-child{ border-bottom:none; }
-        .k{
-            color: var(--muted);
-            font-size: 13px;
-            display:flex;
-            gap:8px;
-            align-items:center;
-            min-height: 22px;
-        }
-        .v{
-            font-size: 14px;
-            color: var(--text);
-            min-height: 22px;
-            word-break: break-word;
-        }
-        .v .mono{ font-family: var(--mono); }
-        .v .muted{ color: var(--muted); }
-
+        .k{ color: var(--muted); font-size: 13px; min-height: 22px; }
+        .v{ font-size: 14px; color: var(--text); min-height: 22px; word-break: break-word; }
+        .mono{ font-family: var(--mono); }
         @media (max-width: 720px){
             .kv{ grid-template-columns: 1fr; }
             .k{ font-size:12px; }
             .v{ font-size:14px; }
         }
 
-        /* Footer note */
         .footer{
-            margin-top: 22px;
+            margin-top: 20px;
             color: var(--muted);
             font-size: 12px;
         }
-        .footer a{ color: var(--primary2); text-decoration:none; }
-        .footer a:hover{ text-decoration:underline; }
 
-        /* Toast */
         .toast{
             position: fixed;
             left: 50%;
@@ -375,18 +298,16 @@
 <body>
 <main class="wrap">
     <header class="hero">
-        <div>
-            <h1 class="title">국가코드 검색기 <span style="color:var(--muted);font-weight:700;">| ISO · 국가번호 · 수도 · 통화코드 · 국제전화코드</span></h1>
-            <p class="subtitle">
-                <b>KR</b>과 <b>KOR</b>의 차이, <b>미국</b>의 국제전화번호, <b>일본</b>의 통화 코드까지 —
-                흩어진 국가 정보를 한 번에 검색하는 “국가 코드 사전”입니다.
-            </p>
-            <div class="badges">
-                <span class="badge"><span class="dot"></span> 순수 HTML/CSS/JS</span>
-                <span class="badge">⚡ DB/JSON 기반 빠른 검색</span>
-                <span class="badge">🔎 한글/영문/코드 통합 검색</span>
-                <span class="badge">🧠 자동완성 · 오타/별칭 대응(aliases)</span>
-            </div>
+        <h1 class="title">국가코드 검색기 <span style="color:var(--muted);font-weight:700;">| ISO · 숫자코드 · 지역(UN)</span></h1>
+        <p class="subtitle">
+            국가명(영문), <b>Alpha-2/Alpha-3</b>, <b>Numeric</b>, <b>ISO 3166-2</b>,
+            <b>Region/Sub-region</b> 등 어떤 값으로도 즉시 검색됩니다.
+        </p>
+        <div class="badges">
+            <span class="badge"><span class="dot"></span> 순수 HTML/CSS/JS</span>
+            <span class="badge">⚡ JSON 로드 + 빠른 검색</span>
+            <span class="badge">🔎 코드/이름/숫자/지역 통합 검색</span>
+            <span class="badge">🧠 자동완성</span>
         </div>
     </header>
 
@@ -395,10 +316,10 @@
             <div class="inputWrap">
                 <div class="label">
                     <span>검색어</span>
-                    <span class="helpTiny">예) 한국 / 대한민국 / KR / KOR / 410 / +82 / USD / Tokyo</span>
+                    <span class="helpTiny">예) KR / KOR / 410 / Japan / ISO 3166-2:KR / Asia / Eastern Europe</span>
                 </div>
                 <input id="q" type="text" inputmode="search" autocomplete="off" spellcheck="false"
-                       placeholder="국가명(한/영), ISO, 통화, 수도, 국제전화코드 등 무엇이든 입력하세요" />
+                       placeholder="국가명, Alpha-2/3, 숫자코드, 지역명, ISO 3166-2 등 입력" />
                 <div id="ac" class="ac" aria-label="자동완성">
                     <div class="acHeader">
                         <span>자동완성</span>
@@ -416,8 +337,8 @@
 
         <div class="metaBar">
             <div class="count">
-                <span>데이터: <strong id="total">0</strong>개국</span>
-                <span class="hint">정확한 248개국 데이터는 <span class="mono">countries-248.min.json</span> 로드 시 적용됩니다.</span>
+                <span>데이터: <strong id="total">0</strong>개</span>
+                <span class="hint">※ 지금 주신 JSON(하이픈 키)을 그대로 지원합니다.</span>
             </div>
             <div class="hint" id="status">로딩 중…</div>
         </div>
@@ -426,100 +347,16 @@
     <section class="grid" id="grid" aria-live="polite"></section>
 
     <p class="footer">
-        ⚙️ 데이터 파일은 같은 폴더에 <span class="mono">countries-248.min.json</span> 이름으로 두는 것을 권장합니다.
-        (CORS 이슈가 있으면 로컬 파일 직접 실행 대신 간단한 로컬 서버로 실행하세요.)
+        ⚙️ 같은 폴더에 <span class="mono">countries-248.min.json</span> 파일을 두세요.
+        (로컬에서 더블클릭 실행 시 fetch가 막히면 간단한 로컬 서버에서 실행하세요.)
     </p>
 </main>
 
 <div id="toast" class="toast"></div>
 
 <script>
-    /**
-     * ===== 데이터 스키마(권장) =====
-     * {
-     *   "name_ko": "대한민국",
-     *   "name_en": "Korea, Republic of",
-     *   "official_ko": "대한민국",
-     *   "official_en": "Republic of Korea",
-     *   "aliases": ["한국","남한","Korea","South Korea"],
-     *   "iso2": "KR",
-     *   "iso3": "KOR",
-     *   "iso_numeric": "410",
-     *   "un_m49": "410",
-     *   "fips": "KS",
-     *   "calling_code": "+82",
-     *   "currency_code": "KRW",
-     *   "capital_ko": "서울",
-     *   "capital_en": "Seoul",
-     *   "cctld": ".kr",
-     *   "mcc": "450",
-     *   "gs1": "880",
-     *   "wipo": "KR",
-     *   "vehicle_reg": "ROK",
-     *   "aircraft_reg_prefix": "HL",
-     *   "icao_prefix": "RK",
-     *   "ioc": "KOR",
-     *   "fifa": "KOR"
-     * }
-     */
-
-    const SAMPLE = [
-        {
-            name_ko: "대한민국",
-            name_en: "Korea, Republic of",
-            official_ko: "대한민국",
-            official_en: "Republic of Korea",
-            aliases: ["한국","남한","Korea","South Korea","ROK"],
-            iso2: "KR", iso3: "KOR", iso_numeric: "410", un_m49: "410",
-            calling_code: "+82",
-            currency_code: "KRW",
-            capital_ko: "서울", capital_en: "Seoul",
-            cctld: ".kr",
-            mcc: "450",
-            gs1: "880",
-            ioc: "KOR",
-            fifa: "KOR",
-            icao_prefix: "RK",
-            aircraft_reg_prefix: "HL",
-            vehicle_reg: "ROK"
-        },
-        {
-            name_ko: "미국",
-            name_en: "United States of America",
-            official_ko: "미합중국",
-            official_en: "United States of America",
-            aliases: ["USA","US","America","미합중국"],
-            iso2: "US", iso3: "USA", iso_numeric: "840", un_m49: "840",
-            calling_code: "+1",
-            currency_code: "USD",
-            capital_ko: "워싱턴 D.C.", capital_en: "Washington, D.C.",
-            cctld: ".us",
-            ioc: "USA",
-            fifa: "USA",
-            icao_prefix: "K",
-            aircraft_reg_prefix: "N",
-            vehicle_reg: "USA"
-        },
-        {
-            name_ko: "일본",
-            name_en: "Japan",
-            official_ko: "일본국",
-            official_en: "Japan",
-            aliases: ["JP","JPN","Nippon","Japan"],
-            iso2: "JP", iso3: "JPN", iso_numeric: "392", un_m49: "392",
-            calling_code: "+81",
-            currency_code: "JPY",
-            capital_ko: "도쿄", capital_en: "Tokyo",
-            cctld: ".jp",
-            ioc: "JPN",
-            fifa: "JPN",
-            icao_prefix: "RJ",
-            aircraft_reg_prefix: "JA",
-            vehicle_reg: "J"
-        }
-    ];
-
     const $ = (sel) => document.querySelector(sel);
+
     const q = $("#q");
     const grid = $("#grid");
     const totalEl = $("#total");
@@ -531,7 +368,7 @@
     const acMeta = $("#acMeta");
 
     let DATA = [];
-    let INDEX = []; // {id, ref, text, boostFields}
+    let INDEX = []; // {id, ref, text}
     let lastResults = [];
     let acActiveIndex = -1;
     let acItems = [];
@@ -541,6 +378,15 @@
         toastEl.style.display = "block";
         clearTimeout(toast._t);
         toast._t = setTimeout(()=> toastEl.style.display = "none", 1400);
+    }
+
+    function escapeHtml(str){
+        return String(str ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
     }
 
     function norm(s){
@@ -556,82 +402,133 @@
         return String(s || "").replace(/\D/g, "");
     }
 
+    function pick(obj, keys){
+        for (const k of keys){
+            const v = obj?.[k];
+            if (v !== undefined && v !== null && String(v).trim() !== "") return v;
+        }
+        return "";
+    }
+
+    // ✅ 하이픈 키 JSON -> 내부 표준 필드로 정규화
+    function normalizeRow(r){
+        const name_en = pick(r, ["name"]);
+        const iso2 = pick(r, ["alpha-2"]);
+        const iso3 = pick(r, ["alpha-3"]);
+        const iso_numeric = String(pick(r, ["country-code"]) || "").padStart(3, "0");
+        const iso_3166_2 = pick(r, ["iso_3166-2"]);
+
+        const region = pick(r, ["region"]);
+        const sub_region = pick(r, ["sub-region"]);
+        const intermediate_region = pick(r, ["intermediate-region"]);
+
+        const region_code = pick(r, ["region-code"]);
+        const sub_region_code = pick(r, ["sub-region-code"]);
+        const intermediate_region_code = pick(r, ["intermediate-region-code"]);
+
+        const aliases = [];
+        if (name_en) aliases.push(name_en);
+        if (iso2) aliases.push(iso2);
+        if (iso3) aliases.push(iso3);
+        if (iso_numeric) aliases.push(iso_numeric);
+        if (iso_3166_2) aliases.push(iso_3166_2);
+        if (region) aliases.push(region);
+        if (sub_region) aliases.push(sub_region);
+        if (intermediate_region) aliases.push(intermediate_region);
+
+        return {
+            // Display
+            name_ko: "",
+            name_en,
+
+            // ISO
+            iso2,
+            iso3,
+            iso_numeric,
+            un_m49: iso_numeric,
+            iso_3166_2,
+
+            // UN Region classification
+            region,
+            sub_region,
+            intermediate_region,
+            region_code,
+            sub_region_code,
+            intermediate_region_code,
+
+            // (추후 확장용: 현재 원본에 없음)
+            calling_code: "",
+            currency_code: "",
+            capital_ko: "",
+            capital_en: "",
+            cctld: "",
+            mcc: "",
+            gs1: "",
+            wipo: "",
+            vehicle_reg: "",
+            aircraft_reg_prefix: "",
+            icao_prefix: "",
+            ioc: "",
+            fifa: "",
+
+            aliases
+        };
+    }
+
     function buildIndex(rows){
         INDEX = rows.map((r, i) => {
             const parts = [];
-
-            // 이름류
-            parts.push(r.name_ko, r.name_en, r.official_ko, r.official_en);
-
-            // 별칭(강력)
+            parts.push(r.name_ko, r.name_en);
             if (Array.isArray(r.aliases)) parts.push(...r.aliases);
 
-            // 코드류
-            parts.push(r.iso2, r.iso3, r.iso_numeric, r.un_m49, r.fips);
-            parts.push(r.currency_code, r.calling_code, r.cctld, r.mcc, r.gs1, r.wipo);
-            parts.push(r.vehicle_reg, r.aircraft_reg_prefix, r.icao_prefix, r.ioc, r.fifa);
-
-            // 도시(수도)
-            parts.push(r.capital_ko, r.capital_en);
-
-            // 국제전화코드는 + 제거 숫자도 매칭되도록
-            const callDigits = digitsOnly(r.calling_code);
-            if (callDigits) parts.push(callDigits);
+            // 핵심 코드/필드
+            parts.push(r.iso2, r.iso3, r.iso_numeric, r.un_m49, r.iso_3166_2);
+            parts.push(r.region, r.sub_region, r.intermediate_region);
+            parts.push(r.region_code, r.sub_region_code, r.intermediate_region_code);
 
             const text = norm(parts.filter(Boolean).join(" | "));
-
             return { id:i, ref:r, text };
         });
     }
 
     function scoreMatch(hay, query){
-        // 간단 점수: 포함 + 앞부분 일치 보너스
-        // (필요하면 토큰 기반으로 더 정교하게 확장 가능)
         if (!query) return 0;
         let s = 0;
-
         const idx = hay.indexOf(query);
         if (idx === -1) return 0;
 
-        // 기본 점수
         s += 50;
-
-        // 앞부분 일치 보너스
         if (idx === 0) s += 30;
 
-        // 짧은 쿼리(1~2글자) 과도 매칭 방지
         if (query.length <= 2) s -= 10;
-
-        // 코드 형태 보너스 (KR, KOR, 410, +82 등)
         if (/^[a-z]{2,3}$/.test(query)) s += 20;
         if (/^\d{3}$/.test(query)) s += 20;
-        if (/^\+?\d{1,4}$/.test(query)) s += 15;
 
         return s;
     }
 
     function search(query, limit=50){
-        const nq = norm(query);
+        const rawQ = String(query || "").trim();
+        const nq = norm(rawQ);
         if (!nq) return INDEX.slice(0, limit).map(x=>x.ref);
 
-        // 숫자-only 쿼리도 지원(국제전화코드/숫자코드)
-        const qDigits = digitsOnly(query);
-        const nqDigits = qDigits ? norm(qDigits) : "";
+        const qDigits = digitsOnly(rawQ);
 
         const scored = [];
         for (const it of INDEX){
             let s = scoreMatch(it.text, nq);
 
-            // 숫자 쿼리 강화
-            if (nqDigits && it.text.includes(nqDigits)) s += 18;
-
-            // 특정 필드 우선순위(ISO2/ISO3/통화/전화)
             const r = it.ref;
-            const qUp = String(query || "").trim().toUpperCase();
-            if (qUp && (r.iso2 === qUp || r.iso3 === qUp)) s += 40;
-            if (qUp && r.currency_code === qUp) s += 25;
-            if (qDigits && digitsOnly(r.calling_code) === qDigits) s += 25;
-            if (/^\+/.test(String(query||"").trim()) && String(r.calling_code||"").trim() === String(query).trim()) s += 25;
+            const up = rawQ.toUpperCase();
+
+            // 강한 우선순위 (ISO2/3 정확 일치)
+            if (up && (r.iso2 === up || r.iso3 === up)) s += 50;
+
+            // 숫자코드 정확 일치(004, 410 등)
+            if (qDigits && String(r.iso_numeric) === String(qDigits).padStart(3,"0")) s += 35;
+
+            // ISO 3166-2 값 정확 포함
+            if (rawQ && r.iso_3166_2 && r.iso_3166_2.toLowerCase().includes(rawQ.toLowerCase())) s += 15;
 
             if (s > 0) scored.push([s, r]);
         }
@@ -640,13 +537,13 @@
         return scored.slice(0, limit).map(x=>x[1]);
     }
 
-    function escapeHtml(str){
-        return String(str ?? "")
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
+    function kv(k, v){
+        return `
+        <div class="kv">
+          <div class="k">${escapeHtml(k)}</div>
+          <div class="v">${v || '<span style="color:var(--muted);">-</span>'}</div>
+        </div>
+      `;
     }
 
     function renderResults(rows){
@@ -654,11 +551,11 @@
 
         if (!rows.length){
             grid.innerHTML = `
-          <div class="card" style="grid-column:span 12;">
+          <div class="card">
             <div class="cardBody">
               <b>검색 결과가 없습니다.</b>
               <div class="hint" style="margin-top:6px;">
-                국가명(한/영), ISO2/ISO3, 숫자코드(예: 410), 국제전화코드(예: +82 / 82), 통화(예: USD), 수도(예: Tokyo) 등으로 다시 시도해보세요.
+                예) KR / KOR / 410 / Japan / ISO 3166-2:KR / Asia / Eastern Europe
               </div>
             </div>
           </div>
@@ -667,70 +564,41 @@
         }
 
         grid.innerHTML = rows.map(r => {
-            const nameLine = `${escapeHtml(r.name_ko || "")}`;
-            const subName = [r.name_en, r.official_en].filter(Boolean)[0] || "";
+            const title = r.name_ko || r.name_en || "(unknown)";
             const codes = [
-                r.iso2 ? `<span class="code">ISO2 <b>${escapeHtml(r.iso2)}</b></span>` : "",
-                r.iso3 ? `<span class="code">ISO3 <b>${escapeHtml(r.iso3)}</b></span>` : "",
+                r.iso2 ? `<span class="code">A2 <b>${escapeHtml(r.iso2)}</b></span>` : "",
+                r.iso3 ? `<span class="code">A3 <b>${escapeHtml(r.iso3)}</b></span>` : "",
                 r.iso_numeric ? `<span class="code">NUM <b>${escapeHtml(r.iso_numeric)}</b></span>` : "",
-                r.calling_code ? `<span class="code">TEL <b>${escapeHtml(r.calling_code)}</b></span>` : "",
-                r.currency_code ? `<span class="code">CUR <b>${escapeHtml(r.currency_code)}</b></span>` : "",
-                r.cctld ? `<span class="code">TLD <b>${escapeHtml(r.cctld)}</b></span>` : "",
+                r.iso_3166_2 ? `<span class="code">ISO-2 <b>${escapeHtml(r.iso_3166_2.replace("ISO 3166-2:",""))}</b></span>` : ""
             ].filter(Boolean).join("");
 
-            const kv = (k, v) => `
-          <div class="kv">
-            <div class="k">${escapeHtml(k)}</div>
-            <div class="v">${v || '<span class="muted">-</span>'}</div>
-          </div>
-        `;
-
-            const cap = [r.capital_ko, r.capital_en].filter(Boolean).join(" / ");
-            const aliases = Array.isArray(r.aliases) && r.aliases.length ? r.aliases.join(", ") : "";
+            const regionLine = [r.region, r.sub_region, r.intermediate_region].filter(Boolean).join(" · ");
+            const regionCodes = [
+                r.region_code ? `Region: <span class="mono">${escapeHtml(r.region_code)}</span>` : "",
+                r.sub_region_code ? `Sub: <span class="mono">${escapeHtml(r.sub_region_code)}</span>` : "",
+                r.intermediate_region_code ? `Inter: <span class="mono">${escapeHtml(r.intermediate_region_code)}</span>` : ""
+            ].filter(Boolean).join(" · ");
 
             return `
           <article class="card">
             <div class="cardTop">
               <div>
-                <h3 class="cardTitle">${nameLine}${subName ? `<small>${escapeHtml(subName)}</small>` : ""}</h3>
+                <h3 class="cardTitle">${escapeHtml(title)}</h3>
                 <div class="hint" style="margin-top:4px;">
-                  ${r.official_ko ? `공식명: ${escapeHtml(r.official_ko)}` : (r.official_en ? `Official: ${escapeHtml(r.official_en)}` : "")}
+                  ${r.name_en ? escapeHtml(r.name_en) : ""}
                 </div>
               </div>
               <div class="codes">${codes}</div>
             </div>
             <div class="cardBody">
-              ${kv("수도 (Capital)", cap ? escapeHtml(cap) : "")}
-              ${kv("국제전화코드 (Calling)", r.calling_code ? `<span class="mono">${escapeHtml(r.calling_code)}</span>` : "")}
-              ${kv("통화코드 (Currency)", r.currency_code ? `<span class="mono">${escapeHtml(r.currency_code)}</span>` : "")}
               ${kv("ISO 3166-1", [
                 r.iso2 ? `Alpha-2: <span class="mono">${escapeHtml(r.iso2)}</span>` : "",
                 r.iso3 ? `Alpha-3: <span class="mono">${escapeHtml(r.iso3)}</span>` : "",
                 r.iso_numeric ? `Numeric: <span class="mono">${escapeHtml(r.iso_numeric)}</span>` : ""
-            ].filter(Boolean).join(" · ") || ""
-            )}
-              ${kv("인터넷/통신", [
-                r.cctld ? `ccTLD: <span class="mono">${escapeHtml(r.cctld)}</span>` : "",
-                r.mcc ? `MCC: <span class="mono">${escapeHtml(r.mcc)}</span>` : ""
-            ].filter(Boolean).join(" · ") || ""
-            )}
-              ${kv("상업/표준", [
-                r.gs1 ? `GS1: <span class="mono">${escapeHtml(r.gs1)}</span>` : "",
-                r.wipo ? `WIPO: <span class="mono">${escapeHtml(r.wipo)}</span>` : ""
-            ].filter(Boolean).join(" · ") || ""
-            )}
-              ${kv("교통/운송", [
-                r.vehicle_reg ? `국제 차량번호판: <span class="mono">${escapeHtml(r.vehicle_reg)}</span>` : "",
-                r.aircraft_reg_prefix ? `항공기 등록: <span class="mono">${escapeHtml(r.aircraft_reg_prefix)}</span>` : "",
-                r.icao_prefix ? `ICAO 접두사: <span class="mono">${escapeHtml(r.icao_prefix)}</span>` : ""
-            ].filter(Boolean).join(" · ") || ""
-            )}
-              ${kv("국제기구 코드", [
-                r.ioc ? `IOC: <span class="mono">${escapeHtml(r.ioc)}</span>` : "",
-                r.fifa ? `FIFA: <span class="mono">${escapeHtml(r.fifa)}</span>` : ""
-            ].filter(Boolean).join(" · ") || ""
-            )}
-              ${kv("별칭/검색키", aliases ? escapeHtml(aliases) : "")}
+            ].filter(Boolean).join(" · "))}
+              ${kv("ISO 3166-2", r.iso_3166_2 ? `<span class="mono">${escapeHtml(r.iso_3166_2)}</span>` : "")}
+              ${kv("UN 지역 분류", regionLine ? escapeHtml(regionLine) : "")}
+              ${kv("UN 지역 코드", regionCodes ? regionCodes : "")}
             </div>
           </article>
         `;
@@ -750,31 +618,36 @@
         acMeta.textContent = `${items.length}개`;
         acList.innerHTML = items.map((r, idx) => {
             const title = r.name_ko || r.name_en || "(unknown)";
-            const sub = [r.name_en, r.capital_en, r.currency_code].filter(Boolean).join(" · ");
+            const sub = [
+                r.iso2 ? r.iso2 : "",
+                r.iso3 ? r.iso3 : "",
+                r.iso_numeric ? r.iso_numeric : "",
+                r.region ? r.region : ""
+            ].filter(Boolean).join(" · ");
+
             return `
           <div class="acItem" role="option" data-idx="${idx}">
             <div class="acLeft">
               <div class="acTitle">${escapeHtml(title)}</div>
               <div class="acSub">${escapeHtml(sub)}</div>
             </div>
-            <div class="acRight">
+            <div style="display:flex;gap:6px;align-items:center;">
               ${r.iso2 ? `<span class="pill">${escapeHtml(r.iso2)}</span>` : ""}
               ${r.iso3 ? `<span class="pill">${escapeHtml(r.iso3)}</span>` : ""}
             </div>
           </div>
         `;
         }).join("");
+
         ac.style.display = items.length ? "block" : "none";
     }
 
     function pickAC(index){
         const r = acItems[index];
         if (!r) return;
-        // 대표키로 검색창 채우기(한글명이 있으면 한글, 없으면 영문)
         q.value = r.name_ko || r.name_en || "";
         closeAC();
-        const results = search(q.value, 50);
-        renderResults(results);
+        renderResults(search(q.value, 50));
     }
 
     function debounce(fn, ms){
@@ -790,11 +663,9 @@
         const results = search(query, 50);
         renderResults(results);
 
-        // 자동완성: 상위 8개만
-        const acResults = search(query, 8);
+        const acResults = query ? search(query, 8) : [];
         if (query && acResults.length) openAC(acResults);
         else closeAC();
-
     }, 120);
 
     function copyTopResult(){
@@ -804,23 +675,22 @@
         }
         const r = lastResults[0];
         const lines = [
-            `국가: ${r.name_ko || ""} (${r.name_en || ""})`,
-            `ISO2: ${r.iso2 || ""}`,
-            `ISO3: ${r.iso3 || ""}`,
+            `Name: ${r.name_en || ""}`,
+            `Alpha-2: ${r.iso2 || ""}`,
+            `Alpha-3: ${r.iso3 || ""}`,
             `Numeric: ${r.iso_numeric || ""}`,
-            `Calling: ${r.calling_code || ""}`,
-            `Currency: ${r.currency_code || ""}`,
-            `Capital: ${(r.capital_ko || "")}${(r.capital_en ? " / " + r.capital_en : "")}`,
-            `ccTLD: ${r.cctld || ""}`,
-            `MCC: ${r.mcc || ""}`,
-            `IOC: ${r.ioc || ""}`,
-            `FIFA: ${r.fifa || ""}`
+            `ISO 3166-2: ${r.iso_3166_2 || ""}`,
+            `Region: ${r.region || ""}`,
+            `Sub-region: ${r.sub_region || ""}`,
+            `Intermediate-region: ${r.intermediate_region || ""}`,
+            `Region-code: ${r.region_code || ""}`,
+            `Sub-region-code: ${r.sub_region_code || ""}`,
+            `Intermediate-region-code: ${r.intermediate_region_code || ""}`
         ].join("\n");
 
         navigator.clipboard.writeText(lines)
         .then(()=> toast("상단 결과를 복사했습니다."))
         .catch(()=> {
-            // clipboard 실패 fallback
             const ta = document.createElement("textarea");
             ta.value = lines;
             document.body.appendChild(ta);
@@ -831,30 +701,33 @@
         });
     }
 
+    // 샘플(로드 실패 대비)
+    const SAMPLE_RAW = [
+        {"name":"Korea, Republic of","alpha-2":"KR","alpha-3":"KOR","country-code":"410","iso_3166-2":"ISO 3166-2:KR","region":"Asia","sub-region":"Eastern Asia","intermediate-region":"","region-code":"142","sub-region-code":"030","intermediate-region-code":""},
+        {"name":"United States of America","alpha-2":"US","alpha-3":"USA","country-code":"840","iso_3166-2":"ISO 3166-2:US","region":"Americas","sub-region":"Northern America","intermediate-region":"","region-code":"019","sub-region-code":"021","intermediate-region-code":""},
+        {"name":"Japan","alpha-2":"JP","alpha-3":"JPN","country-code":"392","iso_3166-2":"ISO 3166-2:JP","region":"Asia","sub-region":"Eastern Asia","intermediate-region":"","region-code":"142","sub-region-code":"030","intermediate-region-code":""}
+    ];
+
     async function loadData(){
         statusEl.textContent = "데이터 불러오는 중…";
         try{
-            // 같은 폴더의 JSON 로드 (권장)
-            const res = await fetch("./countries-248.min.json", { cache: "no-store" });
+            const res = await fetch("assets/json/countries-248.min.json", { cache: "no-store" });
             if (!res.ok) throw new Error("HTTP " + res.status);
-            const json = await res.json();
-            if (!Array.isArray(json)) throw new Error("JSON is not an array");
-            DATA = json;
+            const raw = await res.json();
+            if (!Array.isArray(raw)) throw new Error("JSON is not an array");
+            DATA = raw.map(normalizeRow);
             statusEl.textContent = "데이터 로드 완료";
         }catch(e){
-            // 로컬 파일 더블클릭 실행(file://)이면 fetch가 막힐 수 있어 샘플로 대체
-            DATA = SAMPLE;
+            DATA = SAMPLE_RAW.map(normalizeRow);
             statusEl.textContent = "샘플 데이터로 실행 중 (countries-248.min.json 로드 실패)";
         }
 
         totalEl.textContent = String(DATA.length);
         buildIndex(DATA);
-
-        // 초기 렌더: 전체 상위 일부
         renderResults(search("", 30));
     }
 
-    // ===== 이벤트 =====
+    // Events
     q.addEventListener("input", onInput);
 
     q.addEventListener("keydown", (e) => {
@@ -870,7 +743,6 @@
             e.preventDefault();
             acActiveIndex = Math.max(acActiveIndex - 1, 0);
         }else if (e.key === "Enter"){
-            // 자동완성 선택 우선
             if (acActiveIndex >= 0){
                 e.preventDefault();
                 pickAC(acActiveIndex);
@@ -910,7 +782,6 @@
 
     $("#btnCopyTop").addEventListener("click", copyTopResult);
 
-    // 시작
     loadData();
 </script>
 </body>
