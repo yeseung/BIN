@@ -1,0 +1,2840 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- https://685ccbf27b7fb7f9600f015e--preeminent-capybara-3d8977.netlify.app/ -->
+
+    <title>색맹·색약 종합 테스트 센터 | 2025 최신판</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #7c3aed;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --dark-bg: #1f2937;
+            --light-bg: #f9fafb;
+            --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            --hover-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #1f2937;
+            line-height: 1.6;
+            overflow-x: hidden;
+            padding-bottom: 100px;
+            position: relative;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 40px 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: var(--card-shadow);
+            backdrop-filter: blur(10px);
+            animation: slideDown 0.6s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header h1 {
+            font-size: clamp(2rem, 5vw, 2.8rem);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            font-weight: 800;
+        }
+
+        .header p {
+            color: #6b7280;
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .test-navigation {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .nav-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: clamp(0.9rem, 2vw, 1rem);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+            color: #4c1d95;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .nav-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .test-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 30px;
+            animation: fadeIn 0.6s ease-out;
+            backdrop-filter: blur(10px);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .test-section {
+            display: none;
+        }
+
+        .test-section.active {
+            display: block;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        .test-section h2 {
+            font-size: clamp(1.5rem, 3vw, 2rem);
+            margin-bottom: 20px;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .test-description {
+            background: #f3f4f6;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .test-description h3 {
+            font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+            margin-bottom: 10px;
+            color: #1f2937;
+        }
+
+        .test-description p {
+            color: #6b7280;
+            margin-bottom: 8px;
+            font-size: clamp(0.95rem, 2vw, 1.05rem);
+        }
+
+        .test-description ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .test-description li {
+            padding-left: 20px;
+            position: relative;
+            margin-bottom: 5px;
+            color: #6b7280;
+            font-size: clamp(0.95rem, 2vw, 1.05rem);
+        }
+
+        .test-description li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--success-color);
+            font-weight: bold;
+        }
+
+        .ishihara-plate {
+            width: 100%;
+            max-width: 400px;
+            height: 400px;
+            margin: 30px auto;
+            border-radius: 50%;
+            position: relative;
+            background: #f8f8f8;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .plate-info {
+            text-align: center;
+            margin-top: 20px;
+            font-size: clamp(0.9rem, 2vw, 1rem);
+            color: #6b7280;
+        }
+
+        .answer-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .answer-btn {
+            padding: 15px 25px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            background: white;
+            font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .answer-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary-color);
+        }
+
+        .answer-btn.correct {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border-color: #10b981;
+            animation: pulse 0.6s ease;
+        }
+
+        .answer-btn.incorrect {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border-color: #ef4444;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .color-arrangement {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f3f4f6;
+            border-radius: 15px;
+            min-height: 100px;
+        }
+
+        .color-tile {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            cursor: move;
+            transition: var(--transition);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .color-tile:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .color-tile.dragging {
+            opacity: 0.5;
+            transform: scale(1.2);
+        }
+
+        .lantern-test {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .lantern-display {
+            width: 300px;
+            height: 100px;
+            background: #1f2937;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .lantern-light {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            box-shadow: 0 0 30px currentColor, inset 0 0 20px currentColor;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 0 20px currentColor, inset 0 0 15px currentColor; }
+            to { box-shadow: 0 0 40px currentColor, inset 0 0 25px currentColor; }
+        }
+
+        .anomaloscope {
+            width: 100%;
+            max-width: 600px;
+            margin: 30px auto;
+            padding: 30px;
+            background: #1f2937;
+            border-radius: 20px;
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .color-mixer {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .mixer-control {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .mixer-control label {
+            color: white;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 10px;
+            font-size: clamp(1rem, 2vw, 1.1rem);
+        }
+
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            transition: var(--transition);
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .mixed-color-display {
+            height: 150px;
+            border-radius: 15px;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(1.5rem, 3vw, 2rem);
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            transition: background-color 0.3s ease;
+        }
+
+        .contrast-test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .contrast-card {
+            aspect-ratio: 1;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .contrast-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transform: rotate(45deg);
+            transition: transform 0.6s;
+        }
+
+        .contrast-card:hover::before {
+            transform: rotate(45deg) translate(100%, 100%);
+        }
+
+        .contrast-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .color-naming-test {
+            display: grid;
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .color-sample {
+            width: 100%;
+            height: 200px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .color-sample::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%);
+            pointer-events: none;
+        }
+
+        .color-input {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .color-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .vision-simulator {
+            margin: 30px 0;
+            padding: 30px;
+            background: #f9fafb;
+            border-radius: 20px;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .simulator-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+
+        .vision-type-btn {
+            padding: 10px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            background: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: clamp(0.9rem, 2vw, 1rem);
+        }
+
+        .vision-type-btn:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .vision-type-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .simulator-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .sim-image {
+            width: 100%;
+            height: 200px;
+            border-radius: 15px;
+            object-fit: cover;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            transition: var(--transition);
+        }
+
+        .sim-image:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .vision-info {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .vision-info h4 {
+            font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+            margin-bottom: 10px;
+            color: #1f2937;
+        }
+
+        .vision-info p {
+            color: #6b7280;
+            margin-bottom: 10px;
+            font-size: clamp(0.95rem, 2vw, 1.05rem);
+        }
+
+        .difficulty-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 15px;
+        }
+
+        .difficulty-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+            color: #6b7280;
+            font-size: clamp(0.95rem, 2vw, 1.05rem);
+        }
+
+        .difficulty-list li:last-child {
+            border-bottom: none;
+        }
+
+        .results-container {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            border-radius: 20px;
+            padding: 40px;
+            margin-top: 40px;
+            box-shadow: var(--card-shadow);
+            display: none;
+        }
+
+        .results-container.show {
+            display: block;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .result-header h2 {
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+
+        .result-score {
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 20px 0;
+        }
+
+        .result-chart {
+            width: 100%;
+            max-width: 600px;
+            margin: 30px auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .chart-bar {
+            margin: 20px 0;
+        }
+
+        .chart-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #4b5563;
+            font-size: clamp(1rem, 2vw, 1.1rem);
+        }
+
+        .chart-progress {
+            height: 30px;
+            background: #e5e7eb;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .chart-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            transition: width 1s ease-out;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 15px;
+            color: white;
+            font-weight: 600;
+            font-size: clamp(0.9rem, 2vw, 1rem);
+        }
+
+        .recommendations {
+            margin-top: 40px;
+            padding: 30px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .recommendations h3 {
+            font-size: clamp(1.3rem, 3vw, 1.6rem);
+            margin-bottom: 20px;
+            color: #1f2937;
+        }
+
+        .recommendation-item {
+            padding: 15px 20px;
+            margin: 10px 0;
+            background: #f9fafb;
+            border-radius: 10px;
+            border-left: 4px solid var(--primary-color);
+            transition: var(--transition);
+            font-size: clamp(0.95rem, 2vw, 1.05rem);
+        }
+
+        .recommendation-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .action-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .primary-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .primary-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .secondary-btn {
+            background: white;
+            color: #4b5563;
+            border: 2px solid #e5e7eb;
+        }
+
+        .secondary-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            z-index: 1000;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+        }
+
+        .floating-help {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            transition: var(--transition);
+            z-index: 999;
+        }
+
+        .floating-help:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5);
+        }
+
+        .help-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .help-modal.show {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .help-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        .help-content h3 {
+            font-size: clamp(1.5rem, 3vw, 2rem);
+            margin-bottom: 20px;
+            color: #1f2937;
+        }
+
+        .help-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 12px;
+        }
+
+        .help-section h4 {
+            font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+            margin-bottom: 10px;
+            color: #4b5563;
+        }
+
+        .help-section p {
+            font-size: clamp(0.95rem, 2vw, 1.05rem);
+        }
+
+        .close-help {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: #f3f4f6;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: #6b7280;
+            transition: var(--transition);
+        }
+
+        .close-help:hover {
+            background: #e5e7eb;
+            transform: rotate(90deg);
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #1f2937;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transition: var(--transition);
+            z-index: 1001;
+            font-size: clamp(0.95rem, 2vw, 1.05rem);
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* 저작권 푸터 스타일 */
+        .copyright-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+            color: white;
+            padding: 15px 0;
+            text-align: center;
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1);
+            z-index: 998;
+        }
+
+        .copyright-text {
+            font-size: clamp(0.85rem, 2vw, 0.95rem);
+            color: #d1d5db;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .header {
+                padding: 30px 20px;
+            }
+
+            .test-container {
+                padding: 25px;
+            }
+
+            .ishihara-plate {
+                max-width: 300px;
+                height: 300px;
+            }
+
+            .color-tile {
+                width: 50px;
+                height: 50px;
+            }
+
+            .nav-btn {
+                padding: 10px 18px;
+            }
+
+            .floating-help {
+                bottom: 80px;
+                right: 20px;
+                width: 50px;
+                height: 50px;
+            }
+
+            .help-content {
+                padding: 30px 20px;
+            }
+
+            .action-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .lantern-display {
+                width: 250px;
+                height: 80px;
+                gap: 15px;
+            }
+
+            .lantern-light {
+                width: 50px;
+                height: 50px;
+            }
+
+            .contrast-test-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .test-navigation {
+                padding: 15px;
+                gap: 10px;
+            }
+
+            .nav-btn {
+                padding: 8px 15px;
+            }
+
+            .ishihara-plate {
+                max-width: 250px;
+                height: 250px;
+            }
+
+            .answer-options {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .result-score {
+                font-size: 2.5rem;
+            }
+
+            .contrast-test-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .color-tile {
+                width: 45px;
+                height: 45px;
+            }
+        }
+
+        /* 노션 임베딩 최적화 */
+        @media (max-width: 1024px) {
+            body {
+                background: white;
+            }
+
+            .container {
+                max-width: 100%;
+            }
+        }
+
+        /* 프린트 스타일 */
+        @media print {
+            body {
+                background: white;
+            }
+
+            .floating-help,
+            .progress-bar,
+            .nav-btn,
+            .action-btn,
+            .copyright-footer {
+                display: none !important;
+            }
+
+            .test-container {
+                box-shadow: none;
+                page-break-inside: avoid;
+            }
+        }
+
+        /* 다크모드 지원 */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --light-bg: #1f2937;
+                --dark-bg: #111827;
+            }
+
+            body {
+                color: #f9fafb;
+            }
+
+            .header,
+            .test-container,
+            .test-navigation {
+                background: rgba(31, 41, 55, 0.95);
+                color: #f9fafb;
+            }
+
+            .header p {
+                color: #d1d5db;
+            }
+
+            .answer-btn,
+            .color-input,
+            .secondary-btn {
+                background: #374151;
+                color: #f9fafb;
+                border-color: #4b5563;
+            }
+
+            .help-content {
+                background: #1f2937;
+                color: #f9fafb;
+            }
+
+            .help-section {
+                background: #374151;
+            }
+
+            .test-description {
+                background: #374151;
+                color: #f9fafb;
+            }
+
+            .vision-info {
+                background: #374151;
+                color: #f9fafb;
+            }
+        }
+
+        /* 접근성 향상 */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        /* 포커스 스타일 */
+        *:focus {
+            outline: 3px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+
+        /* 보안 레이어 */
+        #protectionLayer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            z-index: 9999;
+            backdrop-filter: blur(10px);
+        }
+
+        /* 고대비 모드 */
+        @media (prefers-contrast: high) {
+            .answer-btn,
+            .nav-btn,
+            .action-btn {
+                border-width: 3px;
+            }
+
+            .chart-fill {
+                background: var(--primary-color);
+            }
+        }
+
+        /* 애니메이션 감소 모드 */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="progress-bar">
+    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+</div>
+
+<div class="container">
+    <header class="header">
+        <h1>🎨 색맹·색약 종합 테스트 센터</h1>
+        <p>최신 의학 기술을 활용한 정확한 색각 이상 진단 시스템</p>
+        <div style="margin-top: 15px; font-size: 0.9rem; color: #9ca3af;">
+            <span>버전 2025.1.0</span> | <span>8가지 종합 테스트</span> | <span>AI 분석 지원</span>
+        </div>
+    </header>
+
+    <nav class="test-navigation">
+        <button class="nav-btn active" onclick="showTest('ishihara')">
+            이시하라 테스트
+        </button>
+        <button class="nav-btn" onclick="showTest('arrangement')">
+            색상 배열
+        </button>
+        <button class="nav-btn" onclick="showTest('lantern')">
+            란토른 테스트
+        </button>
+        <button class="nav-btn" onclick="showTest('anomaloscope')">
+            아노말로스코프
+        </button>
+        <button class="nav-btn" onclick="showTest('contrast')">
+            대비 민감도
+        </button>
+        <button class="nav-btn" onclick="showTest('naming')">
+            색상 명명
+        </button>
+        <button class="nav-btn" onclick="showTest('simulator')">
+            시각 시뮬레이터
+        </button>
+        <button class="nav-btn" onclick="showTest('comprehensive')">
+            종합 분석
+        </button>
+    </nav>
+
+    <div class="test-container">
+        <!-- 이시하라 테스트 -->
+        <div id="ishihara" class="test-section active">
+            <h2>이시하라 색맹 검사</h2>
+            <div class="test-description">
+                <h3>📋 검사 안내</h3>
+                <p><strong>검사 목적:</strong> 적록색맹(적색맹, 녹색맹)을 진단하는 가장 보편적인 검사입니다.</p>
+                <p><strong>검사 방법:</strong> 원 안의 숫자나 도형을 식별하여 답을 선택하세요.</p>
+                <p><strong>알 수 있는 것:</strong></p>
+                <ul>
+                    <li>적색과 녹색 구분 능력</li>
+                    <li>색각 이상의 유무와 정도</li>
+                    <li>일상생활에서의 색상 인지 능력</li>
+                </ul>
+            </div>
+            <div class="ishihara-plate" id="ishiharaPlate">
+                <canvas id="plateCanvas" width="400" height="400"></canvas>
+            </div>
+            <div class="plate-info" id="plateInfo">플레이트 1/10</div>
+            <div class="answer-options" id="ishiharaOptions">
+                <!-- 동적으로 생성됨 -->
+            </div>
+        </div>
+
+        <!-- 색상 배열 테스트 -->
+        <div id="arrangement" class="test-section">
+            <h2>색상 배열 테스트 (Farnsworth D-15)</h2>
+            <div class="test-description">
+                <h3>📋 검사 안내</h3>
+                <p><strong>검사 목적:</strong> 색상을 구분하고 배열하는 능력을 평가합니다.</p>
+                <p><strong>검사 방법:</strong> 색상 타일을 드래그하여 빨강에서 보라색 순서로 배열하세요.</p>
+                <p><strong>알 수 있는 것:</strong></p>
+                <ul>
+                    <li>색상 구분의 정확도</li>
+                    <li>색각 이상의 유형 (적색맹, 녹색맹, 청색맹)</li>
+                    <li>색상 혼동 패턴</li>
+                </ul>
+            </div>
+            <div class="color-arrangement" id="colorArrangement">
+                <!-- 동적으로 생성됨 -->
+            </div>
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="action-btn secondary-btn" onclick="shuffleColors()">
+                    🔄 다시 섞기
+                </button>
+                <button class="action-btn primary-btn" onclick="checkArrangement()">
+                    배열 확인
+                </button>
+            </div>
+        </div>
+
+        <!-- 란토른 테스트 -->
+        <div id="lantern" class="test-section">
+            <h2>란토른 테스트 (Farnsworth Lantern)</h2>
+            <div class="test-description">
+                <h3>📋 검사 안내</h3>
+                <p><strong>검사 목적:</strong> 실생활에서 중요한 신호등 색상 구분 능력을 평가합니다.</p>
+                <p><strong>검사 방법:</strong> 표시되는 색상을 보고 해당하는 색상 버튼을 선택하세요.</p>
+                <p><strong>알 수 있는 것:</strong></p>
+                <ul>
+                    <li>교통 신호 인식 능력</li>
+                    <li>직업적 색상 구분 능력 (조종사, 선원 등)</li>
+                    <li>일상생활 적응도</li>
+                </ul>
+            </div>
+            <div class="lantern-test">
+                <div class="lantern-display">
+                    <div class="lantern-light" id="lanternLight1"></div>
+                    <div class="lantern-light" id="lanternLight2"></div>
+                </div>
+                <p style="text-align: center; margin-top: 20px; color: #6b7280;">위쪽 색상을 선택하세요</p>
+                <div class="answer-options">
+                    <button class="answer-btn" onclick="checkLantern('red')">빨강</button>
+                    <button class="answer-btn" onclick="checkLantern('yellow')">노랑</button>
+                    <button class="answer-btn" onclick="checkLantern('green')">초록</button>
+                    <button class="answer-btn" onclick="checkLantern('white')">흰색</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 아노말로스코프 시뮬레이션 -->
+        <div id="anomaloscope" class="test-section">
+            <h2>아노말로스코프 시뮬레이션</h2>
+            <div class="test-description">
+                <h3>📋 검사 안내</h3>
+                <p><strong>검사 목적:</strong> 색각 이상의 정확한 유형과 정도를 진단하는 정밀 검사입니다.</p>
+                <p><strong>검사 방법:</strong> 빨강과 초록 슬라이더를 조절하여 아래 노란색과 동일하게 만드세요.</p>
+                <p><strong>알 수 있는 것:</strong></p>
+                <ul>
+                    <li>적록색각 이상의 정확한 유형</li>
+                    <li>색각 이상의 심각도</li>
+                    <li>색상 혼합 인지 능력</li>
+                </ul>
+            </div>
+            <div class="anomaloscope">
+                <div class="color-mixer">
+                    <div class="mixer-control">
+                        <label for="redMixer">빨강 강도</label>
+                        <input type="range" id="redMixer" class="slider" min="0" max="255" value="128">
+                        <span id="redValue" style="color: white;">128</span>
+                    </div>
+                    <div class="mixer-control">
+                        <label for="greenMixer">초록 강도</label>
+                        <input type="range" id="greenMixer" class="slider" min="0" max="255" value="128">
+                        <span id="greenValue" style="color: white;">128</span>
+                    </div>
+                </div>
+                <div class="mixed-color-display" id="mixedColor">
+                    혼합 색상
+                </div>
+                <div class="mixed-color-display" style="background: yellow; margin-top: 10px;">
+                    목표 색상 (노란색)
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="action-btn primary-btn" onclick="checkColorMatch()">
+                    색상 일치 확인
+                </button>
+            </div>
+        </div>
+
+        <!-- 대비 민감도 테스트 -->
+        <div id="contrast" class="test-section">
+            <h2>색상 대비 민감도 테스트</h2>
+            <div class="test-description">
+                <h3>📋 검사 안내</h3>
+                <p><strong>검사 목적:</strong> 미묘한 색상 차이를 구분하는 능력을 평가합니다.</p>
+                <p><strong>검사 방법:</strong> 다른 색상을 가진 하나의 사각형을 찾아 클릭하세요.</p>
+                <p><strong>알 수 있는 것:</strong></p>
+                <ul>
+                    <li>색상 대비 감도</li>
+                    <li>미세한 색상 구분 능력</li>
+                    <li>시각적 민감도</li>
+                </ul>
+            </div>
+            <div class="contrast-test-grid" id="contrastGrid">
+                <!-- 동적으로 생성됨 -->
+            </div>
+            <p style="text-align: center; margin-top: 20px; color: #6b7280;">
+                현재 난이도: <span id="contrastLevel">1</span>/5
+            </p>
+        </div>
+
+        <!-- 색상 명명 테스트 -->
+        <div id="naming" class="test-section">
+            <h2>색상 명명 테스트</h2>
+            <div class="test-description">
+                <h3>📋 검사 안내</h3>
+                <p><strong>검사 목적:</strong> 색상을 인지하고 명명하는 능력을 평가합니다.</p>
+                <p><strong>검사 방법:</strong> 표시된 색상의 이름을 입력란에 적어주세요.</p>
+                <p><strong>알 수 있는 것:</strong></p>
+                <ul>
+                    <li>색상 인지와 언어 연결 능력</li>
+                    <li>색상 혼동 패턴</li>
+                    <li>주관적 색상 인식</li>
+                </ul>
+            </div>
+            <div class="color-naming-test">
+                <div class="color-sample" id="colorSample"></div>
+                <input type="text" class="color-input" id="colorNameInput"
+                       placeholder="색상 이름을 입력하세요 (예: 빨강, 파랑, 초록)">
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="action-btn primary-btn" onclick="checkColorName()">
+                        확인
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 시각 시뮬레이터 -->
+        <div id="simulator" class="test-section">
+            <h2>색각 이상 시뮬레이터</h2>
+            <div class="test-description">
+                <h3>📋 시뮬레이터 안내</h3>
+                <p><strong>목적:</strong> 다양한 색각 이상을 가진 사람들이 세상을 어떻게 보는지 체험해보세요.</p>
+                <p><strong>사용법:</strong> 아래 버튼을 클릭하여 각 색각 이상 유형을 체험할 수 있습니다.</p>
+            </div>
+            <div class="vision-simulator">
+                <div class="simulator-controls">
+                    <button class="vision-type-btn active" onclick="setVisionType('normal')">
+                        정상 시각
+                    </button>
+                    <button class="vision-type-btn" onclick="setVisionType('protanopia')">
+                        적색맹
+                    </button>
+                    <button class="vision-type-btn" onclick="setVisionType('deuteranopia')">
+                        녹색맹
+                    </button>
+                    <button class="vision-type-btn" onclick="setVisionType('tritanopia')">
+                        청색맹
+                    </button>
+                    <button class="vision-type-btn" onclick="setVisionType('achromatopsia')">
+                        전색맹
+                    </button>
+                </div>
+                <div class="simulator-display" id="simulatorDisplay">
+                    <canvas id="simCanvas" width="300" height="200" class="sim-image"></canvas>
+                </div>
+                <div class="vision-info" id="visionInfo">
+                    <h4>정상 시각</h4>
+                    <p>모든 색상을 정상적으로 구분할 수 있습니다.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 종합 분석 -->
+        <div id="comprehensive" class="test-section">
+            <h2>종합 검사 분석</h2>
+            <div class="test-description">
+                <h3>📋 종합 분석 안내</h3>
+                <p><strong>분석 내용:</strong> 모든 테스트 결과를 종합하여 상세한 분석을 제공합니다.</p>
+                <p><strong>포함 사항:</strong></p>
+                <ul>
+                    <li>전체 색각 능력 점수</li>
+                    <li>색각 이상 유형 예측</li>
+                    <li>일상생활 영향도 평가</li>
+                    <li>맞춤형 권장사항</li>
+                </ul>
+            </div>
+            <div style="text-align: center; padding: 40px;">
+                <div class="loading-spinner" id="analysisLoader"></div>
+                <button class="action-btn primary-btn" onclick="runComprehensiveAnalysis()">
+                    종합 분석 시작
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 결과 컨테이너 -->
+    <div class="results-container" id="resultsContainer">
+        <div class="result-header">
+            <h2>🎯 검사 결과</h2>
+            <div class="result-score" id="resultScore">0%</div>
+            <p id="resultSummary" style="color: #6b7280; font-size: 1.1rem;"></p>
+        </div>
+
+        <div class="result-chart">
+            <div class="chart-bar">
+                <div class="chart-label">적색 감지력</div>
+                <div class="chart-progress">
+                    <div class="chart-fill" id="redScore" style="width: 0%">0%</div>
+                </div>
+            </div>
+            <div class="chart-bar">
+                <div class="chart-label">녹색 감지력</div>
+                <div class="chart-progress">
+                    <div class="chart-fill" id="greenScore" style="width: 0%">0%</div>
+                </div>
+            </div>
+            <div class="chart-bar">
+                <div class="chart-label">청색 감지력</div>
+                <div class="chart-progress">
+                    <div class="chart-fill" id="blueScore" style="width: 0%">0%</div>
+                </div>
+            </div>
+            <div class="chart-bar">
+                <div class="chart-label">대비 민감도</div>
+                <div class="chart-progress">
+                    <div class="chart-fill" id="contrastScore" style="width: 0%">0%</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="recommendations">
+            <h3>💡 맞춤형 권장사항</h3>
+            <div id="recommendationsList">
+                <!-- 동적으로 생성됨 -->
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="action-btn secondary-btn" onclick="copyResults()">
+                📋 결과 복사
+            </button>
+            <button class="action-btn secondary-btn" onclick="downloadReport()">
+                📥 결과 다운로드
+            </button>
+            <button class="action-btn primary-btn" onclick="resetAllTests()">
+                🔄 다시 검사하기
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 도움말 버튼 -->
+<div class="floating-help" onclick="showHelp()">
+    <span>?</span>
+</div>
+
+<!-- 도움말 모달 -->
+<div class="help-modal" id="helpModal">
+    <div class="help-content">
+        <button class="close-help" onclick="hideHelp()">×</button>
+        <h3>🎨 색맹·색약 테스트 가이드</h3>
+
+        <div class="help-section">
+            <h4>📋 테스트 종류</h4>
+            <p><strong>이시하라 테스트:</strong> 가장 일반적인 색맹 검사로, 점으로 이루어진 원 안의 숫자를 식별합니다.</p>
+            <p><strong>색상 배열:</strong> 색상을 순서대로 배열하여 색각 이상의 유형을 파악합니다.</p>
+            <p><strong>란토른 테스트:</strong> 신호등 색상 구분 능력을 평가합니다.</p>
+            <p><strong>아노말로스코프:</strong> 색상 혼합을 통한 정밀 검사입니다.</p>
+        </div>
+
+        <div class="help-section">
+            <h4>🎯 검사 팁</h4>
+            <ul style="list-style: none; padding: 0;">
+                <li>✓ 밝은 조명 아래에서 검사하세요</li>
+                <li>✓ 화면 밝기를 최대로 설정하세요</li>
+                <li>✓ 눈의 피로가 없을 때 검사하세요</li>
+                <li>✓ 각 테스트는 충분한 시간을 갖고 진행하세요</li>
+            </ul>
+        </div>
+
+        <div class="help-section">
+            <h4>⚠️ 주의사항</h4>
+            <p>이 검사는 의학적 진단을 대체할 수 없습니다. 정확한 진단을 위해서는 안과 전문의를 방문하세요.</p>
+        </div>
+
+        <div class="help-section" style="text-align: center; background: #e0e7ff;">
+            <p style="margin: 0; color: #4c1d95;">© 2025 큐레이터 단비</p>
+        </div>
+    </div>
+</div>
+
+<!-- 토스트 메시지 -->
+<div class="toast" id="toast"></div>
+
+<!-- 보호 레이어 -->
+<div id="protectionLayer"></div>
+
+<!-- 저작권 푸터 -->
+<footer class="copyright-footer">
+    <div class="copyright-text">
+        © 2025 .... All rights reserved.<br>
+        이 웹사이트의 모든 콘텐츠는 저작권법에 의해 보호됩니다.
+    </div>
+</footer>
+
+<script>
+    // 전역 변수
+    let currentTest = 'ishihara';
+    let testResults = {
+        ishihara: [],
+        arrangement: [],
+        lantern: [],
+        anomaloscope: [],
+        contrast: [],
+        naming: [],
+        comprehensive: {}
+    };
+    let currentPlateIndex = 0;
+    let totalProgress = 0;
+    let autoProgressTimer = null;
+    let contrastLevel = 1;
+    let currentLanternColors = [];
+
+    // 개선된 이시하라 테스트 플레이트 데이터
+    const ishiharaPlates = [
+        {
+            number: 12,
+            normalColors: ['#E07B7B', '#D46B6B'],
+            confusionColors: ['#7BE07B', '#6BD46B'],
+            options: [12, 17, 8, '안보임'],
+            difficulty: 'easy'
+        },
+        {
+            number: 8,
+            normalColors: ['#FF6B6B', '#F45555'],
+            confusionColors: ['#6BFF6B', '#55F455'],
+            options: [8, 3, 5, '안보임'],
+            difficulty: 'easy'
+        },
+        {
+            number: 29,
+            normalColors: ['#FF9999', '#FF7777'],
+            confusionColors: ['#99FF99', '#77FF77'],
+            options: [29, 70, 21, '안보임'],
+            difficulty: 'medium'
+        },
+        {
+            number: 5,
+            normalColors: ['#E09999', '#D08888'],
+            confusionColors: ['#99E099', '#88D088'],
+            options: [5, 2, 6, '안보임'],
+            difficulty: 'medium'
+        },
+        {
+            number: 3,
+            normalColors: ['#FFB3B3', '#FFA0A0'],
+            confusionColors: ['#B3FFB3', '#A0FFA0'],
+            options: [3, 8, 5, '안보임'],
+            difficulty: 'hard'
+        },
+        {
+            number: 15,
+            normalColors: ['#FFAAAA', '#FF9090'],
+            confusionColors: ['#AAFFAA', '#90FF90'],
+            options: [15, 17, 13, '안보임'],
+            difficulty: 'hard'
+        },
+        {
+            number: 74,
+            normalColors: ['#E0A0A0', '#D09090'],
+            confusionColors: ['#A0E0A0', '#90D090'],
+            options: [74, 21, 47, '안보임'],
+            difficulty: 'hard'
+        },
+        {
+            number: 6,
+            normalColors: ['#FFB8B8', '#FFA5A5'],
+            confusionColors: ['#B8FFB8', '#A5FFA5'],
+            options: [6, 9, 8, '안보임'],
+            difficulty: 'medium'
+        },
+        {
+            number: 45,
+            normalColors: ['#F0AAAA', '#E09999'],
+            confusionColors: ['#AAF0AA', '#99E099'],
+            options: [45, 56, 43, '안보임'],
+            difficulty: 'hard'
+        },
+        {
+            number: 97,
+            normalColors: ['#FFBCBC', '#FFABAB'],
+            confusionColors: ['#BCFFBC', '#ABFFAB'],
+            options: [97, 87, 91, '안보임'],
+            difficulty: 'very_hard'
+        }
+    ];
+
+    // 초기화
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeTests();
+        updateProgress();
+        generateIshiharaPlate();
+    });
+
+    // 테스트 초기화
+    function initializeTests() {
+        // 색상 배열 테스트 초기화
+        generateColorArrangement();
+
+        // 란토른 테스트 초기화
+        generateLanternColors();
+
+        // 대비 테스트 초기화
+        generateContrastTest();
+
+        // 색상 명명 테스트 초기화
+        generateColorNaming();
+
+        // 시뮬레이터 초기화
+        initializeSimulator();
+    }
+
+    // 테스트 전환
+    function showTest(testName) {
+        currentTest = testName;
+
+        // 자동 진행 타이머 취소
+        if (autoProgressTimer) {
+            clearTimeout(autoProgressTimer);
+            autoProgressTimer = null;
+        }
+
+        // 모든 테스트 숨기기
+        document.querySelectorAll('.test-section').forEach(section => {
+            section.classList.remove('active');
+        });
+
+        // 선택된 테스트 표시
+        document.getElementById(testName).classList.add('active');
+
+        // 네비게이션 버튼 업데이트
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+
+        updateProgress();
+    }
+
+    // 개선된 이시하라 플레이트 생성
+    function generateIshiharaPlate() {
+        const canvas = document.getElementById('plateCanvas');
+        const ctx = canvas.getContext('2d');
+        const plate = ishiharaPlates[currentPlateIndex];
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // 원형 클리핑 마스크 설정
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(canvas.width / 2, canvas.height / 2, canvas.width / 2 - 5, 0, Math.PI * 2);
+        ctx.clip();
+
+        // 배경색 설정
+        ctx.fillStyle = '#f5f5f5';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // 점의 크기와 밀도 설정
+        const dotSizes = [4, 5, 6, 7, 8];
+        const totalDots = 1500;
+
+        // 숫자 경로 생성
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const fontSize = 160;
+
+        ctx.font = `bold ${fontSize}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        // 텍스트 경로 저장
+        const textPath = new Path2D();
+        ctx.fillStyle = 'black';
+        ctx.fillText(plate.number.toString(), centerX, centerY);
+
+        // 텍스트 영역 감지를 위한 임시 캔버스
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCtx.font = ctx.font;
+        tempCtx.textAlign = 'center';
+        tempCtx.textBaseline = 'middle';
+        tempCtx.fillStyle = 'black';
+        tempCtx.fillText(plate.number.toString(), centerX, centerY);
+
+        const imageData = tempCtx.getImageData(0, 0, canvas.width, canvas.height);
+        const pixels = imageData.data;
+
+        // 점 그리기
+        for (let i = 0; i < totalDots; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const radius = Math.sqrt(Math.random()) * (canvas.width / 2 - 10);
+            const x = centerX + radius * Math.cos(angle);
+            const y = centerY + radius * Math.sin(angle);
+
+            // 픽셀 위치 계산
+            const pixelX = Math.floor(x);
+            const pixelY = Math.floor(y);
+            const pixelIndex = (pixelY * canvas.width + pixelX) * 4;
+
+            // 텍스트 영역 확인
+            const isTextArea = pixels[pixelIndex + 3] > 128;
+
+            // 점 크기 선택
+            const dotSize = dotSizes[Math.floor(Math.random() * dotSizes.length)];
+
+            // 색상 선택
+            let color;
+            if (isTextArea) {
+                // 숫자 영역 - 정상 시각자가 볼 수 있는 색상
+                color = plate.normalColors[Math.floor(Math.random() * plate.normalColors.length)];
+            } else {
+                // 배경 영역 - 혼동 색상
+                color = plate.confusionColors[Math.floor(Math.random() * plate.confusionColors.length)];
+            }
+
+            // 점 그리기
+            ctx.beginPath();
+            ctx.arc(x, y, dotSize, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+
+            // 점에 약간의 변화 추가
+            if (Math.random() > 0.7) {
+                ctx.globalAlpha = 0.3;
+                ctx.beginPath();
+                ctx.arc(x + Math.random() * 4 - 2, y + Math.random() * 4 - 2, dotSize * 0.6, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        ctx.restore();
+
+        // 플레이트 정보 업데이트
+        document.getElementById('plateInfo').textContent = `플레이트 ${currentPlateIndex + 1}/${ishiharaPlates.length}`;
+
+        // 답변 옵션 생성
+        generateAnswerOptions(plate.options);
+    }
+
+    // 답변 옵션 생성
+    function generateAnswerOptions(options) {
+        const container = document.getElementById('ishiharaOptions');
+        container.innerHTML = '';
+
+        // 옵션 섞기
+        const shuffled = [...options].sort(() => Math.random() - 0.5);
+
+        shuffled.forEach(option => {
+            const btn = document.createElement('button');
+            btn.className = 'answer-btn';
+            btn.textContent = option;
+            btn.onclick = () => checkIshihara(option);
+            container.appendChild(btn);
+        });
+    }
+
+    // 이시하라 답변 확인
+    function checkIshihara(answer) {
+        const plate = ishiharaPlates[currentPlateIndex];
+        const correctAnswer = plate.number;
+        const buttons = document.querySelectorAll('#ishiharaOptions .answer-btn');
+
+        buttons.forEach(btn => {
+            btn.disabled = true;
+            if (btn.textContent == answer) {
+                if (answer === correctAnswer || (answer === '안보임' && plate.difficulty === 'very_hard')) {
+                    btn.classList.add('correct');
+                    testResults.ishihara.push({ plate: currentPlateIndex, correct: true, difficulty: plate.difficulty });
+                    showToast('정답입니다! ✅');
+                } else {
+                    btn.classList.add('incorrect');
+                    testResults.ishihara.push({ plate: currentPlateIndex, correct: false, difficulty: plate.difficulty });
+                    showToast(`틀렸습니다. 정답은 ${correctAnswer}입니다.`);
+                }
+            }
+        });
+
+        // 2초 후 자동으로 다음 문제로
+        autoProgressTimer = setTimeout(() => {
+            nextIshiharaPlate();
+        }, 2000);
+    }
+
+    // 다음 이시하라 플레이트
+    function nextIshiharaPlate() {
+        currentPlateIndex++;
+
+        if (currentPlateIndex >= ishiharaPlates.length) {
+            currentPlateIndex = 0;
+            showToast('이시하라 테스트를 완료했습니다! 다음 테스트로 이동하세요.');
+        } else {
+            generateIshiharaPlate();
+        }
+
+        updateProgress();
+    }
+
+    // 색상 배열 테스트 생성
+    function generateColorArrangement() {
+        const container = document.getElementById('colorArrangement');
+        container.innerHTML = '';
+
+        // Farnsworth D-15 색상 (더 정확한 색상값)
+        const colors = [
+            '#FF0000', '#FF2200', '#FF4400', '#FF6600', '#FF8800',
+            '#FFAA00', '#FFCC00', '#FFEE00', '#EEFF00', '#CCFF00',
+            '#AAFF00', '#88FF00', '#66FF00', '#44FF00', '#22FF00'
+        ];
+
+        // 색상 섞기
+        const shuffled = [...colors].sort(() => Math.random() - 0.5);
+
+        shuffled.forEach((color, index) => {
+            const tile = document.createElement('div');
+            tile.className = 'color-tile';
+            tile.style.backgroundColor = color;
+            tile.draggable = true;
+            tile.dataset.color = color;
+            tile.dataset.index = index;
+
+            // 드래그 이벤트
+            tile.addEventListener('dragstart', handleDragStart);
+            tile.addEventListener('dragover', handleDragOver);
+            tile.addEventListener('drop', handleDrop);
+            tile.addEventListener('dragend', handleDragEnd);
+
+            // 터치 이벤트 추가
+            tile.addEventListener('touchstart', handleTouchStart, { passive: false });
+            tile.addEventListener('touchmove', handleTouchMove, { passive: false });
+            tile.addEventListener('touchend', handleTouchEnd, { passive: false });
+
+            container.appendChild(tile);
+        });
+    }
+
+    // 드래그 핸들러
+    let draggedElement = null;
+
+    function handleDragStart(e) {
+        draggedElement = this;
+        this.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', this.innerHTML);
+    }
+
+    function handleDragOver(e) {
+        if (e.preventDefault) {
+            e.preventDefault();
+        }
+        e.dataTransfer.dropEffect = 'move';
+        return false;
+    }
+
+    function handleDrop(e) {
+        if (e.stopPropagation) {
+            e.stopPropagation();
+        }
+
+        if (draggedElement !== this) {
+            const container = document.getElementById('colorArrangement');
+            const allTiles = [...container.children];
+            const draggedIndex = allTiles.indexOf(draggedElement);
+            const targetIndex = allTiles.indexOf(this);
+
+            if (draggedIndex < targetIndex) {
+                container.insertBefore(draggedElement, this.nextSibling);
+            } else {
+                container.insertBefore(draggedElement, this);
+            }
+        }
+
+        return false;
+    }
+
+    function handleDragEnd(e) {
+        this.classList.remove('dragging');
+    }
+
+    // 터치 이벤트 핸들러
+    let touchItem = null;
+
+    function handleTouchStart(e) {
+        touchItem = this;
+        this.classList.add('dragging');
+        e.preventDefault();
+    }
+
+    function handleTouchMove(e) {
+        if (!touchItem) return;
+
+        const touch = e.touches[0];
+        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+
+        if (elementBelow && elementBelow.classList.contains('color-tile') && elementBelow !== touchItem) {
+            const container = document.getElementById('colorArrangement');
+            const allTiles = [...container.children];
+            const touchIndex = allTiles.indexOf(touchItem);
+            const targetIndex = allTiles.indexOf(elementBelow);
+
+            if (touchIndex < targetIndex) {
+                container.insertBefore(touchItem, elementBelow.nextSibling);
+            } else {
+                container.insertBefore(touchItem, elementBelow);
+            }
+        }
+
+        e.preventDefault();
+    }
+
+    function handleTouchEnd(e) {
+        if (touchItem) {
+            touchItem.classList.remove('dragging');
+            touchItem = null;
+        }
+        e.preventDefault();
+    }
+
+    // 색상 섞기
+    function shuffleColors() {
+        generateColorArrangement();
+        showToast('색상이 다시 섞였습니다! 🔄');
+    }
+
+    // 배열 확인
+    function checkArrangement() {
+        const tiles = document.querySelectorAll('#colorArrangement .color-tile');
+        const currentOrder = Array.from(tiles).map(tile => tile.dataset.color);
+
+        // 정답 순서
+        const correctOrder = [
+            '#FF0000', '#FF2200', '#FF4400', '#FF6600', '#FF8800',
+            '#FFAA00', '#FFCC00', '#FFEE00', '#EEFF00', '#CCFF00',
+            '#AAFF00', '#88FF00', '#66FF00', '#44FF00', '#22FF00'
+        ];
+
+        let correctCount = 0;
+        currentOrder.forEach((color, index) => {
+            if (color === correctOrder[index]) {
+                correctCount++;
+            }
+        });
+
+        const accuracy = (correctCount / correctOrder.length) * 100;
+        testResults.arrangement.push({ accuracy: accuracy });
+
+        if (accuracy === 100) {
+            showToast('완벽합니다! 모든 색상을 올바르게 배열했습니다! 🎉');
+        } else if (accuracy >= 80) {
+            showToast(`좋습니다! ${correctCount}/${correctOrder.length}개를 맞췄습니다.`);
+        } else {
+            showToast(`${correctCount}/${correctOrder.length}개를 맞췄습니다. 다시 시도해보세요.`);
+        }
+
+        updateProgress();
+    }
+
+    // 개선된 란토른 테스트
+    function generateLanternColors() {
+        const colors = ['red', 'yellow', 'green', 'white'];
+        const colorCombinations = [
+            ['red', 'green'],
+            ['red', 'white'],
+            ['green', 'white'],
+            ['yellow', 'red'],
+            ['yellow', 'green'],
+            ['red', 'red'],
+            ['green', 'green'],
+            ['white', 'yellow']
+        ];
+
+        const combination = colorCombinations[Math.floor(Math.random() * colorCombinations.length)];
+        currentLanternColors = combination;
+
+        const light1 = document.getElementById('lanternLight1');
+        const light2 = document.getElementById('lanternLight2');
+
+        // 실제 란토른 테스트의 색상 값
+        const lanternColors = {
+            'red': '#DC143C',
+            'yellow': '#FFD700',
+            'green': '#228B22',
+            'white': '#FFFAFA'
+        };
+
+        light1.style.backgroundColor = lanternColors[combination[0]];
+        light1.style.color = lanternColors[combination[0]];
+
+        light2.style.backgroundColor = lanternColors[combination[1]];
+        light2.style.color = lanternColors[combination[1]];
+    }
+
+    // 란토른 답변 확인
+    function checkLantern(answer) {
+        const correctColor = currentLanternColors[0]; // 위쪽 색상
+        const buttons = document.querySelectorAll('#lantern .answer-btn');
+
+        let isCorrect = false;
+        buttons.forEach(btn => {
+            btn.disabled = true;
+            const btnColor = btn.textContent.toLowerCase();
+            if ((btnColor === '빨강' && answer === 'red') ||
+                (btnColor === '노랑' && answer === 'yellow') ||
+                (btnColor === '초록' && answer === 'green') ||
+                (btnColor === '흰색' && answer === 'white')) {
+                if (answer === correctColor) {
+                    btn.classList.add('correct');
+                    isCorrect = true;
+                } else {
+                    btn.classList.add('incorrect');
+                }
+            }
+        });
+
+        testResults.lantern.push({
+            correct: isCorrect,
+            combination: currentLanternColors,
+            answered: answer
+        });
+
+        const koreanColor = {
+            'red': '빨강',
+            'yellow': '노랑',
+            'green': '초록',
+            'white': '흰색'
+        };
+
+        if (isCorrect) {
+            showToast('정답입니다! ✅');
+        } else {
+            showToast(`틀렸습니다. 정답은 ${koreanColor[correctColor]}입니다.`);
+        }
+
+        // 2초 후 자동으로 다음 색상으로
+        autoProgressTimer = setTimeout(() => {
+            buttons.forEach(btn => {
+                btn.disabled = false;
+                btn.classList.remove('correct', 'incorrect');
+            });
+            generateLanternColors();
+            updateProgress();
+        }, 2000);
+    }
+
+    // 아노말로스코프 업데이트
+    document.getElementById('redMixer').addEventListener('input', updateMixedColor);
+    document.getElementById('greenMixer').addEventListener('input', updateMixedColor);
+
+    function updateMixedColor() {
+        const red = document.getElementById('redMixer').value;
+        const green = document.getElementById('greenMixer').value;
+        const mixedColor = document.getElementById('mixedColor');
+
+        document.getElementById('redValue').textContent = red;
+        document.getElementById('greenValue').textContent = green;
+
+        mixedColor.style.backgroundColor = `rgb(${red}, ${green}, 0)`;
+    }
+
+    // 색상 일치 확인
+    function checkColorMatch() {
+        const red = parseInt(document.getElementById('redMixer').value);
+        const green = parseInt(document.getElementById('greenMixer').value);
+
+        // 노란색에 가까운지 확인 (대략 R:255, G:255)
+        const redDiff = Math.abs(red - 255);
+        const greenDiff = Math.abs(green - 255);
+        const totalDiff = redDiff + greenDiff;
+
+        const accuracy = Math.max(0, 100 - (totalDiff / 5.1));
+        testResults.anomaloscope.push({ red, green, accuracy });
+
+        if (accuracy >= 90) {
+            showToast('완벽합니다! 노란색과 일치합니다! 🎯');
+        } else if (accuracy >= 70) {
+            showToast('거의 맞았습니다! 조금만 더 조정해보세요.');
+        } else {
+            showToast('색상이 많이 다릅니다. 다시 조정해보세요.');
+        }
+
+        updateProgress();
+    }
+
+    // 개선된 대비 테스트
+    function generateContrastTest() {
+        const grid = document.getElementById('contrastGrid');
+        grid.innerHTML = '';
+
+        // 난이도별 색상 설정
+        const colorSets = [
+            // 레벨 1 - 쉬움 (빨강-초록)
+            { base: { r: 200, g: 100, b: 100 }, diff: 30, type: 'red-green' },
+            // 레벨 2 - 보통 (파랑-노랑)
+            { base: { r: 100, g: 100, b: 200 }, diff: 25, type: 'blue-yellow' },
+            // 레벨 3 - 어려움 (보라-초록)
+            { base: { r: 150, g: 100, b: 200 }, diff: 20, type: 'purple-green' },
+            // 레벨 4 - 매우 어려움 (주황-분홍)
+            { base: { r: 255, g: 180, b: 120 }, diff: 15, type: 'orange-pink' },
+            // 레벨 5 - 극한 (회색 계열)
+            { base: { r: 150, g: 150, b: 150 }, diff: 10, type: 'gray' }
+        ];
+
+        const currentSet = colorSets[contrastLevel - 1];
+        const positions = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+        const differentIndex = Math.floor(Math.random() * 9);
+
+        positions.forEach((pos, index) => {
+            const card = document.createElement('div');
+            card.className = 'contrast-card';
+
+            if (index === differentIndex) {
+                // 다른 색상
+                const sign = Math.random() > 0.5 ? 1 : -1;
+                card.style.backgroundColor = `rgb(
+                        ${Math.max(0, Math.min(255, currentSet.base.r + sign * currentSet.diff))}, 
+                        ${Math.max(0, Math.min(255, currentSet.base.g + sign * currentSet.diff))}, 
+                        ${Math.max(0, Math.min(255, currentSet.base.b + sign * currentSet.diff))}
+                    )`;
+                card.dataset.different = 'true';
+            } else {
+                card.style.backgroundColor = `rgb(${currentSet.base.r}, ${currentSet.base.g}, ${currentSet.base.b})`;
+                card.dataset.different = 'false';
+            }
+
+            card.addEventListener('click', checkContrast);
+            grid.appendChild(card);
+        });
+
+        // 난이도 표시 업데이트
+        document.getElementById('contrastLevel').textContent = contrastLevel;
+    }
+
+    // 대비 확인
+    function checkContrast(e) {
+        const cards = document.querySelectorAll('.contrast-card');
+        const isDifferent = e.target.dataset.different === 'true';
+
+        cards.forEach(card => {
+            card.style.pointerEvents = 'none';
+            if (card.dataset.different === 'true') {
+                card.innerHTML = '✓';
+                card.style.color = 'white';
+                card.style.textShadow = '2px 2px 4px rgba(0,0,0,0.5)';
+            }
+        });
+
+        if (isDifferent) {
+            testResults.contrast.push({ correct: true, level: contrastLevel });
+            showToast(`정답입니다! 레벨 ${contrastLevel} 클리어! 👁️`);
+
+            // 다음 레벨로
+            if (contrastLevel < 5) {
+                contrastLevel++;
+            } else {
+                showToast('모든 레벨을 완료했습니다! 🎉');
+                contrastLevel = 1;
+            }
+        } else {
+            testResults.contrast.push({ correct: false, level: contrastLevel });
+            showToast('틀렸습니다. 다시 시도해보세요.');
+        }
+
+        // 1.5초 후 다음 테스트로
+        autoProgressTimer = setTimeout(() => {
+            generateContrastTest();
+            updateProgress();
+        }, 1500);
+    }
+
+    // 색상 명명 테스트 생성
+    function generateColorNaming() {
+        const colors = [
+            { color: '#FF0000', names: ['빨강', '빨간색', '적색', 'red'] },
+            { color: '#00FF00', names: ['초록', '초록색', '녹색', 'green'] },
+            { color: '#0000FF', names: ['파랑', '파란색', '청색', 'blue'] },
+            { color: '#FFFF00', names: ['노랑', '노란색', '황색', 'yellow'] },
+            { color: '#FF00FF', names: ['보라', '보라색', '자주색', 'purple', 'magenta'] },
+            { color: '#00FFFF', names: ['하늘', '하늘색', '청록색', 'cyan'] },
+            { color: '#FFA500', names: ['주황', '주황색', '오렌지', 'orange'] },
+            { color: '#FFC0CB', names: ['분홍', '분홍색', '핑크', 'pink'] },
+            { color: '#800080', names: ['보라', '보라색', '자주', 'purple'] },
+            { color: '#A52A2A', names: ['갈색', '브라운', 'brown'] },
+            { color: '#808080', names: ['회색', '그레이', 'gray', 'grey'] },
+            { color: '#000000', names: ['검정', '검은색', '흑색', 'black'] }
+        ];
+
+        const randomColor = colors[Math.floor(Math.random() * colors.length)];
+        const sample = document.getElementById('colorSample');
+
+        sample.style.backgroundColor = randomColor.color;
+        sample.dataset.correctNames = JSON.stringify(randomColor.names);
+    }
+
+    // 색상 이름 확인
+    function checkColorName() {
+        const input = document.getElementById('colorNameInput').value.trim().toLowerCase();
+        const correctNames = JSON.parse(document.getElementById('colorSample').dataset.correctNames);
+
+        if (correctNames.includes(input)) {
+            testResults.naming.push({ correct: true });
+            showToast('정답입니다! 색상을 정확히 인식했습니다! 🎨');
+
+            setTimeout(() => {
+                document.getElementById('colorNameInput').value = '';
+                generateColorNaming();
+                updateProgress();
+            }, 1500);
+        } else {
+            testResults.naming.push({ correct: false });
+            showToast('틀렸습니다. 다시 시도해보세요.');
+        }
+    }
+
+    // 시뮬레이터 초기화
+    function initializeSimulator() {
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // 샘플 이미지 그리기
+        drawSampleImage(ctx, 'normal');
+    }
+
+    // 샘플 이미지 그리기
+    function drawSampleImage(ctx, visionType) {
+        const width = ctx.canvas.width;
+        const height = ctx.canvas.height;
+
+        // 색상 팔레트
+        const colors = [
+            '#FF0000', '#00FF00', '#0000FF', '#FFFF00',
+            '#FF00FF', '#00FFFF', '#FFA500', '#800080'
+        ];
+
+        // 그리드 그리기
+        const gridSize = 8;
+        const cellWidth = width / gridSize;
+        const cellHeight = height / gridSize;
+
+        for (let i = 0; i < gridSize; i++) {
+            for (let j = 0; j < gridSize; j++) {
+                const colorIndex = (i + j) % colors.length;
+                let color = colors[colorIndex];
+
+                // 색각 이상 시뮬레이션
+                if (visionType !== 'normal') {
+                    color = simulateColorBlindness(color, visionType);
+                }
+
+                ctx.fillStyle = color;
+                ctx.fillRect(i * cellWidth, j * cellHeight, cellWidth, cellHeight);
+            }
+        }
+
+        // 텍스트 추가
+        ctx.fillStyle = visionType === 'normal' ? '#000000' : simulateColorBlindness('#000000', visionType);
+        ctx.font = 'bold 20px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(visionType.toUpperCase(), width / 2, height / 2);
+    }
+
+    // 색각 이상 시뮬레이션
+    function simulateColorBlindness(hexColor, type) {
+        const rgb = hexToRgb(hexColor);
+        let newRgb;
+
+        switch (type) {
+            case 'protanopia': // 적색맹
+                newRgb = {
+                    r: 0.567 * rgb.r + 0.433 * rgb.g,
+                    g: 0.558 * rgb.r + 0.442 * rgb.g,
+                    b: 0.242 * rgb.g + 0.758 * rgb.b
+                };
+                break;
+            case 'deuteranopia': // 녹색맹
+                newRgb = {
+                    r: 0.625 * rgb.r + 0.375 * rgb.g,
+                    g: 0.7 * rgb.r + 0.3 * rgb.g,
+                    b: 0.3 * rgb.g + 0.7 * rgb.b
+                };
+                break;
+            case 'tritanopia': // 청색맹
+                newRgb = {
+                    r: 0.95 * rgb.r + 0.05 * rgb.g,
+                    g: 0.433 * rgb.g + 0.567 * rgb.b,
+                    b: 0.475 * rgb.g + 0.525 * rgb.b
+                };
+                break;
+            case 'achromatopsia': // 전색맹
+                const gray = 0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b;
+                newRgb = { r: gray, g: gray, b: gray };
+                break;
+            default:
+                newRgb = rgb;
+        }
+
+        return rgbToHex(
+            Math.round(newRgb.r),
+            Math.round(newRgb.g),
+            Math.round(newRgb.b)
+        );
+    }
+
+    // 색상 변환 유틸리티
+    function hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : null;
+    }
+
+    function rgbToHex(r, g, b) {
+        return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    }
+
+    // 시각 유형 설정
+    function setVisionType(type) {
+        const buttons = document.querySelectorAll('.vision-type-btn');
+        buttons.forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+        drawSampleImage(ctx, type);
+
+        // 시각 정보 업데이트
+        const visionInfo = document.getElementById('visionInfo');
+        let infoHTML = '';
+
+        switch (type) {
+            case 'normal':
+                infoHTML = `
+                        <h4>정상 시각</h4>
+                        <p>모든 색상을 정상적으로 구분할 수 있습니다.</p>
+                    `;
+                break;
+            case 'protanopia':
+                infoHTML = `
+                        <h4>적색맹 (Protanopia)</h4>
+                        <p>빨간색을 감지하는 원추세포가 없어 빨강-초록 구분이 어렵습니다.</p>
+                        <p><strong>일상생활 어려움:</strong></p>
+                        <ul class="difficulty-list">
+                            <li>🚦 빨간 신호등이 어둡게 보여 위험할 수 있음</li>
+                            <li>🍎 익은 과일과 덜 익은 과일 구분 어려움</li>
+                            <li>🥩 고기의 익은 정도 판단 어려움</li>
+                            <li>📊 빨강-초록 그래프 해석 어려움</li>
+                        </ul>
+                    `;
+                break;
+            case 'deuteranopia':
+                infoHTML = `
+                        <h4>녹색맹 (Deuteranopia)</h4>
+                        <p>초록색을 감지하는 원추세포가 없어 빨강-초록 구분이 어렵습니다.</p>
+                        <p><strong>일상생활 어려움:</strong></p>
+                        <ul class="difficulty-list">
+                            <li>🚦 빨간색과 초록색 신호등 구분 어려움</li>
+                            <li>🌿 자연에서 초록색 변화 감지 어려움</li>
+                            <li>👔 빨강-초록 계열 옷 매칭 어려움</li>
+                            <li>🎮 게임에서 팀 색상 구분 어려움</li>
+                        </ul>
+                    `;
+                break;
+            case 'tritanopia':
+                infoHTML = `
+                        <h4>청색맹 (Tritanopia)</h4>
+                        <p>파란색을 감지하는 원추세포가 없어 파랑-노랑 구분이 어렵습니다.</p>
+                        <p><strong>일상생활 어려움:</strong></p>
+                        <ul class="difficulty-list">
+                            <li>🌅 하늘색과 분홍색 구분 어려움</li>
+                            <li>💎 파란색과 초록색 구분 어려움</li>
+                            <li>🎨 예술 작품의 색상 감상 제한</li>
+                            <li>🖥️ 디지털 화면의 색상 구분 어려움</li>
+                        </ul>
+                    `;
+                break;
+            case 'achromatopsia':
+                infoHTML = `
+                        <h4>전색맹 (Achromatopsia)</h4>
+                        <p>모든 색상을 감지할 수 없어 흑백으로만 세상을 봅니다.</p>
+                        <p><strong>일상생활 어려움:</strong></p>
+                        <ul class="difficulty-list">
+                            <li>🎨 모든 색상 정보 인지 불가</li>
+                            <li>☀️ 밝은 빛에 매우 민감함</li>
+                            <li>📱 색상 코드로 된 정보 해석 불가</li>
+                            <li>🚦 신호등 위치로만 구분 가능</li>
+                        </ul>
+                    `;
+                break;
+        }
+
+        visionInfo.innerHTML = infoHTML;
+    }
+
+    // 종합 분석 실행
+    function runComprehensiveAnalysis() {
+        const loader = document.getElementById('analysisLoader');
+        loader.style.display = 'block';
+
+        setTimeout(() => {
+            loader.style.display = 'none';
+            calculateResults();
+            showResults();
+        }, 2000);
+    }
+
+    // 결과 계산
+    function calculateResults() {
+        let totalScore = 0;
+        let redScore = 0;
+        let greenScore = 0;
+        let blueScore = 0;
+        let contrastScore = 0;
+
+        // 이시하라 테스트 점수
+        if (testResults.ishihara.length > 0) {
+            const ishiharaScore = testResults.ishihara.filter(r => r.correct).length / testResults.ishihara.length;
+            totalScore += ishiharaScore * 25;
+            redScore += ishiharaScore * 50;
+            greenScore += ishiharaScore * 50;
+        }
+
+        // 색상 배열 점수
+        if (testResults.arrangement.length > 0) {
+            const avgArrangement = testResults.arrangement.reduce((sum, r) => sum + r.accuracy, 0) / testResults.arrangement.length;
+            totalScore += avgArrangement * 0.25;
+            redScore += avgArrangement * 0.3;
+            greenScore += avgArrangement * 0.3;
+            blueScore += avgArrangement * 0.4;
+        }
+
+        // 란토른 테스트 점수
+        if (testResults.lantern.length > 0) {
+            const lanternScore = testResults.lantern.filter(r => r.correct).length / testResults.lantern.length;
+            totalScore += lanternScore * 20;
+            redScore += lanternScore * 40;
+            greenScore += lanternScore * 40;
+        }
+
+        // 대비 테스트 점수
+        if (testResults.contrast.length > 0) {
+            const contrastTestScore = testResults.contrast.filter(r => r.correct).length / testResults.contrast.length;
+            const avgLevel = testResults.contrast.reduce((sum, r) => sum + r.level, 0) / testResults.contrast.length;
+            totalScore += contrastTestScore * 15;
+            contrastScore = (contrastTestScore * 100) * (avgLevel / 5);
+        }
+
+        // 색상 명명 점수
+        if (testResults.naming.length > 0) {
+            const namingScore = testResults.naming.filter(r => r.correct).length / testResults.naming.length;
+            totalScore += namingScore * 15;
+            blueScore += namingScore * 30;
+        }
+
+        // 최종 점수 저장
+        testResults.comprehensive = {
+            total: Math.min(100, totalScore),
+            red: Math.min(100, redScore),
+            green: Math.min(100, greenScore),
+            blue: Math.min(100, blueScore),
+            contrast: Math.min(100, contrastScore)
+        };
+    }
+
+    // 결과 표시
+    function showResults() {
+        const container = document.getElementById('resultsContainer');
+        container.classList.add('show');
+
+        // 점수 애니메이션
+        animateScore('resultScore', testResults.comprehensive.total);
+        animateScore('redScore', testResults.comprehensive.red);
+        animateScore('greenScore', testResults.comprehensive.green);
+        animateScore('blueScore', testResults.comprehensive.blue);
+        animateScore('contrastScore', testResults.comprehensive.contrast);
+
+        // 결과 요약
+        const summary = document.getElementById('resultSummary');
+        if (testResults.comprehensive.total >= 90) {
+            summary.textContent = '정상적인 색각을 가지고 있습니다.';
+        } else if (testResults.comprehensive.total >= 70) {
+            summary.textContent = '경미한 색각 이상이 의심됩니다.';
+        } else if (testResults.comprehensive.total >= 50) {
+            summary.textContent = '중등도의 색각 이상이 의심됩니다.';
+        } else {
+            summary.textContent = '심한 색각 이상이 의심됩니다. 전문의 상담을 권장합니다.';
+        }
+
+        // 권장사항 생성
+        generateRecommendations();
+
+        // 스크롤
+        container.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // 점수 애니메이션
+    function animateScore(elementId, targetScore) {
+        const element = document.getElementById(elementId);
+        const isChart = element.classList.contains('chart-fill');
+        let currentScore = 0;
+        const increment = targetScore / 50;
+
+        const timer = setInterval(() => {
+            currentScore += increment;
+            if (currentScore >= targetScore) {
+                currentScore = targetScore;
+                clearInterval(timer);
+            }
+
+            if (isChart) {
+                element.style.width = currentScore + '%';
+                element.textContent = Math.round(currentScore) + '%';
+            } else {
+                element.textContent = Math.round(currentScore) + '%';
+            }
+        }, 20);
+    }
+
+    // 권장사항 생성
+    function generateRecommendations() {
+        const list = document.getElementById('recommendationsList');
+        list.innerHTML = '';
+
+        const recommendations = [];
+
+        if (testResults.comprehensive.red < 70) {
+            recommendations.push('적색 구분에 어려움이 있을 수 있습니다. 빨간색 신호등 주의가 필요합니다.');
+        }
+
+        if (testResults.comprehensive.green < 70) {
+            recommendations.push('녹색 구분에 어려움이 있을 수 있습니다. 교통 신호 확인 시 주의하세요.');
+        }
+
+        if (testResults.comprehensive.blue < 70) {
+            recommendations.push('청색 구분에 어려움이 있을 수 있습니다. 파란색 계열 구분에 주의하세요.');
+        }
+
+        if (testResults.comprehensive.contrast < 70) {
+            recommendations.push('색상 대비 감도가 낮습니다. 밝은 조명 환경을 유지하세요.');
+        }
+
+        if (testResults.comprehensive.total < 70) {
+            recommendations.push('안과 전문의 상담을 받아 정확한 진단을 받으시기 바랍니다.');
+            recommendations.push('색각 보정 안경이나 앱을 사용하면 도움이 될 수 있습니다.');
+        }
+
+        if (recommendations.length === 0) {
+            recommendations.push('정상적인 색각을 가지고 있습니다. 정기적인 검진을 권장합니다.');
+        }
+
+        recommendations.forEach(rec => {
+            const item = document.createElement('div');
+            item.className = 'recommendation-item';
+            item.textContent = rec;
+            list.appendChild(item);
+        });
+    }
+
+    // 진행률 업데이트
+    function updateProgress() {
+        let completedTests = 0;
+        const totalTests = 7;
+
+        if (testResults.ishihara.length > 0) completedTests++;
+        if (testResults.arrangement.length > 0) completedTests++;
+        if (testResults.lantern.length > 0) completedTests++;
+        if (testResults.anomaloscope.length > 0) completedTests++;
+        if (testResults.contrast.length > 0) completedTests++;
+        if (testResults.naming.length > 0) completedTests++;
+        if (Object.keys(testResults.comprehensive).length > 0) completedTests++;
+
+        const progress = (completedTests / totalTests) * 100;
+        document.getElementById('progressFill').style.width = progress + '%';
+    }
+
+    // 토스트 메시지
+    function showToast(message) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.classList.add('show');
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    }
+
+    // 도움말 표시
+    function showHelp() {
+        document.getElementById('helpModal').classList.add('show');
+    }
+
+    // 도움말 숨기기
+    function hideHelp() {
+        document.getElementById('helpModal').classList.remove('show');
+    }
+
+    // 결과 복사
+    function copyResults() {
+        const report = `색맹·색약 종합 테스트 결과
+================================
+테스트 일시: ${new Date().toLocaleString('ko-KR')}
+
+종합 점수: ${testResults.comprehensive.total}%
+- 적색 감지력: ${testResults.comprehensive.red}%
+- 녹색 감지력: ${testResults.comprehensive.green}%
+- 청색 감지력: ${testResults.comprehensive.blue}%
+- 대비 민감도: ${testResults.comprehensive.contrast}%
+
+세부 테스트 결과:
+- 이시하라 테스트: ${testResults.ishihara.filter(r => r.correct).length}/${testResults.ishihara.length}
+- 색상 배열: ${testResults.arrangement.length > 0 ? testResults.arrangement[0].accuracy + '%' : '미실시'}
+- 란토른 테스트: ${testResults.lantern.filter(r => r.correct).length}/${testResults.lantern.length}
+- 대비 테스트: ${testResults.contrast.filter(r => r.correct).length}/${testResults.contrast.length}
+
+※ 이 결과는 참고용이며, 정확한 진단은 안과 전문의를 방문하세요.
+
+© 2025 큐레이터 단비`;
+
+        navigator.clipboard.writeText(report).then(() => {
+            showToast('결과가 클립보드에 복사되었습니다! 📋');
+        }).catch(err => {
+            console.error('복사 실패:', err);
+            showToast('복사에 실패했습니다. 다시 시도해주세요.');
+        });
+    }
+
+    // 결과 다운로드
+    function downloadReport() {
+        const report = `색맹·색약 종합 테스트 결과 보고서
+================================
+테스트 일시: ${new Date().toLocaleString('ko-KR')}
+
+종합 점수: ${testResults.comprehensive.total}%
+- 적색 감지력: ${testResults.comprehensive.red}%
+- 녹색 감지력: ${testResults.comprehensive.green}%
+- 청색 감지력: ${testResults.comprehensive.blue}%
+- 대비 민감도: ${testResults.comprehensive.contrast}%
+
+세부 테스트 결과:
+- 이시하라 테스트: ${testResults.ishihara.filter(r => r.correct).length}/${testResults.ishihara.length}
+- 색상 배열: ${testResults.arrangement.length > 0 ? testResults.arrangement[0].accuracy + '%' : '미실시'}
+- 란토른 테스트: ${testResults.lantern.filter(r => r.correct).length}/${testResults.lantern.length}
+- 대비 테스트: ${testResults.contrast.filter(r => r.correct).length}/${testResults.contrast.length}
+
+※ 이 결과는 참고용이며, 정확한 진단은 안과 전문의를 방문하세요.
+
+© 2025 큐레이터 단비`;
+
+        const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `색각테스트_결과_${new Date().toISOString().slice(0, 10)}.txt`;
+        link.click();
+
+        showToast('결과가 다운로드되었습니다! 📥');
+    }
+
+    // 전체 초기화
+    function resetAllTests() {
+        if (confirm('모든 테스트 결과가 초기화됩니다. 계속하시겠습니까?')) {
+            // 자동 진행 타이머 취소
+            if (autoProgressTimer) {
+                clearTimeout(autoProgressTimer);
+                autoProgressTimer = null;
+            }
+
+            testResults = {
+                ishihara: [],
+                arrangement: [],
+                lantern: [],
+                anomaloscope: [],
+                contrast: [],
+                naming: [],
+                comprehensive: {}
+            };
+
+            currentPlateIndex = 0;
+            contrastLevel = 1;
+            document.getElementById('resultsContainer').classList.remove('show');
+            document.getElementById('progressFill').style.width = '0%';
+
+            showTest('ishihara');
+            initializeTests();
+
+            showToast('테스트가 초기화되었습니다. 처음부터 시작하세요! 🔄');
+        }
+    }
+
+    // 키보드 접근성
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            hideHelp();
+        }
+    });
+
+    // 페이지 로드 완료 시 애니메이션
+    window.addEventListener('load', function() {
+        document.body.style.opacity = '1';
+    });
+
+    // 보안 시스템
+    (function() {
+        'use strict';
+
+        // 우클릭 방지
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            showToast('⚠️ 우클릭이 비활성화되어 있습니다.');
+            return false;
+        });
+
+        // 개발자 도구 감지
+        let devtools = { open: false, orientation: null };
+        const threshold = 160;
+
+        setInterval(() => {
+            if (window.outerHeight - window.innerHeight > threshold ||
+                window.outerWidth - window.innerWidth > threshold) {
+                if (!devtools.open) {
+                    devtools.open = true;
+                    console.clear();
+                    console.log('%c보안 경고!', 'color: red; font-size: 30px; font-weight: bold;');
+                    console.log('%c© 2026 ....', 'color: red; font-size: 14px;');
+                }
+            } else {
+                devtools.open = false;
+            }
+        }, 500);
+
+        // 키보드 단축키 방지
+        document.addEventListener('keydown', function(e) {
+            // F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
+            if (e.keyCode === 123 ||
+                (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) ||
+                (e.ctrlKey && e.keyCode === 85)) {
+                e.preventDefault();
+                showToast('⚠️ 개발자 도구 사용이 제한되어 있습니다.');
+                return false;
+            }
+
+            // Ctrl+S (저장 방지)
+            if (e.ctrlKey && e.keyCode === 83) {
+                e.preventDefault();
+                showToast('⚠️ 페이지 저장이 제한되어 있습니다.');
+                return false;
+            }
+        });
+
+        // 텍스트 선택 방지
+        document.addEventListener('selectstart', function(e) {
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+            }
+        });
+
+        // 드래그 방지
+        document.addEventListener('dragstart', function(e) {
+            if (!e.target.classList.contains('color-tile')) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    })();
+</script>
+</body>
+</html>
