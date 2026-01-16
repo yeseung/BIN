@@ -1,0 +1,917 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>국가코드 검색기 | ISO, 국가번호, 수도, 통화코드, 국제 전화 코드</title>
+    <meta name="description" content="ISO(Alpha-2/3/숫자), 수도, 통화코드, 국제전화코드 등 248개국 국가코드를 가장 빠르게 검색하세요." />
+    <meta name="keywords" content="국가코드, ISO 3166-1, Alpha-2, Alpha-3, 국제전화코드, 통화코드, 수도, 국가번호, ccTLD" />
+    <meta name="robots" content="index,follow" />
+    <meta name="theme-color" content="#ffffff" />
+
+    <style>
+        :root{
+            --bg:#ffffff;
+            --panel:#ffffff;
+            --text:#0f172a;
+            --muted:#64748b;
+            --border:#e5e7eb;
+            --shadow: 0 10px 30px rgba(2,6,23,.06);
+            --shadow2: 0 6px 18px rgba(2,6,23,.06);
+            --primary:#2563eb;
+            --primary2:#1d4ed8;
+            --ok:#16a34a;
+            --warn:#f59e0b;
+            --danger:#ef4444;
+            --radius:16px;
+            --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+            --sans: ui-sans-serif, system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", Roboto, Arial, sans-serif;
+        }
+        *{ box-sizing:border-box; }
+        html,body{ height:100%; }
+        body{
+            margin:0;
+            font-family: var(--sans);
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        .wrap{
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 26px 18px 60px;
+        }
+
+        /* Header */
+        .hero{
+            display:flex;
+            gap:14px;
+            align-items:flex-start;
+            justify-content:space-between;
+            flex-wrap:wrap;
+            margin-bottom: 16px;
+        }
+        .title{
+            font-size: 26px;
+            letter-spacing:-.02em;
+            margin:0;
+        }
+        .subtitle{
+            margin:8px 0 0;
+            color: var(--muted);
+            max-width: 820px;
+        }
+        .badges{
+            display:flex;
+            gap:8px;
+            flex-wrap:wrap;
+            align-items:center;
+            margin-top: 10px;
+        }
+        .badge{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            padding: 8px 10px;
+            border:1px solid var(--border);
+            border-radius: 999px;
+            background:#fff;
+            box-shadow: var(--shadow2);
+            color: var(--muted);
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        .dot{
+            width:8px;height:8px;border-radius:99px;background:var(--ok);
+        }
+
+        /* Search panel */
+        .panel{
+            border:1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--panel);
+            box-shadow: var(--shadow);
+            padding: 16px;
+            margin-top: 12px;
+        }
+        .row{
+            display:grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            align-items: start;
+        }
+        @media (max-width: 720px){
+            .row{ grid-template-columns: 1fr; }
+        }
+
+        .inputWrap{
+            position:relative;
+        }
+        .label{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            margin: 0 0 8px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+        .helpTiny{
+            font-size:12px;
+            color: var(--muted);
+            opacity:.9;
+        }
+        input[type="text"]{
+            width:100%;
+            padding: 14px 14px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            outline:none;
+            font-size: 16px;
+            background:#fff;
+            transition: box-shadow .15s, border-color .15s;
+        }
+        input[type="text"]:focus{
+            border-color: rgba(37,99,235,.45);
+            box-shadow: 0 0 0 4px rgba(37,99,235,.10);
+        }
+
+        .btns{
+            display:flex;
+            gap:10px;
+            justify-content:flex-end;
+            flex-wrap:wrap;
+        }
+        .btn{
+            cursor:pointer;
+            border:1px solid var(--border);
+            background:#fff;
+            color: var(--text);
+            border-radius: 14px;
+            padding: 12px 14px;
+            font-size: 14px;
+            transition: transform .05s ease, box-shadow .15s, border-color .15s;
+            box-shadow: var(--shadow2);
+            user-select:none;
+        }
+        .btn:hover{
+            border-color: rgba(2,6,23,.16);
+        }
+        .btn:active{ transform: translateY(1px); }
+        .btnPrimary{
+            border-color: rgba(37,99,235,.25);
+            background: linear-gradient(180deg, rgba(37,99,235,.95), rgba(29,78,216,.95));
+            color:#fff;
+        }
+        .btnPrimary:hover{
+            border-color: rgba(37,99,235,.40);
+            box-shadow: 0 10px 24px rgba(37,99,235,.18);
+        }
+
+        /* Autocomplete dropdown */
+        .ac{
+            position:absolute;
+            z-index: 30;
+            left:0; right:0;
+            margin-top: 8px;
+            border:1px solid var(--border);
+            background:#fff;
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+            overflow:hidden;
+            display:none;
+        }
+        .acHeader{
+            padding: 10px 12px;
+            border-bottom:1px solid var(--border);
+            color: var(--muted);
+            font-size: 12px;
+            background: #fafafa;
+            display:flex;
+            justify-content:space-between;
+            gap:12px;
+        }
+        .acList{ max-height: 320px; overflow:auto; }
+        .acItem{
+            padding: 10px 12px;
+            cursor:pointer;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap: 12px;
+        }
+        .acItem:hover{ background:#f8fafc; }
+        .acLeft{
+            display:flex;
+            flex-direction:column;
+            gap:2px;
+            min-width: 0;
+        }
+        .acTitle{
+            font-weight: 700;
+            font-size: 14px;
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+        }
+        .acSub{
+            color: var(--muted);
+            font-size: 12px;
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+        }
+        .acRight{
+            display:flex;
+            gap:6px;
+            align-items:center;
+            flex-shrink:0;
+        }
+        .pill{
+            font-family: var(--mono);
+            font-size: 12px;
+            padding: 4px 8px;
+            border:1px solid var(--border);
+            border-radius: 999px;
+            color: var(--muted);
+            background:#fff;
+        }
+
+        /* Results */
+        .metaBar{
+            margin-top: 14px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap: 10px;
+            flex-wrap:wrap;
+            color: var(--muted);
+            font-size: 13px;
+        }
+        .count{
+            display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+        }
+        .count strong{ color: var(--text); }
+        .hint{
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .grid{
+            margin-top: 12px;
+            display:grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 12px;
+        }
+        .card{
+            grid-column: span 12;
+            border:1px solid var(--border);
+            border-radius: var(--radius);
+            background:#fff;
+            box-shadow: var(--shadow2);
+            overflow:hidden;
+        }
+        .cardTop{
+            padding: 14px 14px 10px;
+            border-bottom:1px solid var(--border);
+            display:flex;
+            justify-content:space-between;
+            gap: 10px;
+            flex-wrap:wrap;
+            align-items:flex-start;
+        }
+        .cardTitle{
+            margin:0;
+            font-size: 16px;
+            letter-spacing:-.01em;
+        }
+        .cardTitle small{
+            font-weight: 600;
+            color: var(--muted);
+            margin-left: 8px;
+            font-size: 12px;
+        }
+        .codes{
+            display:flex;
+            flex-wrap:wrap;
+            gap:6px;
+            align-items:center;
+        }
+        .code{
+            font-family: var(--mono);
+            font-size: 12px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border:1px solid var(--border);
+            background:#fff;
+            color: var(--text);
+        }
+        .code b{ color: var(--primary2); }
+        .cardBody{
+            padding: 12px 14px 14px;
+        }
+
+        .kv{
+            display:grid;
+            grid-template-columns: 170px 1fr;
+            gap: 10px 14px;
+            padding: 8px 0;
+            border-bottom:1px dashed #eef2f7;
+        }
+        .kv:last-child{ border-bottom:none; }
+        .k{
+            color: var(--muted);
+            font-size: 13px;
+            display:flex;
+            gap:8px;
+            align-items:center;
+            min-height: 22px;
+        }
+        .v{
+            font-size: 14px;
+            color: var(--text);
+            min-height: 22px;
+            word-break: break-word;
+        }
+        .v .mono{ font-family: var(--mono); }
+        .v .muted{ color: var(--muted); }
+
+        @media (max-width: 720px){
+            .kv{ grid-template-columns: 1fr; }
+            .k{ font-size:12px; }
+            .v{ font-size:14px; }
+        }
+
+        /* Footer note */
+        .footer{
+            margin-top: 22px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+        .footer a{ color: var(--primary2); text-decoration:none; }
+        .footer a:hover{ text-decoration:underline; }
+
+        /* Toast */
+        .toast{
+            position: fixed;
+            left: 50%;
+            bottom: 18px;
+            transform: translateX(-50%);
+            padding: 10px 12px;
+            border:1px solid var(--border);
+            border-radius: 999px;
+            box-shadow: var(--shadow);
+            background:#fff;
+            color: var(--text);
+            font-size: 13px;
+            display:none;
+            z-index: 50;
+        }
+    </style>
+</head>
+
+<body>
+<main class="wrap">
+    <header class="hero">
+        <div>
+            <h1 class="title">국가코드 검색기 <span style="color:var(--muted);font-weight:700;">| ISO · 국가번호 · 수도 · 통화코드 · 국제전화코드</span></h1>
+            <p class="subtitle">
+                <b>KR</b>과 <b>KOR</b>의 차이, <b>미국</b>의 국제전화번호, <b>일본</b>의 통화 코드까지 —
+                흩어진 국가 정보를 한 번에 검색하는 “국가 코드 사전”입니다.
+            </p>
+            <div class="badges">
+                <span class="badge"><span class="dot"></span> 순수 HTML/CSS/JS</span>
+                <span class="badge">⚡ DB/JSON 기반 빠른 검색</span>
+                <span class="badge">🔎 한글/영문/코드 통합 검색</span>
+                <span class="badge">🧠 자동완성 · 오타/별칭 대응(aliases)</span>
+            </div>
+        </div>
+    </header>
+
+    <section class="panel">
+        <div class="row">
+            <div class="inputWrap">
+                <div class="label">
+                    <span>검색어</span>
+                    <span class="helpTiny">예) 한국 / 대한민국 / KR / KOR / 410 / +82 / USD / Tokyo</span>
+                </div>
+                <input id="q" type="text" inputmode="search" autocomplete="off" spellcheck="false"
+                       placeholder="국가명(한/영), ISO, 통화, 수도, 국제전화코드 등 무엇이든 입력하세요" />
+                <div id="ac" class="ac" aria-label="자동완성">
+                    <div class="acHeader">
+                        <span>자동완성</span>
+                        <span id="acMeta">0개</span>
+                    </div>
+                    <div id="acList" class="acList"></div>
+                </div>
+            </div>
+
+            <div class="btns">
+                <button id="btnClear" class="btn" type="button">초기화</button>
+                <button id="btnCopyTop" class="btn btnPrimary" type="button">상단 결과 복사</button>
+            </div>
+        </div>
+
+        <div class="metaBar">
+            <div class="count">
+                <span>데이터: <strong id="total">0</strong>개국</span>
+                <span class="hint">정확한 248개국 데이터는 <span class="mono">countries-248.min.json</span> 로드 시 적용됩니다.</span>
+            </div>
+            <div class="hint" id="status">로딩 중…</div>
+        </div>
+    </section>
+
+    <section class="grid" id="grid" aria-live="polite"></section>
+
+    <p class="footer">
+        ⚙️ 데이터 파일은 같은 폴더에 <span class="mono">countries-248.min.json</span> 이름으로 두는 것을 권장합니다.
+        (CORS 이슈가 있으면 로컬 파일 직접 실행 대신 간단한 로컬 서버로 실행하세요.)
+    </p>
+</main>
+
+<div id="toast" class="toast"></div>
+
+<script>
+    /**
+     * ===== 데이터 스키마(권장) =====
+     * {
+     *   "name_ko": "대한민국",
+     *   "name_en": "Korea, Republic of",
+     *   "official_ko": "대한민국",
+     *   "official_en": "Republic of Korea",
+     *   "aliases": ["한국","남한","Korea","South Korea"],
+     *   "iso2": "KR",
+     *   "iso3": "KOR",
+     *   "iso_numeric": "410",
+     *   "un_m49": "410",
+     *   "fips": "KS",
+     *   "calling_code": "+82",
+     *   "currency_code": "KRW",
+     *   "capital_ko": "서울",
+     *   "capital_en": "Seoul",
+     *   "cctld": ".kr",
+     *   "mcc": "450",
+     *   "gs1": "880",
+     *   "wipo": "KR",
+     *   "vehicle_reg": "ROK",
+     *   "aircraft_reg_prefix": "HL",
+     *   "icao_prefix": "RK",
+     *   "ioc": "KOR",
+     *   "fifa": "KOR"
+     * }
+     */
+
+    const SAMPLE = [
+        {
+            name_ko: "대한민국",
+            name_en: "Korea, Republic of",
+            official_ko: "대한민국",
+            official_en: "Republic of Korea",
+            aliases: ["한국","남한","Korea","South Korea","ROK"],
+            iso2: "KR", iso3: "KOR", iso_numeric: "410", un_m49: "410",
+            calling_code: "+82",
+            currency_code: "KRW",
+            capital_ko: "서울", capital_en: "Seoul",
+            cctld: ".kr",
+            mcc: "450",
+            gs1: "880",
+            ioc: "KOR",
+            fifa: "KOR",
+            icao_prefix: "RK",
+            aircraft_reg_prefix: "HL",
+            vehicle_reg: "ROK"
+        },
+        {
+            name_ko: "미국",
+            name_en: "United States of America",
+            official_ko: "미합중국",
+            official_en: "United States of America",
+            aliases: ["USA","US","America","미합중국"],
+            iso2: "US", iso3: "USA", iso_numeric: "840", un_m49: "840",
+            calling_code: "+1",
+            currency_code: "USD",
+            capital_ko: "워싱턴 D.C.", capital_en: "Washington, D.C.",
+            cctld: ".us",
+            ioc: "USA",
+            fifa: "USA",
+            icao_prefix: "K",
+            aircraft_reg_prefix: "N",
+            vehicle_reg: "USA"
+        },
+        {
+            name_ko: "일본",
+            name_en: "Japan",
+            official_ko: "일본국",
+            official_en: "Japan",
+            aliases: ["JP","JPN","Nippon","Japan"],
+            iso2: "JP", iso3: "JPN", iso_numeric: "392", un_m49: "392",
+            calling_code: "+81",
+            currency_code: "JPY",
+            capital_ko: "도쿄", capital_en: "Tokyo",
+            cctld: ".jp",
+            ioc: "JPN",
+            fifa: "JPN",
+            icao_prefix: "RJ",
+            aircraft_reg_prefix: "JA",
+            vehicle_reg: "J"
+        }
+    ];
+
+    const $ = (sel) => document.querySelector(sel);
+    const q = $("#q");
+    const grid = $("#grid");
+    const totalEl = $("#total");
+    const statusEl = $("#status");
+    const toastEl = $("#toast");
+
+    const ac = $("#ac");
+    const acList = $("#acList");
+    const acMeta = $("#acMeta");
+
+    let DATA = [];
+    let INDEX = []; // {id, ref, text, boostFields}
+    let lastResults = [];
+    let acActiveIndex = -1;
+    let acItems = [];
+
+    function toast(msg){
+        toastEl.textContent = msg;
+        toastEl.style.display = "block";
+        clearTimeout(toast._t);
+        toast._t = setTimeout(()=> toastEl.style.display = "none", 1400);
+    }
+
+    function norm(s){
+        if (s == null) return "";
+        return String(s)
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, " ")
+        .replace(/[\u2000-\u206F\u2E00-\u2E7F'’"“”`~!@#$%^&*()_=+\[\]{}\\|;:,.<>/?-]/g, " ");
+    }
+
+    function digitsOnly(s){
+        return String(s || "").replace(/\D/g, "");
+    }
+
+    function buildIndex(rows){
+        INDEX = rows.map((r, i) => {
+            const parts = [];
+
+            // 이름류
+            parts.push(r.name_ko, r.name_en, r.official_ko, r.official_en);
+
+            // 별칭(강력)
+            if (Array.isArray(r.aliases)) parts.push(...r.aliases);
+
+            // 코드류
+            parts.push(r.iso2, r.iso3, r.iso_numeric, r.un_m49, r.fips);
+            parts.push(r.currency_code, r.calling_code, r.cctld, r.mcc, r.gs1, r.wipo);
+            parts.push(r.vehicle_reg, r.aircraft_reg_prefix, r.icao_prefix, r.ioc, r.fifa);
+
+            // 도시(수도)
+            parts.push(r.capital_ko, r.capital_en);
+
+            // 국제전화코드는 + 제거 숫자도 매칭되도록
+            const callDigits = digitsOnly(r.calling_code);
+            if (callDigits) parts.push(callDigits);
+
+            const text = norm(parts.filter(Boolean).join(" | "));
+
+            return { id:i, ref:r, text };
+        });
+    }
+
+    function scoreMatch(hay, query){
+        // 간단 점수: 포함 + 앞부분 일치 보너스
+        // (필요하면 토큰 기반으로 더 정교하게 확장 가능)
+        if (!query) return 0;
+        let s = 0;
+
+        const idx = hay.indexOf(query);
+        if (idx === -1) return 0;
+
+        // 기본 점수
+        s += 50;
+
+        // 앞부분 일치 보너스
+        if (idx === 0) s += 30;
+
+        // 짧은 쿼리(1~2글자) 과도 매칭 방지
+        if (query.length <= 2) s -= 10;
+
+        // 코드 형태 보너스 (KR, KOR, 410, +82 등)
+        if (/^[a-z]{2,3}$/.test(query)) s += 20;
+        if (/^\d{3}$/.test(query)) s += 20;
+        if (/^\+?\d{1,4}$/.test(query)) s += 15;
+
+        return s;
+    }
+
+    function search(query, limit=50){
+        const nq = norm(query);
+        if (!nq) return INDEX.slice(0, limit).map(x=>x.ref);
+
+        // 숫자-only 쿼리도 지원(국제전화코드/숫자코드)
+        const qDigits = digitsOnly(query);
+        const nqDigits = qDigits ? norm(qDigits) : "";
+
+        const scored = [];
+        for (const it of INDEX){
+            let s = scoreMatch(it.text, nq);
+
+            // 숫자 쿼리 강화
+            if (nqDigits && it.text.includes(nqDigits)) s += 18;
+
+            // 특정 필드 우선순위(ISO2/ISO3/통화/전화)
+            const r = it.ref;
+            const qUp = String(query || "").trim().toUpperCase();
+            if (qUp && (r.iso2 === qUp || r.iso3 === qUp)) s += 40;
+            if (qUp && r.currency_code === qUp) s += 25;
+            if (qDigits && digitsOnly(r.calling_code) === qDigits) s += 25;
+            if (/^\+/.test(String(query||"").trim()) && String(r.calling_code||"").trim() === String(query).trim()) s += 25;
+
+            if (s > 0) scored.push([s, r]);
+        }
+
+        scored.sort((a,b)=> b[0]-a[0]);
+        return scored.slice(0, limit).map(x=>x[1]);
+    }
+
+    function escapeHtml(str){
+        return String(str ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function renderResults(rows){
+        lastResults = rows;
+
+        if (!rows.length){
+            grid.innerHTML = `
+          <div class="card" style="grid-column:span 12;">
+            <div class="cardBody">
+              <b>검색 결과가 없습니다.</b>
+              <div class="hint" style="margin-top:6px;">
+                국가명(한/영), ISO2/ISO3, 숫자코드(예: 410), 국제전화코드(예: +82 / 82), 통화(예: USD), 수도(예: Tokyo) 등으로 다시 시도해보세요.
+              </div>
+            </div>
+          </div>
+        `;
+            return;
+        }
+
+        grid.innerHTML = rows.map(r => {
+            const nameLine = `${escapeHtml(r.name_ko || "")}`;
+            const subName = [r.name_en, r.official_en].filter(Boolean)[0] || "";
+            const codes = [
+                r.iso2 ? `<span class="code">ISO2 <b>${escapeHtml(r.iso2)}</b></span>` : "",
+                r.iso3 ? `<span class="code">ISO3 <b>${escapeHtml(r.iso3)}</b></span>` : "",
+                r.iso_numeric ? `<span class="code">NUM <b>${escapeHtml(r.iso_numeric)}</b></span>` : "",
+                r.calling_code ? `<span class="code">TEL <b>${escapeHtml(r.calling_code)}</b></span>` : "",
+                r.currency_code ? `<span class="code">CUR <b>${escapeHtml(r.currency_code)}</b></span>` : "",
+                r.cctld ? `<span class="code">TLD <b>${escapeHtml(r.cctld)}</b></span>` : "",
+            ].filter(Boolean).join("");
+
+            const kv = (k, v) => `
+          <div class="kv">
+            <div class="k">${escapeHtml(k)}</div>
+            <div class="v">${v || '<span class="muted">-</span>'}</div>
+          </div>
+        `;
+
+            const cap = [r.capital_ko, r.capital_en].filter(Boolean).join(" / ");
+            const aliases = Array.isArray(r.aliases) && r.aliases.length ? r.aliases.join(", ") : "";
+
+            return `
+          <article class="card">
+            <div class="cardTop">
+              <div>
+                <h3 class="cardTitle">${nameLine}${subName ? `<small>${escapeHtml(subName)}</small>` : ""}</h3>
+                <div class="hint" style="margin-top:4px;">
+                  ${r.official_ko ? `공식명: ${escapeHtml(r.official_ko)}` : (r.official_en ? `Official: ${escapeHtml(r.official_en)}` : "")}
+                </div>
+              </div>
+              <div class="codes">${codes}</div>
+            </div>
+            <div class="cardBody">
+              ${kv("수도 (Capital)", cap ? escapeHtml(cap) : "")}
+              ${kv("국제전화코드 (Calling)", r.calling_code ? `<span class="mono">${escapeHtml(r.calling_code)}</span>` : "")}
+              ${kv("통화코드 (Currency)", r.currency_code ? `<span class="mono">${escapeHtml(r.currency_code)}</span>` : "")}
+              ${kv("ISO 3166-1", [
+                r.iso2 ? `Alpha-2: <span class="mono">${escapeHtml(r.iso2)}</span>` : "",
+                r.iso3 ? `Alpha-3: <span class="mono">${escapeHtml(r.iso3)}</span>` : "",
+                r.iso_numeric ? `Numeric: <span class="mono">${escapeHtml(r.iso_numeric)}</span>` : ""
+            ].filter(Boolean).join(" · ") || ""
+            )}
+              ${kv("인터넷/통신", [
+                r.cctld ? `ccTLD: <span class="mono">${escapeHtml(r.cctld)}</span>` : "",
+                r.mcc ? `MCC: <span class="mono">${escapeHtml(r.mcc)}</span>` : ""
+            ].filter(Boolean).join(" · ") || ""
+            )}
+              ${kv("상업/표준", [
+                r.gs1 ? `GS1: <span class="mono">${escapeHtml(r.gs1)}</span>` : "",
+                r.wipo ? `WIPO: <span class="mono">${escapeHtml(r.wipo)}</span>` : ""
+            ].filter(Boolean).join(" · ") || ""
+            )}
+              ${kv("교통/운송", [
+                r.vehicle_reg ? `국제 차량번호판: <span class="mono">${escapeHtml(r.vehicle_reg)}</span>` : "",
+                r.aircraft_reg_prefix ? `항공기 등록: <span class="mono">${escapeHtml(r.aircraft_reg_prefix)}</span>` : "",
+                r.icao_prefix ? `ICAO 접두사: <span class="mono">${escapeHtml(r.icao_prefix)}</span>` : ""
+            ].filter(Boolean).join(" · ") || ""
+            )}
+              ${kv("국제기구 코드", [
+                r.ioc ? `IOC: <span class="mono">${escapeHtml(r.ioc)}</span>` : "",
+                r.fifa ? `FIFA: <span class="mono">${escapeHtml(r.fifa)}</span>` : ""
+            ].filter(Boolean).join(" · ") || ""
+            )}
+              ${kv("별칭/검색키", aliases ? escapeHtml(aliases) : "")}
+            </div>
+          </article>
+        `;
+        }).join("");
+    }
+
+    function closeAC(){
+        ac.style.display = "none";
+        acItems = [];
+        acActiveIndex = -1;
+    }
+
+    function openAC(items){
+        acItems = items;
+        acActiveIndex = -1;
+
+        acMeta.textContent = `${items.length}개`;
+        acList.innerHTML = items.map((r, idx) => {
+            const title = r.name_ko || r.name_en || "(unknown)";
+            const sub = [r.name_en, r.capital_en, r.currency_code].filter(Boolean).join(" · ");
+            return `
+          <div class="acItem" role="option" data-idx="${idx}">
+            <div class="acLeft">
+              <div class="acTitle">${escapeHtml(title)}</div>
+              <div class="acSub">${escapeHtml(sub)}</div>
+            </div>
+            <div class="acRight">
+              ${r.iso2 ? `<span class="pill">${escapeHtml(r.iso2)}</span>` : ""}
+              ${r.iso3 ? `<span class="pill">${escapeHtml(r.iso3)}</span>` : ""}
+            </div>
+          </div>
+        `;
+        }).join("");
+        ac.style.display = items.length ? "block" : "none";
+    }
+
+    function pickAC(index){
+        const r = acItems[index];
+        if (!r) return;
+        // 대표키로 검색창 채우기(한글명이 있으면 한글, 없으면 영문)
+        q.value = r.name_ko || r.name_en || "";
+        closeAC();
+        const results = search(q.value, 50);
+        renderResults(results);
+    }
+
+    function debounce(fn, ms){
+        let t;
+        return (...args) => {
+            clearTimeout(t);
+            t = setTimeout(()=> fn(...args), ms);
+        };
+    }
+
+    const onInput = debounce(() => {
+        const query = q.value.trim();
+        const results = search(query, 50);
+        renderResults(results);
+
+        // 자동완성: 상위 8개만
+        const acResults = search(query, 8);
+        if (query && acResults.length) openAC(acResults);
+        else closeAC();
+
+    }, 120);
+
+    function copyTopResult(){
+        if (!lastResults.length){
+            toast("복사할 결과가 없습니다.");
+            return;
+        }
+        const r = lastResults[0];
+        const lines = [
+            `국가: ${r.name_ko || ""} (${r.name_en || ""})`,
+            `ISO2: ${r.iso2 || ""}`,
+            `ISO3: ${r.iso3 || ""}`,
+            `Numeric: ${r.iso_numeric || ""}`,
+            `Calling: ${r.calling_code || ""}`,
+            `Currency: ${r.currency_code || ""}`,
+            `Capital: ${(r.capital_ko || "")}${(r.capital_en ? " / " + r.capital_en : "")}`,
+            `ccTLD: ${r.cctld || ""}`,
+            `MCC: ${r.mcc || ""}`,
+            `IOC: ${r.ioc || ""}`,
+            `FIFA: ${r.fifa || ""}`
+        ].join("\n");
+
+        navigator.clipboard.writeText(lines)
+        .then(()=> toast("상단 결과를 복사했습니다."))
+        .catch(()=> {
+            // clipboard 실패 fallback
+            const ta = document.createElement("textarea");
+            ta.value = lines;
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand("copy"); toast("상단 결과를 복사했습니다."); }
+            catch(e){ toast("복사에 실패했습니다."); }
+            document.body.removeChild(ta);
+        });
+    }
+
+    async function loadData(){
+        statusEl.textContent = "데이터 불러오는 중…";
+        try{
+            // 같은 폴더의 JSON 로드 (권장)
+            const res = await fetch("./countries-248.min.json", { cache: "no-store" });
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            const json = await res.json();
+            if (!Array.isArray(json)) throw new Error("JSON is not an array");
+            DATA = json;
+            statusEl.textContent = "데이터 로드 완료";
+        }catch(e){
+            // 로컬 파일 더블클릭 실행(file://)이면 fetch가 막힐 수 있어 샘플로 대체
+            DATA = SAMPLE;
+            statusEl.textContent = "샘플 데이터로 실행 중 (countries-248.min.json 로드 실패)";
+        }
+
+        totalEl.textContent = String(DATA.length);
+        buildIndex(DATA);
+
+        // 초기 렌더: 전체 상위 일부
+        renderResults(search("", 30));
+    }
+
+    // ===== 이벤트 =====
+    q.addEventListener("input", onInput);
+
+    q.addEventListener("keydown", (e) => {
+        if (ac.style.display !== "block") return;
+
+        const items = Array.from(acList.querySelectorAll(".acItem"));
+        if (!items.length) return;
+
+        if (e.key === "ArrowDown"){
+            e.preventDefault();
+            acActiveIndex = Math.min(acActiveIndex + 1, items.length - 1);
+        }else if (e.key === "ArrowUp"){
+            e.preventDefault();
+            acActiveIndex = Math.max(acActiveIndex - 1, 0);
+        }else if (e.key === "Enter"){
+            // 자동완성 선택 우선
+            if (acActiveIndex >= 0){
+                e.preventDefault();
+                pickAC(acActiveIndex);
+            }
+        }else if (e.key === "Escape"){
+            closeAC();
+        }else{
+            return;
+        }
+
+        items.forEach((el, idx) => {
+            el.style.background = (idx === acActiveIndex) ? "#f1f5f9" : "";
+        });
+
+        const active = items[acActiveIndex];
+        if (active) active.scrollIntoView({ block: "nearest" });
+    });
+
+    acList.addEventListener("click", (e) => {
+        const item = e.target.closest(".acItem");
+        if (!item) return;
+        const idx = Number(item.dataset.idx);
+        pickAC(idx);
+    });
+
+    document.addEventListener("click", (e) => {
+        if (!e.target.closest(".inputWrap")) closeAC();
+    });
+
+    $("#btnClear").addEventListener("click", () => {
+        q.value = "";
+        closeAC();
+        renderResults(search("", 30));
+        q.focus();
+        toast("초기화했습니다.");
+    });
+
+    $("#btnCopyTop").addEventListener("click", copyTopResult);
+
+    // 시작
+    loadData();
+</script>
+</body>
+</html>
