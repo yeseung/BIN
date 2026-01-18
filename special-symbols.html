@@ -1,0 +1,835 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- https://685cfe7146ec119a7c38f483--glistening-nasturtium-bb40e5.netlify.app/ -->
+    <title>크리에이터 특수문자 도구 | Creator Symbol Tools</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .search-section {
+            margin-bottom: 30px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 50px;
+            outline: none;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .search-box:focus {
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-tips {
+            background: #e8f0fe;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #495057;
+        }
+
+        .search-tips h4 {
+            margin-bottom: 8px;
+            color: #667eea;
+        }
+
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: #f1f3f5;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .symbol-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .symbol-item {
+            background: #f8f9fa;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 24px;
+            position: relative;
+            overflow: hidden;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+
+        .symbol-item:hover {
+            background: white;
+            border-color: #667eea;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .symbol-item:active {
+            transform: scale(0.95);
+        }
+
+        .symbol-item.copied::after {
+            content: '복사됨!';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(102, 126, 234, 0.95);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            pointer-events: none;
+            animation: fadeOut 1s ease-out;
+        }
+
+        @keyframes fadeOut {
+            0% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        .category-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 30px 0 15px;
+            color: #495057;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .category-description {
+            color: #6c757d;
+            font-size: 14px;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .tools-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .tool-item {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .tool-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #495057;
+        }
+
+        .tool-description {
+            color: #6c757d;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .input-group input,
+        .input-group textarea {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+            min-width: 200px;
+        }
+
+        .input-group input:focus,
+        .input-group textarea:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .output-box {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            min-height: 100px;
+            font-family: monospace;
+            word-break: break-all;
+            position: relative;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 30px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+
+            .symbol-grid {
+                grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+                gap: 8px;
+            }
+
+            .symbol-item {
+                padding: 10px;
+                font-size: 20px;
+            }
+
+            .tabs {
+                gap: 5px;
+            }
+
+            .tab {
+                padding: 8px 15px;
+                font-size: 12px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .header p {
+                font-size: 14px;
+            }
+        }
+
+        .search-highlight {
+            background-color: #ffeb3b !important;
+            border-color: #ffc107 !important;
+        }
+    </style>
+</head>
+<body oncontextmenu="return false;" onselectstart="return false;" ondragstart="return false;" onkeydown="return disableKeys(event);">
+
+<div class="container">
+    <header class="header">
+        <h1>✨ 크리에이터 특수문자 도구</h1>
+        <p>콘텐츠 제작에 필요한 모든 특수문자와 이모티콘을 한 곳에서!</p>
+    </header>
+
+    <main class="main-content">
+        <div class="search-section">
+            <div class="search-container">
+                <input type="text" class="search-box" placeholder="🔍 원하는 특수문자나 이모티콘을 검색하세요..." id="searchInput">
+            </div>
+            <div class="search-tips">
+                <h4>💡 검색 팁</h4>
+                <ul style="margin-left: 20px; font-size: 13px;">
+                    <li>이모지 이름으로 검색: "하트", "별", "화살표" 등</li>
+                    <li>특수문자 직접 입력: "★", "♥", "→" 등</li>
+                    <li>카테고리로 검색: "괄호", "수학", "통화" 등</li>
+                    <li>검색 결과는 노란색으로 강조 표시됩니다</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="popular">🌟 인기</button>
+            <button class="tab" data-tab="emoji">😊 이모지</button>
+            <button class="tab" data-tab="arrows">➡️ 화살표</button>
+            <button class="tab" data-tab="shapes">⭐ 도형</button>
+            <button class="tab" data-tab="math">➕ 수학</button>
+            <button class="tab" data-tab="currency">💰 통화</button>
+            <button class="tab" data-tab="brackets">【】 괄호</button>
+            <button class="tab" data-tab="decorative">✨ 장식</button>
+            <button class="tab" data-tab="tools">🛠️ 도구</button>
+        </div>
+
+        <!-- 인기 특수문자 -->
+        <div class="content-section active" id="popular">
+            <div class="category-title">🌟 크리에이터 인기 특수문자</div>
+            <div class="category-description">
+                유튜브, 인스타그램, 틱톡 등에서 자주 사용되는 특수문자 모음입니다.
+                클릭 한 번으로 바로 복사하여 사용하세요!
+            </div>
+            <div class="symbol-grid" id="popularSymbols"></div>
+
+            <div class="category-title">💝 SNS 인기 이모티콘</div>
+            <div class="symbol-grid" id="snsPopularSymbols"></div>
+
+            <div class="category-title">🎬 영상 제작용 특수문자</div>
+            <div class="symbol-grid" id="videoSymbols"></div>
+        </div>
+
+        <!-- 이모지 -->
+        <div class="content-section" id="emoji">
+            <div class="category-title">😊 감정 표현 이모지</div>
+            <div class="symbol-grid" id="emotionSymbols"></div>
+
+            <div class="category-title">👋 손동작 & 제스처</div>
+            <div class="symbol-grid" id="handSymbols"></div>
+
+            <div class="category-title">🎯 활동 & 스포츠</div>
+            <div class="symbol-grid" id="activitySymbols"></div>
+
+            <div class="category-title">🍔 음식 & 음료</div>
+            <div class="symbol-grid" id="foodSymbols"></div>
+
+            <div class="category-title">🌸 자연 & 동물</div>
+            <div class="symbol-grid" id="natureSymbols"></div>
+
+            <div class="category-title">🎉 축하 & 파티</div>
+            <div class="symbol-grid" id="celebrationSymbols"></div>
+        </div>
+
+        <!-- 화살표 -->
+        <div class="content-section" id="arrows">
+            <div class="category-title">➡️ 기본 방향 화살표</div>
+            <div class="symbol-grid" id="basicArrows"></div>
+
+            <div class="category-title">⤴️ 특수 화살표</div>
+            <div class="symbol-grid" id="specialArrows"></div>
+
+            <div class="category-title">⏩ 미디어 컨트롤</div>
+            <div class="symbol-grid" id="mediaArrows"></div>
+        </div>
+
+        <!-- 도형 -->
+        <div class="content-section" id="shapes">
+            <div class="category-title">⭐ 별 모양</div>
+            <div class="symbol-grid" id="starShapes"></div>
+
+            <div class="category-title">● 원형 도형</div>
+            <div class="symbol-grid" id="circleShapes"></div>
+
+            <div class="category-title">■ 사각형 도형</div>
+            <div class="symbol-grid" id="squareShapes"></div>
+
+            <div class="category-title">♦ 다이아몬드 & 기타</div>
+            <div class="symbol-grid" id="diamondShapes"></div>
+        </div>
+
+        <!-- 수학 기호 -->
+        <div class="content-section" id="math">
+            <div class="category-title">➕ 기본 연산 기호</div>
+            <div class="symbol-grid" id="basicMath"></div>
+
+            <div class="category-title">∑ 고급 수학 기호</div>
+            <div class="symbol-grid" id="advancedMath"></div>
+
+            <div class="category-title">° 단위 기호</div>
+            <div class="symbol-grid" id="unitSymbols"></div>
+        </div>
+
+        <!-- 통화 기호 -->
+        <div class="content-section" id="currency">
+            <div class="category-title">💰 주요 통화 기호</div>
+            <div class="symbol-grid" id="majorCurrency"></div>
+
+            <div class="category-title">💱 기타 통화 기호</div>
+            <div class="symbol-grid" id="otherCurrency"></div>
+        </div>
+
+        <!-- 괄호 -->
+        <div class="content-section" id="brackets">
+            <div class="category-title">【】 장식 괄호</div>
+            <div class="symbol-grid" id="decorativeBrackets"></div>
+
+            <div class="category-title">〈〉 꺾쇠 괄호</div>
+            <div class="symbol-grid" id="angleBrackets"></div>
+
+            <div class="category-title">｛｝ 기타 괄호</div>
+            <div class="symbol-grid" id="otherBrackets"></div>
+        </div>
+
+        <!-- 장식 -->
+        <div class="content-section" id="decorative">
+            <div class="category-title">✨ 반짝이는 장식</div>
+            <div class="symbol-grid" id="sparkleDecorative"></div>
+
+            <div class="category-title">♠ 카드 문양</div>
+            <div class="symbol-grid" id="cardSymbols"></div>
+
+            <div class="category-title">❄️ 계절 & 날씨</div>
+            <div class="symbol-grid" id="weatherSymbols"></div>
+
+            <div class="category-title">🎵 음악 & 예술</div>
+            <div class="symbol-grid" id="musicSymbols"></div>
+        </div>
+
+        <!-- 도구 -->
+        <div class="content-section" id="tools">
+            <div class="tools-section">
+                <div class="tool-item">
+                    <div class="tool-title">📝 텍스트 변환기</div>
+                    <div class="tool-description">
+                        일반 텍스트를 특수문자로 꾸며진 텍스트로 변환합니다.
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="textInput" placeholder="변환할 텍스트를 입력하세요">
+                        <button class="btn" id="convertBtn">변환하기</button>
+                    </div>
+                    <div class="output-box" id="textOutput">
+                        <div id="convertedTexts"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>© 2025 .... | Creator Symbol Tools</p>
+    </footer>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+    // 특수문자 데이터
+    const symbolData = {
+        popularSymbols: ['✨', '⭐', '💫', '🌟', '✅', '❌', '⚡', '🔥', '💯', '👍', '❤️', '💕',
+            '🎯', '📌', '🔔', '💡', '🎁', '🎉', '🎊', '🏆', '👑', '💎', '🌈', '☀️',
+            '▶️', '⏸️', '⏹️', '⏭️', '🔄', '🔃', '⬆️', '⬇️', '➡️', '⬅️', '↗️', '↘️',
+            '✓', '✗', '✔', '✖', '☑', '☐', '◆', '◇', '■', '□', '●', '○', '♥', '♡'],
+
+        snsPopularSymbols: ['💖', '💗', '💓', '💞', '💝', '💘', '😍', '🥰', '😘', '💋', '👄', '💄',
+            '✨', '🌟', '⭐', '💫', '🌠', '🎆', '🎇', '🎉', '🎊', '🎈', '🎁', '🎀',
+            '🔥', '💥', '💢', '💯', '💪', '👊', '✊', '🤝', '👏', '🙌', '🤲', '🙏'],
+
+        videoSymbols: ['🎬', '🎥', '📹', '📷', '📸', '🎞️', '📽️', '🎭', '🎪', '🎨', '🖼️', '🎤',
+            '🎧', '🎵', '🎶', '🎼', '🎹', '🥁', '🎷', '🎺', '🎸', '🎻', '🪕', '🎙️',
+            '📺', '📻', '📡', '📢', '📣', '🔊', '🔉', '🔈', '🔇', '🔕', '🎚️', '🎛️'],
+
+        emotionSymbols: ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃',
+            '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😜', '🤪',
+            '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😏',
+            '😒', '🙄', '😬', '🤥', '😌', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕',
+            '🤢', '🤮', '🤧', '🥵', '🥶', '🥴', '😵', '🤯', '🤠', '🥳', '😎', '🤓'],
+
+        handSymbols: ['👋', '🤚', '🖐️', '✋', '🖖', '👌', '🤏', '✌️', '🤞', '🤟', '🤘', '🤙',
+            '👈', '👉', '👆', '🖕', '👇', '☝️', '👍', '👎', '👊', '✊', '🤛', '🤜',
+            '👏', '🙌', '🤝', '🙏', '✍️', '💅', '🤳', '💪', '🦾', '🦿', '🦵', '🦶'],
+
+        activitySymbols: ['⚽', '🏀', '🏈', '⚾', '🥎', '🎾', '🏐', '🏉', '🥏', '🎱', '🏓', '🏸',
+            '🏒', '🏑', '🥍', '🏏', '🥅', '⛳', '🏹', '🎣', '🥊', '🥋', '🎽', '🛹',
+            '🛷', '⛸️', '🥌', '🎿', '⛷️', '🏂', '🏋️', '🤸', '🤺', '🤾', '🏌️', '🏇',
+            '🧘', '🏄', '🏊', '🤽', '🚣', '🧗', '🚴', '🚵', '🎪', '🎭', '🎨', '🎬'],
+
+        foodSymbols: ['🍎', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🍈', '🍒', '🍑', '🥭', '🍍',
+            '🥥', '🥝', '🍅', '🍆', '🥑', '🥦', '🥬', '🥒', '🌶️', '🌽', '🥕', '🥔',
+            '🍔', '🍟', '🍕', '🌭', '🥪', '🌮', '🌯', '🥗', '🥘', '🍝', '🍜', '🍲',
+            '🍱', '🍣', '🍤', '🍙', '🍚', '🍛', '🍰', '🎂', '🧁', '🥧', '🍮', '🍭'],
+
+        natureSymbols: ['🌸', '💮', '🏵️', '🌹', '🥀', '🌺', '🌻', '🌼', '🌷', '🌱', '🌲', '🌳',
+            '🌴', '🌵', '🌾', '🌿', '☘️', '🍀', '🍁', '🍂', '🍃', '🐶', '🐱', '🐭',
+            '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵',
+            '🌞', '🌝', '🌛', '🌜', '🌚', '🌕', '🌖', '🌗', '🌘', '🌑', '🌒', '🌓'],
+
+        celebrationSymbols: ['🎉', '🎊', '🎈', '🎁', '🎀', '🎄', '🎃', '🎆', '🎇', '🧨', '✨', '🎐',
+            '🎑', '🧧', '🎗️', '🎟️', '🎫', '🎖️', '🏆', '🏅', '🥇', '🥈', '🥉', '⚽',
+            '🏀', '🏈', '⚾', '🥎', '🏐', '🏉', '🎾', '🥏', '🎳', '🏏', '🏑', '🏒'],
+
+        basicArrows: ['←', '↑', '→', '↓', '↔', '↕', '↖', '↗', '↘', '↙', '⇐', '⇑', '⇒', '⇓',
+            '⇔', '⇕', '⇖', '⇗', '⇘', '⇙', '⬅', '⬆', '⬇', '⬈', '⬉', '⬊', '⬋',
+            '⬌', '⬍', '◀', '▲', '▶', '▼', '◁', '△', '▷', '▽'],
+
+        specialArrows: ['↩', '↪', '↫', '↬', '↭', '↮', '↯', '↰', '↱', '↲', '↳', '↴', '↵', '↶',
+            '↷', '↸', '↹', '↺', '↻', '↼', '↽', '↾', '↿', '⇀', '⇁', '⇂', '⇃', '⇄',
+            '⇅', '⇆', '⇇', '⇈', '⇉', '⇊', '⇋', '⇌', '⇍', '⇎', '⇏', '⇚', '⇛', '⇜'],
+
+        mediaArrows: ['⏮', '⏪', '⏯', '⏸', '⏹', '⏺', '⏭', '⏩', '⏫', '⏬', '⏴', '⏵', '⏶', '⏷',
+            '▶️', '⏸️', '⏹️', '⏺️', '⏏️', '🔀', '🔁', '🔂', '⏮️', '⏭️', '⏯️', '◀️', '🔼', '🔽'],
+
+        starShapes: ['★', '☆', '✦', '✧', '✩', '✪', '✫', '✬', '✭', '✮', '✯', '✰', '⁂', '⁎',
+            '⁑', '⁕', '✢', '✣', '✤', '✥', '❋', '✱', '✲', '✳', '✴', '✵', '✶', '✷',
+            '✸', '✹', '✺', '✻', '✼', '✽', '✾', '✿', '❀', '❁', '❂', '❃', '❇', '❈'],
+
+        circleShapes: ['●', '○', '◐', '◑', '◒', '◓', '◔', '◕', '◖', '◗', '◉', '◌', '◍', '◎',
+            '◦', '◯', '◴', '◵', '◶', '◷', '⚪', '⚫', '🔴', '🔵', '🟢', '🟡', '🟠', '🟣',
+            '🟤', '⭕', '🅾️', '🈁', '🈂️', '🈷️', '🈶', '🈯', '🉐', '🈹', '🈚', '🈲', '🉑', '🈸'],
+
+        squareShapes: ['■', '□', '▢', '▣', '▤', '▥', '▦', '▧', '▨', '▩', '▪', '▫', '▬', '▭',
+            '▮', '▯', '▰', '▱', '◧', '◨', '◩', '◪', '◫', '⬛', '⬜', '🟥', '🟦', '🟩',
+            '🟨', '🟧', '🟪', '🟫', '⏹️', '🔲', '🔳', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'],
+
+        diamondShapes: ['◆', '◇', '◈', '♦', '♢', '⬙', '⬘', '⬗', '⬖', '⬥', '⬦', '⬧', '⬨', '⬩',
+            '🔶', '🔷', '🔸', '🔹', '🔺', '🔻', '💠', '🔘', '🔲', '🔳', '⚬', '⚭', '⚮', '⚯'],
+
+        basicMath: ['+', '-', '×', '÷', '=', '≠', '≈', '≡', '≤', '≥', '<', '>', '±', '∓',
+            '＋', '－', '＝', '＊', '／', '＜', '＞', '％', '＃', '＆', '＠', '！'],
+
+        advancedMath: ['∞', '∑', '∏', '∫', '∂', '∇', '√', '∛', '∜', '∝', '∈', '∉', '∋', '∌',
+            '∀', '∃', '∄', '∅', '∆', '∇', '∧', '∨', '∩', '∪', '⊂', '⊃', '⊆', '⊇',
+            '⊕', '⊖', '⊗', '⊘', '⊙', '⊚', '⊛', '⊜', '⊝', '⊞', '⊟', '⊠', '⊡', '∴'],
+
+        unitSymbols: ['°', '℃', '℉', 'K', '㎡', '㎢', '㎣', '㎤', '㎥', '㎦', '㎧',
+            '㎨', '㎩', '㎪', '㎫', '㎬', '㎭', '㎮', '㎯', '㎰', '㎱', '㎲', '㎳', '㎴', '㎵',
+            '㎶', '㎷', '㎸', '㎹', '㎺', '㎻', '㎼', '㎽', '㎾', '㎿', '㏀', '㏁', '㏂', '㏃'],
+
+        majorCurrency: ['$', '€', '£', '¥', '₩', '₹', '₽', '¢', '₿', '₮', '₱', '₨', '₪', '₦',
+            '＄', '￥', '￦', '￡', '€', '¤', '₠', '₡', '₢', '₣', '₤', '₥'],
+
+        otherCurrency: ['₧', '₫', '₭', '₯', '₰', '₲', '₳', '₴', '₵', '₶', '₷', '₸', '₺', '₻',
+            '₼', '₾', '₽', '﷼', '﹩', '＄', '￠', '￡', '￢', '￣', '￤', '￥'],
+
+        decorativeBrackets: ['「', '」', '『', '』', '【', '】', '〔', '〕', '〖', '〗', '〘', '〙',
+            '〚', '〛', '［', '］', '｛', '｝', '⦅', '⦆', '⦇', '⦈', '⦉', '⦊'],
+
+        angleBrackets: ['〈', '〉', '《', '》', '＜', '＞', '≪', '≫', '⟨', '⟩', '⟪', '⟫', '⦑', '⦒',
+            '⦓', '⦔', '⦕', '⦖', '⦗', '⦘', '⧼', '⧽', '﹤', '﹥', '︿', '﹀'],
+
+        otherBrackets: ['（', '）', '［', '］', '｛', '｝', '⁽', '⁾', '₍', '₎', '⌈', '⌉', '⌊', '⌋',
+            '⌌', '⌍', '⌎', '⌏', '⌐', '⌑', '⌒', '⌓', '⌔', '⌕', '⌖', '⌗', '⌘', '⌙'],
+
+        sparkleDecorative: ['✨', '💫', '⭐', '🌟', '✦', '✧', '✩', '✪', '✫', '✬', '✭', '✮', '✯', '✰',
+            '✡', '✢', '✣', '✤', '✥', '❋', '✱', '✲', '✳', '✴', '✵', '✶', '✷', '✸',
+            '✹', '✺', '✻', '✼', '✽', '✾', '✿', '❀', '❁', '❂', '❃', '❇', '❈', '❉'],
+
+        cardSymbols: ['♠', '♣', '♥', '♦', '♤', '♧', '♡', '♢', '🂠', '🂡', '🂢', '🂣', '🂤', '🂥',
+            '🂦', '🂧', '🂨', '🂩', '🂪', '🂫', '🂬', '🂭', '🂮', '🃏', '🀄', '🎴', '🔮', '🎰'],
+
+        weatherSymbols: ['☀️', '☁️', '⛅', '⛈️', '🌤️', '🌥️', '🌦️', '🌧️', '🌨️', '🌩️', '🌪️', '🌫️',
+            '🌬️', '🌀', '🌈', '🌂', '☂️', '☔', '⛱️', '⚡', '❄️', '☃️', '⛄', '☄️',
+            '🔥', '💧', '🌊', '🎃', '🎄', '🎆', '🎇', '🧨', '✨', '🎈', '🎉', '🎊'],
+
+        musicSymbols: ['♩', '♪', '♫', '♬', '♭', '♮', '♯', '𝄞', '𝄟', '𝄠', '𝄡', '𝄢', '𝄣', '𝄤',
+            '𝄥', '𝄦', '𝄪', '𝄫', '𝄬', '𝄭', '𝄮', '𝄯', '𝄰', '𝄱', '𝄲', '𝄳', '🎵', '🎶',
+            '🎼', '🎹', '🥁', '🎷', '🎺', '🎸', '🎻', '🪕', '🎤', '🎧', '📻', '🎙️']
+    };
+
+    // 초기화
+    document.addEventListener('DOMContentLoaded', function() {
+        loadSymbols();
+        setupEventListeners();
+    });
+
+    // 심볼 로드
+    function loadSymbols() {
+        for (const [category, symbols] of Object.entries(symbolData)) {
+            const container = document.getElementById(category);
+            if (container && Array.isArray(symbols)) {
+                symbols.forEach(symbol => {
+                    const item = createSymbolItem(symbol);
+                    container.appendChild(item);
+                });
+            }
+        }
+    }
+
+    // 심볼 아이템 생성
+    function createSymbolItem(symbol) {
+        const item = document.createElement('div');
+        item.className = 'symbol-item';
+        item.textContent = symbol;
+        item.setAttribute('data-symbol', symbol);
+        item.addEventListener('click', function() {
+            copySymbol(symbol, item);
+        });
+        return item;
+    }
+
+    // 복사 기능
+    function copySymbol(symbol, element) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(symbol).then(() => {
+                element.classList.add('copied');
+                showToast(`"${symbol}" 복사되었습니다!`);
+                setTimeout(() => {
+                    element.classList.remove('copied');
+                }, 1000);
+            }).catch(() => {
+                fallbackCopy(symbol, element);
+            });
+        } else {
+            fallbackCopy(symbol, element);
+        }
+    }
+
+    // 폴백 복사 기능
+    function fallbackCopy(symbol, element) {
+        const textArea = document.createElement('textarea');
+        textArea.value = symbol;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        textArea.style.top = '0';
+        textArea.style.left = '0';
+        document.body.appendChild(textArea);
+        textArea.select();
+
+        try {
+            document.execCommand('copy');
+            element.classList.add('copied');
+            showToast(`"${symbol}" 복사되었습니다!`);
+            setTimeout(() => {
+                element.classList.remove('copied');
+            }, 1000);
+        } catch (err) {
+            showToast('복사 실패! 수동으로 복사해주세요.');
+        }
+
+        document.body.removeChild(textArea);
+    }
+
+    // 토스트 메시지
+    function showToast(message) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 2000);
+    }
+
+    // 이벤트 리스너 설정
+    function setupEventListeners() {
+        // 탭 전환
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+
+                this.classList.add('active');
+                const targetId = this.getAttribute('data-tab');
+                const targetSection = document.getElementById(targetId);
+                if (targetSection) {
+                    targetSection.classList.add('active');
+                }
+            });
+        });
+
+        // 변환 버튼
+        const convertBtn = document.getElementById('convertBtn');
+        if (convertBtn) {
+            convertBtn.addEventListener('click', convertText);
+        }
+
+        // 검색 기능
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase().trim();
+
+                document.querySelectorAll('.symbol-item').forEach(item => {
+                    item.classList.remove('search-highlight');
+                    item.style.display = 'flex';
+                });
+
+                if (searchTerm === '') {
+                    document.querySelectorAll('.content-section').forEach((section, index) => {
+                        section.style.display = index === 0 ? 'block' : 'none';
+                    });
+                    return;
+                }
+
+                document.querySelectorAll('.content-section').forEach(section => {
+                    section.style.display = 'block';
+                });
+
+                let hasResults = false;
+
+                document.querySelectorAll('.symbol-item').forEach(item => {
+                    const symbol = item.getAttribute('data-symbol');
+                    if (symbol && symbol.toLowerCase().includes(searchTerm)) {
+                        item.style.display = 'flex';
+                        item.classList.add('search-highlight');
+                        hasResults = true;
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+
+                if (!hasResults) {
+                    showToast('검색 결과가 없습니다.');
+                }
+            });
+        }
+    }
+
+    // 텍스트 변환 함수
+    function convertText() {
+        const input = document.getElementById('textInput').value;
+        if (!input) {
+            showToast('텍스트를 입력해주세요!');
+            return;
+        }
+
+        const output = document.getElementById('convertedTexts');
+        output.innerHTML = `
+                <div style="margin-bottom: 10px;">
+                    <strong>원본:</strong> ${input}
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <strong>꾸밈:</strong> ✨${input}✨
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <strong>하트:</strong> ${input.split('').join('♥')}♥
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <strong>별:</strong> ${input.split('').join('★')}★
+                </div>
+            `;
+    }
+
+    //보안
+    function disableKeys(event) {
+        // F12, Ctrl+Shift+I, Ctrl+Shift+C, Ctrl+U 키를 막습니다.
+        if (event.keyCode === 123 ||
+            (event.ctrlKey && event.shiftKey && event.keyCode === 73) ||
+            (event.ctrlKey && event.shiftKey && event.keyCode === 67) ||
+            (event.ctrlKey && event.keyCode === 85)) {
+            event.preventDefault();
+            return false;
+        }
+    }
+
+</script>
+</body>
+</html>
