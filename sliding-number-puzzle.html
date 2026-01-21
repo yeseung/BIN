@@ -1,0 +1,670 @@
+<!--
+파일명(영어) 예시:
+- sliding-number-puzzle.html (단일 파일)
+-->
+
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>숫자 맞추기 퍼즐 (Vanilla JS)</title>
+
+    <!-- http://mathman.kr/lect/java_scr/numlogic1.htm -->
+
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --border:#e5e7eb;
+            --shadow:0 10px 30px rgba(0,0,0,.06);
+            --radius:16px;
+
+            --btn:#2563eb;
+            --btn-hover:#1d4ed8;
+
+            --btn2:#10b981;
+            --btn2-hover:#059669;
+
+            --btn3:#6b7280;
+            --btn3-hover:#4b5563;
+
+            --btn4:#ef4444;
+            --btn4-hover:#dc2626;
+        }
+
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", "Apple SD Gothic Neo", Arial, sans-serif;
+            background:var(--bg);
+            color:var(--text);
+        }
+        .wrap{
+            max-width: 980px;
+            margin: 28px auto;
+            padding: 0 16px 40px;
+        }
+        .header{
+            display:flex;
+            justify-content:space-between;
+            align-items:flex-end;
+            gap:12px;
+            margin-bottom: 16px;
+        }
+        .title{
+            margin:0;
+            font-size:22px;
+            font-weight:900;
+            letter-spacing:-0.2px;
+        }
+        .subtitle{
+            margin:6px 0 0;
+            color:var(--muted);
+            font-size:13px;
+            line-height:1.4;
+        }
+
+        .card{
+            background:var(--card);
+            border:1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 18px;
+        }
+
+        .grid{
+            display:grid;
+            grid-template-columns: 1fr 280px;
+            gap: 16px;
+            align-items:start;
+        }
+        @media (max-width: 860px){
+            .grid{ grid-template-columns: 1fr; }
+        }
+
+        .boardWrap{
+            display:flex;
+            justify-content:center;
+            padding:14px;
+            border:1px solid var(--border);
+            border-radius: 14px;
+            background:#fbfbfd;
+        }
+
+        /* ===== 퍼즐 보드 ===== */
+        .board{
+            --tile: 70px;
+            position:relative;
+            width: calc(var(--tile) * 5);
+            height: calc(var(--tile) * 5);
+            border-radius: 14px;
+            border:1px solid var(--border);
+            overflow:hidden;
+            background:#fff;
+            box-shadow: 0 10px 24px rgba(0,0,0,.06);
+        }
+
+        /* 배경 전체 이미지(완성 시 보이는 용도) */
+        .bgFull{
+            position:absolute;
+            inset:0;
+            background-size: cover;
+            background-position:center;
+            filter: saturate(1.05);
+        }
+
+        /* 퍼즐 조각들을 덮는 레이어(평소엔 조각이 보이도록, 완성 시 숨김) */
+        .tilesLayer{
+            position:absolute;
+            inset:0;
+            display:grid;
+            grid-template-columns: repeat(5, var(--tile));
+            grid-template-rows: repeat(5, var(--tile));
+            gap:0;
+            background: transparent;
+        }
+
+        .tileBtn{
+            width: var(--tile);
+            height: var(--tile);
+            padding:0;
+            border:0;
+            background: transparent;
+            cursor:pointer;
+            position:relative;
+        }
+
+        .tileImg{
+            width:100%;
+            height:100%;
+            display:block;
+            border-radius: 10px;
+            border:1px solid rgba(0,0,0,.04);
+            box-shadow: 0 6px 14px rgba(0,0,0,.08);
+            background:#fff;
+            user-select:none;
+            -webkit-user-drag:none;
+            transition: transform .06s ease, filter .12s ease;
+        }
+        .tileBtn:active .tileImg{
+            transform: translateY(1px);
+        }
+
+        .blank .tileImg{
+            opacity:0;
+            box-shadow:none;
+            border:0;
+        }
+
+        /* 이동 가능 힌트 */
+        .hint .tileImg{
+            outline: 3px dashed #10b981;
+            outline-offset: 2px;
+            filter: brightness(1.03);
+        }
+
+        /* ===== 오른쪽 패널 ===== */
+        .panel h3{
+            margin:0 0 10px;
+            font-size:14px;
+            letter-spacing:-0.1px;
+        }
+        .btns{
+            display:flex;
+            flex-direction:column;
+            gap:10px;
+        }
+        button.ui{
+            appearance:none;
+            border:0;
+            border-radius: 12px;
+            padding: 12px 12px;
+            font-weight: 900;
+            cursor:pointer;
+            transition: transform .06s ease, background .15s ease, opacity .15s ease;
+            color:#fff;
+            width:100%;
+        }
+        button.ui:active{ transform: translateY(1px); }
+        button.ui:disabled{ opacity:.55; cursor:not-allowed; transform:none; }
+
+        .btn1{ background: var(--btn); }
+        .btn1:hover{ background: var(--btn-hover); }
+        .btn2{ background: var(--btn2); }
+        .btn2:hover{ background: var(--btn2-hover); }
+        .btn3{ background: var(--btn3); }
+        .btn3:hover{ background: var(--btn3-hover); }
+        .btn4{ background: var(--btn4); }
+        .btn4:hover{ background: var(--btn4-hover); }
+
+        .stat{
+            margin-top: 12px;
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap:10px;
+        }
+        .statCard{
+            border:1px solid var(--border);
+            background:#fff;
+            border-radius: 14px;
+            padding: 10px 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,.04);
+        }
+        .statCard b{
+            display:block;
+            font-size:12px;
+            color: var(--muted);
+            margin-bottom: 4px;
+        }
+        .statCard .v{
+            font-size: 16px;
+            font-weight: 900;
+            color: var(--text);
+        }
+
+        .row{
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top:1px solid var(--border);
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .toggle{
+            display:flex;
+            gap:10px;
+            align-items:center;
+            margin-top: 10px;
+            padding:10px 12px;
+            border:1px solid var(--border);
+            border-radius: 14px;
+            background:#fff;
+        }
+        .toggle input{ transform: scale(1.2); }
+        .msg{
+            margin-top:10px;
+            padding:10px 12px;
+            border-radius: 12px;
+            border:1px solid var(--border);
+            background:#fff;
+            font-size: 13px;
+            line-height: 1.45;
+            color: var(--text);
+            min-height: 48px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="header">
+        <div>
+            <h1 class="title">숫자 맞추기 퍼즐</h1>
+            <p class="subtitle">바닐라 JS + 순수 CSS · 광고/부트스트랩 없음 · Undo/Reset/시간/횟수 포함</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="grid">
+            <div class="boardWrap">
+                <div class="board" id="board" aria-label="슬라이딩 퍼즐 보드">
+                    <div class="bgFull" id="bgFull"></div>
+                    <div class="tilesLayer" id="tilesLayer"></div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3>컨트롤</h3>
+                <div class="btns">
+                    <button class="ui btn2" id="btnNew" type="button">새 게임(섞기)</button>
+                    <button class="ui btn1" id="btnReset" type="button">리셋(처음 상태)</button>
+                    <button class="ui btn3" id="btnUndo" type="button" disabled>되돌리기(Undo)</button>
+                    <button class="ui btn4" id="btnStop" type="button">정지/재개</button>
+                </div>
+
+                <div class="toggle">
+                    <input type="checkbox" id="chkHoverMove" />
+                    <label for="chkHoverMove"><b>마우스 오버로 이동</b> (클릭 없이)</label>
+                </div>
+
+                <div class="toggle">
+                    <input type="checkbox" id="chkHint" checked />
+                    <label for="chkHint"><b>이동 가능 힌트 표시</b></label>
+                </div>
+
+                <div class="stat">
+                    <div class="statCard">
+                        <b>이동 횟수</b>
+                        <div class="v" id="moveCount">0</div>
+                    </div>
+                    <div class="statCard">
+                        <b>걸린 시간</b>
+                        <div class="v" id="timeSec">0초</div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <b>안내</b><br/>
+                    - 빈칸(공백)과 인접한 타일만 이동됩니다.<br/>
+                    - 완성하면 배경 이미지가 전체 공개됩니다.
+                </div>
+
+                <div class="msg" id="msgBox">“새 게임(섞기)” 버튼을 누르면 시작됩니다.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* =========================
+       설정 / 이미지 선택
+    ========================= */
+    const COL = 5;
+    const ROW = 5;
+    const LAST = COL * ROW;     // 25
+    const TILE_SIZE = 70;
+
+    // 배경 이미지 랜덤 선택(01~07)
+    function pickBackground(){
+        const n = Math.floor(Math.random() * 7) + 1;
+        return "assets/img/back_" + String(n).padStart(2, "0") + ".jpg";
+    }
+
+    let backImage = pickBackground();
+
+    /* =========================
+       상태
+    ========================= */
+    // pic[1..24] = digit1..digit24, pic[25] = blank(0.jpg)
+    let pic = new Array(LAST + 1);
+    for (let i=1; i<LAST; i++){
+        pic[i] = "assets/img/digit" + i + ".gif";
+    }
+    pic[LAST] = "assets/img/0.jpg"; // 공백 이미지(실제 표시 안 함)
+
+    // 빈칸 위치(1..25)
+    let position = LAST;
+
+    // 게임/시간
+    let gameOK = false;
+    let paused = false;
+    let timerId = null;
+    let seconds = 0;
+    let moves = 0;
+
+    // Undo 스택: {pic:[...], position, seconds, moves, gameOK, paused}
+    let history = [];
+
+    // 리셋용 초기 상태(“처음 상태”)
+    let initial = null;
+
+    /* =========================
+       DOM
+    ========================= */
+    const board = document.getElementById("board");
+    const bgFull = document.getElementById("bgFull");
+    const tilesLayer = document.getElementById("tilesLayer");
+
+    const elMoves = document.getElementById("moveCount");
+    const elTime  = document.getElementById("timeSec");
+    const elMsg   = document.getElementById("msgBox");
+
+    const btnNew   = document.getElementById("btnNew");
+    const btnReset = document.getElementById("btnReset");
+    const btnUndo  = document.getElementById("btnUndo");
+    const btnStop  = document.getElementById("btnStop");
+
+    const chkHoverMove = document.getElementById("chkHoverMove");
+    const chkHint = document.getElementById("chkHint");
+
+    // 보드 타일 크기 반영
+    board.style.setProperty("--tile", TILE_SIZE + "px");
+
+    /* =========================
+       유틸
+    ========================= */
+    function setMsg(t){ elMsg.textContent = t; }
+    function renderStats(){
+        elMoves.textContent = String(moves);
+        elTime.textContent  = String(seconds) + "초";
+        btnUndo.disabled = (history.length === 0);
+    }
+
+    function snapshot(){
+        return {
+            pic: pic.slice(),
+            position,
+            seconds,
+            moves,
+            gameOK,
+            paused
+        };
+    }
+    function restore(s){
+        pic = s.pic.slice();
+        position = s.position;
+        seconds = s.seconds;
+        moves = s.moves;
+        gameOK = s.gameOK;
+        paused = s.paused;
+    }
+
+    /* =========================
+       렌더링
+    ========================= */
+    function canMove(num){
+        if (!gameOK || paused) return false;
+        if (num === position) return false;
+
+        const diff = Math.abs(num - position);
+        if (diff === 1){
+            // 같은 행인지 확인
+            const rowA = Math.ceil(num / COL);
+            const rowB = Math.ceil(position / COL);
+            return rowA === rowB;
+        }
+        return diff === COL;
+    }
+
+    function draw(){
+        // 배경 전체
+        bgFull.style.backgroundImage = `url('${backImage}')`;
+
+        // 타일 레이어 초기화
+        tilesLayer.innerHTML = "";
+
+        // 완성 시: 타일 레이어 숨김(배경만 보이게)
+        tilesLayer.style.opacity = gameOK ? "1" : "0"; // gameOK=false(완성)면 타일 숨김
+
+        for (let i=1; i<=LAST; i++){
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "tileBtn";
+            btn.dataset.idx = String(i);
+
+            const img = document.createElement("img");
+            img.className = "tileImg";
+            img.alt = (i === position) ? "빈칸" : "타일";
+            img.src = pic[i];
+
+            if (i === position){
+                btn.classList.add("blank");
+            } else {
+                // 힌트
+                if (chkHint.checked && canMove(i)){
+                    btn.classList.add("hint");
+                }
+            }
+
+            btn.appendChild(img);
+
+            const doMove = () => move(i);
+
+            // 클릭 이동
+            btn.addEventListener("click", doMove);
+
+            // 마우스오버 이동 옵션
+            btn.addEventListener("mouseover", function(){
+                if (chkHoverMove.checked) doMove();
+            });
+
+            tilesLayer.appendChild(btn);
+        }
+
+        renderStats();
+    }
+
+    /* =========================
+       타일 스왑/이동
+    ========================= */
+    function swap(a, b){
+        const t = pic[a];
+        pic[a] = pic[b];
+        pic[b] = t;
+    }
+
+    function move(num){
+        if (!canMove(num)) return;
+
+        // Undo 저장
+        history.push(snapshot());
+
+        // 이동
+        swap(num, position);
+        position = num;
+
+        moves++;
+        renderStats();
+        draw();
+
+        // 완료 체크(빈칸이 마지막이고 1..24가 정렬)
+        if (position === LAST){
+            for (let i=1; i<LAST; i++){
+                if (pic[i] !== ("assets/img/digit" + i + ".gif")){
+                    return;
+                }
+            }
+            // 완료!
+            gameOK = false;
+            paused = false;
+            setMsg("Nice! 🎉 완성했습니다.");
+            draw(); // 타일 숨김 처리
+            stopTimer();
+        }
+    }
+
+    /* =========================
+       섞기(항상 풀 수 있는 방식)
+       - 기존 코드처럼 빈칸을 랜덤 방향으로 여러 번 움직여 섞음
+    ========================= */
+    function shuffle(times){
+        // 섞기 전: 정렬 상태로 만들고 마지막 칸을 빈칸
+        for (let i=1; i<LAST; i++){
+            pic[i] = "assets/img/digit" + i + ".gif";
+        }
+        pic[LAST] = "assets/img/0.jpg";
+        position = LAST;
+
+        let pre = 0;
+        for (let k=0; k<times; k++){
+            let where = position;
+            let ok = false;
+
+            while(!ok){
+                const rnd = Math.random() * 4;
+
+                if (rnd < 1){
+                    // left
+                    if (position % COL !== 1 && pre !== 2){
+                        where = position - 1; pre = 1; ok = true;
+                    }
+                } else if (rnd < 2){
+                    // right
+                    if (position % COL !== 0 && pre !== 1){
+                        where = position + 1; pre = 2; ok = true;
+                    }
+                } else if (rnd < 3){
+                    // up
+                    if (position > COL && pre !== 4){
+                        where = position - COL; pre = 3; ok = true;
+                    }
+                } else {
+                    // down
+                    if (position <= LAST - COL && pre !== 3){
+                        where = position + COL; pre = 4; ok = true;
+                    }
+                }
+            }
+
+            swap(where, position);
+            position = where;
+        }
+    }
+
+    /* =========================
+       타이머
+    ========================= */
+    function startTimer(){
+        stopTimer();
+        timerId = setInterval(function(){
+            if (gameOK && !paused){
+                seconds++;
+                renderStats();
+            }
+        }, 1000);
+    }
+    function stopTimer(){
+        if (timerId){
+            clearInterval(timerId);
+            timerId = null;
+        }
+    }
+
+    /* =========================
+       게임 제어
+    ========================= */
+    function newGame(){
+        // 배경도 새로 선택
+        backImage = pickBackground();
+
+        // 상태 초기화
+        history = [];
+        seconds = 0;
+        moves = 0;
+        paused = false;
+
+        // 섞기
+        shuffle(LAST * LAST); // 기존 감성: 625회 정도
+
+        // 리셋 기준 스냅샷 저장
+        initial = snapshot();
+
+        gameOK = true;
+        setMsg("게임 시작! 빈칸 옆 타일을 이동하세요.");
+        draw();
+        startTimer();
+    }
+
+    function resetGame(){
+        if (!initial){
+            // 아직 newGame을 안 눌렀다면 새 게임처럼
+            newGame();
+            return;
+        }
+        history = [];
+        restore(initial);
+        gameOK = true;
+        paused = false;
+        setMsg("리셋 완료! 처음 섞인 상태로 돌아왔습니다.");
+        draw();
+        startTimer();
+    }
+
+    function undo(){
+        if (history.length === 0) return;
+        const snap = history.pop();
+        restore(snap);
+        setMsg("되돌렸습니다.");
+        draw();
+    }
+
+    function togglePause(){
+        if (!gameOK){
+            setMsg("완성 상태입니다. 새 게임을 시작하세요.");
+            return;
+        }
+        paused = !paused;
+        setMsg(paused ? "일시정지(타일 이동 불가)" : "재개!");
+        btnStop.textContent = paused ? "재개" : "정지/재개";
+        draw();
+    }
+
+    /* =========================
+       이벤트
+    ========================= */
+    btnNew.addEventListener("click", newGame);
+    btnReset.addEventListener("click", resetGame);
+    btnUndo.addEventListener("click", undo);
+    btnStop.addEventListener("click", togglePause);
+
+    chkHoverMove.addEventListener("change", function(){
+        setMsg(chkHoverMove.checked ? "마우스 오버 이동 ON" : "마우스 오버 이동 OFF");
+    });
+    chkHint.addEventListener("change", function(){
+        draw();
+    });
+
+    /* =========================
+       최초 렌더(대기 상태)
+    ========================= */
+    bgFull.style.backgroundImage = `url('${backImage}')`;
+    tilesLayer.style.opacity = "1";
+    draw();
+    setMsg("“새 게임(섞기)” 버튼을 누르면 시작됩니다.");
+</script>
+</body>
+</html>
