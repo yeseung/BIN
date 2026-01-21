@@ -1,0 +1,801 @@
+<!--
+파일명(영어) 예시:
+- gonu-game.html (단일 파일)
+-->
+
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>고누 게임 - Vanilla JS</title>
+
+    <!-- http://mathman.kr/html5/gonu/hobak_gonu.html -->
+
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --border:#e5e7eb;
+            --shadow:0 10px 30px rgba(0,0,0,.06);
+            --radius:16px;
+
+            --red: rgb(200,0,0);
+            --blue: rgb(0,0,200);
+            --green: rgb(0,200,0);
+
+            --btn:#2563eb;
+            --btn-hover:#1d4ed8;
+
+            --btn2:#10b981;
+            --btn2-hover:#059669;
+
+            --btn3:#6b7280;
+            --btn3-hover:#4b5563;
+
+            --btn4:#ef4444;
+            --btn4-hover:#dc2626;
+
+            --btn5:#111827;
+            --btn5-hover:#0b1220;
+        }
+
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", "Apple SD Gothic Neo", Arial, sans-serif;
+            background:var(--bg);
+            color:var(--text);
+        }
+
+        .wrap{
+            max-width: 1040px;
+            margin: 28px auto;
+            padding: 0 16px 40px;
+        }
+
+        .header{
+            display:flex;
+            align-items:flex-end;
+            justify-content:space-between;
+            gap:12px;
+            margin-bottom: 16px;
+        }
+        .title{
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing:-0.2px;
+            margin:0;
+        }
+        .subtitle{
+            margin:6px 0 0;
+            color:var(--muted);
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .card{
+            background:var(--card);
+            border:1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 18px;
+        }
+
+        .grid{
+            display:grid;
+            grid-template-columns: 1fr 320px;
+            gap: 16px;
+            align-items:start;
+        }
+        @media (max-width: 920px){
+            .grid{ grid-template-columns: 1fr; }
+        }
+
+        .boardWrap{
+            display:flex;
+            justify-content:center;
+            padding: 14px;
+            border-radius: 14px;
+            background: #fbfbfd;
+            border:1px solid var(--border);
+        }
+
+        .board{
+            position: relative;
+            width: 500px;
+            height: 550px;
+            background:#fff;
+            border:1px solid var(--border);
+            border-radius: 12px;
+            overflow:hidden;
+        }
+
+        .line{ position:absolute; background: rgb(50,50,50); border-radius:3px; }
+        .line.h{ height:3px; }
+        .line.v{ width:3px; }
+
+        .ring{
+            position:absolute;
+            border:3px solid rgb(50,50,50);
+            border-radius: 999px;
+            background: transparent;
+            pointer-events:none;
+        }
+
+        .spot{
+            position:absolute;
+            width: 80px;
+            height: 80px;
+            transform: translate(-50%, -50%);
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            cursor:pointer;
+            user-select:none;
+            transition: transform .06s ease, box-shadow .12s ease, border-color .12s ease;
+        }
+        .spot:hover{ box-shadow: 0 8px 20px rgba(0,0,0,.08); }
+        .spot:active{ transform: translate(-50%, -50%) translateY(1px); }
+
+        .stone-red{ background: var(--red); border-color: rgba(0,0,0,.08); }
+        .stone-blue{ background: var(--blue); border-color: rgba(0,0,0,.08); }
+
+        .selected{ outline: 4px solid var(--green); outline-offset: 6px; }
+        .moveable{ border: 3px dashed var(--green); }
+
+        .panel h3{
+            margin:0 0 10px;
+            font-size: 14px;
+            letter-spacing:-0.1px;
+        }
+
+        .btnRow{
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap:10px;
+            margin-top: 8px;
+        }
+        .btnRow.single{ grid-template-columns: 1fr; }
+
+        button{
+            appearance:none;
+            border:0;
+            border-radius: 12px;
+            padding: 12px 12px;
+            font-weight: 800;
+            cursor:pointer;
+            transition: transform .06s ease, background .15s ease, opacity .15s ease;
+            color:#fff;
+            width:100%;
+        }
+        button:active{ transform: translateY(1px); }
+        button:disabled{ opacity:.55; cursor:not-allowed; transform:none; }
+
+        .btn1{ background: var(--btn); }
+        .btn1:hover{ background: var(--btn-hover); }
+
+        .btn2{ background: var(--btn2); }
+        .btn2:hover{ background: var(--btn2-hover); }
+
+        .btn3{ background: var(--btn3); }
+        .btn3:hover{ background: var(--btn3-hover); }
+
+        .btn4{ background: var(--btn4); }
+        .btn4:hover{ background: var(--btn4-hover); }
+
+        .btn5{ background: var(--btn5); }
+        .btn5:hover{ background: var(--btn5-hover); }
+
+        .info{
+            margin-top: 12px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+            border-top:1px solid var(--border);
+            padding-top: 12px;
+        }
+
+        .stat{
+            margin-top: 10px;
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap:10px;
+        }
+        .statCard{
+            border:1px solid var(--border);
+            background:#fff;
+            border-radius: 14px;
+            padding: 10px 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,.04);
+        }
+        .statCard b{ display:block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+        .statCard .v{ font-size: 16px; font-weight: 900; color: var(--text); }
+
+        .msg{
+            margin-top:10px;
+            padding:10px 12px;
+            border-radius: 12px;
+            border:1px solid var(--border);
+            background:#fff;
+            font-size: 13px;
+            line-height: 1.45;
+            color: var(--text);
+            min-height: 48px;
+        }
+
+        .turnDot{
+            display:inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 999px;
+            vertical-align: -2px;
+            margin-left: 6px;
+            border:1px solid rgba(0,0,0,.15);
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="header">
+        <div>
+            <h1 class="title">고누 게임</h1>
+            <p class="subtitle">승패/수 기록 · 되돌리기(Undo) · 리셋 포함</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="grid">
+            <div class="boardWrap">
+                <div class="board" id="board">
+                    <!-- 고누 틀(sx=100, sy=60, d=100) -->
+                    <div class="line h" style="left:100px; top:60px; width:200px;"></div>
+                    <div class="line h" style="left:100px; top:260px; width:200px;"></div>
+                    <div class="line h" style="left:100px; top:460px; width:200px;"></div>
+                    <div class="line v" style="left:200px; top:60px; height:400px;"></div>
+                    <div class="ring" style="left:100px; top:160px; width:200px; height:200px;"></div>
+                    <!-- spots는 JS가 생성 -->
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3>게임 모드</h3>
+                <div class="btnRow">
+                    <button class="btn3" type="button" id="btnPractice">연습</button>
+                    <button class="btn1" type="button" id="btnOne">1인용</button>
+                    <button class="btn2" type="button" id="btnTwo">2인용</button>
+                </div>
+
+                <h3 style="margin-top:14px;">컨트롤</h3>
+                <div class="btnRow">
+                    <button class="btn5" type="button" id="btnUndo">되돌리기(Undo)</button>
+                    <button class="btn4" type="button" id="btnReset">리셋(Reset)</button>
+                </div>
+
+                <div class="info" id="infoBox"></div>
+
+                <div class="stat">
+                    <div class="statCard">
+                        <b>승패 기록</b>
+                        <div class="v" id="statWinLose">0승 0패</div>
+                    </div>
+                    <div class="statCard">
+                        <b>누적 수</b>
+                        <div class="v" id="statMoves">0</div>
+                    </div>
+                </div>
+
+                <div class="msg" id="msgBox">모드를 선택하세요.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* =========================
+       설정 / 상태
+    ========================= */
+    var d = 100, r = 40, cw = 500, ch = 550, sx = 100, sy = 60;
+
+    // -1 종료, 0 연습, 1 PC, 2 2인
+    var gameState = 0;
+    var strGameState = ["연습하기", "1인용 게임", "2인용 게임"];
+
+    var clickPosition = -1;
+    var moveCount = 0;
+    var whoFirst = -1; // 0=빨강(상대/PC), 1=파랑(나)
+
+    var stone = new Array(11);
+
+    // 기록(전역)
+    var stats = {
+        win: 0,
+        lose: 0,
+        totalMoves: 0,
+        lastResult: ""
+    };
+
+    // 되돌리기용 히스토리 스택
+    // 각 요소: { stoneStates:[...], moveCount, whoFirst, gameState, clickPosition }
+    var historyStack = [];
+
+    // 1인용에서 Undo 누르면 "내 수 + PC 수"를 한 번에 되돌릴지
+    var undoPairInPcMode = true;
+
+    function StoneInfo(x, y, state, moveable){
+        this.x = x; this.y = y; this.state = state; this.moveable = moveable;
+    }
+
+    function initStoneData(){
+        stone[0] = new StoneInfo(sx, sy, 0, [1]);
+        stone[1] = new StoneInfo(sx+d, sy, 0, [3]);
+        stone[2] = new StoneInfo(sx+2*d, sy, 0, [1]);
+        stone[3] = new StoneInfo(sx+d, sy+d, -1, [4,5,6]);
+        stone[4] = new StoneInfo(sx, sy+2*d, -1, [3,5,7]);
+        stone[5] = new StoneInfo(sx+d, sy+2*d, -1, [3,4,6,7]);
+        stone[6] = new StoneInfo(sx+2*d, sy+2*d, -1, [3,5,7]);
+        stone[7] = new StoneInfo(sx+d, sy+3*d, -1, [4,5,6]);
+        stone[8] = new StoneInfo(sx, sy+4*d, 1, [9]);
+        stone[9] = new StoneInfo(sx+d, sy+4*d, 1, [7]);
+        stone[10] = new StoneInfo(sx+2*d, sy+4*d, 1, [9]);
+    }
+
+    /* =========================
+       기록/히스토리
+    ========================= */
+    function snapshotState(){
+        return {
+            stoneStates: stone.map(function(s){ return s.state; }),
+            moveCount: moveCount,
+            whoFirst: whoFirst,
+            gameState: gameState,
+            clickPosition: clickPosition
+        };
+    }
+
+    function pushHistory(){
+        historyStack.push(snapshotState());
+        updateUndoButton();
+    }
+
+    function restoreFromSnapshot(snap){
+        for (var i=0; i<stone.length; i++){
+            stone[i].state = snap.stoneStates[i];
+        }
+        moveCount = snap.moveCount;
+        whoFirst = snap.whoFirst;
+        gameState = snap.gameState;
+        clickPosition = snap.clickPosition;
+    }
+
+    function canUndo(){
+        return historyStack.length > 0 && gameState >= 0; // 종료(-1)도 되돌리고 싶으면 여기 조건 완화 가능
+    }
+
+    function updateUndoButton(){
+        document.getElementById("btnUndo").disabled = !canUndo();
+    }
+
+    /* =========================
+       렌더링 (DIV)
+    ========================= */
+    function render(){
+        var board = document.getElementById("board");
+
+        // 기존 spot 제거
+        board.querySelectorAll(".spot").forEach(function(el){ el.remove(); });
+
+        renderInfo();
+        renderStats();
+
+        // spot 생성
+        for (var i=0; i<stone.length; i++){
+            (function(idx){
+                var s = stone[idx];
+                var div = document.createElement("div");
+                div.className = "spot";
+                div.style.left = s.x + "px";
+                div.style.top  = s.y + "px";
+                div.dataset.idx = String(idx);
+
+                if (s.state === 0) div.classList.add("stone-red");
+                if (s.state === 1) div.classList.add("stone-blue");
+
+                div.addEventListener("click", function(){ onSpotClick(idx); });
+                board.appendChild(div);
+            })(i);
+        }
+
+        applySelectionUI();
+        updateUndoButton();
+    }
+
+    function renderInfo(){
+        var infoBox = document.getElementById("infoBox");
+
+        var html = "";
+        html += "<b>모드</b> : " + strGameState[gameState < 0 ? 0 : gameState] + "<br/>";
+
+        if (gameState === 0){
+            html += "<b>차례</b> : 아무나";
+        } else if (gameState > 0){
+            html += "<b>현재</b> : " + moveCount + " 수<br/>";
+            if (whoFirst < 0) {
+                html += "<b>차례</b> : 아무나";
+            } else {
+                var turn = (whoFirst + moveCount) % 2; // 0=빨강, 1=파랑
+                html += "<b>차례</b> : " + (turn===0 ? "빨강" : "파랑");
+                html += '<span class="turnDot" style="background:' + (turn===0 ? "var(--red)" : "var(--blue)") + '"></span>';
+            }
+        } else {
+            html += "<b>상태</b> : 종료";
+        }
+
+        infoBox.innerHTML = html;
+    }
+
+    function renderStats(){
+        document.getElementById("statWinLose").textContent = stats.win + "승 " + stats.lose + "패";
+        document.getElementById("statMoves").textContent = String(stats.totalMoves);
+    }
+
+    function setMsg(text){
+        document.getElementById("msgBox").textContent = text;
+    }
+
+    /* =========================
+       UI 표시
+    ========================= */
+    function clearSelectionUI(){
+        var board = document.getElementById("board");
+        board.querySelectorAll(".spot").forEach(function(el){
+            el.classList.remove("selected");
+            el.classList.remove("moveable");
+        });
+    }
+
+    function applySelectionUI(){
+        clearSelectionUI();
+        if (clickPosition < 0) return;
+
+        var sel = document.querySelector('.spot[data-idx="' + clickPosition + '"]');
+        if (sel) sel.classList.add("selected");
+
+        var mv = stone[clickPosition].moveable;
+        for (var i=0; i<mv.length; i++){
+            var p = mv[i];
+            if (stone[p].state < 0){
+                var el = document.querySelector('.spot[data-idx="' + p + '"]');
+                if (el) el.classList.add("moveable");
+            }
+        }
+    }
+
+    /* =========================
+       클릭 로직
+    ========================= */
+    function onSpotClick(nPos){
+        if (gameState < 0) return;
+
+        function tryMove(from, to){
+            var mv = stone[from].moveable;
+            for (var i=0; i<mv.length; i++){
+                if (to === mv[i] && stone[to].state < 0){
+                    moveStone(from, to);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function canSelect(pos){
+            var st = stone[pos].state;
+            if (st < 0) return false;
+
+            if (gameState === 0) return true;
+
+            if (gameState === 1){
+                // 내 돌(파랑=1)만 + 내 차례일 때만
+                return (st === 1 && st === (whoFirst + moveCount) % 2);
+            }
+
+            if (gameState === 2){
+                // 첫 수는 아무나, 이후 차례 색만
+                return (moveCount === 0 || st === (whoFirst + moveCount) % 2);
+            }
+
+            return false;
+        }
+
+        // 선택 없음 -> 선택
+        if (clickPosition === -1){
+            if (canSelect(nPos)){
+                clickPosition = nPos;
+                applySelectionUI();
+                playAudio("척");
+            }
+            return;
+        }
+
+        // 선택된 곳 다시 클릭 -> 해제
+        if (nPos === clickPosition){
+            clickPosition = -1;
+            applySelectionUI();
+            playAudio("취소");
+            return;
+        }
+
+        // 빈칸이면 이동 시도
+        if (stone[nPos].state < 0){
+            if (!tryMove(clickPosition, nPos)){
+                playAudio("취소");
+            }
+            return;
+        }
+
+        // 다른 돌 클릭 -> 가능하면 새 선택
+        if (canSelect(nPos)){
+            clickPosition = nPos;
+            applySelectionUI();
+            playAudio("척");
+        }
+    }
+
+    /* =========================
+       이동 / 종료 / PC 자동
+    ========================= */
+    function moveStone(p1, p2){
+        // 이동 전 스냅샷 저장(Undo)
+        pushHistory();
+
+        var _state = stone[p1].state;
+        stone[p2].state = _state;
+        stone[p1].state = -1;
+
+        // 2인용 첫 수로 선 결정
+        if (gameState === 2 && moveCount === 0) whoFirst = _state;
+
+        clickPosition = -1;
+        moveCount++;
+        stats.totalMoves++; // 누적 수 기록
+
+        render();
+        playAudio("칙");
+
+        if (gameState > 0){
+            var over = checkGameOver();
+            if (over) return;
+
+            // 1인용: 내가(파랑=1) 두면 PC(빨강=0) 자동
+            if (gameState === 1 && _state === 1){
+                setTimeout(yourStonAutoMove, 700 + Math.random()*600);
+            }
+        }
+    }
+
+    function finishGameWithResult(winnerColor){
+        // winnerColor: 0=빨강, 1=파랑
+        gameState = -1;
+
+        if (winnerColor === 1){
+            // 파랑(나) 승리로 기록
+            stats.win++;
+            stats.lastResult = "승리";
+            setMsg("게임 종료 · 파랑 승리!");
+            setTimeout(function(){ playAudio("파랑승리"); }, 700);
+        } else {
+            stats.lose++;
+            stats.lastResult = "패배";
+            setMsg("게임 종료 · 빨강 승리!");
+            setTimeout(function(){ playAudio("빨강승리"); }, 700);
+        }
+
+        render();
+    }
+
+    function checkGameOver(){
+        // 2인용 첫 수 전엔 종료 판정 X
+        if (whoFirst < 0 && gameState === 2 && moveCount === 0) return false;
+
+        var turn = (whoFirst + moveCount) % 2; // 지금 둬야 할 색
+        var bOver = true;
+
+        for (var i=0; i<stone.length; i++){
+            if (stone[i].state === turn){
+                var mv = stone[i].moveable;
+                for (var j=0; j<mv.length; j++){
+                    if (stone[mv[j]].state < 0){
+                        bOver = false;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (bOver){
+            // turn이 못 둔 쪽 => turn==0이면 빨강이 못 둠 => 파랑 승
+            var winner = (turn === 0) ? 1 : 0;
+
+            if (gameState === 1){
+                // 1인용: 파랑=나, 빨강=PC
+                if (winner === 1){
+                    stats.win++;
+                    stats.lastResult = "승리";
+                    setMsg("이겼다^^");
+                    setTimeout(function(){ playAudio("이겼다"); }, 700);
+                } else {
+                    stats.lose++;
+                    stats.lastResult = "패배";
+                    setMsg("졌다ㅠㅠ");
+                    setTimeout(function(){ playAudio("졌다"); }, 700);
+                }
+                gameState = -1;
+                render();
+                return true;
+            }
+
+            // 2인용: 그냥 색 승리로 표시(기록은 파랑 기준으로 승/패 누적)
+            finishGameWithResult(winner);
+            return true;
+        }
+
+        return false;
+    }
+
+    function yourStonAutoMove(){
+        if (gameState !== 1) return;
+
+        var turn = (whoFirst + moveCount) % 2;
+        if (turn !== 0) return; // PC는 빨강(0)
+
+        // 이동 가능한 수 세기
+        var total = 0;
+        for (var i=0; i<stone.length; i++){
+            if (stone[i].state === 0){
+                var mv = stone[i].moveable;
+                for (var j=0; j<mv.length; j++){
+                    if (stone[mv[j]].state < 0) total++;
+                }
+            }
+        }
+        if (total <= 0) return;
+
+        var moveCnt = Math.floor(Math.random() * total);
+        var cnt = 0;
+
+        for (var i2=0; i2<stone.length; i2++){
+            if (stone[i2].state === 0){
+                var mv2 = stone[i2].moveable;
+                for (var j2=0; j2<mv2.length; j2++){
+                    var to = mv2[j2];
+                    if (stone[to].state < 0){
+                        if (cnt === moveCnt){
+                            // 선택 느낌
+                            clickPosition = i2;
+                            applySelectionUI();
+                            playAudio("척");
+
+                            (function(from, dest){
+                                setTimeout(function(){
+                                    moveStone(from, dest);
+                                }, 400 + Math.random()*700);
+                            })(i2, to);
+                            return;
+                        }
+                        cnt++;
+                    }
+                }
+            }
+        }
+    }
+
+    /* =========================
+       Undo / Reset
+    ========================= */
+    function undoOnce(){
+        if (!canUndo()) return;
+
+        var snap = historyStack.pop();
+        restoreFromSnapshot(snap);
+
+        // 누적 수는 "기록"이므로 보통 되돌리지 않습니다.
+        // (원하면 아래 줄 주석 해제: stats.totalMoves = Math.max(0, stats.totalMoves - 1);)
+
+        setMsg("되돌렸습니다.");
+        render();
+    }
+
+    function undo(){
+        if (!canUndo()) return;
+
+        // 1인용에서는 기본: 내 수 + PC 수를 한 번에 되돌리기
+        if (gameState === 1 && undoPairInPcMode){
+            // 현재 moveCount가 홀수면(내가 둔 직후 PC 전), 1번만
+            // 짝수면(PC까지 둔 뒤), 2번 되돌리기
+            var toUndo = (moveCount % 2 === 0) ? 2 : 1;
+
+            for (var k=0; k<toUndo; k++){
+                if (canUndo()) undoOnce();
+            }
+            setMsg("1인용 Undo (" + toUndo + "수 되돌림)");
+        } else {
+            undoOnce();
+        }
+
+        render();
+    }
+
+    function resetGame(){
+        // 현재 모드 기준으로 다시 시작
+        var mode = gameState;
+        if (mode < 0) {
+            // 종료 상태면 마지막 선택 모드가 없을 수 있으니 연습으로
+            mode = 0;
+        }
+        startGame(mode, true);
+    }
+
+    /* =========================
+       시작 / 버튼
+    ========================= */
+    function startGame(n, isReset){
+        gameState = n;
+        clickPosition = -1;
+        moveCount = 0;
+        whoFirst = -1;
+
+        initStoneData();
+
+        // 히스토리 초기화
+        historyStack = [];
+        updateUndoButton();
+
+        if (gameState === 1){
+            whoFirst = Math.floor(Math.random() * 2); // 0/1
+            setMsg((isReset ? "리셋! " : "") + "1인용 시작 · " + (whoFirst===0 ? "PC(빨강) 선공" : "나(파랑) 선공"));
+        } else if (gameState === 2){
+            setMsg((isReset ? "리셋! " : "") + "2인용 시작 · 첫 수를 둔 사람이 선공");
+        } else {
+            setMsg((isReset ? "리셋! " : "") + "연습 모드 · 아무 돌이나 움직여보세요.");
+        }
+
+        render();
+        if (gameState > 0) playAudio("start");
+
+        // 1인용에서 PC 선공이면 자동 1수
+        if (gameState === 1 && whoFirst === 0){
+            setTimeout(yourStonAutoMove, 700 + Math.random()*600);
+        }
+    }
+
+    /* =========================
+       오디오 (없으면 무시)
+    ========================= */
+    function playAudio(name){
+        try{
+            var audio = new Audio("audio/" + name + ".mp3");
+            audio.play().catch(function(){});
+        }catch(e){}
+    }
+
+    /* =========================
+       이벤트 바인딩
+    ========================= */
+    document.getElementById("btnPractice").addEventListener("click", function(){ startGame(0, false); });
+    document.getElementById("btnOne").addEventListener("click", function(){ startGame(1, false); });
+    document.getElementById("btnTwo").addEventListener("click", function(){ startGame(2, false); });
+
+    document.getElementById("btnUndo").addEventListener("click", undo);
+    document.getElementById("btnReset").addEventListener("click", resetGame);
+
+    // 초기 실행
+    startGame(0, false);
+</script>
+</body>
+</html>
