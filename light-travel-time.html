@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Light Travel Time Calculator</title>
+
+    <style>
+        :root{
+            --bg: #f6f7fb;
+            --card: #ffffff;
+            --text: #101828;
+            --muted: #667085;
+            --border: #e5e7eb;
+            --shadow: 0 10px 30px rgba(16,24,40,.06);
+            --radius: 18px;
+
+            --accent: #2563eb;
+            --accent2: #22c55e;
+
+            --bar-bg: #eef2ff;
+            --bar-fill: linear-gradient(90deg, #2563eb, #22c55e);
+        }
+
+        *{ box-sizing: border-box; }
+        html, body{ height: 100%; }
+        body{
+            margin:0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;
+            line-height: 1.45;
+        }
+
+        .wrap{
+            width: min(1100px, 100%);
+            margin: 0 auto;
+            padding: 22px 16px 40px;
+        }
+
+        .hero{
+            background: var(--card);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            border-radius: var(--radius);
+            padding: 18px 18px;
+            display:flex;
+            align-items:center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .hero .tag{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            font-size: 12px;
+            color: #1d4ed8;
+            background: #eff6ff;
+            border: 1px solid #dbeafe;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-weight: 700;
+            width: fit-content;
+        }
+        .hero h1{
+            margin: 10px 0 6px;
+            font-size: 22px;
+            letter-spacing: -0.2px;
+        }
+        .hero p{
+            margin:0;
+            color: var(--muted);
+            font-size: 13px;
+        }
+        .hero .icon{
+            width: 46px; height: 46px;
+            border-radius: 16px;
+            background: #f1f5f9;
+            border: 1px solid var(--border);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size: 22px;
+            flex: 0 0 auto;
+        }
+
+        .panel{
+            margin-top: 14px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            border-radius: var(--radius);
+            padding: 16px;
+        }
+        .panel h2{
+            margin:0 0 12px;
+            font-size: 14px;
+            color: #0f172a;
+            display:flex;
+            align-items:center;
+            gap: 8px;
+        }
+        .panel h2 .dot{
+            width: 8px; height: 8px;
+            background: var(--accent);
+            border-radius: 999px;
+            display:inline-block;
+        }
+
+        .seg{
+            display:flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .seg button{
+            appearance: none;
+            border: 1px solid var(--border);
+            background: #fff;
+            color: var(--text);
+            border-radius: 14px;
+            padding: 12px 14px;
+            font-weight: 800;
+            cursor: pointer;
+            flex: 1 1 260px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap: 10px;
+            transition: transform .05s ease, border-color .15s ease, box-shadow .15s ease;
+            box-shadow: 0 6px 16px rgba(16,24,40,.05);
+        }
+        .seg button:active{ transform: translateY(1px); }
+        .seg button .emoji{ font-size: 18px; }
+        .seg button.is-active{
+            border-color: #bfdbfe;
+            box-shadow: 0 10px 24px rgba(37,99,235,.15);
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+        .hint{
+            margin-top: 10px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .list{
+            margin-top: 14px;
+            display:flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .row{
+            border: 1px solid var(--border);
+            background: #fff;
+            border-radius: 16px;
+            padding: 14px 14px 12px;
+        }
+        .topline{
+            display:flex;
+            align-items:flex-start;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .left{
+            display:flex;
+            gap: 10px;
+            align-items:flex-start;
+            min-width: 0;
+        }
+        .badge{
+            width: 40px; height: 40px;
+            border-radius: 14px;
+            background: #f1f5f9;
+            border: 1px solid var(--border);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size: 18px;
+            flex: 0 0 auto;
+        }
+        .meta{
+            min-width: 0;
+        }
+        .meta .name{
+            font-weight: 900;
+            letter-spacing: -0.15px;
+            margin: 0;
+            font-size: 14px;
+        }
+        .meta .desc{
+            margin: 2px 0 0;
+            color: var(--muted);
+            font-size: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 520px;
+        }
+        .right{
+            text-align: right;
+            flex: 0 0 auto;
+        }
+        .time{
+            font-weight: 950;
+            font-size: 18px;
+            letter-spacing: -0.3px;
+            margin: 0;
+            color: #0f172a;
+        }
+        .dist{
+            margin: 2px 0 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .bar{
+            margin-top: 10px;
+            width: 100%;
+            height: 10px;
+            background: var(--bar-bg);
+            border-radius: 999px;
+            overflow:hidden;
+            border: 1px solid #e0e7ff;
+        }
+        .bar > i{
+            display:block;
+            height: 100%;
+            width: 0%;
+            background: var(--bar-fill);
+            border-radius: 999px;
+            transition: width .45s ease;
+        }
+
+        .footer-note{
+            margin-top: 14px;
+            color: var(--muted);
+            font-size: 12px;
+            padding: 0 2px;
+        }
+
+        .grid2{
+            display:grid;
+            grid-template-columns: 1fr;
+            gap: 14px;
+        }
+        @media (min-width: 860px){
+            .grid2{
+                grid-template-columns: 420px 1fr;
+                align-items: start;
+            }
+            .meta .desc{ max-width: 380px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="hero">
+        <div>
+            <div class="tag">☀️ 태양계 허브</div>
+            <h1>빛 도달 시간 계산기</h1>
+            <p>빛(광속)이 선택한 출발점에서 각 천체까지 도달하는 시간을 계산합니다.</p>
+        </div>
+        <div class="icon" aria-hidden="true">✨</div>
+    </div>
+
+    <div class="grid2">
+        <section class="panel">
+            <h2><span class="dot"></span>빛의 출발점 선택</h2>
+
+            <div class="seg" role="tablist" aria-label="출발점 선택">
+                <button id="btnSun" class="is-active" type="button" role="tab" aria-selected="true">
+                    <span class="emoji">☀️</span> 태양에서 출발
+                </button>
+                <button id="btnEarth" type="button" role="tab" aria-selected="false">
+                    <span class="emoji">🌍</span> 지구에서 출발
+                </button>
+            </div>
+
+            <div class="hint">
+                ※ 지구에서 출발 시, 행성 간 거리는 “평균 궤도 반지름 차이(AU) 기반 근사”로 계산됩니다.<br />
+                (정밀 천문 계산이 아니라 교육/시각화용입니다.)
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2><span class="dot"></span>결과</h2>
+            <div id="list" class="list"></div>
+
+            <div class="footer-note">
+                기준 광속: 299,792.458 km/s · 거리 단위: km (표시는 “만/억/조…”로 자동 변환)
+            </div>
+        </section>
+    </div>
+</div>
+
+<script>
+    // ===== Constants =====
+    const C_KM_S = 299792.458;         // speed of light in km/s
+    const AU_KM  = 149597870.7;        // astronomical unit in km
+
+    // ===== Data (simple + readable) =====
+    // distanceAuFromSun: 평균 공전반경(반장축) 기준
+    // Earth-origin은 "지구 AU(1)와의 차이"로 근사
+    const bodies = [
+        { key:"mercury", name:"수성", icon:"☿️", desc:"태양에 가장 가까운 행성", distanceAuFromSun: 0.387 },
+        { key:"venus",   name:"금성", icon:"♀️", desc:"지구와 비슷한 크기",      distanceAuFromSun: 0.723 },
+        // 달: 태양기준은 대략 지구와 비슷(1 AU), 지구기준은 평균 달거리 사용
+        { key:"moon",    name:"달",   icon:"🌙", desc:"지구에서 가장 가까운 천체", distanceKmFromEarth: 384400, distanceAuFromSun: 1.000 },
+        { key:"earth",   name:"지구", icon:"🌍", desc:"우리의 고향",             distanceAuFromSun: 1.000 },
+        { key:"mars",    name:"화성", icon:"🔴", desc:"붉은 행성",               distanceAuFromSun: 1.524 },
+        { key:"jupiter", name:"목성", icon:"🟠", desc:"태양계 최대 행성",         distanceAuFromSun: 5.204 },
+        { key:"saturn",  name:"토성", icon:"🪐", desc:"아름다운 고리를 가진 행성", distanceAuFromSun: 9.582 },
+        { key:"uranus",  name:"천왕성", icon:"🔵", desc:"옆으로 누워 도는 행성",   distanceAuFromSun: 19.191 },
+        { key:"neptune", name:"해왕성", icon:"💙", desc:"태양계 최외곽 행성(고전)", distanceAuFromSun: 30.07 },
+        { key:"pluto",   name:"명왕성", icon:"❄️", desc:"왜소행성",               distanceAuFromSun: 39.48 },
+        // 항성/은하(대표 값)
+        //{ key:"alpha",   name:"알파 센타우리", icon:"⭐", desc:"가장 가까운 별(계)", lightYears: 4.246 },
+        //{ key:"andromeda", name:"안드로메다 은하", icon:"🌌", desc:"가장 가까운 대형 은하", lightYears: 2.537e6 }
+    ];
+
+    // ===== Formatting helpers =====
+    function formatKoreanNumber(n){
+        // n: km (could be huge)
+        // 간단 표기: 만/억/조/경/해
+        const units = [
+            { v: 1e20, s: "해" },
+            { v: 1e16, s: "경" },
+            { v: 1e12, s: "조" },
+            { v: 1e8,  s: "억" },
+            { v: 1e4,  s: "만" }
+        ];
+        for (const u of units){
+            if (n >= u.v){
+                const val = n / u.v;
+                return `${trimFixed(val, 2)}${u.s}km`;
+            }
+        }
+        return `${Math.round(n).toLocaleString("ko-KR")}km`;
+    }
+
+    function trimFixed(x, digits){
+        // 2.00 -> 2, 2.10 -> 2.1
+        const s = x.toFixed(digits);
+        return s.replace(/\.?0+$/,"");
+    }
+
+    function formatLightTime(seconds){
+        const minute = 60;
+        const hour = 3600;
+        const day = 86400;
+        const year = 31557600; // 평균 태양년(365.25일) 근사
+
+        if (seconds < hour){
+            return { text: `${trimFixed(seconds/minute, 2)}분`, unit: "min" };
+        }
+        if (seconds < day){
+            return { text: `${trimFixed(seconds/hour, 2)}시간`, unit: "hr" };
+        }
+        if (seconds < year){
+            return { text: `${trimFixed(seconds/day, 2)}일`, unit: "day" };
+        }
+        return { text: `${trimFixed(seconds/year, 2)}년`, unit: "yr" };
+    }
+
+    function lyToKm(ly){
+        // 1 ly ≈ 9.4607e12 km
+        return ly * 9.4607e12;
+    }
+
+    // ===== Distance model =====
+    function getDistanceKm(origin){
+        // origin: "sun" or "earth"
+        // returns: array with computed km
+        const earthAU = 1.0;
+
+        return bodies.map(b => {
+            // far objects by light-year
+            if (typeof b.lightYears === "number"){
+                const km = lyToKm(b.lightYears);
+                return { ...b, distanceKm: km };
+            }
+
+            if (origin === "sun"){
+                // if explicit km exists (moon from earth) but sun-origin uses AU as rough
+                if (typeof b.distanceAuFromSun === "number"){
+                    return { ...b, distanceKm: b.distanceAuFromSun * AU_KM };
+                }
+                return { ...b, distanceKm: NaN };
+            }
+
+            // origin === "earth"
+            if (b.key === "earth"){
+                return { ...b, distanceKm: 0 };
+            }
+            if (b.key === "moon"){
+                return { ...b, distanceKm: b.distanceKmFromEarth };
+            }
+            // planets: AU difference approximation
+            if (typeof b.distanceAuFromSun === "number"){
+                const km = Math.abs(b.distanceAuFromSun - earthAU) * AU_KM;
+                return { ...b, distanceKm: km };
+            }
+            return { ...b, distanceKm: NaN };
+        });
+    }
+
+    // ===== UI render =====
+    const $list = document.getElementById("list");
+    const $btnSun = document.getElementById("btnSun");
+    const $btnEarth = document.getElementById("btnEarth");
+
+    let origin = "sun";
+
+    function render(){
+        const items = getDistanceKm(origin)
+        .map(b => {
+            const seconds = b.distanceKm / C_KM_S;
+            const t = formatLightTime(seconds);
+
+            return {
+                ...b,
+                seconds,
+                timeText: t.text,
+                distText: formatKoreanNumber(b.distanceKm)
+            };
+        });
+
+        // max distance for progress bar scaling (ignore NaN)
+        const maxKm = Math.max(...items.map(x => isFinite(x.distanceKm) ? x.distanceKm : 0), 1);
+
+        $list.innerHTML = items.map(x => {
+            const pct = isFinite(x.distanceKm) ? (x.distanceKm / maxKm) * 100 : 0;
+
+            // 지구 기준일 때 "지구 0"은 너무 밋밋하니 최소 bar 2% 정도(원하면 제거 가능)
+            const barPct = (origin === "earth" && x.key === "earth") ? 2 : pct;
+
+            return `
+          <article class="row">
+            <div class="topline">
+              <div class="left">
+                <div class="badge" aria-hidden="true">${x.icon || "✨"}</div>
+                <div class="meta">
+                  <p class="name">${escapeHtml(x.name)}</p>
+                  <p class="desc">${escapeHtml(x.desc || "")}</p>
+                </div>
+              </div>
+              <div class="right">
+                <p class="time">${escapeHtml(x.timeText)}</p>
+                <p class="dist">${escapeHtml(x.distText)}</p>
+              </div>
+            </div>
+            <div class="bar" aria-hidden="true">
+              <i style="width:${Math.max(0, Math.min(100, barPct))}%;"></i>
+            </div>
+          </article>
+        `;
+        }).join("");
+    }
+
+    function setOrigin(next){
+        origin = next;
+
+        const isSun = origin === "sun";
+        $btnSun.classList.toggle("is-active", isSun);
+        $btnEarth.classList.toggle("is-active", !isSun);
+
+        $btnSun.setAttribute("aria-selected", String(isSun));
+        $btnEarth.setAttribute("aria-selected", String(!isSun));
+
+        render();
+    }
+
+    function escapeHtml(str){
+        return String(str)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    // ===== Events =====
+    $btnSun.addEventListener("click", () => setOrigin("sun"));
+    $btnEarth.addEventListener("click", () => setOrigin("earth"));
+
+    // init
+    render();
+</script>
+</body>
+</html>
