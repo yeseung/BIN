@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>흑백지도 | 흑백요리사 출연 셰프 식당 지도(비공식)</title>
+
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --text:#101828;
+            --muted:#667085;
+            --border:#e5e7eb;
+            --shadow: 0 10px 30px rgba(16,24,40,.06);
+            --radius: 18px;
+
+            --primary:#2563eb;
+            --primary-hover:#1d4ed8;
+
+            --chip:#f1f5f9;
+            --chip-border:#e2e8f0;
+
+            --black:#111827;
+            --white:#f8fafc;
+
+            --ok:#16a34a;
+            --bad:#ef4444;
+        }
+
+        *{ box-sizing:border-box; }
+        html,body{ height:100%; }
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Apple SD Gothic Neo, Noto Sans KR, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .wrap{
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 24px 16px 60px;
+        }
+
+        header{
+            display:flex;
+            align-items:flex-start;
+            justify-content:space-between;
+            gap:16px;
+            margin-bottom: 16px;
+        }
+
+        .title{ line-height:1.2; }
+        .title .badge{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            padding:6px 10px;
+            border-radius: 999px;
+            background: #fff;
+            border:1px solid var(--border);
+            color: var(--muted);
+            font-size: 12px;
+        }
+        h1{
+            font-size: 24px;
+            margin: 10px 0 6px;
+            letter-spacing: -0.02em;
+        }
+        .sub{
+            color: var(--muted);
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .notice{
+            margin-top: 10px;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,.7);
+            border-radius: 14px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .toolbar{
+            display:grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 12px;
+            margin: 16px 0 14px;
+        }
+
+        @media (max-width: 860px){
+            .toolbar{ grid-template-columns: 1fr; }
+        }
+
+        .card{
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .search{ padding: 14px; }
+
+        .searchRow{
+            display:flex;
+            gap: 10px;
+            align-items:center;
+        }
+
+        .input{
+            flex:1;
+            height: 44px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 0 12px;
+            font-size: 14px;
+            outline:none;
+            background:#fff;
+        }
+        .input:focus{
+            border-color: rgba(37,99,235,.5);
+            box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+        }
+
+        .btn{
+            height: 44px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: #fff;
+            padding: 0 14px;
+            font-size: 14px;
+            cursor:pointer;
+            transition: .15s ease;
+            white-space:nowrap;
+        }
+        .btnPrimary{
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+        .btnPrimary:hover{
+            background: var(--primary-hover);
+            border-color: var(--primary-hover);
+        }
+        .btn:hover{ transform: translateY(-1px); }
+
+        .filters{ padding: 14px; }
+
+        .grid{
+            display:grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        @media (max-width: 860px){
+            .grid{ grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 480px){
+            .grid{ grid-template-columns: 1fr; }
+        }
+
+        .field label{
+            display:block;
+            font-size: 12px;
+            color: var(--muted);
+            margin: 0 0 6px;
+        }
+
+        select{
+            width:100%;
+            height: 44px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 0 10px;
+            background:#fff;
+            font-size: 14px;
+            outline:none;
+        }
+        select:focus{
+            border-color: rgba(37,99,235,.5);
+            box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+        }
+
+        .metaBar{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap: 10px;
+            margin: 12px 0;
+        }
+        .count{
+            color: var(--muted);
+            font-size: 13px;
+        }
+        .viewToggle{
+            display:flex;
+            gap:8px;
+        }
+
+        .list{
+            margin-top: 10px;
+            overflow:hidden;
+        }
+
+        .item{
+            padding: 14px;
+            border-top: 1px solid var(--border);
+            display:flex;
+            gap: 12px;
+            align-items:flex-start;
+            justify-content:space-between;
+        }
+        .item:first-child{ border-top:none; }
+
+        .left{ min-width:0; }
+
+        .nameLine{
+            display:flex;
+            flex-wrap:wrap;
+            gap: 8px;
+            align-items:center;
+            margin-bottom: 6px;
+        }
+
+        .restaurant{
+            font-weight: 700;
+            font-size: 16px;
+            letter-spacing:-0.01em;
+        }
+
+        .chef{
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .addr{
+            color: var(--muted);
+            font-size: 13px;
+            line-height:1.35;
+            word-break: keep-all;
+        }
+
+        .chips{
+            margin-top: 10px;
+            display:flex;
+            flex-wrap:wrap;
+            gap: 6px;
+        }
+
+        .chip{
+            display:inline-flex;
+            align-items:center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: var(--chip);
+            border: 1px solid var(--chip-border);
+            font-size: 12px;
+            color: var(--text);
+            white-space:nowrap;
+        }
+
+        .chipDot{
+            width: 8px; height: 8px; border-radius: 999px;
+            background: var(--muted);
+            opacity:.8;
+        }
+        .dotWhite{ background:#cbd5e1; }
+        .dotBlack{ background:#111827; }
+
+        .actions{
+            display:flex;
+            flex-direction:column;
+            gap: 8px;
+            align-items:flex-end;
+            flex-shrink:0;
+        }
+
+        .small{
+            height: 36px;
+            font-size: 13px;
+            border-radius: 10px;
+            padding: 0 12px;
+        }
+
+        footer{
+            margin-top: 18px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height:1.55;
+            padding: 14px 2px;
+        }
+
+        .hidden{ display:none; }
+        .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+
+        /* ✅ 지도 열기 버튼 */
+        a.btn.small.btnPrimary{
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+
+            height: 36px;
+            padding: 0 14px;
+            min-width: 92px;
+            border-radius: 12px;
+
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 1;
+            text-decoration: none;
+            user-select: none;
+            cursor: pointer;
+
+            color: #fff;
+            background: #2563eb;
+            border: 1px solid rgba(37, 99, 235, .35);
+
+            box-shadow: 0 10px 24px rgba(37, 99, 235, .18);
+            transition: transform .08s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
+        }
+
+        a.btn.small.btnPrimary:hover{
+            background: #1d4ed8;
+            border-color: rgba(29, 78, 216, .45);
+            box-shadow: 0 12px 26px rgba(29, 78, 216, .22);
+        }
+
+        a.btn.small.btnPrimary:active{
+            transform: translateY(1px);
+            box-shadow: 0 8px 18px rgba(29, 78, 216, .18);
+        }
+
+        a.btn.small.btnPrimary:focus{ outline: none; }
+        a.btn.small.btnPrimary:focus-visible{
+            box-shadow:
+                    0 12px 26px rgba(29, 78, 216, .22),
+                    0 0 0 4px rgba(37, 99, 235, .22);
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <header>
+        <div class="title">
+            <span class="badge">비공식 · 팬메이드</span>
+            <h1 id="pageTitle">흑백지도</h1>
+            <p class="sub" id="pageSub">흑백요리사 출연 셰프 식당 지도 (비공식)</p>
+            <div class="notice" id="notice">
+                본 서비스는 방송 프로그램과 무관한 비공식 정보 서비스입니다.
+            </div>
+        </div>
+
+        <div style="min-width:400px; max-width:320px;">
+            <div class="card search">
+                <div class="searchRow">
+                    <input id="q" class="input" placeholder="어디를 찾고 있나요? (주소·식당·셰프)" />
+                    <button class="btn btnPrimary" id="btnSearch">검색</button>
+                </div>
+                <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="btn small" id="btnReset">초기화</button>
+                    <!-- ✅ round2 기능 제거: 버튼도 같이 제거 -->
+                    <!-- <button class="btn small" id="btnOnlyRound2">2라운드 이상만</button> -->
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="toolbar">
+        <div class="card filters">
+            <div class="grid">
+                <div class="field">
+                    <label>시즌</label>
+                    <select id="season"></select>
+                </div>
+                <div class="field">
+                    <label>수저</label>
+                    <select id="spoon"></select>
+                </div>
+                <div class="field">
+                    <label>지역</label>
+                    <select id="region"></select>
+                </div>
+            </div>
+        </div>
+
+        <div class="card filters">
+            <div class="metaBar">
+                <div class="count" id="count">-</div>
+                <div class="viewToggle">
+                    <button class="btn small btnPrimary" id="viewList">리스트 보기</button>
+                    <button class="btn small" id="viewMap">지도 보기(링크)</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="card list" id="list"></section>
+
+    <footer id="footer">
+        일부 식당의 위치 정보는 실제와 다를 수 있습니다.
+    </footer>
+</div>
+
+<script>
+    const DATA_URL = "assets/json/data.json";
+
+    // ---- helpers
+    const $ = (id) => document.getElementById(id);
+
+    function norm(s){
+        return String(s ?? "").trim().toLowerCase();
+    }
+
+    function joinParts(...parts){
+        return parts.filter(Boolean).join(" · ");
+    }
+
+    // ✅ 구글맵 검색 링크(라벨 포함). API 키 없이 동작.
+    function mapsLink(lat, lng, label){
+        const q = encodeURIComponent(`${lat},${lng} ${label || ""}`.trim());
+        return `https://www.google.com/maps/search/?api=1&query=${q}`;
+    }
+
+    async function loadData() {
+        const res = await fetch(DATA_URL, { cache: "no-store" });
+        if (!res.ok) throw new Error("Failed to load: " + res.status);
+        return await res.json();
+    }
+
+    // ✅ 전역 상태
+    let DATA = null;      // data.json 객체
+    let allRows = [];     // restaurants + chef 합친 배열
+
+    // ---- UI init
+    function setOptions(selectEl, items){
+        selectEl.innerHTML = items
+        .map(o => `<option value="${String(o.value)}">${o.label}</option>`)
+        .join("");
+    }
+
+    function initFilters(){
+        setOptions($("season"), [
+            { value: "all", label: "전체" },
+            { value: "1", label: "시즌 1" },
+            { value: "2", label: "시즌 2" },
+        ]);
+
+        setOptions($("spoon"), [
+            { value: "all", label: "전체" },
+            { value: "white", label: "백수저" },
+            { value: "black", label: "흑수저" },
+        ]);
+
+        const regions = Array.isArray(DATA?.regions) && DATA.regions.length ? DATA.regions : [];
+        const regionItems = [{ value:"all", label:"전체" }]
+        .concat(regions.map(r => ({ value:r, label:r })));
+        setOptions($("region"), regionItems);
+    }
+
+    // ---- filtering
+    function getState(){
+        return {
+            q: $("q").value.trim(),
+            season: $("season").value,
+            spoon: $("spoon").value,
+            region: $("region").value,
+        };
+    }
+
+    function matchRow(row, st){
+        // 시즌
+        if (st.season !== "all") {
+            const want = Number(st.season);
+            const seasons = row.chef?.seasons || [];
+            if (!seasons.includes(want)) return false;
+        }
+
+        // 수저
+        if (st.spoon !== "all") {
+            if ((row.chef?.spoon || "") !== st.spoon) return false;
+        }
+
+        // 지역
+        if (st.region !== "all") {
+            if ((row.region || "") !== st.region) return false;
+        }
+
+        // 검색
+        if (st.q) {
+            const q = norm(st.q);
+            const hay = [
+                row.restaurantNameKo, row.restaurantNameEn,
+                row.addressKo, row.addressEn,
+                row.chef?.nameKo, row.chef?.nameEn,
+                row.chef?.nicknameKo, row.chef?.nicknameEn,
+                row.region
+            ].map(norm).join(" | ");
+            if (!hay.includes(q)) return false;
+        }
+
+        return true;
+    }
+
+    function chipSpoon(spoon){
+        const isBlack = spoon === "black";
+        return `
+      <span class="chip">
+        <span class="chipDot ${isBlack ? "dotBlack" : "dotWhite"}"></span>
+        ${isBlack ? "흑수저" : "백수저"}
+      </span>
+    `;
+    }
+
+    function chipSeason(seasons){
+        const s = (seasons || []).slice().sort((a,b)=>a-b).map(n => `S${n}`).join(", ");
+        return `
+      <span class="chip">
+        <span class="chipDot"></span>
+        시즌 ${s || "-"}
+      </span>
+    `;
+    }
+
+    function render(){
+        if (!DATA) return;
+
+        const st = getState();
+        const rows = allRows.filter(r => matchRow(r, st));
+
+        $("count").textContent = `현재 조건에 해당하는 식당 ${rows.length}개`;
+
+        $("list").innerHTML = rows.map(r => {
+            const chef = r.chef || {};
+            const chefName = chef.nameKo || chef.nameEn || "셰프";
+            const nick = chef.nicknameKo ? `(${chef.nicknameKo})` : "";
+            const label = `${r.restaurantNameKo || r.restaurantNameEn || ""} ${chefName}`.trim();
+
+            const link = mapsLink(r.lat, r.lng, label);
+
+            return `
+        <div class="item">
+          <div class="left">
+            <div class="nameLine">
+              <div class="restaurant">${r.restaurantNameKo || r.restaurantNameEn || "-"}</div>
+              <div class="chef">${joinParts(chefName, nick, chef.nameEn ? chef.nameEn : "")}</div>
+            </div>
+
+            <div class="addr">${r.addressKo || r.addressEn || "-"}</div>
+
+            <div class="chips">
+              ${chipSpoon(chef.spoon)}
+              ${chipSeason(chef.seasons)}
+              <span class="chip"><span class="chipDot"></span>${r.region || "-"}</span>
+            </div>
+          </div>
+
+          <div class="actions">
+            <a class="btn small btnPrimary" href="${link}" target="_blank" rel="noreferrer">지도 열기</a>
+            <button class="btn small" data-copy="${r.addressKo || r.addressEn || ""}">주소 복사</button>
+          </div>
+        </div>
+      `;
+        }).join("");
+
+        $("list").querySelectorAll("button[data-copy]").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const text = btn.getAttribute("data-copy") || "";
+                try{
+                    await navigator.clipboard.writeText(text);
+                    btn.textContent = "복사됨!";
+                    setTimeout(() => btn.textContent = "주소 복사", 900);
+                }catch(e){
+                    alert("복사 실패: 브라우저 권한을 확인해주세요.");
+                }
+            });
+        });
+    }
+
+    function bind(){
+        $("btnSearch").addEventListener("click", render);
+        $("q").addEventListener("keydown", (e) => { if (e.key === "Enter") render(); });
+
+        ["season","spoon","region"].forEach(id => $(id).addEventListener("change", render));
+
+        $("btnReset").addEventListener("click", () => {
+            $("q").value = "";
+            $("season").value = "all";
+            $("spoon").value = "all";
+            $("region").value = "all";
+            render();
+        });
+
+        $("viewList").addEventListener("click", () => {
+            $("viewList").classList.add("btnPrimary");
+            $("viewMap").classList.remove("btnPrimary");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+
+        $("viewMap").addEventListener("click", () => {
+            $("viewMap").classList.add("btnPrimary");
+            $("viewList").classList.remove("btnPrimary");
+            alert("각 항목의 ‘지도 열기’ 버튼을 눌러 지도에서 확인할 수 있어요.");
+        });
+    }
+
+    // ✅ 부팅: 로드 → 인덱스 → 필터 → 바인드 → 렌더
+    (async function boot(){
+        try{
+            DATA = await loadData();
+            console.log("DATA loaded:", DATA);
+
+            const chefById = new Map((DATA.chefs ?? []).map(c => [c.id, c]));
+            allRows = (DATA.restaurants ?? []).map(r => ({ ...r, chef: chefById.get(r.chefId) || {} }));
+
+            initFilters();
+            bind();
+            render();
+        }catch(err){
+            console.error(err);
+            $("count").textContent = "데이터를 불러오지 못했습니다.";
+            $("list").innerHTML = `<div class="item"><div class="left">data.json 경로와 JSON 형식을 확인해주세요.</div></div>`;
+        }
+    })();
+</script>
+
+</body>
+</html>
