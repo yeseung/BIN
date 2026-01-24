@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Planet Position Calculator</title>
+
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --text:#101828;
+            --muted:#667085;
+            --border:#e5e7eb;
+            --shadow:0 10px 30px rgba(16,24,40,.06);
+            --radius:18px;
+
+            --primary:#2563eb;
+            --ok:#16a34a;
+            --warn:#f59e0b;
+            --bad:#ef4444;
+
+            --chip:#f1f5f9;
+            --chip2:#eff6ff;
+
+            --orbit:#e6eaf2;
+        }
+
+        *{ box-sizing:border-box; }
+        html,body{ height:100%; }
+        body{
+            margin:0;
+            font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;
+            background:var(--bg);
+            color:var(--text);
+            line-height:1.45;
+        }
+
+        .wrap{
+            width:min(1150px,100%);
+            margin:0 auto;
+            padding:22px 16px 44px;
+        }
+
+        .hero{
+            background:var(--card);
+            border:1px solid var(--border);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            padding:18px 18px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:12px;
+        }
+        .hero .tag{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            font-size:12px;
+            font-weight:800;
+            color:#1d4ed8;
+            background:#eff6ff;
+            border:1px solid #dbeafe;
+            padding:6px 10px;
+            border-radius:999px;
+            width:fit-content;
+        }
+        .hero h1{
+            margin:10px 0 6px;
+            font-size:22px;
+            letter-spacing:-0.2px;
+        }
+        .hero p{
+            margin:0;
+            color:var(--muted);
+            font-size:13px;
+        }
+        .hero .icon{
+            width:46px;height:46px;
+            border-radius:16px;
+            background:#f1f5f9;
+            border:1px solid var(--border);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:22px;
+            flex:0 0 auto;
+        }
+
+        .grid{
+            margin-top:14px;
+            display:grid;
+            grid-template-columns: 1fr;
+            gap:14px;
+        }
+        @media (min-width: 960px){
+            .grid{
+                grid-template-columns: 420px 1fr;
+                align-items:start;
+            }
+        }
+
+        .panel{
+            background:var(--card);
+            border:1px solid var(--border);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            padding:16px;
+        }
+        .panel h2{
+            margin:0 0 12px;
+            font-size:14px;
+            display:flex;
+            gap:8px;
+            align-items:center;
+        }
+        .dot{
+            width:8px;height:8px;
+            border-radius:999px;
+            background:var(--primary);
+            display:inline-block;
+        }
+
+        .dateRow{
+            display:flex;
+            flex-wrap:wrap;
+            gap:10px;
+            align-items:center;
+        }
+        .dateBox{
+            flex: 1 1 240px;
+            display:flex;
+            gap:10px;
+            align-items:center;
+            border:1px solid var(--border);
+            border-radius:14px;
+            padding:10px 12px;
+            background:#fff;
+        }
+        .dateBox .cal{
+            width:34px;height:34px;
+            border-radius:12px;
+            background:var(--chip);
+            border:1px solid var(--border);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:16px;
+            flex:0 0 auto;
+        }
+        input[type="date"]{
+            border:none;
+            outline:none;
+            font-size:14px;
+            font-weight:800;
+            color:var(--text);
+            background:transparent;
+            width:100%;
+        }
+
+        .btns{
+            display:flex;
+            gap:8px;
+            flex-wrap:wrap;
+        }
+        .btn{
+            appearance:none;
+            border:1px solid var(--border);
+            background:#fff;
+            color:var(--text);
+            border-radius:999px;
+            padding:10px 12px;
+            font-weight:900;
+            font-size:12px;
+            cursor:pointer;
+            box-shadow:0 6px 16px rgba(16,24,40,.05);
+            transition:transform .05s ease, box-shadow .15s ease, border-color .15s ease;
+        }
+        .btn:active{ transform: translateY(1px); }
+        .btn.primary{
+            background:var(--chip2);
+            border-color:#dbeafe;
+            color:#1d4ed8;
+        }
+
+        .hint{
+            margin-top:10px;
+            color:var(--muted);
+            font-size:12px;
+        }
+
+        .canvasWrap{
+            padding:14px;
+        }
+        .canvasTop{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+            margin-bottom:10px;
+        }
+        .canvasTop .label{
+            display:flex;
+            gap:8px;
+            align-items:center;
+            font-size:12px;
+            font-weight:900;
+            color:#0f172a;
+        }
+        .chip{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            font-size:12px;
+            font-weight:800;
+            color:#0f172a;
+            background:var(--chip);
+            border:1px solid var(--border);
+            padding:6px 10px;
+            border-radius:999px;
+            width:fit-content;
+        }
+
+        canvas{
+            width:100%;
+            height:auto;
+            border-radius:16px;
+            border:1px solid var(--border);
+            background: #ffffff;
+            box-shadow: 0 10px 28px rgba(16,24,40,.05);
+            display:block;
+        }
+
+        .cards{
+            margin-top:14px;
+            display:grid;
+            grid-template-columns: 1fr;
+            gap:12px;
+        }
+        @media (min-width: 720px){
+            .cards{ grid-template-columns: 1fr 1fr; }
+        }
+
+        .card{
+            border:1px solid var(--border);
+            border-radius:16px;
+            background:#fff;
+            padding:14px;
+            box-shadow:0 10px 26px rgba(16,24,40,.05);
+        }
+        .cardTop{
+            display:flex;
+            justify-content:space-between;
+            align-items:flex-start;
+            gap:10px;
+        }
+        .cardLeft{
+            display:flex;
+            gap:10px;
+            align-items:flex-start;
+            min-width:0;
+        }
+        .badge{
+            width:40px;height:40px;
+            border-radius:14px;
+            border:1px solid var(--border);
+            background:#f1f5f9;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:18px;
+            flex:0 0 auto;
+        }
+        .meta{ min-width:0; }
+        .meta .name{
+            margin:0;
+            font-weight:950;
+            font-size:14px;
+            letter-spacing:-0.15px;
+        }
+        .meta .sub{
+            margin:2px 0 0;
+            color:var(--muted);
+            font-size:12px;
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            max-width: 380px;
+        }
+        .cardRight{
+            text-align:right;
+            flex:0 0 auto;
+        }
+        .deg{
+            margin:0;
+            font-weight:950;
+            font-size:16px;
+            letter-spacing:-0.2px;
+        }
+        .state{
+            margin:3px 0 0;
+            font-size:12px;
+            font-weight:900;
+            color:var(--muted);
+            display:flex;
+            justify-content:flex-end;
+            align-items:center;
+            gap:6px;
+        }
+        .state i{
+            width:8px;height:8px;border-radius:999px;display:inline-block;
+            background:var(--muted);
+        }
+        .state.ok{ color:#166534; }
+        .state.ok i{ background:var(--ok); }
+        .state.warn{ color:#92400e; }
+        .state.warn i{ background:var(--warn); }
+        .state.bad{ color:#7f1d1d; }
+        .state.bad i{ background:var(--bad); }
+
+        .bar{
+            margin-top:10px;
+            height:10px;
+            border-radius:999px;
+            background:#f1f5f9;
+            border:1px solid var(--border);
+            overflow:hidden;
+        }
+        .bar > i{
+            display:block;
+            height:100%;
+            width:0%;
+            border-radius:999px;
+            background: linear-gradient(90deg, #22c55e, #2563eb);
+            transition: width .45s ease;
+        }
+
+        .foot{
+            margin-top:12px;
+            color:var(--muted);
+            font-size:12px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="hero">
+        <div>
+            <div class="tag">🪐 태양계 허브</div>
+            <h1>행성 위치 계산기</h1>
+            <p>선택한 날짜의 행성 위치(상면도)와 간단한 관측 힌트를 보여줍니다.</p>
+        </div>
+        <div class="icon" aria-hidden="true">🛰️</div>
+    </div>
+
+    <div class="grid">
+        <!-- Left: controls -->
+        <section class="panel">
+            <h2><span class="dot"></span>날짜 선택</h2>
+
+            <div class="dateRow">
+                <div class="dateBox">
+                    <div class="cal" aria-hidden="true">📅</div>
+                    <input id="dateInput" type="date" />
+                </div>
+
+                <div class="btns">
+                    <button class="btn primary" id="btnToday" type="button">오늘</button>
+                    <button class="btn" id="btnPlusMonth" type="button">+1개월</button>
+                    <button class="btn" id="btnPlusYear" type="button">+1년</button>
+                </div>
+            </div>
+
+            <div class="hint">
+                ※ 이 페이지는 “교육/시각화용 근사 모델”입니다. (정밀 천문력/관측용 좌표계가 아닙니다.)<br>
+                ※ 방향 각도는 “태양 중심 기준(0°=오른쪽, 반시계)”의 단순 각도입니다.
+            </div>
+
+            <div class="foot">
+                표시: 태양 중심 · 원 궤도(평균 반장축) · 평균 각속도 기반
+            </div>
+        </section>
+
+        <!-- Right: canvas + cards -->
+        <section class="panel canvasWrap">
+            <div class="canvasTop">
+                <div class="label">🗺️ 태양계 현재 위치 (상면도)</div>
+                <div class="chip" id="dateLabel">선택 날짜</div>
+            </div>
+
+            <canvas id="sky" width="820" height="480" aria-label="태양계 상면도"></canvas>
+
+            <div class="hint" style="margin-top:10px;">
+                * 크기/거리 스케일은 보기 좋게 조정됩니다.
+            </div>
+
+            <div class="cards" id="cards"></div>
+        </section>
+    </div>
+</div>
+
+<script>
+    /* =========================================================
+       Planet Position Calculator (simple/educational model)
+       - Circular orbits with mean motion approximation
+       - Reference epoch: 2000-01-01 (rough)
+       - Angle: 0° at +X (right), CCW
+       - "Observation hint": based on elongation from Earth (very rough)
+       ========================================================= */
+
+    const planets = [
+        { key:"mercury", name:"수성", icon:"☿️", desc:"황소자리 방향", a:0.387, periodDays:87.969 },
+        { key:"venus",   name:"금성", icon:"♀️", desc:"게자리 방향",   a:0.723, periodDays:224.701 },
+        { key:"earth",   name:"지구", icon:"🌍", desc:"물고기자리 방향", a:1.000, periodDays:365.256 },
+        { key:"mars",    name:"화성", icon:"🔴", desc:"염소자리 방향",   a:1.524, periodDays:686.980 },
+        { key:"jupiter", name:"목성", icon:"🟠", desc:"황소자리 방향",   a:5.204, periodDays:4332.589 },
+        { key:"saturn",  name:"토성", icon:"🪐", desc:"염소자리 방향",   a:9.582, periodDays:10759.22 },
+        { key:"uranus",  name:"천왕성", icon:"🔵", desc:"쌍둥이자리 방향", a:19.191, periodDays:30685.4 },
+        { key:"neptune", name:"해왕성", icon:"💙", desc:"양자리 방향",    a:30.07, periodDays:60190.0 }
+    ];
+
+    // small offsets (deg) to avoid all planets lining up at epoch
+    // (purely for nicer visualization)
+    const phaseDeg = {
+        mercury:  20,
+        venus:    60,
+        earth:   100,
+        mars:    140,
+        jupiter: 200,
+        saturn:  260,
+        uranus:  310,
+        neptune:  15
+    };
+
+    const $dateInput = document.getElementById("dateInput");
+    const $btnToday = document.getElementById("btnToday");
+    const $btnPlusMonth = document.getElementById("btnPlusMonth");
+    const $btnPlusYear = document.getElementById("btnPlusYear");
+    const $dateLabel = document.getElementById("dateLabel");
+    const $cards = document.getElementById("cards");
+
+    const canvas = document.getElementById("sky");
+    const ctx = canvas.getContext("2d");
+
+    // reference epoch (local date) - rough
+    const epoch = new Date(Date.UTC(2000,0,1,0,0,0)); // 2000-01-01 UTC
+
+    function pad2(n){ return String(n).padStart(2,"0"); }
+    function toInputDate(d){
+        // local date -> yyyy-mm-dd
+        const y = d.getFullYear();
+        const m = pad2(d.getMonth()+1);
+        const day = pad2(d.getDate());
+        return `${y}-${m}-${day}`;
+    }
+    function fromInputDate(s){
+        // yyyy-mm-dd -> local date
+        const [y,m,d] = s.split("-").map(Number);
+        return new Date(y, m-1, d, 12, 0, 0); // noon to reduce DST edge cases
+    }
+
+    function daysSinceEpoch(d){
+        // use UTC milliseconds to reduce timezone drift
+        const du = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), 0,0,0);
+        const eu = epoch.getTime();
+        return (du - eu) / 86400000;
+    }
+
+    function degNorm(deg){
+        deg = deg % 360;
+        if (deg < 0) deg += 360;
+        return deg;
+    }
+
+    function polarToXY(r, deg){
+        const rad = deg * Math.PI / 180;
+        return { x: r * Math.cos(rad), y: r * Math.sin(rad) };
+    }
+
+    function computePositions(date){
+        const t = daysSinceEpoch(date);
+
+        // first compute all heliocentric angles
+        const out = planets.map(p => {
+            const n = 360 / p.periodDays;               // deg/day
+            const theta = degNorm(phaseDeg[p.key] + n*t);
+            const pos = polarToXY(p.a, theta);
+            return { ...p, thetaDeg: theta, x: pos.x, y: pos.y };
+        });
+
+        // earth info
+        const earth = out.find(x => x.key === "earth");
+
+        // for observation hint: elongation = angle between (Sun->Earth) and (Earth->Planet)
+        out.forEach(p => {
+            if (p.key === "earth"){
+                p.elongation = 0;
+                p.obs = { label:"우리가 사는 곳!", cls:"ok", score: 100 };
+                return;
+            }
+
+            const vSunEarth = { x: earth.x, y: earth.y };
+            const vEarthPlanet = { x: p.x - earth.x, y: p.y - earth.y };
+
+            const dot = vSunEarth.x*vEarthPlanet.x + vSunEarth.y*vEarthPlanet.y;
+            const magA = Math.hypot(vSunEarth.x, vSunEarth.y);
+            const magB = Math.hypot(vEarthPlanet.x, vEarthPlanet.y);
+
+            let cos = dot / (magA*magB);
+            if (!isFinite(cos)) cos = 1;
+            cos = Math.max(-1, Math.min(1, cos));
+            const ang = Math.acos(cos) * 180/Math.PI; // 0~180
+
+            p.elongation = ang;
+
+            // very rough classification
+            // - elongation 큰 편(>120): 관측 가능(상대적으로)
+            // - 중간(60~120): 보통
+            // - 작음(<60): 태양 근처(관측 어려움)
+            let obs;
+            if (ang >= 120){
+                obs = { label:"관측 가능", cls:"ok", score: 90 };
+            } else if (ang >= 60){
+                obs = { label:"관측 보통", cls:"warn", score: 65 };
+            } else {
+                obs = { label:"관측 어려움", cls:"bad", score: 35 };
+            }
+
+            // inner planets: show "최대 이각 근처" 느낌을 조금 강조
+            if (p.key === "mercury" || p.key === "venus"){
+                if (ang >= 70 && ang < 120){
+                    obs = { label:"최대 이각 근처", cls:"ok", score: 85 };
+                } else if (ang < 40){
+                    obs = { label:"태양 근처(어려움)", cls:"bad", score: 25 };
+                }
+            }
+
+            p.obs = obs;
+        });
+
+        return out;
+    }
+
+    function drawSystem(positions){
+        // canvas size
+        const w = canvas.width;
+        const h = canvas.height;
+
+        ctx.clearRect(0,0,w,h);
+
+        // center
+        const cx = Math.round(w/2);
+        const cy = Math.round(h/2);
+
+        // background
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0,0,w,h);
+
+        // scaling: map max semimajor axis to fit
+        const maxA = Math.max(...positions.map(p => p.a));
+        const pad = 46;
+        const R = Math.min(cx, cy) - pad;
+        const scale = R / maxA;
+
+        // draw orbits
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue("--orbit").trim() || "#e6eaf2";
+
+        positions.forEach(p => {
+            const r = p.a * scale;
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI*2);
+            ctx.stroke();
+        });
+
+        // sun
+        ctx.beginPath();
+        ctx.fillStyle = "#f59e0b";
+        ctx.arc(cx, cy, 10, 0, Math.PI*2);
+        ctx.fill();
+
+        // label sun
+        ctx.fillStyle = "#111827";
+        ctx.font = "700 12px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+        ctx.fillText("태양", cx + 14, cy + 4);
+
+        // planets (points)
+        positions.forEach(p => {
+            const px = cx + p.x * scale;
+            const py = cy + p.y * scale;
+
+            // planet dot size (pretty)
+            const size =
+                      p.key === "jupiter" ? 7 :
+                          p.key === "saturn"  ? 6 :
+                              p.key === "earth"   ? 6 :
+                                  p.key === "venus"   ? 5 :
+                                      p.key === "mars"    ? 5 :
+                                          p.key === "mercury" ? 4 : 4;
+
+            // color (simple)
+            const col =
+                      p.key === "mercury" ? "#94a3b8" :
+                          p.key === "venus"   ? "#fbbf24" :
+                              p.key === "earth"   ? "#22c55e" :
+                                  p.key === "mars"    ? "#ef4444" :
+                                      p.key === "jupiter" ? "#f97316" :
+                                          p.key === "saturn"  ? "#eab308" :
+                                              p.key === "uranus"  ? "#3b82f6" :
+                                                  "#2563eb";
+
+            ctx.beginPath();
+            ctx.fillStyle = col;
+            ctx.arc(px, py, size, 0, Math.PI*2);
+            ctx.fill();
+
+            // label (short)
+            ctx.fillStyle = "#111827";
+            ctx.font = "700 11px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+            const label = p.name;
+            ctx.fillText(label, px + 10, py + 4);
+        });
+
+        // axis crosshair subtle
+        ctx.strokeStyle = "#eef2f7";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(cx, pad/2);
+        ctx.lineTo(cx, h - pad/2);
+        ctx.moveTo(pad/2, cy);
+        ctx.lineTo(w - pad/2, cy);
+        ctx.stroke();
+    }
+
+    function escapeHtml(str){
+        return String(str)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function renderCards(positions){
+        // max for bar scaling (use elongation 0~180)
+        $cards.innerHTML = positions.map(p => {
+            const deg = `${p.thetaDeg.toFixed(1)}°`;
+            const stateCls = p.obs?.cls || "warn";
+            const stateLabel = p.obs?.label || "—";
+            const score = Math.max(0, Math.min(100, p.obs?.score ?? 50));
+
+            // show elongation for non-earth
+            const sub = (p.key === "earth")
+                ? "우리의 고향"
+                : `${p.desc} · 이각 ${p.elongation.toFixed(1)}°`;
+
+            return `
+          <div class="card">
+            <div class="cardTop">
+              <div class="cardLeft">
+                <div class="badge" aria-hidden="true">${p.icon}</div>
+                <div class="meta">
+                  <p class="name">${escapeHtml(p.name)}</p>
+                  <p class="sub">${escapeHtml(sub)}</p>
+                </div>
+              </div>
+              <div class="cardRight">
+                <p class="deg">${escapeHtml(deg)}</p>
+                <div class="state ${stateCls}">
+                  <i aria-hidden="true"></i> ${escapeHtml(stateLabel)}
+                </div>
+              </div>
+            </div>
+            <div class="bar" aria-hidden="true">
+              <i style="width:${score}%;"></i>
+            </div>
+          </div>
+        `;
+        }).join("");
+    }
+
+    function formatKoreanDate(d){
+        const y = d.getFullYear();
+        const m = pad2(d.getMonth()+1);
+        const day = pad2(d.getDate());
+        return `${y}. ${m}. ${day}.`;
+    }
+
+    function update(){
+        const d = fromInputDate($dateInput.value);
+        $dateLabel.textContent = formatKoreanDate(d);
+
+        const positions = computePositions(d);
+        drawSystem(positions);
+        renderCards(positions);
+    }
+
+    function addMonths(date, n){
+        const d = new Date(date.getTime());
+        d.setMonth(d.getMonth() + n);
+        return d;
+    }
+    function addYears(date, n){
+        const d = new Date(date.getTime());
+        d.setFullYear(d.getFullYear() + n);
+        return d;
+    }
+
+    // events
+    $dateInput.addEventListener("change", update);
+    $btnToday.addEventListener("click", () => {
+        const now = new Date();
+        $dateInput.value = toInputDate(now);
+        update();
+    });
+    $btnPlusMonth.addEventListener("click", () => {
+        const cur = fromInputDate($dateInput.value);
+        const next = addMonths(cur, 1);
+        $dateInput.value = toInputDate(next);
+        update();
+    });
+    $btnPlusYear.addEventListener("click", () => {
+        const cur = fromInputDate($dateInput.value);
+        const next = addYears(cur, 1);
+        $dateInput.value = toInputDate(next);
+        update();
+    });
+
+    // init
+    (function init(){
+        const now = new Date();
+        $dateInput.value = toInputDate(now);
+        update();
+    })();
+</script>
+</body>
+</html>
