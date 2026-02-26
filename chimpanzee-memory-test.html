@@ -1,0 +1,679 @@
+<!-- file: chimpanzee-memory-test-v2.html -->
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>침팬지 기억력 테스트</title>
+
+    <style>
+        :root{
+            --bg:#ffffff;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --border:#e5e7eb;
+            --shadow: 0 10px 30px rgba(0,0,0,.08);
+
+            --primary:#2563eb;
+            --primary2:#06b6d4;
+            --danger:#ef4444;
+            --success:#22c55e;
+        }
+
+        *{ box-sizing:border-box; }
+        html,body{ height:100%; }
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .page{
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 18px 14px 60px;
+        }
+
+        /* 상단 */
+        .topbar{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            margin-bottom: 14px;
+        }
+        .brand{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            font-weight:900;
+            letter-spacing:-.3px;
+        }
+        .brand-badge{
+            width:34px;height:34px;
+            border-radius:10px;
+            display:grid;
+            place-items:center;
+            color:#fff;
+            background: linear-gradient(135deg, var(--primary), var(--primary2));
+            box-shadow: 0 10px 20px rgba(37,99,235,.18);
+        }
+
+        /* 공통 카드 */
+        .card{
+            background: var(--card);
+            border:1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            overflow:hidden;
+        }
+        .card-pad{ padding: 16px; }
+
+        .title-row{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+            margin-bottom: 8px;
+        }
+        .title{
+            margin:0;
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing:-.3px;
+        }
+        .desc{
+            margin:0;
+            color: var(--muted);
+            line-height:1.65;
+            font-size: 14px;
+        }
+
+        /* 게임 보드 */
+        .game-wrap{
+            margin-top: 14px;
+        }
+
+        #game-display{
+            position: relative;
+            height: 520px;
+            border-radius: 18px;
+            overflow:hidden;
+            border: 1px solid var(--border);
+            background:
+                    radial-gradient(circle at 20% 10%, rgba(37,99,235,.12), transparent 40%),
+                    radial-gradient(circle at 80% 20%, rgba(6,182,212,.12), transparent 35%),
+                    #0b0f19;
+            box-shadow: 0 10px 30px rgba(0,0,0,.12);
+        }
+
+        /* 상단 패널 */
+        #stats-panel{
+            position:absolute;
+            top:0; left:0;
+            width:100%;
+            height: 56px;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            padding: 0 12px;
+            background: rgba(255,255,255,.08);
+            border-bottom: 1px solid rgba(255,255,255,.12);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color:#fff;
+            z-index:10;
+        }
+        .stats-group{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            flex-wrap:wrap;
+        }
+        .stat-pill{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.92);
+            color:#111;
+            font-weight:900;
+            font-size: 13px;
+            border: 1px solid rgba(0,0,0,.06);
+            box-shadow: 0 8px 16px rgba(0,0,0,.10);
+            user-select:none;
+        }
+        .stat-pill small{
+            color: var(--muted);
+            font-weight:900;
+        }
+
+        /* 타일 영역 */
+        #game-container{
+            position:absolute;
+            top: 56px;
+            left:0;
+            width:100%;
+            height: calc(100% - 56px);
+            padding: 16px;
+        }
+
+        .tile{
+            position:absolute;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            border-radius: 14px;
+            background: linear-gradient(145deg, #ffffff, #f3f4f6);
+            border: 1px solid rgba(0,0,0,.06);
+            box-shadow: 0 10px 18px rgba(0,0,0,.16), inset 0 -6px 0 rgba(0,0,0,.06);
+            font-weight: 900;
+            font-size: 22px;
+            cursor:pointer;
+            user-select:none;
+            transition: transform .12s ease, box-shadow .12s ease;
+        }
+        .tile:hover{
+            transform: translateY(-3px);
+            box-shadow: 0 16px 24px rgba(0,0,0,.18), inset 0 -6px 0 rgba(0,0,0,.06);
+        }
+        .tile:active{
+            transform: translateY(0);
+            box-shadow: 0 8px 14px rgba(0,0,0,.16), inset 0 -4px 0 rgba(0,0,0,.06);
+        }
+
+        /* 숫자 숨김 */
+        .hidden-number{
+            color: transparent !important;
+            text-shadow: none !important;
+        }
+
+        /* 맞음/틀림 효과 */
+        .correct{
+            animation: pop .35s cubic-bezier(.18,.89,.32,1.28);
+            outline: 3px solid rgba(34,197,94,.35);
+        }
+        .wrong{
+            animation: shake .45s cubic-bezier(.36,.07,.19,.97) both;
+            outline: 3px solid rgba(239,68,68,.35);
+        }
+        @keyframes pop{
+            0%{ transform: scale(1); }
+            50%{ transform: scale(1.08); }
+            100%{ transform: scale(1); }
+        }
+        @keyframes shake{
+            10%, 90%{ transform: translateX(-2px); }
+            20%, 80%{ transform: translateX(4px); }
+            30%, 50%, 70%{ transform: translateX(-8px); }
+            40%, 60%{ transform: translateX(8px); }
+        }
+
+        /* 게임오버 오버레이 */
+        #game-over-layer{
+            position: fixed;
+            inset: 0;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background: rgba(0,0,0,.72);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            opacity:0;
+            visibility:hidden;
+            transition: all .25s ease;
+            z-index: 9999;
+            padding: 18px;
+        }
+        #game-over-layer.visible{
+            opacity:1;
+            visibility:visible;
+        }
+        #game-over-box{
+            width:100%;
+            max-width: 420px;
+            background:#fff;
+            border-radius: 18px;
+            border:1px solid var(--border);
+            box-shadow: 0 20px 40px rgba(0,0,0,.25);
+            padding: 18px;
+            transform: translateY(10px);
+            transition: transform .25s ease;
+        }
+        #game-over-layer.visible #game-over-box{
+            transform: translateY(0);
+        }
+        #game-over-box h2{
+            margin:0 0 10px;
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing:-.3px;
+        }
+        .game-over-score{
+            margin-top: 10px;
+            border:1px solid var(--border);
+            background: #fafafa;
+            border-radius: 14px;
+            padding: 12px;
+            text-align:center;
+        }
+        .btn{
+            width:100%;
+            margin-top: 12px;
+            border:1px solid var(--border);
+            background: linear-gradient(135deg, rgba(37,99,235,.12), rgba(6,182,212,.10));
+            border-color: rgba(37,99,235,.25);
+            color: #111;
+            padding: 12px 14px;
+            border-radius: 14px;
+            font-weight: 900;
+            cursor:pointer;
+            transition: transform .12s ease, box-shadow .12s ease;
+        }
+        .btn:hover{ transform: translateY(-1px); box-shadow: 0 10px 18px rgba(0,0,0,.10); }
+        .btn:active{ transform: scale(.98); }
+
+        /* 아래 정보 카드 */
+        .info-card{
+            margin-top: 14px;
+            padding: 14px;
+            background:#fff;
+            border:1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+        }
+        .info-card video{
+            width:100%;
+            height:auto;
+            max-width: 420px;
+            display:block;
+            margin: 12px auto 0;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 20px rgba(0,0,0,.08);
+        }
+
+        /* 랭킹 */
+        .rank{
+            margin-top: 14px;
+        }
+        .tabs{
+            display:flex;
+            flex-wrap:wrap;
+            gap:8px;
+            margin-bottom: 10px;
+        }
+        .tab{
+            padding: 8px 12px;
+            border-radius: 999px;
+            border:1px solid var(--border);
+            background:#fff;
+            cursor:pointer;
+            font-weight:900;
+            color: var(--muted);
+        }
+        .tab.active{
+            color: var(--primary);
+            border-color: rgba(37,99,235,.25);
+            background: rgba(37,99,235,.06);
+        }
+        table{
+            width:100%;
+            border-collapse: collapse;
+            border:1px solid var(--border);
+            border-radius: 14px;
+            overflow:hidden;
+        }
+        th, td{
+            padding: 10px;
+            border-bottom:1px solid var(--border);
+            text-align:center;
+            font-size: 14px;
+        }
+        th{ background:#fafafa; font-weight:900; color:#374151; }
+        tr:last-child td{ border-bottom:0; }
+
+        /* 반응형 */
+        @media (max-width: 480px){
+            #game-display{ height: 460px; }
+            .stat-pill{ padding: 7px 10px; font-size:12px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="page">
+
+    <div class="topbar">
+        <div class="brand">
+            <div class="brand-badge">🧠</div>
+            <div>침팬지 기억력 테스트</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-pad">
+            <div class="title-row">
+                <h1 class="title">숫자 기억력 게임</h1>
+            </div>
+            <p class="desc">
+                1부터 시작하여 순서대로 숨겨진 숫자들을 클릭하세요.<br/>
+                <b>숫자 1을 클릭하면</b> 나머지 숫자가 숨겨집니다.
+            </p>
+
+            <div class="game-wrap">
+                <div id="game-display">
+                    <div id="stats-panel">
+                        <div class="stats-group">
+                            <div class="stat-pill"><small>레벨</small> <span id="level-number">1</span></div>
+                        </div>
+                        <div class="stats-group">
+                            <div class="stat-pill"><small>점수</small> <span id="lives-score">0</span>점</div>
+                            <div class="stat-pill"><small>기회</small> <span id="lives-count">3</span>회</div>
+                        </div>
+                    </div>
+
+                    <div id="game-container" aria-label="게임 타일 영역"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="info-card">
+        일본 연구진이 미국 과학 발전 협회(AAAS)의 연례 회의(2월 14일)에서 Ayumu라는 침팬지의 놀라운 능력을 보여주는 영상을 공개했습니다. 화면에 1에서 9까지의 숫자가 무작위로 나타났다가 사라지면, 침팬지는 각 숫자의 정확한 순서와 위치를 기억할 수 있었습니다. 교토 대학 영장류 연구소의 연구원인 Tetsuro Matsuzawa는 Ayumu가 1부터 19까지의 숫자를 학습했으며, 이전에는 경험하지 못한 숫자도 오름차순으로 정확하게 찾아낼 수 있다고 전했습니다.
+        <video id="chimpanzee-video" src="assets/mp4/chimpanzee.mp4" autoplay loop muted playsinline></video>
+    </div>
+
+
+</div>
+
+<!-- 게임 오버 -->
+<div id="game-over-layer" aria-hidden="true">
+    <div id="game-over-box">
+        <h2>침팬지 기억력 테스트 종료</h2>
+        <div class="game-over-score">
+            <div id="final-score">최종 점수: <b><span>0</span></b>점</div>
+            <div id="game-over-message" style="margin-top:8px;color:var(--muted);font-weight:900;">
+                침팬지의 평균을 넘어보세요!
+            </div>
+        </div>
+        <button class="btn" id="restart-game" type="button">다시하기</button>
+    </div>
+</div>
+
+<!-- 사운드(경로 유지) -->
+<audio id="click-sound" src="assets/mp3/button-click.mp3" preload="auto"></audio>
+<audio id="correct-sound" src="assets/mp3/correct-choice.mp3" preload="auto"></audio>
+<audio id="wrong-sound" src="assets/mp3/error.mp3" preload="auto"></audio>
+<audio id="level-up-sound" src="assets/mp3/level-up.mp3" preload="auto"></audio>
+
+<script>
+    /****************************************************
+     * 바닐라 JS 버전 (jQuery 제거)
+     ****************************************************/
+    const $ = (sel) => document.querySelector(sel);
+    const gameContainer = $("#game-container");
+
+    const ui = {
+        level: $("#level-number"),
+        score: $("#lives-score"),
+        lives: $("#lives-count"),
+        overLayer: $("#game-over-layer"),
+        finalScore: $("#final-score span"),
+        overMsg: $("#game-over-message"),
+        restartBtn: $("#restart-game"),
+        rankBody: $("#rankBody")
+    };
+
+    const sounds = {
+        click: $("#click-sound"),
+        correct: $("#correct-sound"),
+        wrong: $("#wrong-sound"),
+        levelUp: $("#level-up-sound")
+    };
+
+    function playSound(aud){
+        if(!aud) return;
+        try{
+            aud.currentTime = 0;
+            aud.play();
+        }catch(e){}
+    }
+
+    const gameState = {
+        lives: 3,
+        currentNumber: 1,
+        maxNumber: 4,
+        endNumber: 80,
+        completed: 0,
+        score: 0,
+        level: 1,
+        isGameActive: true,
+        tilesShown: true
+    };
+
+    function setText(el, v){ el.textContent = String(v); }
+
+    function getTileSize(){
+        const w = window.innerWidth;
+        if (w <= 480) return 54;
+        if (w <= 768) return 62;
+        return 72;
+    }
+
+    function shuffle(arr){
+        for(let i=arr.length-1;i>0;i--){
+            const j = Math.floor(Math.random()*(i+1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    function generatePositions(containerW, containerH, tileSize, margin){
+        const positions = [];
+        const step = tileSize + (margin * 2);
+
+        const hCount = Math.max(1, Math.floor(containerW / step));
+        const vCount = Math.max(1, Math.floor(containerH / step));
+
+        for(let i=0;i<vCount;i++){
+            for(let j=0;j<hCount;j++){
+                positions.push({
+                    top: (i * step) + margin,
+                    left:(j * step) + margin
+                });
+            }
+        }
+        return positions;
+    }
+
+    function generateTiles(){
+        const rect = gameContainer.getBoundingClientRect();
+        const tileSize = getTileSize();
+        const margin = (window.innerWidth <= 480) ? 6 : (window.innerWidth <= 768) ? 8 : 10;
+
+        gameContainer.innerHTML = "";
+
+        const positions = generatePositions(rect.width, rect.height, tileSize, margin);
+        shuffle(positions);
+
+        const numbers = Array.from({length: gameState.maxNumber}, (_, i) => i + 1);
+        shuffle(numbers);
+
+        numbers.forEach((num, idx) => {
+            const pos = positions[idx % positions.length];
+
+            const tile = document.createElement("div");
+            tile.className = "tile";
+            tile.textContent = String(num);
+            tile.dataset.num = String(num);
+            tile.style.width = tile.style.height = tileSize + "px";
+            tile.style.top = pos.top + "px";
+            tile.style.left = pos.left + "px";
+
+            gameContainer.appendChild(tile);
+        });
+    }
+
+    function hideTileNumbers(){
+        if(!gameState.tilesShown) return;
+        gameState.tilesShown = false;
+
+        // 1 클릭 후, 나머지 숫자 숨김(1은 이미 맞춰서 correct 처리 예정)
+        document.querySelectorAll(".tile").forEach(t=>{
+            if (t.dataset.num !== "1") t.classList.add("hidden-number");
+        });
+    }
+
+    function resetGameRound(){
+        gameState.currentNumber = 1;
+        gameState.completed = 0;
+        gameState.tilesShown = true;
+        setText(ui.level, gameState.level);
+        generateTiles();
+    }
+
+    function levelUp(){
+        gameState.level++;
+        setText(ui.level, gameState.level);
+        playSound(sounds.levelUp);
+    }
+
+    function increaseScore(){
+        gameState.score++;
+        setText(ui.score, gameState.score);
+    }
+
+    function gradeMessage(score){
+        if (score < 2)  return "너무 형편없어! 침팬지도 이 정도는 해!";
+        if (score < 4)  return "초짜 수준이야! 침팬치에게도 웃음거리야!";
+        if (score < 6)  return "아직 부족해! 침팬치가 더 잘할 거야!";
+        if (score < 8)  return "기본은 잡았지만, 침팬치에게 미치지 못해!";
+        if (score < 10) return "무난해! 침팬치도 할 수 있는 수준이야!";
+        if (score < 12) return "괜찮아, 침팬치보다 약간은 낫네!";
+        if (score < 14) return "좋아! 침팬치도 인정할 만한 기억력이야!";
+        if (score < 16) return "훌륭해! 이제 침팬치를 앞서고 있어!";
+        if (score < 18) return "대단해! 침팬치도 감탄할 수준이야!";
+        return "전설적인 기억력! 침팬치가 널 따라올 수 없을 거야!";
+    }
+
+    function showGameOver(){
+        gameState.isGameActive = false;
+
+        ui.finalScore.textContent = String(gameState.score);
+        ui.overMsg.textContent = gradeMessage(gameState.score);
+
+        ui.overLayer.classList.add("visible");
+        ui.overLayer.setAttribute("aria-hidden", "false");
+
+        // (선택) 점수 전송 - 서버 API 맞게 구현
+        rankPost("chimpanzee-v2", gameState.score);
+
+        // 상태 초기화(원본 로직과 동일한 흐름)
+        gameState.lives = 3;
+        gameState.maxNumber = 4;
+        gameState.score = 0;
+        gameState.level = 1;
+
+        setText(ui.lives, gameState.lives);
+        setText(ui.score, gameState.score);
+        setText(ui.level, gameState.level);
+    }
+
+    function checkGameOver(){
+        if (gameState.lives <= 0) showGameOver();
+    }
+
+    // 타일 클릭(이벤트 위임)
+    gameContainer.addEventListener("click", (e)=>{
+        const tile = e.target.closest(".tile");
+        if(!tile) return;
+        if(!gameState.isGameActive) return;
+
+        playSound(sounds.click);
+
+        const num = parseInt(tile.dataset.num, 10);
+
+        if (num === gameState.currentNumber){
+            // 정답
+            tile.classList.add("correct");
+            tile.classList.remove("hidden-number");
+
+            if (num === 1) hideTileNumbers();
+
+            playSound(sounds.correct);
+
+            gameState.completed++;
+            gameState.currentNumber++;
+
+            // 레벨 완료
+            if (gameState.completed === gameState.maxNumber){
+
+                if (gameState.maxNumber < gameState.endNumber){
+                    gameState.maxNumber++;
+
+                    // 4개 단위로 레벨업(원본 유지)
+                    if (gameState.maxNumber % 4 === 0){
+                        levelUp();
+                    }
+                }
+
+                increaseScore();
+
+                setTimeout(resetGameRound, 450);
+            }
+        } else {
+            // 오답
+            gameState.lives--;
+            setText(ui.lives, gameState.lives);
+
+            playSound(sounds.wrong);
+
+            tile.classList.add("wrong");
+            setTimeout(()=>tile.classList.remove("wrong"), 450);
+
+            checkGameOver();
+        }
+    });
+
+    // 다시하기
+    ui.restartBtn.addEventListener("click", ()=>{
+        ui.overLayer.classList.remove("visible");
+        ui.overLayer.setAttribute("aria-hidden", "true");
+        gameState.isGameActive = true;
+        resetGameRound();
+    });
+
+    // 리사이즈 시 재배치
+    window.addEventListener("resize", ()=>{
+        if (gameState.isGameActive) resetGameRound();
+    });
+
+
+
+    function escapeHtml(s){
+        return String(s ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    // 탭 클릭
+    document.querySelectorAll(".tab").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+            document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+            btn.classList.add("active");
+        });
+    });
+
+    // 초기 시작
+    generateTiles();
+</script>
+</body>
+</html>
