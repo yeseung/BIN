@@ -1,0 +1,718 @@
+<!-- file: arcing-cannon-challenge.html -->
+
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>아크 캐논 챌린지</title>
+
+    <!-- https://www.jiraksil.com/service/arcing-cannon -->
+
+    <style>
+        :root{
+            --bg:#ffffff;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --border:#e5e7eb;
+            --shadow: 0 12px 30px rgba(0,0,0,.08);
+
+            --primary:#2563eb;
+            --primary2:#06b6d4;
+            --danger:#ef4444;
+            --ok:#22c55e;
+        }
+
+        *{ box-sizing:border-box; }
+        html,body{ height:100%; }
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .page{
+            max-width: 920px;
+            margin: 0 auto;
+            padding: 18px 14px 70px;
+        }
+
+        /* Header */
+        .topbar{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            margin-bottom: 14px;
+        }
+        .brand{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            font-weight:900;
+            letter-spacing:-.3px;
+            font-size: 16px;
+        }
+        .brand-badge{
+            width:34px;height:34px;
+            border-radius:10px;
+            display:grid;
+            place-items:center;
+            color:#fff;
+            background: linear-gradient(135deg, var(--primary), var(--primary2));
+            box-shadow: 0 10px 20px rgba(37,99,235,.18);
+        }
+
+        .card{
+            background: var(--card);
+            border:1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            overflow:hidden;
+        }
+        .card-pad{ padding: 16px; }
+
+        .title{
+            margin:0 0 8px;
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing:-.3px;
+        }
+        .desc{
+            margin:0;
+            color: var(--muted);
+            line-height:1.65;
+            font-size: 14px;
+        }
+
+        /* Game Area */
+        .game-wrap{
+            margin-top: 14px;
+        }
+
+        #game-display{
+            width:100%;
+            height: 380px;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            background:#fff;
+            position:relative;
+            border-radius: 18px;
+            border: 1px solid var(--border);
+            overflow:hidden;
+        }
+
+        canvas{
+            display:block;
+            background-color:#87CEEB; /* sky */
+            border-radius: 14px;
+            border: 1px solid rgba(0,0,0,.06);
+            box-shadow: 0 12px 24px rgba(0,0,0,.10);
+            touch-action: none; /* 모바일 드래그 스크롤 방지 */
+        }
+
+        /* UI bar */
+        #ui{
+            position:absolute;
+            top: 10px;
+            left: 10px;
+            display:none;
+            padding: 8px 10px;
+            border-radius: 999px;
+            background: rgba(17,24,39,.72);
+            color:#fff;
+            font-weight: 900;
+            font-size: 13px;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,.18);
+        }
+
+        /* Start/End overlay */
+        .overlay{
+            position:absolute;
+            width: 260px;
+            max-width: calc(100% - 26px);
+            background: rgba(17,24,39,.86);
+            color:#fff;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            text-align:center;
+            border-radius: 16px;
+            padding: 14px;
+            border: 1px solid rgba(255,255,255,.18);
+            box-shadow: 0 18px 30px rgba(0,0,0,.20);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        #start-screen{ display:flex; }
+        #end-screen{ display:none; }
+
+        .overlay .small{
+            color: rgba(255,255,255,.75);
+            font-weight: 700;
+            font-size: 12px;
+            line-height: 1.45;
+            margin-top: 8px;
+        }
+
+        .btn{
+            width: 100%;
+            margin-top: 12px;
+            border: 0;
+            cursor:pointer;
+            border-radius: 14px;
+            padding: 12px 14px;
+            font-weight: 900;
+            font-size: 14px;
+            color:#0b1020;
+            background: linear-gradient(135deg, rgba(37,99,235,.85), rgba(6,182,212,.75));
+            box-shadow: 0 12px 20px rgba(37,99,235,.20);
+            transition: transform .12s ease, box-shadow .12s ease;
+        }
+        .btn:hover{ transform: translateY(-1px); box-shadow: 0 16px 26px rgba(37,99,235,.24); }
+        .btn:active{ transform: scale(.98); }
+
+        .info-card{
+            margin-top: 14px;
+            padding: 14px;
+            background:#fff;
+            border:1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+        }
+
+        .hint{
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        @media (max-width: 480px){
+            #game-display{ height: 360px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="page">
+    <div class="topbar">
+        <div class="brand">
+            <div class="brand-badge">🎯</div>
+            <div>아크 캐논 챌린지</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-pad">
+            <h1 class="title">탄도를 조절해서 목표물을 맞춰보세요</h1>
+            <p class="desc">
+                한 레벨에 60초가 주어집니다. 목표물에 명중하면 다음 레벨로 진행합니다.<br />
+                시작 후 커서(또는 터치)로 각도를 조절하고, <b>누르고 있으면 파워가 차고</b> 떼면 발사됩니다.
+            </p>
+
+            <div class="game-wrap">
+                <div id="game-display">
+                    <div id="ui">레벨: <span id="level">1</span> | 시간: <span id="time">60</span></div>
+
+                    <div id="start-screen" class="overlay">
+                        <div>
+                            <div style="font-weight:900;font-size:14px;">탄도를 조절해서 목표물을 맞춰보세요</div>
+                            <div class="small">모바일은 가로모드가 더 편합니다.</div>
+                            <button class="btn" id="start-button" type="button">테스트 시작</button>
+                        </div>
+                    </div>
+
+                    <div id="end-screen" class="overlay">
+                        <div>
+                            <div id="end-message" style="font-weight:900;font-size:14px;"></div>
+                            <button class="btn" id="restart-button" type="button">다시하기</button>
+                        </div>
+                    </div>
+
+                    <canvas id="gameCanvas" aria-label="아크 캐논 캔버스"></canvas>
+                </div>
+            </div>
+
+            <div class="hint">
+                * 팁: 너무 세게 쏘면 넘어가고, 너무 약하면 못 갑니다. 각도와 파워의 균형이 핵심!
+            </div>
+        </div>
+    </div>
+
+    <div class="info-card">
+        아크 캐논 테스트는 공간지각력, 각도 계산 능력, 힘 조절 능력, 전략적 사고 능력을 요구합니다.
+        목표물 위치/장애물 배치를 보고 “각도 + 파워”를 조합해 명중시키는 방식입니다.
+    </div>
+</div>
+
+<script>
+    /*********************************************************
+     * Vanilla JS - Arcing Cannon Challenge (No rank / No ads)
+     *********************************************************/
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const uiEl = document.getElementById('ui');
+    const levelEl = document.getElementById('level');
+    const timeEl = document.getElementById('time');
+    const startScreen = document.getElementById('start-screen');
+    const endScreen = document.getElementById('end-screen');
+    const endMessage = document.getElementById('end-message');
+
+    const startBtn = document.getElementById('start-button');
+    const restartBtn = document.getElementById('restart-button');
+
+    // 캔버스 크기 설정(컨테이너 기준)
+    function resizeCanvas(){
+        const wrap = document.getElementById('game-display');
+        const rect = wrap.getBoundingClientRect();
+
+        // 원본 로직 감안: 너무 작으면 최소폭 확보
+        let w = Math.max(460, Math.floor(rect.width - 24));
+        let h = Math.floor(rect.height - 24);
+
+        // 모바일에서 너무 높지 않게
+        h = Math.max(320, Math.min(420, h));
+
+        canvas.width = w;
+        canvas.height = h;
+    }
+
+    resizeCanvas();
+    window.addEventListener('resize', () => {
+        const running = isRunning;
+        resizeCanvas();
+        if (running) {
+            // 리사이즈 시 물리/좌표가 바뀌므로 레벨 리셋 대신 현재 레벨 그대로 재배치
+            resetLevel(false);
+        } else {
+            // 시작 전/종료 화면에서도 캔버스는 다시 그려줌
+            renderFrame();
+        }
+    });
+
+    // 게임 상수/상태
+    let isRunning = false;
+
+    const gravity = 0.5;
+
+    function groundY(){ return canvas.height * 0.8; }
+
+    const cannon = { x: 100, y: 0, width: 40, height: 40, angle: 45 };
+
+    let target = { x: 0, y: 0, radius: 25 };
+
+    const projectile = {
+        x: 0, y: 0, radius: 6,
+        speed: 0, angle: 0,
+        active: false,
+        vx: 0, vy: 0
+    };
+
+    let obstacles = [];
+
+    let level = 1;
+    let timeLeft = 60;
+    let gameInterval = null;
+    let timeInterval = null;
+
+    let charging = false;
+    let chargeLevel = 0;
+    let chargeInterval = null;
+
+    // 이펙트
+    let targetHit = false;
+    let targetOpacity = 1.0;
+    let lastShotPower = 0;
+
+    function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+    function rand(min, max){ return Math.random() * (max - min) + min; }
+
+    function resetLevel(resetTimer = true){
+        cannon.y = groundY() - 10;
+
+        randomizeTargetPosition();
+        generateObstacles();
+
+        projectile.active = false;
+        targetHit = false;
+        targetOpacity = 1.0;
+
+        if (resetTimer){
+            timeLeft = 60;
+            timeEl.textContent = timeLeft;
+        }
+    }
+
+    function randomizeTargetPosition(){
+        const gy = groundY();
+        const minX = (level <= 5) ? 200 : (canvas.width / 2);
+        const maxX = canvas.width - 100;
+
+        target.x = rand(minX, maxX);
+        target.y = gy;
+
+        target.radius = rand(15, 25);
+    }
+
+    function generateObstacles(){
+        const num = Math.floor(Math.random() * 5) + 1;
+        obstacles = [];
+
+        const safe = 110;
+        for (let i=0;i<num;i++){
+            let w = rand(50, 100);
+            let h = rand(30, 100);
+            let x = rand(0, canvas.width - w);
+
+            while ((x > cannon.x - safe && x < cannon.x + safe) ||
+            (x > target.x - safe && x < target.x + safe)) {
+                x = rand(0, canvas.width - w);
+            }
+            obstacles.push({ x, width: w, height: h });
+        }
+    }
+
+    // Draw
+    function drawGround(){
+        const gy = groundY();
+        ctx.fillStyle = '#654321';
+        ctx.fillRect(0, gy, canvas.width, canvas.height - gy);
+        drawObstacles();
+    }
+
+    function drawObstacles(){
+        const gy = groundY();
+        ctx.fillStyle = '#8B4513';
+        obstacles.forEach(o=>{
+            ctx.beginPath();
+            const half = o.width/2;
+            ctx.moveTo(o.x, gy);
+            ctx.lineTo(o.x + half, gy - o.height);
+            ctx.lineTo(o.x + o.width, gy);
+            ctx.closePath();
+            ctx.fill();
+        });
+    }
+
+    function drawCannon(){
+        ctx.save();
+        ctx.translate(cannon.x, cannon.y);
+        ctx.rotate(-cannon.angle * Math.PI / 180);
+
+        ctx.fillStyle = '#000';
+        ctx.fillRect(-cannon.width/2, -cannon.height/2, cannon.width, cannon.height);
+
+        ctx.fillStyle = '#555';
+        ctx.fillRect(0, -5, cannon.width, 10);
+
+        ctx.restore();
+
+        drawChargeBar();
+    }
+
+    function drawChargeBar(){
+        // base bar
+        const barW = 130;
+        const barH = 7;
+        const x = cannon.x - barW/2;
+        const y = cannon.y - cannon.height - 14;
+
+        ctx.fillStyle = 'rgba(255,255,255,.85)';
+        ctx.fillRect(x, y, barW, barH);
+
+        // fill
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(x, y, barW * (chargeLevel / 100), barH);
+
+        // ticks
+        ctx.fillStyle = 'rgba(0,0,0,.7)';
+        for(let i=0;i<=10;i++){
+            const tx = x + (i * (barW/10));
+            ctx.fillRect(tx, y - 5, 1, 5);
+        }
+
+        // number
+        ctx.fillStyle = '#111';
+        ctx.font = 'bold 18px Arial';
+        ctx.fillText(String(chargeLevel), cannon.x - 10, y - 10);
+    }
+
+    function drawTarget(){
+        if (targetHit){
+            ctx.fillStyle = `rgba(255,0,0,${targetOpacity})`;
+            ctx.beginPath();
+            ctx.arc(target.x, target.y, target.radius, 0, Math.PI*2);
+            ctx.fill();
+
+            if (targetOpacity > 0){
+                target.y -= 1;
+                targetOpacity -= 0.02;
+            }
+        } else {
+            ctx.fillStyle = '#ff0000';
+            ctx.beginPath();
+            ctx.arc(target.x, target.y, target.radius, 0, Math.PI*2);
+            ctx.fill();
+        }
+    }
+
+    function drawProjectile(){
+        if (!projectile.active) return;
+        ctx.fillStyle = '#ff0000';
+        ctx.beginPath();
+        ctx.arc(projectile.x, projectile.y, projectile.radius, 0, Math.PI*2);
+        ctx.fill();
+    }
+
+    function drawPowerDisplay(){
+        // 원본은 항상 표시 중이어서 그대로 유지
+        const boxW = 150, boxH = 92;
+        const boxX = cannon.x - boxW/2;
+        const boxY = cannon.y - cannon.height - 160;
+
+        ctx.fillStyle = 'rgba(255,255,255,0.75)';
+        ctx.fillRect(boxX, boxY, boxW, boxH);
+
+        ctx.fillStyle = '#111';
+        ctx.font = '14px Arial';
+        ctx.fillText(`각도: ${Math.round(cannon.angle)}°`, boxX + 10, boxY + 28);
+        ctx.fillText(`파워: ${lastShotPower}`, boxX + 10, boxY + 50);
+        ctx.fillText(`속도: ${Math.round(projectile.speed)}`, boxX + 10, boxY + 72);
+    }
+
+    function updateProjectile(){
+        if (!projectile.active) return;
+
+        const gy = groundY();
+
+        projectile.vy += gravity;
+        projectile.x += projectile.vx;
+        projectile.y += projectile.vy;
+
+        // target collision
+        const dx = projectile.x - target.x;
+        const dy = projectile.y - target.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+
+        if (dist < projectile.radius + target.radius){
+            projectile.active = false;
+            hitTargetEffect();
+            return;
+        }
+
+        // ground
+        if (projectile.y + projectile.radius >= gy){
+            projectile.active = false;
+            return;
+        }
+
+        // obstacles collision (triangle bounds is complex)
+        // 원본처럼 대략적인 사각 판정 + 바닥 근처 판정 유지
+        for (const o of obstacles){
+            if (projectile.x > o.x && projectile.x < o.x + o.width &&
+                projectile.y > gy - o.height && projectile.y < gy){
+                projectile.active = false;
+                return;
+            }
+            if (projectile.x + projectile.radius >= o.x &&
+                projectile.x - projectile.radius <= o.x + o.width &&
+                projectile.y + projectile.radius >= gy - o.height) {
+                projectile.active = false;
+                return;
+            }
+        }
+
+        // out of bounds
+        if (projectile.x < -50 || projectile.x > canvas.width + 50 || projectile.y < -100){
+            projectile.active = false;
+        }
+    }
+
+    function hitTargetEffect(){
+        targetHit = true;
+        targetOpacity = 1.0;
+
+        const interval = setInterval(()=>{
+            if (targetOpacity <= 0){
+                clearInterval(interval);
+                nextLevel();
+            }
+        }, 30);
+    }
+
+    function nextLevel(){
+        level++;
+        levelEl.textContent = level;
+        resetLevel(true);
+    }
+
+    function updateTime(){
+        if (timeLeft > 0){
+            timeLeft--;
+            timeEl.textContent = timeLeft;
+        } else {
+            endGame();
+        }
+    }
+
+    function endGame(){
+        stopLoops();
+        isRunning = false;
+
+        endMessage.innerHTML = `테스트 종료!<br>최종 레벨 ${level}`;
+        endScreen.style.display = 'flex';
+        uiEl.style.display = 'none';
+    }
+
+    function stopLoops(){
+        if (gameInterval) { clearInterval(gameInterval); gameInterval = null; }
+        if (timeInterval) { clearInterval(timeInterval); timeInterval = null; }
+        if (chargeInterval) { clearInterval(chargeInterval); chargeInterval = null; }
+        charging = false;
+        chargeLevel = 0;
+    }
+
+    function startGame(){
+        stopLoops();
+        isRunning = true;
+
+        level = 1;
+        timeLeft = 60;
+        levelEl.textContent = level;
+        timeEl.textContent = timeLeft;
+
+        startScreen.style.display = 'none';
+        endScreen.style.display = 'none';
+        uiEl.style.display = 'block';
+
+        resetLevel(true);
+
+        gameInterval = setInterval(gameLoop, 1000/50);
+        timeInterval = setInterval(updateTime, 1000);
+    }
+
+    // Input helpers
+    function getPointerPos(evt){
+        const rect = canvas.getBoundingClientRect();
+        return {
+            x: evt.clientX - rect.left,
+            y: evt.clientY - rect.top
+        };
+    }
+
+    function updateCannonAngleByPoint(px, py){
+        const dx = px - cannon.x;
+        const dy = cannon.y - py;
+        cannon.angle = Math.atan2(dy, dx) * 180 / Math.PI;
+        // 뒤로 쏘는 각도 방지(선택): -10~170 정도 제한
+        cannon.angle = clamp(cannon.angle, 0, 90);
+    }
+
+    function startCharging(){
+        if (!isRunning) return;
+        charging = true;
+        chargeLevel = 0;
+
+        if (chargeInterval) clearInterval(chargeInterval);
+        chargeInterval = setInterval(()=>{
+            if (!charging) return;
+            chargeLevel += 2;
+            if (chargeLevel > 100) chargeLevel = 0;
+        }, 30);
+    }
+
+    function releaseCharge(){
+        if (!isRunning) return;
+        if (!charging) return;
+
+        charging = false;
+        if (chargeInterval) { clearInterval(chargeInterval); chargeInterval = null; }
+
+        if (!projectile.active){
+            projectile.x = cannon.x;
+            projectile.y = cannon.y;
+            projectile.angle = cannon.angle;
+            projectile.speed = chargeLevel / 3;
+
+            projectile.vx = Math.cos(projectile.angle * Math.PI/180) * projectile.speed;
+            projectile.vy = -Math.sin(projectile.angle * Math.PI/180) * projectile.speed;
+            projectile.active = true;
+
+            lastShotPower = chargeLevel;
+            chargeLevel = 0;
+        }
+    }
+
+    // Mouse events
+    canvas.addEventListener('mousemove', (e)=>{
+        if (!isRunning) return;
+        const p = getPointerPos(e);
+        updateCannonAngleByPoint(p.x, p.y);
+    });
+    canvas.addEventListener('mousedown', (e)=>{
+        if (!isRunning) return;
+        startCharging();
+    });
+    window.addEventListener('mouseup', (e)=>{
+        // 캔버스 밖에서 떼어도 발사되게
+        if (!isRunning) return;
+        releaseCharge();
+    });
+
+    // Touch events
+    canvas.addEventListener('touchstart', (e)=>{
+        if (!isRunning) return;
+        e.preventDefault();
+        const t = e.touches[0];
+        const p = getPointerPos(t);
+        updateCannonAngleByPoint(p.x, p.y);
+        startCharging();
+    }, {passive:false});
+
+    canvas.addEventListener('touchmove', (e)=>{
+        if (!isRunning) return;
+        e.preventDefault();
+        const t = e.touches[0];
+        const p = getPointerPos(t);
+        updateCannonAngleByPoint(p.x, p.y);
+    }, {passive:false});
+
+    canvas.addEventListener('touchend', (e)=>{
+        if (!isRunning) return;
+        e.preventDefault();
+        releaseCharge();
+    }, {passive:false});
+
+    // Main loop
+    function renderFrame(){
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        drawGround();
+        drawCannon();
+        drawTarget();
+        drawProjectile();
+        drawPowerDisplay();
+    }
+
+    function gameLoop(){
+        renderFrame();
+        updateProjectile();
+    }
+
+    // initial render
+    resetLevel(true);
+    renderFrame();
+
+    // buttons
+    startBtn.addEventListener('click', startGame);
+    restartBtn.addEventListener('click', startGame);
+</script>
+</body>
+</html>
