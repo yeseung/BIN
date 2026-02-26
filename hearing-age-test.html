@@ -1,0 +1,554 @@
+<!-- file: hearing-age-test.html -->
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>청력 나이 테스트 🎧</title>
+    <meta name="description" content="이어폰 하나로 끝내는 초간단 주파수 청력 나이 테스트!" />
+
+    <style>
+        :root{
+            --bg:#ffffff;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --border:#e5e7eb;
+            --shadow: 0 12px 30px rgba(0,0,0,.08);
+
+            --primary:#2563eb;
+            --primary2:#06b6d4;
+
+            --warn:#ef4444;
+            --ok:#22c55e;
+            --amber:#f59e0b;
+        }
+
+        *{ box-sizing:border-box; }
+        html,body{ height:100%; }
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .page{
+            max-width: 920px;
+            margin: 0 auto;
+            padding: 18px 14px 70px;
+        }
+
+        .topbar{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            margin-bottom: 14px;
+        }
+
+        .brand{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            font-weight:900;
+            letter-spacing:-.3px;
+            font-size: 16px;
+        }
+
+        .brand-badge{
+            width:34px;height:34px;
+            border-radius:10px;
+            display:grid;
+            place-items:center;
+            color:#fff;
+            background: linear-gradient(135deg, var(--primary), var(--primary2));
+            box-shadow: 0 10px 20px rgba(37,99,235,.18);
+        }
+
+        .card{
+            background: var(--card);
+            border:1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            overflow:hidden;
+        }
+        .card-pad{ padding: 16px; }
+
+        .title{
+            margin:0 0 8px;
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing:-.3px;
+        }
+        .desc{
+            margin:0;
+            color: var(--muted);
+            line-height:1.65;
+            font-size: 14px;
+        }
+
+        /* Test UI */
+        .test-wrap{
+            margin-top: 14px;
+            border:1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            background:#fff;
+            overflow:hidden;
+        }
+
+        .stage{
+            display:none;
+            padding: 18px;
+            min-height: 460px;
+            align-items:center;
+            justify-content:center;
+            flex-direction:column;
+            text-align:center;
+            gap: 12px;
+        }
+        .stage.active{
+            display:flex;
+            animation: fadeIn .25s ease-out;
+        }
+        @keyframes fadeIn{
+            from{ opacity:0; transform: translateY(8px); }
+            to{ opacity:1; transform: translateY(0); }
+        }
+
+        .warn-box{
+            max-width: 620px;
+            width: 100%;
+            border: 1px solid rgba(239,68,68,.35);
+            background: rgba(239,68,68,.06);
+            color: #b91c1c;
+            padding: 14px 14px;
+            border-radius: 14px;
+            font-weight: 800;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .hz-label{
+            color: var(--muted);
+            font-weight: 800;
+            font-size: 13px;
+        }
+
+        .hz-display{
+            font-weight: 1000;
+            letter-spacing: -1px;
+            font-size: clamp(38px, 7vw, 56px);
+            color: #0f172a;
+            margin: 4px 0;
+        }
+
+        .speaker{
+            font-size: 64px;
+            line-height: 1;
+            margin: 6px 0 10px;
+            filter: drop-shadow(0 10px 18px rgba(0,0,0,.10));
+            user-select:none;
+        }
+
+        .speaker.playing{
+            animation: pulse .5s infinite alternate, shake .10s infinite;
+        }
+        @keyframes pulse{
+            from{ transform: scale(1); }
+            to{ transform: scale(1.15); }
+        }
+        @keyframes shake{
+            0%,100%{ transform: translateX(0); }
+            50%{ transform: translateX(-2px); }
+        }
+
+        .question{
+            font-weight: 900;
+            font-size: 16px;
+            margin-top: 6px;
+        }
+
+        .btns{
+            width: 100%;
+            max-width: 380px;
+            display:flex;
+            flex-direction:column;
+            gap:10px;
+            margin-top: 8px;
+        }
+
+        .btn{
+            border:0;
+            cursor:pointer;
+            border-radius: 14px;
+            padding: 14px 14px;
+            font-weight: 1000;
+            font-size: 15px;
+            transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:10px;
+            user-select:none;
+        }
+        .btn:active{ transform: scale(.98); }
+
+        .btn-primary{
+            color:#0b1020;
+            background: linear-gradient(135deg, rgba(37,99,235,.85), rgba(6,182,212,.75));
+            box-shadow: 0 12px 20px rgba(37,99,235,.18);
+        }
+        .btn-primary:hover{ filter: brightness(1.02); box-shadow: 0 16px 26px rgba(37,99,235,.22); }
+
+        .btn-yes{
+            color:#052e1b;
+            background: linear-gradient(135deg, rgba(34,197,94,.9), rgba(16,185,129,.75));
+            box-shadow: 0 12px 20px rgba(34,197,94,.16);
+        }
+        .btn-no{
+            color:#111827;
+            background:#fff;
+            border:1px solid var(--border);
+            box-shadow: 0 10px 18px rgba(0,0,0,.06);
+        }
+
+        .progress{
+            width: 100%;
+            max-width: 520px;
+            height: 8px;
+            border-radius: 999px;
+            background: #f3f4f6;
+            border:1px solid var(--border);
+            overflow:hidden;
+            margin-bottom: 10px;
+        }
+        .bar{
+            height:100%;
+            width:0%;
+            background: linear-gradient(90deg, var(--amber), var(--primary2));
+            transition: width .25s ease;
+        }
+
+        /* Result */
+        .result-emoji{
+            font-size: 64px;
+            margin-bottom: 2px;
+        }
+        .result-age{
+            font-weight: 1000;
+            font-size: clamp(34px, 6vw, 50px);
+            color: #dc2626;
+            letter-spacing: -1px;
+            margin: 2px 0 6px;
+        }
+
+        .result-box{
+            max-width: 680px;
+            width: 100%;
+            border:1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            background:#fff;
+            box-shadow: 0 12px 26px rgba(0,0,0,.08);
+            text-align:left;
+            line-height: 1.6;
+        }
+        .result-title{
+            font-weight: 1000;
+            color: #0f172a;
+            margin-bottom: 8px;
+            display:block;
+        }
+        .result-desc{
+            color: var(--muted);
+            font-weight: 700;
+            margin:0;
+        }
+
+        .mini{
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+            max-width: 680px;
+        }
+
+        /* accessibility */
+        .sr-only{
+            position:absolute;
+            width:1px;height:1px;
+            padding:0;margin:-1px;
+            overflow:hidden;clip:rect(0,0,0,0);
+            white-space:nowrap;border:0;
+        }
+    </style>
+</head>
+
+<body>
+<div class="page">
+    <div class="topbar">
+        <div class="brand">
+            <div class="brand-badge">🎧</div>
+            <div>청력 나이 테스트</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-pad">
+            <h1 class="title">이어폰 하나로 끝내는 주파수 청력 나이 테스트</h1>
+            <p class="desc">
+                볼륨은 <b>절반 이하</b>로 맞추고 진행하세요. (고막 보호)<br />
+                각 주파수 소리를 듣고 “들린다/안 들린다”를 선택하면 결과가 나옵니다.
+            </p>
+
+            <div class="test-wrap" role="application" aria-label="청력 나이 테스트">
+                <!-- START -->
+                <section id="screenStart" class="stage active">
+                    <div class="title" style="font-size:22px; margin:0;">🎧 전국민 청력 나이 테스트</div>
+                    <div class="desc" style="max-width:680px;">
+                        당신의 고막은 안녕하신가요? 주파수로 ‘귀 나이’를 추정합니다.
+                    </div>
+
+                    <div class="warn-box">
+                        🚨 경고: 이어폰 착용 권장!<br />
+                        단, 볼륨은 절반 이하로 맞추고 시작하세요. (고막 터짐 주의)
+                    </div>
+
+                    <button id="btnStart" class="btn btn-primary" type="button">테스트 시작하기</button>
+
+                    <p class="mini">
+                        * 브라우저 정책상 소리 재생은 버튼 클릭 이후에만 가능합니다.
+                    </p>
+                </section>
+
+                <!-- TEST -->
+                <section id="screenTest" class="stage">
+                    <div class="progress" aria-hidden="true"><div id="progressBar" class="bar"></div></div>
+
+                    <div class="hz-label">현재 주파수</div>
+                    <div id="hzText" class="hz-display">8,000 Hz</div>
+
+                    <div id="speakerIcon" class="speaker" aria-hidden="true">🔈</div>
+
+                    <div class="question">이 소리가 들리십니까?</div>
+
+                    <div class="btns">
+                        <button id="btnYes" class="btn btn-yes" type="button">네, 잘 들립니다 (O)</button>
+                        <button id="btnNo" class="btn btn-no" type="button">아니요, 안 들립니다 (X)</button>
+                    </div>
+
+                    <p class="mini">
+                        * 소리가 너무 크면 즉시 중단하고 볼륨을 낮춰주세요.
+                    </p>
+                </section>
+
+                <!-- RESULT -->
+                <section id="screenResult" class="stage">
+                    <div id="resultEmoji" class="result-emoji">👴</div>
+                    <div class="hz-label">당신의 청력 나이는...</div>
+                    <div id="resultAge" class="result-age">60대 이상</div>
+
+                    <div class="result-box">
+                        <span id="resultTitle" class="result-title">"이어폰 안 꽂은 거 아니죠?"</span>
+                        <p id="resultDesc" class="result-desc">
+                            이것도 안 들리시면 스마트폰을 볼 게 아니라 당장 이비인후과를 예약하셔야 합니다.
+                        </p>
+                    </div>
+
+                    <div class="btns" style="margin-top:14px;">
+                        <button id="btnRestart" class="btn btn-primary" type="button">다시 측정하기</button>
+                    </div>
+
+                    <p class="mini">
+                        * 본 테스트는 재미용이며 의료 진단이 아닙니다.
+                    </p>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /************************************************************
+     * Hearing Age Test - Vanilla JS (No ads / No jQuery / No bootstrap)
+     * - Web Audio API oscillator + safe gain
+     ************************************************************/
+    const $ = (sel) => document.querySelector(sel);
+
+    const screenStart = $('#screenStart');
+    const screenTest = $('#screenTest');
+    const screenResult = $('#screenResult');
+
+    const btnStart = $('#btnStart');
+    const btnYes = $('#btnYes');
+    const btnNo = $('#btnNo');
+    const btnRestart = $('#btnRestart');
+
+    const hzText = $('#hzText');
+    const progressBar = $('#progressBar');
+    const speakerIcon = $('#speakerIcon');
+
+    const resultEmoji = $('#resultEmoji');
+    const resultAge = $('#resultAge');
+    const resultTitle = $('#resultTitle');
+    const resultDesc = $('#resultDesc');
+
+    // WebAudio
+    let audioCtx = null;
+    let oscillator = null;
+    let gainNode = null;
+
+    const levels = [
+        { hz:  8000, age: '60대 이상', emoji: '👴', title: '이어폰 안 꽂은 거 아니죠?', desc: '이것도 안 들리시면 스마트폰을 볼 게 아니라 당장 이비인후과를 예약하셔야 합니다. 혹은 이어폰 탓을 해보세요.' },
+        { hz: 10000, age: '50대',     emoji: '👨‍🦳', title: '부장님, 여기서 이러시면 안됩니다.', desc: '자연스러운 노화 현상입니다. 회식 자리에서 남들 웃을 때 눈치껏 같이 웃는 기술이 필요합니다.' },
+        { hz: 12000, age: '40대',     emoji: '🧔',   title: '라떼는 말이야~가 환청으로 들리는 귀', desc: '일상생활은 가능하지만 고음과는 서서히 작별 중입니다. 스트레스는 귀에도 안 좋습니다.' },
+        { hz: 14000, age: '30대',     emoji: '💼',   title: '사회생활에 찌든 K-직장인 고막', desc: '업무 스트레스와 잦은 야근으로 귀도 같이 피곤해졌습니다. 그래도 아직 괜찮습니다.' },
+        { hz: 15000, age: '20대 후반',emoji: '🎧',  title: '아직은 쌩쌩한 젊은 피', desc: '준수한 고막입니다. 다만 이어폰 풀볼륨은 이제부터 조심하세요.' },
+        { hz: 16000, age: '20대 초반',emoji: '✨',  title: '맑고 투명한 유리구슬 고막', desc: '축하합니다! 아직 꺾이지 않은 귀입니다. 이 상태를 유지하려면 볼륨부터 관리하세요.' },
+        { hz: 17400, age: '10대 (모기음)',emoji:'🦟', title: '야자 째고 피방가기 딱 좋은 귀', desc: '어른들은 못 듣는 고주파를 캐치하는 능력자 귀입니다.' },
+        { hz: 20000, age: '우리집 뽀삐',emoji:'🐶', title: '인간은 못 듣는 소리입니다만?', desc: '이 주파수는 대부분의 사람에겐 어렵습니다. 혹시 전생에 강아지셨나요? 왈왈!' }
+    ];
+
+    let currentLevel = 0;
+    let startDelayTimer = null;
+
+    function showScreen(which){
+        [screenStart, screenTest, screenResult].forEach(s => s.classList.remove('active'));
+        which.classList.add('active');
+    }
+
+    function initAudio(){
+        if (!audioCtx){
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContext();
+        }
+        // iOS 등에서 suspended일 수 있음
+        if (audioCtx.state === 'suspended'){
+            audioCtx.resume().catch(()=>{});
+        }
+    }
+
+    function stopFrequency(){
+        if (!oscillator) {
+            speakerIcon.textContent = '🔈';
+            speakerIcon.classList.remove('playing');
+            return;
+        }
+        try{
+            // click/pop 방지 페이드아웃
+            if (gainNode){
+                gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(gainNode.gain.value, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.05);
+            }
+            const o = oscillator;
+            oscillator = null;
+            setTimeout(()=>{
+                try{ o.stop(); o.disconnect(); }catch(e){}
+            }, 60);
+        }catch(e){}
+
+        speakerIcon.textContent = '🔈';
+        speakerIcon.classList.remove('playing');
+    }
+
+    function playFrequency(hz){
+        stopFrequency();
+
+        oscillator = audioCtx.createOscillator();
+        gainNode = audioCtx.createGain();
+
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(hz, audioCtx.currentTime);
+
+        // 안전장치: 볼륨 상한 0.10(10%)
+        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.10, audioCtx.currentTime + 0.10);
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        oscillator.start();
+
+        speakerIcon.textContent = '🔊';
+        speakerIcon.classList.add('playing');
+    }
+
+    function updateProgress(){
+        const pct = ((currentLevel + 1) / levels.length) * 100;
+        progressBar.style.width = pct + '%';
+    }
+
+    function loadLevel(){
+        // 혹시 남아있던 타이머 제거
+        if (startDelayTimer) { clearTimeout(startDelayTimer); startDelayTimer = null; }
+
+        updateProgress();
+        const hz = levels[currentLevel].hz;
+        hzText.textContent = hz.toLocaleString() + ' Hz';
+
+        // 약간의 텀 뒤에 재생
+        startDelayTimer = setTimeout(()=>{
+            startDelayTimer = null;
+            playFrequency(hz);
+        }, 450);
+    }
+
+    function showResult(index){
+        stopFrequency();
+        const r = levels[index];
+        resultEmoji.textContent = r.emoji;
+        resultAge.textContent = r.age;
+        resultTitle.textContent = `"${r.title}"`;
+        resultDesc.textContent = r.desc;
+        showScreen(screenResult);
+    }
+
+    function startTest(){
+        initAudio();
+        currentLevel = 0;
+        showScreen(screenTest);
+        loadLevel();
+    }
+
+    function answer(isHear){
+        stopFrequency();
+
+        if (isHear){
+            currentLevel++;
+            if (currentLevel >= levels.length){
+                // 끝까지 다 들림 -> 마지막(뽀삐) 처리
+                showResult(levels.length - 1);
+            } else {
+                loadLevel();
+            }
+        } else {
+            showResult(currentLevel);
+        }
+    }
+
+    function resetAll(){
+        stopFrequency();
+        currentLevel = 0;
+        progressBar.style.width = '0%';
+        hzText.textContent = '8,000 Hz';
+        showScreen(screenStart);
+    }
+
+    // 이벤트
+    btnStart.addEventListener('click', startTest);
+    btnYes.addEventListener('click', () => answer(true));
+    btnNo.addEventListener('click', () => answer(false));
+    btnRestart.addEventListener('click', () => {
+        // reload 대신 깨끗한 리셋
+        resetAll();
+    });
+
+    // 페이지 숨김/이탈 시 소리 정지
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) stopFrequency();
+    });
+    window.addEventListener('pagehide', stopFrequency);
+</script>
+</body>
+</html>
