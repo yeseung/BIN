@@ -1,0 +1,551 @@
+<!-- filename example: perfect-pitch-test.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>절대음감 테스트</title>
+
+    <!-- https://www.jiraksil.com/service/tone -->
+
+    <!-- Tone.js (only external lib; no jQuery/Bootstrap/Ads) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --border:#e5e7eb;
+            --text:#111827;
+            --muted:#6b7280;
+
+            --primary:#2563eb;
+            --good:#22c55e;
+            --bad:#ef4444;
+
+            --shadow:0 10px 30px rgba(0,0,0,.08);
+            --radius:16px;
+
+            --whiteKey:#ffffff;
+            --whiteKeyBorder:#111827;
+            --blackKey:#111827;
+            --blackKeyBorder:#0b0f1a;
+            --selected:#a7d7ff;
+        }
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;
+            background:var(--bg);
+            color:var(--text);
+        }
+        .wrap{
+            max-width:920px;
+            margin:40px auto;
+            padding:20px;
+        }
+        .title{
+            margin:0;
+            font-size:22px;
+            line-height:1.2;
+        }
+        .desc{
+            margin:10px 0 0;
+            color:var(--muted);
+            line-height:1.6;
+        }
+
+        .card{
+            margin-top:16px;
+            background:var(--card);
+            border:1px solid var(--border);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            overflow:hidden;
+        }
+        .topbar{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            flex-wrap:wrap;
+            padding:14px 16px;
+            border-bottom:1px solid var(--border);
+        }
+        .chips{
+            display:flex;
+            gap:10px;
+            align-items:center;
+            flex-wrap:wrap;
+            font-weight:900;
+        }
+        .chip{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            padding:8px 12px;
+            border:1px solid var(--border);
+            border-radius:999px;
+            background:#fff;
+            font-size:14px;
+            user-select:none;
+        }
+        .chip span{ color:var(--muted); font-weight:800; }
+
+        .btns{ display:flex; gap:10px; flex-wrap:wrap; }
+        .btn{
+            appearance:none;
+            border:1px solid var(--border);
+            background:#fff;
+            color:var(--text);
+            border-radius:999px;
+            padding:10px 14px;
+            font-weight:900;
+            cursor:pointer;
+            transition:transform .05s ease, border-color .2s ease, background .2s ease, opacity .2s ease;
+            user-select:none;
+        }
+        .btn:hover{ border-color:#cbd5e1; }
+        .btn:active{ transform:translateY(1px); }
+        .btn.primary{
+            background:var(--primary);
+            border-color:var(--primary);
+            color:#fff;
+        }
+        .btn:disabled{
+            opacity:.5;
+            cursor:not-allowed;
+        }
+
+        .stage{
+            padding:18px;
+        }
+
+        .gameBox{
+            border:1px solid var(--border);
+            border-radius:14px;
+            background:#ffffff;
+            padding:16px;
+        }
+
+        .row{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+            flex-wrap:wrap;
+            margin-bottom:10px;
+        }
+
+        .hint{
+            margin:0;
+            color:var(--muted);
+            line-height:1.6;
+            font-size:14px;
+            display:flex;
+            align-items:center;
+            gap:8px;
+            flex-wrap:wrap;
+        }
+
+        .result{
+            margin:8px 0 0;
+            text-align:center;
+            padding:10px 12px;
+            border-radius:12px;
+            border:1px dashed var(--border);
+            background:#fafafa;
+            min-height:44px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            flex-direction:column;
+            gap:8px;
+        }
+        .good{ color:var(--good); font-weight:1000; }
+        .bad{ color:var(--bad); font-weight:1000; }
+        .small{
+            font-size:13px;
+            color:var(--muted);
+            line-height:1.4;
+            text-align:center;
+            margin:0;
+        }
+
+        /* Piano */
+        .pianoWrap{
+            display:flex;
+            justify-content:center;
+            margin-top:12px;
+        }
+        #piano{
+            position:relative;
+            width:420px;
+            height:200px;
+            user-select:none;
+            touch-action:manipulation;
+        }
+        .white-key{
+            position:relative;
+            display:inline-flex;
+            width:60px;
+            height:200px;
+            border-radius:0 0 10px 10px;
+            background:var(--whiteKey);
+            border:1px solid var(--whiteKeyBorder);
+            cursor:pointer;
+            align-items:flex-end;
+            justify-content:center;
+            padding-bottom:8px;
+            font-weight:900;
+            transition:background .15s ease, transform .05s ease;
+        }
+        .white-key:active{ transform:translateY(1px); }
+        .white-key.selected{ background:var(--selected); }
+
+        .black-key{
+            position:absolute;
+            top:0;
+            width:40px;
+            height:120px;
+            border-radius:0 0 10px 10px;
+            background:var(--blackKey);
+            color:#fff;
+            border:1px solid var(--blackKeyBorder);
+            cursor:pointer;
+            z-index:2;
+            display:flex;
+            align-items:flex-end;
+            justify-content:center;
+            padding-bottom:8px;
+            font-weight:900;
+            transition:background .15s ease, color .15s ease, transform .05s ease;
+        }
+        .black-key:active{ transform:translateY(1px); }
+        .black-key.selected{ background:var(--selected); color:#111; }
+
+        @media (max-width: 600px){
+            #piano{ width:280px; height:133px; }
+            .white-key{ width:40px; height:133px; font-size:13px; padding-bottom:6px; border-radius:0 0 10px 10px; }
+            .black-key{ width:27px; height:80px; font-size:12px; padding-bottom:6px; border-radius:0 0 10px 10px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <h1 class="title">절대음감 테스트</h1>
+    <p class="desc">
+        재생되는 음을 듣고 해당 음(도, 레, 미, 파, 솔, 라, 시)을 맞혀보세요.
+        레벨이 오르면 더 많은 음이 연속으로 나옵니다. 총 5번의 기회가 있습니다.
+    </p>
+
+    <div class="card">
+        <div class="topbar">
+            <div class="chips">
+                <div class="chip">레벨 <span id="levelText">1</span></div>
+                <div class="chip">점수 <span id="scoreText">0</span></div>
+                <div class="chip">기회 <span id="livesText">5</span></div>
+            </div>
+            <div class="btns">
+                <button class="btn" id="resetBtn" type="button">초기화</button>
+                <button class="btn primary" id="startBtn" type="button">시작</button>
+                <button class="btn" id="replayBtn" type="button" disabled>다시듣기</button>
+            </div>
+        </div>
+
+        <div class="stage">
+            <div class="gameBox">
+                <div class="row">
+                    <p class="hint" id="instruction">시작을 누르면 음이 재생됩니다.</p>
+                </div>
+
+                <div class="result" id="resultBox">
+                    <p class="small">정답/오답 메시지가 여기에 표시됩니다.</p>
+                </div>
+
+                <div class="pianoWrap">
+                    <div id="piano" aria-label="피아노 건반"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (() => {
+        // ===== Tone.js Synth =====
+        const synth = new Tone.Synth().toDestination();
+
+        // 기본 7계
+        const noteList = [
+            { name:'도', tone:'C4' },
+            { name:'레', tone:'D4' },
+            { name:'미', tone:'E4' },
+            { name:'파', tone:'F4' },
+            { name:'솔', tone:'G4' },
+            { name:'라', tone:'A4' },
+            { name:'시', tone:'B4' }
+        ];
+        // 반음(검은건반)
+        const extraNotes = [
+            { name:'도#', tone:'C#4' },
+            { name:'레#', tone:'D#4' },
+            { name:'파#', tone:'F#4' },
+            { name:'솔#', tone:'G#4' },
+            { name:'라#', tone:'A#4' }
+        ];
+
+        // ===== State =====
+        let score = 0;
+        let lives = 5;
+        let level = 1;
+
+        let currentSequence = [];
+        let userSequence = [];
+
+        let inputDisabled = true;     // 시작 전 입력 막기
+        let isPlaying = false;
+
+        // ===== DOM =====
+        const levelText = document.getElementById('levelText');
+        const scoreText = document.getElementById('scoreText');
+        const livesText = document.getElementById('livesText');
+
+        const instruction = document.getElementById('instruction');
+        const resultBox = document.getElementById('resultBox');
+
+        const piano = document.getElementById('piano');
+
+        const startBtn = document.getElementById('startBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const replayBtn = document.getElementById('replayBtn');
+
+        function setHeader(){
+            levelText.textContent = String(level);
+            scoreText.textContent = String(score);
+            livesText.textContent = String(lives);
+        }
+
+        function setResult(html){
+            resultBox.innerHTML = html;
+        }
+
+        function clearSelectedKeys(){
+            piano.querySelectorAll('.white-key, .black-key').forEach(k => k.classList.remove('selected'));
+        }
+
+        // ===== Difficulty =====
+        // 원본 로직 유지:
+        // 1~8: 1개, 9~17: 2개, 18~26: 3개, 이후 매 9레벨마다 1개 증가
+        function getNoteCount(lv){
+            return lv <= 8 ? 1 : Math.floor((lv - 9) / 9) + 2;
+        }
+
+        // 원본: 레벨 10 이상부터 반음 포함
+        function getAvailableNotes(){
+            return level >= 10 ? noteList.concat(extraNotes) : noteList;
+        }
+
+        // ===== Piano Build =====
+        function createPianoKeys(){
+            piano.innerHTML = '';
+
+            // white keys
+            noteList.forEach(note => {
+                const key = document.createElement('button');
+                key.type = 'button';
+                key.className = 'white-key';
+                key.textContent = note.name;
+                key.dataset.tone = note.tone;
+                key.addEventListener('click', () => handleUserInput(note, key));
+                piano.appendChild(key);
+            });
+
+            // black keys appear only when level >= 10 (same as original available notes)
+            if(level >= 10){
+                const scaleFactor = window.innerWidth < 600 ? 0.6667 : 1;
+                const pos = {
+                    '도#': Math.round(40 * scaleFactor),
+                    '레#': Math.round(100 * scaleFactor),
+                    '파#': Math.round(220 * scaleFactor),
+                    '솔#': Math.round(280 * scaleFactor),
+                    '라#': Math.round(340 * scaleFactor)
+                };
+
+                extraNotes.forEach(note => {
+                    const key = document.createElement('button');
+                    key.type = 'button';
+                    key.className = 'black-key';
+                    key.textContent = note.name;
+                    key.dataset.tone = note.tone;
+                    key.style.left = pos[note.name] + 'px';
+                    key.addEventListener('click', () => handleUserInput(note, key));
+                    piano.appendChild(key);
+                });
+            }
+        }
+
+        // ===== Sequence =====
+        function generateSequence(count){
+            const available = getAvailableNotes();
+            const seq = [];
+            for(let i=0;i<count;i++){
+                const idx = Math.floor(Math.random() * available.length);
+                seq.push(available[idx]);
+            }
+            return seq;
+        }
+
+        function delay(ms){
+            return new Promise(res => setTimeout(res, ms));
+        }
+
+        async function playSequence(sequence){
+            isPlaying = true;
+            replayBtn.disabled = true;
+            instruction.textContent = '소리를 잘 들어보세요.';
+            clearSelectedKeys();
+
+            for(const note of sequence){
+                synth.triggerAttackRelease(note.tone, "8n");
+                await delay(600);
+            }
+
+            instruction.textContent = '어떤 음인지 선택하세요.';
+            replayBtn.disabled = false;
+            isPlaying = false;
+        }
+
+        // ===== Game Flow =====
+        async function startGame(){
+            await Tone.start(); // user gesture required on many browsers
+
+            score = 0;
+            lives = 5;
+            level = 1;
+            setHeader();
+
+            createPianoKeys();
+            setResult(`<p class="small">준비 완료! 음을 듣고 건반을 눌러 맞혀보세요.</p>`);
+
+            replayBtn.disabled = true;
+            inputDisabled = true;
+
+            await nextLevel();
+        }
+
+        async function nextLevel(){
+            inputDisabled = true;
+            userSequence = [];
+            clearSelectedKeys();
+
+            createPianoKeys(); // level 10에서 검은건반 활성화되므로 매번 재생성
+            const count = getNoteCount(level);
+            currentSequence = generateSequence(count);
+
+            setResult(`<p class="small">레벨 ${level} - ${count}개의 음이 재생됩니다.</p>`);
+
+            await delay(300);
+            await playSequence(currentSequence);
+
+            inputDisabled = false;
+        }
+
+        function correctNotesText(){
+            return currentSequence.map(n => n.name).join(', ');
+        }
+
+        function handleUserInput(selectedNote, keyEl){
+            if(inputDisabled || isPlaying) return;
+
+            keyEl.classList.add('selected');
+            userSequence.push(selectedNote);
+
+            if(userSequence.length < currentSequence.length) return;
+
+            // compare
+            let ok = true;
+            for(let i=0;i<currentSequence.length;i++){
+                if(userSequence[i].tone !== currentSequence[i].tone){
+                    ok = false;
+                    break;
+                }
+            }
+
+            inputDisabled = true; // stop extra clicks
+
+            if(ok){
+                score++;
+                level++;
+                setHeader();
+                setResult(`
+        <div class="good">정답!</div>
+        <p class="small">정답 음계: ${correctNotesText()}</p>
+        <button class="btn primary" id="nextBtn" type="button">다음</button>
+      `);
+                document.getElementById('nextBtn').addEventListener('click', () => nextLevel());
+            } else {
+                lives--;
+                setHeader();
+
+                if(lives <= 0){
+                    setResult(`
+          <div class="bad">땡! 테스트 종료</div>
+          <p class="small">최종 점수: <b>${score}</b></p>
+          <p class="small">정답 음계: ${correctNotesText()}</p>
+          <button class="btn primary" id="restartBtn" type="button">다시 테스트</button>
+        `);
+                    replayBtn.disabled = true;
+                    document.getElementById('restartBtn').addEventListener('click', startGame);
+                } else {
+                    setResult(`
+          <div class="bad">땡!</div>
+          <p class="small">정답 음계: ${correctNotesText()}</p>
+          <button class="btn primary" id="retryBtn" type="button">다시하기</button>
+        `);
+                    document.getElementById('retryBtn').addEventListener('click', () => nextLevel());
+                }
+            }
+        }
+
+        // ===== Buttons =====
+        startBtn.addEventListener('click', startGame);
+
+        resetBtn.addEventListener('click', () => {
+            score = 0;
+            lives = 5;
+            level = 1;
+            currentSequence = [];
+            userSequence = [];
+            inputDisabled = true;
+            isPlaying = false;
+
+            setHeader();
+            createPianoKeys();
+            instruction.textContent = '시작을 누르면 음이 재생됩니다.';
+            setResult(`<p class="small">초기화되었습니다.</p>`);
+            replayBtn.disabled = true;
+        });
+
+        replayBtn.addEventListener('click', async () => {
+            if(isPlaying || !currentSequence.length) return;
+            inputDisabled = true;         // 다시듣는 동안 입력 막기
+            await playSequence(currentSequence);
+            inputDisabled = false;
+        });
+
+        window.addEventListener('resize', () => {
+            // 검은 건반 위치 재계산 필요
+            createPianoKeys();
+            clearSelectedKeys();
+        });
+
+        // ===== Init =====
+        setHeader();
+        createPianoKeys();
+        setResult(`<p class="small">시작 버튼을 눌러 테스트를 진행하세요. (브라우저 정책상 오디오는 클릭 후 재생됩니다)</p>`);
+    })();
+</script>
+</body>
+</html>
