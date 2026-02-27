@@ -1,0 +1,689 @@
+<!-- filename example: color-reaction-test.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>컬러 반응 속도 테스트 - Color Reaction Test</title>
+
+    <!-- https://www.jiraksil.com/service/coloraction -->
+
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --border:#e5e7eb;
+            --text:#111827;
+            --muted:#6b7280;
+            --primary:#2563eb;
+            --green:#22c55e;
+            --dark:#111827;
+            --shadow: 0 10px 30px rgba(0,0,0,.08);
+            --radius: 16px;
+        }
+
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;
+            background:var(--bg);
+            color:var(--text);
+        }
+
+        .wrap{
+            max-width:900px;
+            margin:40px auto;
+            padding:20px;
+        }
+
+        .header{
+            display:flex;
+            align-items:flex-start;
+            justify-content:space-between;
+            gap:16px;
+            margin-bottom:16px;
+        }
+
+        .title{
+            margin:0;
+            font-size:22px;
+            line-height:1.2;
+        }
+        .desc{
+            margin:8px 0 0;
+            color:var(--muted);
+            line-height:1.6;
+        }
+
+        .card{
+            background:var(--card);
+            border:1px solid var(--border);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            overflow:hidden;
+        }
+
+        .card-top{
+            padding:16px 18px;
+            border-bottom:1px solid var(--border);
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+            flex-wrap:wrap;
+        }
+
+        .pill{
+            display:inline-flex;
+            gap:10px;
+            align-items:center;
+            font-weight:700;
+            color:var(--text);
+        }
+        .pill small{
+            font-weight:600;
+            color:var(--muted);
+        }
+
+        .btn{
+            appearance:none;
+            border:1px solid var(--border);
+            background:#fff;
+            color:var(--text);
+            border-radius:999px;
+            padding:10px 14px;
+            font-weight:700;
+            cursor:pointer;
+            transition:transform .05s ease, box-shadow .2s ease, border-color .2s ease;
+        }
+        .btn:hover{ border-color:#cbd5e1; }
+        .btn:active{ transform:translateY(1px); }
+        .btn.primary{
+            background:var(--primary);
+            border-color:var(--primary);
+            color:#fff;
+        }
+
+        /* 게임 화면(화이트 UI) */
+        #gameArea{
+            padding:18px;
+        }
+
+        #gameScreen{
+            position:relative;
+            width:100%;
+            height:min(420px, 70vh);
+            border-radius:14px;
+            border:1px solid var(--border);
+            background:#0f172a; /* 대기시 어두운 화면 */
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            user-select:none;
+            touch-action:manipulation;
+            overflow:hidden;
+        }
+
+        /* 상단 우측 라운드 표시 */
+        .roundBadge{
+            position:absolute;
+            top:14px;
+            right:14px;
+            padding:8px 10px;
+            border-radius:999px;
+            background:rgba(255,255,255,.12);
+            border:1px solid rgba(255,255,255,.18);
+            color:#fff;
+            font-weight:800;
+            font-size:13px;
+            letter-spacing:.2px;
+            backdrop-filter: blur(4px);
+        }
+
+        .centerText{
+            text-align:center;
+            padding:0 16px;
+            color:#fff;
+        }
+        .centerText h2{
+            margin:0 0 10px;
+            font-size:22px;
+        }
+        .centerText p{
+            margin:0;
+            color:rgba(255,255,255,.85);
+            line-height:1.6;
+            font-size:16px;
+        }
+
+        .greenWord{
+            color:var(--green);
+            font-weight:900;
+        }
+
+        .countdown{
+            font-size:88px;
+            font-weight:900;
+            color:#fff;
+            text-shadow: 0 12px 24px rgba(0,0,0,.35);
+            opacity:0;
+            transform:scale(.9);
+            transition: opacity .2s ease, transform .2s ease;
+        }
+        .countdown.show{
+            opacity:1;
+            transform:scale(1);
+        }
+
+        .timer{
+            margin-top:14px;
+            font-size:48px;
+            font-weight:900;
+            letter-spacing:1px;
+            color:#fff;
+            text-shadow: 0 10px 20px rgba(0,0,0,.3);
+        }
+
+        /* 안내 메시지 */
+        .hint{
+            margin-top:12px;
+            font-size:16px;
+            color:rgba(255,255,255,.8);
+        }
+
+        .blink{
+            animation: blink .55s infinite alternate;
+        }
+        @keyframes blink{
+            from{ opacity:1; }
+            to{ opacity:.55; }
+        }
+
+        /* 데모 점 */
+        .demoDot{
+            position:absolute;
+            width:56px;
+            height:56px;
+            border-radius:50%;
+            background:#fff;
+            opacity:.18;
+            transform:translate(-50%,-50%);
+            box-shadow: 0 10px 25px rgba(0,0,0,.25);
+        }
+
+        /* 결과 리스트 */
+        .resultBox{
+            margin-top:14px;
+            border-top:1px solid var(--border);
+            padding:14px 18px 18px;
+            background:#fff;
+        }
+
+        .resultTitle{
+            margin:0 0 10px;
+            font-size:16px;
+            color:var(--text);
+        }
+
+        .rows{
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap:10px;
+        }
+        .row{
+            border:1px solid var(--border);
+            border-radius:12px;
+            padding:10px 12px;
+            background:#fafafa;
+        }
+        .row b{
+            display:block;
+            font-size:13px;
+            color:var(--muted);
+            margin-bottom:4px;
+        }
+        .row span{
+            font-size:18px;
+            font-weight:900;
+            color:var(--text);
+        }
+
+        .list{
+            margin-top:10px;
+            display:grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap:8px;
+        }
+        .chip{
+            text-align:center;
+            border:1px solid var(--border);
+            background:#fff;
+            border-radius:10px;
+            padding:10px 8px;
+            font-weight:800;
+        }
+        .chip small{
+            display:block;
+            font-weight:700;
+            color:var(--muted);
+            margin-bottom:4px;
+            font-size:12px;
+        }
+
+        @media (max-width:640px){
+            .wrap{ margin:20px auto; }
+            .rows{ grid-template-columns: 1fr; }
+            .list{ grid-template-columns: repeat(3, 1fr); }
+            .countdown{ font-size:74px; }
+            .timer{ font-size:42px; }
+            .centerText h2{ font-size:20px; }
+            .centerText p{ font-size:15px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="header">
+        <div>
+            <h1 class="title">컬러 반응 속도 테스트</h1>
+            <p class="desc">
+                화면이 <span class="greenWord">녹색</span>으로 바뀌는 순간 최대한 빠르게 클릭하세요.
+                총 5회 측정 후 평균 반응 시간을 보여줍니다.
+            </p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-top">
+            <div class="pill">
+                <span>상태</span>
+                <small id="statusText">대기 중</small>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="btn" id="resetBtn" type="button">초기화</button>
+                <button class="btn primary" id="startBtn" type="button">시작하기</button>
+            </div>
+        </div>
+
+        <div id="gameArea">
+            <div id="gameScreen" aria-label="게임 화면">
+                <div class="centerText" id="introText">
+                    <h2>준비되셨나요?</h2>
+                    <p>
+                        <span class="greenWord">녹색</span>이 나타나면 즉시 클릭!<br />
+                        (너무 빨리 클릭하면 해당 라운드는 다시 진행됩니다)
+                    </p>
+                    <div class="hint" style="margin-top:14px;">아래 버튼 또는 화면 클릭으로 진행합니다.</div>
+                </div>
+            </div>
+
+            <div class="resultBox" id="resultBox" style="display:none;">
+                <h3 class="resultTitle">결과</h3>
+
+                <div class="rows">
+                    <div class="row">
+                        <b>평균 반응 시간</b>
+                        <span id="avgMs">-</span>
+                    </div>
+                    <div class="row">
+                        <b>최고(가장 빠름)</b>
+                        <span id="bestMs">-</span>
+                    </div>
+                </div>
+
+                <div class="list" id="roundList"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (() => {
+        // ====== DOM ======
+        const gameScreen  = document.getElementById('gameScreen');
+        const statusText  = document.getElementById('statusText');
+        const startBtn    = document.getElementById('startBtn');
+        const resetBtn    = document.getElementById('resetBtn');
+
+        const resultBox   = document.getElementById('resultBox');
+        const avgMsEl     = document.getElementById('avgMs');
+        const bestMsEl    = document.getElementById('bestMs');
+        const roundListEl = document.getElementById('roundList');
+
+        // ====== 상태 ======
+        const TOTAL_ROUNDS = 5;
+        let started = false;
+        let inRound = false;
+        let waitingGreen = false;
+        let round = 0;
+
+        let greenTimeout = null;
+        let timerInterval = null;
+        let greenStartTime = 0;
+        let results = [];
+
+        // 데모 점
+        let demoDot = null;
+        let demoInterval = null;
+
+        // ====== 유틸 ======
+        const clamp = (v,min,max) => Math.max(min, Math.min(max, v));
+
+        function setStatus(text){
+            statusText.textContent = text;
+        }
+
+        function clearTimers(){
+            if(greenTimeout){ clearTimeout(greenTimeout); greenTimeout = null; }
+            if(timerInterval){ clearInterval(timerInterval); timerInterval = null; }
+        }
+
+        function setScreenDark(){
+            gameScreen.style.background = '#0f172a';
+        }
+        function setScreenGreen(){
+            gameScreen.style.background = '#22c55e';
+        }
+
+        function renderCenter(html){
+            gameScreen.innerHTML = html;
+        }
+
+        function renderRoundBadge(){
+            const badge = document.createElement('div');
+            badge.className = 'roundBadge';
+            badge.textContent = `${round} / ${TOTAL_ROUNDS}`;
+            gameScreen.appendChild(badge);
+        }
+
+        // ====== 데모 애니메이션 ======
+        function startDemo(){
+            stopDemo();
+
+            demoDot = document.createElement('div');
+            demoDot.className = 'demoDot';
+            gameScreen.appendChild(demoDot);
+
+            let x = 50, y = 50;
+            let dx = 1.4, dy = 1.1;
+
+            demoInterval = setInterval(() => {
+                // 화면 퍼센트 이동
+                x += dx;
+                y += dy;
+
+                if (x > 92 || x < 8) dx = -dx;
+                if (y > 92 || y < 8) dy = -dy;
+
+                demoDot.style.left = x + '%';
+                demoDot.style.top  = y + '%';
+
+                // 가끔 초록색으로 깜빡
+                if (Math.random() < 0.015) {
+                    demoDot.style.background = '#22c55e';
+                    demoDot.style.opacity = '0.65';
+                    setTimeout(() => {
+                        if(!demoDot) return;
+                        demoDot.style.background = '#fff';
+                        demoDot.style.opacity = '0.18';
+                    }, 650);
+                }
+            }, 24);
+        }
+
+        function stopDemo(){
+            if(demoInterval){ clearInterval(demoInterval); demoInterval = null; }
+            if(demoDot && demoDot.parentNode){
+                demoDot.parentNode.removeChild(demoDot);
+            }
+            demoDot = null;
+        }
+
+        // ====== 게임 흐름 ======
+        function resetGame(){
+            clearTimers();
+            started = false;
+            inRound = false;
+            waitingGreen = false;
+            round = 0;
+            results = [];
+
+            resultBox.style.display = 'none';
+            avgMsEl.textContent = '-';
+            bestMsEl.textContent = '-';
+            roundListEl.innerHTML = '';
+
+            setStatus('대기 중');
+            setScreenDark();
+            renderCenter(`
+      <div class="centerText" id="introText">
+        <h2>준비되셨나요?</h2>
+        <p>
+          <span class="greenWord">녹색</span>이 나타나면 즉시 클릭!<br />
+          (너무 빨리 클릭하면 해당 라운드는 다시 진행됩니다)
+        </p>
+        <div class="hint" style="margin-top:14px;">시작하기 버튼을 누르세요.</div>
+      </div>
+    `);
+
+            startDemo();
+        }
+
+        function startGame(){
+            if(started) return;
+            started = true;
+            results = [];
+            resultBox.style.display = 'none';
+            roundListEl.innerHTML = '';
+            stopDemo();
+            setStatus('카운트다운');
+            countdown(3);
+        }
+
+        function countdown(n){
+            clearTimers();
+            setScreenDark();
+            renderCenter(`<div class="countdown" id="cd">${n}</div>`);
+            const cd = document.getElementById('cd');
+
+            let cur = n;
+            const tick = () => {
+                cd.textContent = cur;
+                cd.classList.remove('show');
+                void cd.offsetWidth; // reflow
+                cd.classList.add('show');
+
+                if(cur === 0){
+                    startRound();
+                    return;
+                }
+                cur--;
+                setTimeout(tick, 900);
+            };
+            tick();
+        }
+
+        function startRound(){
+            clearTimers();
+            inRound = true;
+            waitingGreen = false;
+
+            round++;
+            if(round > TOTAL_ROUNDS){
+                finishAll();
+                return;
+            }
+
+            setStatus(`라운드 ${round} 대기`);
+            setScreenDark();
+
+            renderCenter(`
+      <div class="centerText">
+        <h2><span class="greenWord">녹색</span>이 나오면 클릭!</h2>
+        <p class="blink" style="margin-top:6px;">지금은 클릭하지 마세요…</p>
+        <div class="hint">랜덤 시간(2~5초) 뒤 화면이 바뀝니다.</div>
+      </div>
+    `);
+            renderRoundBadge();
+
+            // 2~5초 랜덤 후 초록
+            const randomMs = Math.floor(Math.random() * 3000) + 2000;
+            greenTimeout = setTimeout(() => {
+                waitingGreen = true;
+                greenStartTime = Date.now();
+
+                setStatus(`라운드 ${round} 측정 중`);
+                setScreenGreen();
+
+                renderCenter(`
+        <div class="centerText">
+          <h2 class="blink">지금 클릭!</h2>
+          <div class="timer" id="msTimer">0</div>
+          <div class="hint">반응 시간을 측정 중입니다.</div>
+        </div>
+      `);
+                renderRoundBadge();
+
+                const msTimer = document.getElementById('msTimer');
+                timerInterval = setInterval(() => {
+                    if(!waitingGreen){
+                        clearInterval(timerInterval);
+                        timerInterval = null;
+                        return;
+                    }
+                    msTimer.textContent = String(Date.now() - greenStartTime);
+                }, 10);
+            }, randomMs);
+        }
+
+        function earlyClickScreen(){
+            // 초록 되기 전에 눌렀으면 같은 라운드 재시작 (라운드 유지)
+            clearTimers();
+            waitingGreen = false;
+
+            setStatus(`너무 일찍 클릭 (라운드 ${round} 재시작)`);
+            setScreenDark();
+
+            renderCenter(`
+      <div class="centerText">
+        <h2>너무 일찍 클릭했어요!</h2>
+        <p>해당 라운드를 다시 진행합니다.</p>
+        <div class="hint">계속하려면 클릭하세요.</div>
+      </div>
+    `);
+            renderRoundBadge();
+
+            // 다음 클릭 시 같은 라운드 다시 시작
+            const once = () => {
+                gameScreen.removeEventListener('click', once);
+                // round를 유지하려고, startRound() 호출 전에 round를 1 줄였다가 다시 올림
+                round--;
+                startRound();
+            };
+            gameScreen.addEventListener('click', once);
+        }
+
+        function recordClick(){
+            // 초록 상태에서 클릭
+            if(!waitingGreen) return;
+            waitingGreen = false;
+            clearTimers();
+
+            const ms = Date.now() - greenStartTime;
+            results.push(ms);
+
+            setStatus(`라운드 ${round} 완료`);
+            setScreenDark();
+
+            renderCenter(`
+      <div class="centerText">
+        <h2>반응 시간</h2>
+        <div class="timer">${ms} ms</div>
+        <div class="hint">계속하려면 클릭하세요.</div>
+      </div>
+    `);
+            renderRoundBadge();
+
+            // 다음 클릭 → 다음 라운드
+            const once = () => {
+                gameScreen.removeEventListener('click', once);
+                startRound();
+            };
+            gameScreen.addEventListener('click', once);
+        }
+
+        function finishAll(){
+            inRound = false;
+            waitingGreen = false;
+            clearTimers();
+
+            // 평균/베스트
+            const sum = results.reduce((a,b)=>a+b,0);
+            const avg = Math.round(sum / results.length);
+            const best = Math.min(...results);
+
+            setStatus('테스트 종료');
+            setScreenDark();
+
+            renderCenter(`
+      <div class="centerText">
+        <h2>테스트 결과</h2>
+        <p>아래에서 상세 기록을 확인하세요.</p>
+        <div class="hint">다시 하려면 상단의 “시작하기”를 누르세요.</div>
+      </div>
+    `);
+
+            // 결과 박스 표시
+            resultBox.style.display = 'block';
+            avgMsEl.textContent = `${avg} ms`;
+            bestMsEl.textContent = `${best} ms`;
+
+            roundListEl.innerHTML = '';
+            results.forEach((t, i) => {
+                const chip = document.createElement('div');
+                chip.className = 'chip';
+                chip.innerHTML = `<small>라운드 ${i+1}</small>${t} ms`;
+                roundListEl.appendChild(chip);
+            });
+
+            // 종료 후 데모 재시작(선택)
+            startDemo();
+        }
+
+        // ====== 이벤트 ======
+        startBtn.addEventListener('click', startGame);
+        resetBtn.addEventListener('click', resetGame);
+
+        gameScreen.addEventListener('click', () => {
+            if(!started){
+                // 시작 전 화면 클릭은 안내만
+                return;
+            }
+
+            // 카운트다운/초기 대기 중엔 그냥 무시
+            if(!inRound && results.length === 0) return;
+
+            // 초록 나오기 전 클릭
+            if(inRound && !waitingGreen){
+                // 결과 화면(라운드 완료 후 "계속" 상태)은 별도 once 핸들러가 처리.
+                // 여기서는 "초록 전" 상태만 처리하기 위해, 현재 DOM에 timer가 없는지로 구분.
+                const hasContinueHint = gameScreen.querySelector('.hint')?.textContent.includes('계속하려면');
+                if(!hasContinueHint){
+                    earlyClickScreen();
+                }
+                return;
+            }
+
+            // 초록 상태 클릭
+            if(inRound && waitingGreen){
+                recordClick();
+            }
+        });
+
+        // 최초 초기화
+        resetGame();
+    })();
+</script>
+</body>
+</html>
