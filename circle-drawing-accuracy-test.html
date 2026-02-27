@@ -1,0 +1,653 @@
+<!-- filename example: circle-drawing-accuracy-test.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>원 그리기 정확도 테스트 - Circle Drawing Accuracy Test</title>
+
+    <!-- https://www.jiraksil.com/service/circle -->
+
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --border:#e5e7eb;
+            --text:#111827;
+            --muted:#6b7280;
+            --primary:#2563eb;
+            --good:#22c55e;
+            --mid:#f59e0b;
+            --bad:#ef4444;
+            --ink:#0f172a;
+            --shadow: 0 10px 30px rgba(0,0,0,.08);
+            --radius:16px;
+        }
+
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;
+            background:var(--bg);
+            color:var(--text);
+        }
+
+        .wrap{
+            max-width:920px;
+            margin:40px auto;
+            padding:20px;
+        }
+
+        .header{
+            margin-bottom:14px;
+        }
+        .title{
+            margin:0;
+            font-size:22px;
+            line-height:1.2;
+        }
+        .desc{
+            margin:10px 0 0;
+            color:var(--muted);
+            line-height:1.6;
+        }
+
+        .card{
+            background:var(--card);
+            border:1px solid var(--border);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            overflow:hidden;
+        }
+
+        .card-top{
+            padding:14px 16px;
+            border-bottom:1px solid var(--border);
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+            flex-wrap:wrap;
+        }
+
+        .pill{
+            display:inline-flex;
+            align-items:center;
+            gap:10px;
+            font-weight:800;
+        }
+        .pill small{
+            font-weight:700;
+            color:var(--muted);
+        }
+
+        .btns{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+        }
+        .btn{
+            appearance:none;
+            border:1px solid var(--border);
+            background:#fff;
+            color:var(--text);
+            border-radius:999px;
+            padding:10px 14px;
+            font-weight:800;
+            cursor:pointer;
+            transition:transform .05s ease, border-color .2s ease;
+        }
+        .btn:hover{ border-color:#cbd5e1; }
+        .btn:active{ transform:translateY(1px); }
+        .btn.primary{
+            background:var(--primary);
+            border-color:var(--primary);
+            color:#fff;
+        }
+
+        .gameArea{
+            padding:16px;
+        }
+
+        .stage{
+            position:relative;
+            width:100%;
+            border:1px solid var(--border);
+            border-radius:14px;
+            background:#fff;
+            overflow:hidden;
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,.02);
+        }
+
+        /* 반응형 캔버스 비율 */
+        .stage::before{
+            content:"";
+            display:block;
+            padding-top:min(70%, 520px);
+        }
+
+        canvas{
+            position:absolute;
+            inset:0;
+            width:100%;
+            height:100%;
+            touch-action:none; /* 모바일 드로잉 안정 */
+            cursor:crosshair;
+        }
+
+        /* 오버레이 */
+        .overlay{
+            position:absolute;
+            inset:0;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:18px;
+            background:rgba(255,255,255,.92);
+            backdrop-filter: blur(3px);
+            z-index:10;
+        }
+        .overlayCard{
+            width:min(520px, 100%);
+            border:1px solid var(--border);
+            background:#fff;
+            border-radius:16px;
+            box-shadow:var(--shadow);
+            padding:18px;
+            text-align:center;
+        }
+        .overlayCard h2{
+            margin:0 0 8px;
+            font-size:20px;
+        }
+        .overlayCard p{
+            margin:0;
+            color:var(--muted);
+            line-height:1.6;
+            font-size:14px;
+        }
+
+        .overlayCard .btn{
+            margin-top:14px;
+            width:100%;
+            justify-content:center;
+        }
+
+        /* 중앙 결과 표시 */
+        .centerHUD{
+            position:absolute;
+            left:50%;
+            top:50%;
+            transform:translate(-50%,-50%);
+            text-align:center;
+            z-index:5;
+            pointer-events:none;
+        }
+        .accuracy{
+            font-size:54px;
+            font-weight:900;
+            letter-spacing:.5px;
+            color:var(--ink);
+            text-shadow: 0 10px 20px rgba(0,0,0,.06);
+        }
+        .detail{
+            margin-top:6px;
+            font-size:13px;
+            color:var(--muted);
+            line-height:1.55;
+            max-width:360px;
+        }
+
+        /* 하단 안내/리셋 */
+        .bottomBar{
+            margin-top:12px;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+            flex-wrap:wrap;
+        }
+        .hint{
+            color:var(--muted);
+            font-size:13px;
+            line-height:1.5;
+        }
+        .btn.secondary{
+            background:#fff;
+            border-color:#cbd5e1;
+        }
+
+        @media (max-width:640px){
+            .wrap{ margin:22px auto; }
+            .accuracy{ font-size:46px; }
+            .overlayCard{ padding:16px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="header">
+        <h1 class="title">원 그리기 정확도 테스트</h1>
+        <p class="desc">
+            마우스(또는 손가락)를 누른 채로 원을 그리고, 떼면 정확도를 계산합니다.
+            시작점과 끝점이 가깝고, 중심으로부터 거리가 일정할수록 점수가 높아집니다.
+        </p>
+    </div>
+
+    <div class="card">
+        <div class="card-top">
+            <div class="pill">
+                상태 <small id="statusText">대기 중</small>
+            </div>
+            <div class="btns">
+                <button class="btn" id="clearBtn" type="button">초기화</button>
+                <button class="btn primary" id="startBtn" type="button">시작하기</button>
+            </div>
+        </div>
+
+        <div class="gameArea">
+            <div class="stage" id="stage">
+                <canvas id="canvas"></canvas>
+
+                <!-- 시작 오버레이 -->
+                <div class="overlay" id="startOverlay">
+                    <div class="overlayCard">
+                        <h2>원 그리기 정확도 테스트</h2>
+                        <p>
+                            화면에서 <b>드래그</b>하여 원을 그리세요.<br/>
+                            손을 떼면 점수가 계산되고, 점선으로 “이상적인 원”이 표시됩니다.
+                        </p>
+                        <button class="btn primary" id="overlayStartBtn" type="button">시작</button>
+                    </div>
+                </div>
+
+                <!-- 중앙 HUD -->
+                <div class="centerHUD" aria-hidden="true">
+                    <div class="accuracy" id="accuracyDisplay">0%</div>
+                    <div class="detail" id="detailDisplay"></div>
+                </div>
+            </div>
+
+            <div class="bottomBar">
+                <div class="hint">
+                    팁: 가능한 한 일정한 속도로 한 바퀴를 그리고, 시작점 근처에서 마무리하면 유리합니다.
+                </div>
+                <button class="btn secondary" id="redoBtn" type="button" style="display:none;">다시 그리기</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (() => {
+        // ===== DOM =====
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        const stage = document.getElementById('stage');
+        const statusText = document.getElementById('statusText');
+
+        const startBtn = document.getElementById('startBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const redoBtn = document.getElementById('redoBtn');
+
+        const startOverlay = document.getElementById('startOverlay');
+        const overlayStartBtn = document.getElementById('overlayStartBtn');
+
+        const accuracyDisplay = document.getElementById('accuracyDisplay');
+        const detailDisplay = document.getElementById('detailDisplay');
+
+        // ===== State =====
+        let isGameStarted = false;
+        let isDrawing = false;
+        let drawingFinished = false;
+
+        let points = [];
+        let centerX = 0, centerY = 0;
+
+        // 성능/정밀도: 너무 촘촘한 포인트 방지
+        const MIN_POINT_DIST = 4;
+
+        // ===== Utils =====
+        function setStatus(t){ statusText.textContent = t; }
+
+        function resizeCanvas(){
+            // CSS 사이즈에 맞춰 내부 해상도 갱신
+            const rect = canvas.getBoundingClientRect();
+            const dpr = Math.max(1, window.devicePixelRatio || 1);
+
+            canvas.width = Math.round(rect.width * dpr);
+            canvas.height = Math.round(rect.height * dpr);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // 이후 좌표는 CSS px 기준으로 사용
+
+            // 리사이즈 시 화면 리셋(그림 깨짐 방지)
+            if(isGameStarted){
+                resetCanvas();
+            } else {
+                // 시작 전에도 가운데 힌트만
+                drawCenterDot();
+            }
+        }
+
+        function getPosFromEvent(e){
+            const rect = canvas.getBoundingClientRect();
+            const clientX = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
+            const clientY = (e.touches && e.touches[0]) ? e.touches[0].clientY : e.clientY;
+            return { x: clientX - rect.left, y: clientY - rect.top };
+        }
+
+        function dist(a,b){
+            const dx = a.x - b.x;
+            const dy = a.y - b.y;
+            return Math.sqrt(dx*dx + dy*dy);
+        }
+
+        function drawCenterDot(){
+            ctx.clearRect(0,0,canvas.clientWidth,canvas.clientHeight);
+
+            centerX = canvas.clientWidth/2;
+            centerY = canvas.clientHeight/2;
+
+            ctx.fillStyle = '#cbd5e1';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 3, 0, Math.PI*2);
+            ctx.fill();
+        }
+
+        // ===== Game Control =====
+        function startGame(){
+            isGameStarted = true;
+            startOverlay.style.display = 'none';
+            setStatus('그리는 중');
+            resetCanvas();
+        }
+
+        function resetCanvas(){
+            drawingFinished = false;
+            isDrawing = false;
+            points = [];
+
+            accuracyDisplay.textContent = '0%';
+            accuracyDisplay.style.color = '#0f172a';
+            detailDisplay.textContent = '';
+            redoBtn.style.display = 'none';
+
+            ctx.clearRect(0,0,canvas.clientWidth,canvas.clientHeight);
+            drawCenterDot();
+        }
+
+        // ===== Drawing =====
+        function beginDraw(e){
+            if(!isGameStarted) return;
+            if(drawingFinished){
+                // 완료 후 다시 클릭하면 리셋해서 바로 그리기
+                resetCanvas();
+            }
+
+            isDrawing = true;
+            points = [];
+
+            const p = getPosFromEvent(e);
+            points.push(p);
+
+            ctx.clearRect(0,0,canvas.clientWidth,canvas.clientHeight);
+
+            ctx.strokeStyle = '#111827';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+
+            // 시작점 표시
+            ctx.fillStyle = 'rgba(37, 99, 235, 0.35)';
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 5, 0, Math.PI*2);
+            ctx.fill();
+        }
+
+        function moveDraw(e){
+            if(!isDrawing) return;
+
+            const p = getPosFromEvent(e);
+            const last = points[points.length-1];
+
+            if(dist(p,last) >= MIN_POINT_DIST){
+                points.push(p);
+            }
+
+            ctx.lineTo(p.x, p.y);
+            ctx.stroke();
+
+            if(points.length > 12){
+                calculateAccuracy(false);
+            }
+        }
+
+        function endDraw(){
+            if(!isDrawing) return;
+
+            isDrawing = false;
+            drawingFinished = true;
+            setStatus('완료');
+
+            calculateAccuracy(true);
+            redoBtn.style.display = 'inline-flex';
+
+            if(points.length > 0){
+                const circle = calculateIdealCircle(points);
+                drawIdealCircle(circle);
+
+                // 시작점/끝점 표시
+                const start = points[0];
+                const end = points[points.length-1];
+
+                ctx.fillStyle = 'rgba(37, 99, 235, 0.7)'; // start
+                ctx.beginPath();
+                ctx.arc(start.x, start.y, 5, 0, Math.PI*2);
+                ctx.fill();
+
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.75)'; // end
+                ctx.beginPath();
+                ctx.arc(end.x, end.y, 5, 0, Math.PI*2);
+                ctx.fill();
+
+                // start-end 연결 점선
+                ctx.beginPath();
+                ctx.strokeStyle = 'rgba(239, 68, 68, 0.65)';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([4,4]);
+                ctx.moveTo(start.x, start.y);
+                ctx.lineTo(end.x, end.y);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+        }
+
+        // ===== Scoring Logic =====
+        function calculateIdealCircle(pts){
+            let sumX=0, sumY=0;
+            for(const p of pts){ sumX += p.x; sumY += p.y; }
+            const cx = sumX / pts.length;
+            const cy = sumY / pts.length;
+
+            const distances = [];
+            let sumR = 0;
+            for(const p of pts){
+                const dx = p.x - cx, dy = p.y - cy;
+                const d = Math.sqrt(dx*dx + dy*dy);
+                distances.push(d);
+                sumR += d;
+            }
+            const r = sumR / pts.length;
+
+            let sumSq = 0;
+            for(const d of distances){
+                const diff = d - r;
+                sumSq += diff*diff;
+            }
+            const std = Math.sqrt(sumSq / distances.length);
+            const cv = (r === 0) ? 1 : (std / r);
+
+            return { x: cx, y: cy, radius: r, standardDeviation: std, variationCoefficient: cv };
+        }
+
+        function drawIdealCircle(circle){
+            ctx.beginPath();
+            ctx.strokeStyle = 'rgba(37, 99, 235, 0.55)';
+            ctx.lineWidth = 1.2;
+            ctx.setLineDash([6,6]);
+            ctx.arc(circle.x, circle.y, circle.radius, 0, Math.PI*2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        function calculateAngleDistribution(pts, center){
+            const angles = [];
+            for(const p of pts){
+                const dx = p.x - center.x;
+                const dy = p.y - center.y;
+                let a = Math.atan2(dy, dx) * 180 / Math.PI;
+                if(a < 0) a += 360;
+                angles.push(a);
+            }
+            angles.sort((a,b)=>a-b);
+
+            const diffs = [];
+            for(let i=1;i<angles.length;i++) diffs.push(angles[i]-angles[i-1]);
+            diffs.push(360 - angles[angles.length-1] + angles[0]);
+
+            const avgDiff = 360 / angles.length;
+            let sumSq = 0;
+            for(const d of diffs){
+                const diff = d - avgDiff;
+                sumSq += diff*diff;
+            }
+            const std = Math.sqrt(sumSq / diffs.length);
+            const uniformity = Math.max(0, 100 - (std / avgDiff * 100));
+
+            const coverage = Math.min(360, Math.max(...angles) - Math.min(...angles)) / 360;
+            return { uniformityScore: uniformity, angleCoverage: coverage };
+        }
+
+        function calculateAccuracy(isFinal){
+            if(points.length < 10){
+                accuracyDisplay.textContent = '0%';
+                detailDisplay.textContent = '';
+                return;
+            }
+
+            const circle = calculateIdealCircle(points);
+
+            // 1) 반지름 변동(CV)
+            let radiusScore = Math.max(0, 100 - (circle.variationCoefficient * 500));
+
+            // 2) 시작-끝 거리(완성도)
+            const start = points[0];
+            const end = points[points.length-1];
+            const closureDist = dist(start, end);
+
+            const maxAllowed = circle.radius * 0.3; // 반지름 30%
+            const closureRatio = Math.min(1, closureDist / (maxAllowed || 1));
+            let closureScore = 100 * (1 - closureRatio);
+
+            // 3) 각도 균일성 + 4) 커버리지
+            const angleInfo = calculateAngleDistribution(points, circle);
+            let uniformScore = angleInfo.uniformityScore;
+            let coverageScore = angleInfo.angleCoverage * 100;
+
+            // 5) 방향 일관성(시계/반시계)
+            let directionChanges = 0;
+            let prevDir = null;
+            for(let i=2;i<points.length;i++){
+                const p1 = points[i-2], p2 = points[i-1], p3 = points[i];
+                const cross = (p2.x-p1.x)*(p3.y-p2.y) - (p2.y-p1.y)*(p3.x-p2.x);
+                const dir = cross > 0 ? 1 : -1;
+                if(prevDir !== null && dir !== prevDir) directionChanges++;
+                prevDir = dir;
+            }
+            const maxChanges = points.length * 0.1;
+            let directionScore = 100 * (1 - Math.min(1, directionChanges / (maxChanges || 1)));
+
+            // 가중치
+            const wR = 0.30, wC = 0.20, wU = 0.25, wCov = 0.15, wD = 0.10;
+
+            let finalScore =
+                    radiusScore*wR +
+                    closureScore*wC +
+                    uniformScore*wU +
+                    coverageScore*wCov +
+                    directionScore*wD;
+
+            // 점 너무 적으면 감점
+            if(points.length < 30){
+                finalScore *= (points.length / 30);
+            }
+
+            // 반올림
+            finalScore = Math.round(finalScore);
+            radiusScore = Math.round(radiusScore);
+            closureScore = Math.round(closureScore);
+            uniformScore = Math.round(uniformScore);
+            coverageScore = Math.round(coverageScore);
+            directionScore = Math.round(directionScore);
+
+            accuracyDisplay.textContent = `${finalScore}%`;
+
+            // 색상
+            if(finalScore < 40) accuracyDisplay.style.color = 'var(--bad)';
+            else if(finalScore < 70) accuracyDisplay.style.color = 'var(--mid)';
+            else if(finalScore < 90) accuracyDisplay.style.color = 'var(--primary)';
+            else accuracyDisplay.style.color = 'var(--good)';
+
+            if(isFinal){
+                detailDisplay.innerHTML = `
+        원형: ${radiusScore}% / 완성도: ${closureScore}%<br/>
+        균일성: ${uniformScore}% / 각도 커버: ${coverageScore}% / 방향: ${directionScore}%
+      `;
+            } else {
+                detailDisplay.textContent = '';
+            }
+        }
+
+        // ===== Events =====
+        overlayStartBtn.addEventListener('click', startGame);
+        startBtn.addEventListener('click', startGame);
+        clearBtn.addEventListener('click', () => {
+            isGameStarted = false;
+            startOverlay.style.display = 'flex';
+            setStatus('대기 중');
+            resetCanvas();
+        });
+        redoBtn.addEventListener('click', resetCanvas);
+
+        // Pointer events (마우스+터치 통합)
+        canvas.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            canvas.setPointerCapture?.(e.pointerId);
+            beginDraw(e);
+        });
+        canvas.addEventListener('pointermove', (e) => {
+            if(!isDrawing) return;
+            e.preventDefault();
+            moveDraw(e);
+        });
+        canvas.addEventListener('pointerup', (e) => {
+            e.preventDefault();
+            endDraw();
+        });
+        canvas.addEventListener('pointercancel', endDraw);
+        canvas.addEventListener('pointerleave', () => {
+            // 드래그 중 밖으로 나가면 종료 처리
+            if(isDrawing) endDraw();
+        });
+
+        // Init
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        setStatus('대기 중');
+    })();
+</script>
+</body>
+</html>
