@@ -1,0 +1,791 @@
+<!-- file: brain-overdrive-stroop-test.html -->
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>뇌절 테스트 : 좌뇌 우뇌의 전쟁</title>
+    <meta name="description" content="스트룹(의미 vs 색깔) 30초 타임어택. 틀리면 -1초!" />
+
+
+    <!-- https://www.jiraksil.com/service/stroop_test -->
+
+    <style>
+        /* =========================================================
+          Stroop Test (White + Clean)
+          - No Ads / No Bootstrap / No jQuery / No Rank
+          - Vanilla JS only
+        ========================================================= */
+        :root{
+            --bg:#f7f8fb;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --border:#e5e7eb;
+            --shadow: 0 14px 34px rgba(0,0,0,.08);
+
+            --blue:#2563eb;
+            --cyan:#06b6d4;
+            --pink:#db2777;
+            --danger:#ef4444;
+            --gold:#f59e0b;
+
+            --stage:#0b1220;
+        }
+
+        *{ box-sizing:border-box; }
+        html,body{ height:100%; }
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif;
+            color: var(--text);
+            background:
+                    radial-gradient(1200px 600px at 50% -10%, rgba(37,99,235,.10), transparent 55%),
+                    radial-gradient(900px 500px at 82% 10%, rgba(219,39,119,.10), transparent 60%),
+                    var(--bg);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .page{
+            max-width: 920px;
+            margin: 0 auto;
+            padding: 18px 14px 70px;
+        }
+
+        .topbar{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            margin-bottom: 14px;
+        }
+
+        .brand{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            font-weight: 1000;
+            letter-spacing: -.3px;
+            font-size: 16px;
+        }
+        .brand-badge{
+            width:36px;height:36px;
+            border-radius: 12px;
+            display:grid;
+            place-items:center;
+            color:#fff;
+            background: linear-gradient(135deg, var(--blue), var(--pink));
+            box-shadow: 0 12px 22px rgba(37,99,235,.18);
+        }
+
+        .card{
+            background: var(--card);
+            border:1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            overflow:hidden;
+        }
+        .card-pad{ padding: 16px; }
+
+        h1{
+            margin:0 0 8px;
+            font-size: 18px;
+            letter-spacing: -.3px;
+            font-weight: 1000;
+        }
+        .desc{
+            margin:0 0 12px;
+            color: var(--muted);
+            line-height:1.65;
+            font-size: 14px;
+        }
+        .hint-strong{ color: var(--pink); font-weight: 1000; }
+
+        /* ---------- HUD ---------- */
+        .hud{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            margin-top: 12px;
+        }
+        .hud-item{
+            flex: 1 1 200px;
+            border:1px solid var(--border);
+            border-radius: 14px;
+            padding: 10px 12px;
+            background:#fff;
+            box-shadow: 0 10px 20px rgba(0,0,0,.06);
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+            min-width: 160px;
+        }
+        .hud-label{
+            color: var(--muted);
+            font-weight: 900;
+            font-size: 11px;
+            letter-spacing: .6px;
+            text-transform: uppercase;
+        }
+        .hud-value{
+            font-variant-numeric: tabular-nums;
+            font-weight: 1000;
+            font-size: 20px;
+        }
+        .time-danger{ color: var(--danger); animation: pulse .55s infinite; }
+        @keyframes pulse{ 0%{ transform:scale(1);} 50%{ transform:scale(1.08);} 100%{ transform:scale(1);} }
+
+        /* ---------- Stage ---------- */
+        .stage-wrap{
+            margin-top: 12px;
+            border:1px solid var(--border);
+            border-radius: 18px;
+            overflow:hidden;
+            box-shadow: var(--shadow);
+            background:#fff;
+        }
+
+        #stage{
+            position:relative;
+            height: 520px;
+            background: radial-gradient(1200px 600px at 50% 50%, rgba(255,255,255,.06), transparent 55%),
+            var(--stage);
+            overflow:hidden;
+            user-select:none;
+            touch-action: manipulation;
+            padding: 18px 16px 20px;
+            display:flex;
+            flex-direction:column;
+            gap: 14px;
+        }
+
+        @media (max-width: 640px){
+            #stage{ height: 430px; }
+        }
+
+        /* timer bar */
+        .timerbar-wrap{
+            position:absolute;
+            left:0; top:0;
+            width:100%;
+            height: 6px;
+            background: rgba(255,255,255,.10);
+            z-index: 5;
+        }
+        #timerBar{
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, var(--cyan), var(--pink));
+            transition: width .05s linear;
+        }
+
+        /* instruction */
+        .instruction{
+            margin-top: 8px;
+            align-self:center;
+            display:inline-flex;
+            align-items:center;
+            gap: 10px;
+            padding: 10px 16px;
+            border-radius: 999px;
+            border: 2px solid rgba(6,182,212,.65);
+            background: rgba(255,255,255,.10);
+            color: rgba(255,255,255,.92);
+            box-shadow: 0 18px 26px rgba(0,0,0,.24);
+            font-weight: 900;
+            letter-spacing: -.2px;
+            white-space: nowrap;
+            z-index: 6;
+        }
+        .instruction strong{
+            color: #fff;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            font-size: 1.05em;
+        }
+        .instruction.mode-color{
+            border-color: rgba(219,39,119,.75);
+        }
+
+        /* stimulus */
+        .stimulus-area{
+            flex: 1;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            position:relative;
+            z-index: 6;
+        }
+        #stimulus{
+            font-size: clamp(52px, 7vw, 92px);
+            font-weight: 1000;
+            letter-spacing: -2px;
+            text-shadow: 0 14px 30px rgba(0,0,0,.35);
+            transform: translateZ(0);
+        }
+
+        /* answers */
+        .answers{
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: min(460px, 100%);
+            margin: 0 auto;
+            z-index: 6;
+        }
+        .ans-btn{
+            border:0;
+            border-radius: 16px;
+            padding: 16px 14px;
+            color:#fff;
+            font-weight: 1000;
+            font-size: 18px;
+            cursor:pointer;
+            box-shadow: 0 10px 0 rgba(0,0,0,.22);
+            transition: transform .08s ease, filter .08s ease, box-shadow .08s ease;
+            user-select:none;
+        }
+        .ans-btn:active{
+            transform: translateY(8px);
+            box-shadow: none;
+        }
+        .btn-red{ background:#ef4444; }
+        .btn-blue{ background:#1e90ff; }
+        .btn-green{ background:#22c55e; }
+        .btn-yellow{ background:#f59e0b; color:#111; }
+
+        /* overlays */
+        .overlay{
+            position:absolute; inset:0;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            flex-direction:column;
+            text-align:center;
+            gap: 10px;
+            padding: 18px;
+            background: rgba(11,18,32,.86);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 100;
+        }
+        .overlay h2{
+            margin:0;
+            font-size: 26px;
+            font-weight: 1000;
+            letter-spacing:-.5px;
+            color: #ffffff;
+        }
+        .overlay p{
+            margin:0;
+            max-width: 640px;
+            color: rgba(255,255,255,.78);
+            font-weight: 900;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .btn{
+            border:0;
+            cursor:pointer;
+            border-radius: 999px;
+            padding: 14px 22px;
+            font-weight: 1000;
+            font-size: 15px;
+            transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
+            user-select:none;
+            color:#fff;
+            background: linear-gradient(135deg, var(--cyan), var(--pink));
+            box-shadow: 0 14px 26px rgba(6,182,212,.20);
+            min-width: 220px;
+        }
+        .btn:active{ transform: scale(.98); }
+        .btn:hover{ filter: brightness(1.05); }
+
+        .result-box{
+            width: min(520px, 92vw);
+            border: 1px solid rgba(255,255,255,.12);
+            border-radius: 18px;
+            padding: 14px;
+            background: rgba(255,255,255,.06);
+            box-shadow: 0 18px 40px rgba(0,0,0,.25);
+            margin-top: 4px;
+        }
+        .result-score{
+            font-variant-numeric: tabular-nums;
+            font-weight: 1000;
+            font-size: 42px;
+            color:#fff;
+            letter-spacing:-1px;
+            margin: 4px 0 4px;
+        }
+        .result-rank{
+            color: rgba(255,255,255,.86);
+            font-weight: 1000;
+            font-size: 16px;
+            margin-top: 2px;
+        }
+        .result-msg{
+            color: rgba(255,255,255,.78);
+            font-weight: 900;
+            font-size: 13px;
+            line-height: 1.6;
+            margin-top: 8px;
+            word-break: keep-all;
+        }
+
+        /* effects */
+        .shake{ animation: shake .36s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake{
+            10%, 90%{ transform: translate3d(-2px,0,0); }
+            20%, 80%{ transform: translate3d(4px,0,0); }
+            30%, 50%, 70%{ transform: translate3d(-6px,0,0); }
+            40%, 60%{ transform: translate3d(6px,0,0); }
+        }
+
+        .penalty{
+            position:absolute;
+            left:50%;
+            top: 22%;
+            transform: translateX(-50%);
+            color: var(--danger);
+            font-weight: 1000;
+            font-size: 44px;
+            z-index: 90;
+            pointer-events:none;
+            text-shadow: 0 16px 30px rgba(0,0,0,.35);
+            animation: floatUp .8s forwards;
+        }
+        @keyframes floatUp{
+            0%{ opacity:1; transform: translate(-50%, 0); }
+            100%{ opacity:0; transform: translate(-50%, -60px); }
+        }
+
+        /* optional: mode buttons (feature preserved, not required) */
+        .mode-row{
+            display:flex;
+            gap:8px;
+            justify-content:center;
+            flex-wrap:wrap;
+            margin-top: 2px;
+        }
+        .mode-btn{
+            border:1px solid rgba(255,255,255,.14);
+            background: rgba(255,255,255,.06);
+            color: rgba(255,255,255,.86);
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-weight: 900;
+            font-size: 12px;
+            cursor:pointer;
+            user-select:none;
+            transition: filter .12s ease, transform .12s ease, background .12s ease;
+        }
+        .mode-btn:hover{ filter: brightness(1.08); }
+        .mode-btn.active{
+            background: rgba(255,255,255,.14);
+            border-color: rgba(255,255,255,.26);
+        }
+    </style>
+</head>
+
+<body>
+<div class="page">
+    <div class="topbar">
+        <div class="brand">
+            <div class="brand-badge">🧠</div>
+            <div>뇌절 테스트</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-pad">
+            <h1>좌뇌(의미) vs 우뇌(색깔) 30초 전쟁</h1>
+            <p class="desc">
+                지시사항에 따라 <b>글자의 “의미”</b> 또는 <b>글자의 “색깔”</b>을 고르세요.
+                <span class="hint-strong">틀리면 -1초!</span>
+            </p>
+
+            <div class="hud" aria-label="HUD">
+                <div class="hud-item">
+                    <div>
+                        <div class="hud-label">남은 시간</div>
+                        <div class="hud-value" id="timeTxt">30.00</div>
+                    </div>
+                    <div style="color:var(--muted); font-weight:900; font-size:12px;">TIME ATTACK</div>
+                </div>
+
+                <div class="hud-item">
+                    <div>
+                        <div class="hud-label">점수</div>
+                        <div class="hud-value" id="scoreTxt" style="color:var(--gold)">0</div>
+                    </div>
+                    <div style="color:var(--muted); font-weight:900; font-size:12px;">정답 +100</div>
+                </div>
+            </div>
+
+            <div class="stage-wrap">
+                <div id="stage" aria-label="Game Stage">
+                    <div class="timerbar-wrap"><div id="timerBar"></div></div>
+
+                    <!-- Ready -->
+                    <div class="overlay" id="readyOverlay">
+                        <h2>30초의 승부</h2>
+                        <p>
+                            지시사항(의미 vs 색깔)이 계속 바뀝니다.<br />
+                            틀리면 <b style="color:var(--danger)">-1초</b> 즉시 차감!
+                        </p>
+                        <button class="btn" id="startBtn" type="button">도전 시작!</button>
+                    </div>
+
+                    <!-- Gameover -->
+                    <div class="overlay" id="overOverlay" style="display:none;">
+                        <h2 style="color:#ffd1dc;">테스트 종료</h2>
+
+                        <div class="result-box">
+                            <div style="color:rgba(255,255,255,.75); font-weight:900; font-size:12px; letter-spacing:.8px;">
+                                FINAL SCORE
+                            </div>
+                            <div class="result-score" id="finalScore">0</div>
+                            <div class="result-rank" id="finalRank">-</div>
+                            <div class="result-msg" id="finalMsg"></div>
+                        </div>
+
+                        <button class="btn" id="retryBtn" type="button">다시 도전</button>
+                    </div>
+
+                    <div class="instruction" id="instruction">
+                        글자의 <strong id="targetModeTxt">의미</strong>를 고르세요!
+                    </div>
+
+                    <!-- (옵션) 모드 선택: mixed / meaning / color -->
+                    <div class="mode-row" aria-label="Mode Select" style="margin-top:-6px;">
+                        <button class="mode-btn active" id="modeMixed" type="button">혼합</button>
+                        <button class="mode-btn" id="modeMeaning" type="button">의미 고정</button>
+                        <button class="mode-btn" id="modeColor" type="button">색깔 고정</button>
+                    </div>
+
+                    <div class="stimulus-area">
+                        <div id="stimulus">준비</div>
+                    </div>
+
+                    <div class="answers" aria-label="Answer Buttons">
+                        <button class="ans-btn btn-red" data-color="red" type="button">빨강</button>
+                        <button class="ans-btn btn-blue" data-color="blue" type="button">파랑</button>
+                        <button class="ans-btn btn-green" data-color="green" type="button">초록</button>
+                        <button class="ans-btn btn-yellow" data-color="yellow" type="button">노랑</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    /************************************************************
+     * Stroop Test (Vanilla JS)
+     * - No jQuery / No Rank
+     ************************************************************/
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+    const COLORS = {
+        red:    { name: '빨강', hex: '#ef4444' },
+        blue:   { name: '파랑', hex: '#1e90ff' },
+        green:  { name: '초록', hex: '#22c55e' },
+        yellow: { name: '노랑', hex: '#f59e0b' }
+    };
+    const COLOR_KEYS = Object.keys(COLORS);
+    const MODES = ['meaning', 'color']; // for mixed
+
+    const cfg = {
+        totalTime: 30.0,
+        tickRateMs: 50,
+        wrongPenaltySec: 1.0,
+        correctScore: 100,
+        mismatchChance: 0.70
+    };
+
+    const el = {
+        stage: $('#stage'),
+        timerBar: $('#timerBar'),
+        timeTxt: $('#timeTxt'),
+        scoreTxt: $('#scoreTxt'),
+
+        ready: $('#readyOverlay'),
+        over: $('#overOverlay'),
+        startBtn: $('#startBtn'),
+        retryBtn: $('#retryBtn'),
+
+        instruction: $('#instruction'),
+        targetModeTxt: $('#targetModeTxt'),
+        stimulus: $('#stimulus'),
+
+        finalScore: $('#finalScore'),
+        finalRank: $('#finalRank'),
+        finalMsg: $('#finalMsg'),
+
+        modeMixed: $('#modeMixed'),
+        modeMeaning: $('#modeMeaning'),
+        modeColor: $('#modeColor'),
+        ansBtns: $$('.ans-btn')
+    };
+
+    const state = {
+        isPlaying: false,
+        timeLeft: cfg.totalTime,
+        score: 0,
+        timerId: null,
+        currentAnswerKey: null,
+        gameMode: 'mixed' // mixed | meaning | color
+    };
+
+    function format2(n){
+        return (Math.max(0, n)).toFixed(2);
+    }
+    function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+    function randPick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
+
+    function setMode(mode){
+        state.gameMode = mode;
+        [el.modeMixed, el.modeMeaning, el.modeColor].forEach(b => b.classList.remove('active'));
+        if (mode === 'mixed') el.modeMixed.classList.add('active');
+        if (mode === 'meaning') el.modeMeaning.classList.add('active');
+        if (mode === 'color') el.modeColor.classList.add('active');
+    }
+
+    function resetGame(){
+        stopTimer();
+        state.isPlaying = false;
+        state.timeLeft = cfg.totalTime;
+        state.score = 0;
+        state.currentAnswerKey = null;
+
+        updateHUD(true);
+
+        el.over.style.display = 'none';
+        el.ready.style.display = 'flex';
+        el.stimulus.textContent = '준비';
+        el.stimulus.style.color = '#ffffff';
+
+        el.timerBar.style.width = '100%';
+        el.timerBar.style.background = 'linear-gradient(90deg, var(--cyan), var(--pink))';
+        el.timeTxt.classList.remove('time-danger');
+        el.instruction.classList.remove('mode-color');
+        el.instruction.style.borderColor = 'rgba(6,182,212,.65)';
+        el.targetModeTxt.textContent = '의미';
+    }
+
+    function startGame(){
+        el.ready.style.display = 'none';
+        el.over.style.display = 'none';
+
+        state.isPlaying = true;
+        state.timeLeft = cfg.totalTime;
+        state.score = 0;
+
+        updateHUD(true);
+        startTimer();
+        nextRound();
+    }
+
+    function startTimer(){
+        stopTimer();
+        state.timerId = setInterval(() => {
+            state.timeLeft -= (cfg.tickRateMs / 1000);
+
+            if (state.timeLeft <= 0){
+                state.timeLeft = 0;
+                updateHUD();
+                gameOver();
+                return;
+            }
+
+            updateHUD();
+        }, cfg.tickRateMs);
+    }
+
+    function stopTimer(){
+        if (state.timerId){
+            clearInterval(state.timerId);
+            state.timerId = null;
+        }
+    }
+
+    function updateHUD(force){
+        el.timeTxt.textContent = format2(state.timeLeft);
+        el.scoreTxt.textContent = Math.round(state.score).toLocaleString('ko-KR');
+
+        const pct = (state.timeLeft / cfg.totalTime) * 100;
+        el.timerBar.style.width = clamp(pct, 0, 100) + '%';
+
+        if (state.timeLeft < 5){
+            el.timeTxt.classList.add('time-danger');
+            el.timerBar.style.background = 'var(--danger)';
+        } else {
+            el.timeTxt.classList.remove('time-danger');
+            el.timerBar.style.background = 'linear-gradient(90deg, var(--cyan), var(--pink))';
+        }
+    }
+
+    function nextRound(){
+        if (!state.isPlaying) return;
+
+        // 1) decide target mode
+        let targetMode = 'meaning';
+        if (state.gameMode === 'mixed') targetMode = randPick(MODES);
+        else targetMode = state.gameMode;
+
+        // 2) meaning word key + color key with mismatch chance
+        const meaningKey = randPick(COLOR_KEYS);
+        let colorKey = meaningKey;
+
+        if (Math.random() < cfg.mismatchChance){
+            do { colorKey = randPick(COLOR_KEYS); } while (colorKey === meaningKey);
+        }
+
+        // 3) render
+        el.targetModeTxt.textContent = (targetMode === 'meaning' ? '의미' : '색깔');
+        if (targetMode === 'color'){
+            el.instruction.classList.add('mode-color');
+            el.instruction.style.borderColor = 'rgba(219,39,119,.75)';
+        } else {
+            el.instruction.classList.remove('mode-color');
+            el.instruction.style.borderColor = 'rgba(6,182,212,.65)';
+        }
+
+        el.stimulus.textContent = COLORS[meaningKey].name;
+        el.stimulus.style.color = COLORS[colorKey].hex;
+
+        // answer key
+        state.currentAnswerKey = (targetMode === 'meaning') ? meaningKey : colorKey;
+    }
+
+    function showPenalty(){
+        const p = document.createElement('div');
+        p.className = 'penalty';
+        p.textContent = '-1초';
+        el.stage.appendChild(p);
+        setTimeout(() => p.remove(), 800);
+    }
+
+    function shakeStage(){
+        el.stage.classList.add('shake');
+        setTimeout(() => el.stage.classList.remove('shake'), 420);
+    }
+
+    function checkAnswer(selectedKey){
+        if (!state.isPlaying) return;
+
+        if (selectedKey === state.currentAnswerKey){
+            state.score += cfg.correctScore;
+            updateHUD();
+            nextRound();
+        } else {
+            state.timeLeft = Math.max(0, state.timeLeft - cfg.wrongPenaltySec);
+            showPenalty();
+            shakeStage();
+            updateHUD();
+            if (state.timeLeft <= 0){
+                gameOver();
+                return;
+            }
+            nextRound();
+        }
+    }
+
+    function getRankData(score){
+        // 원본 느낌 유지(랜덤 멘트) + 랭킹 전송/표시 기능은 없음(로컬 결과만)
+        if (score <= 500) return { rank: "🦠 단세포 생물", msgs: [
+                "혹시... 눈 감고 테스트하셨나요?",
+                "뇌가 잠시 가출했습니다. (찾아주세요)",
+                "키보드 청소하다가 눌린 점수입니다.",
+                "괜찮아요. 머리 안 쓰고 살면 되죠 뭐.",
+                "당신의 좌뇌와 우뇌가 '합의 이혼' 했습니다."
+            ]};
+        if (score <= 1500) return { rank: "🐔 조류수준", msgs: [
+                "금붕어 기억력이 3초라던데... 이겼나요?",
+                "손가락과 뇌의 연결이 자주 끊깁니다.",
+                "혹시 어제 과음하셨나요?",
+                "침팬지가 당신을 비웃고 있습니다.",
+                "색깔이랑 글자가 그렇게 헷갈려요?"
+            ]};
+        if (score <= 2500) return { rank: "🐢 거북이", msgs: [
+                "느려요... 너무 느려요...",
+                "신중한 성격이시군요. (좋게 포장함)",
+                "답답해서 모니터 칠 뻔했습니다.",
+                "나쁘진 않은데... 그냥 못해요.",
+                "집중력은 있는데 손이 늦습니다!"
+            ]};
+        if (score <= 3500) return { rank: "😐 평범한 지구인", msgs: [
+                "딱! 대한민국 평균입니다.",
+                "어디 가서 자랑은 하지 마세요.",
+                "노력하면 사람 될 수 있습니다.",
+                "밥 먹고 테스트만 하셨나요? 아, 아니구나.",
+                "좌뇌 우뇌가 아직은 사이 좋네요."
+            ]};
+        if (score <= 4500) return { rank: "🦊 눈치 100단", msgs: [
+                "오... 제법 치는데?",
+                "동체시력이 살아있네요!",
+                "이 정도면 어디 가서 '똑똑하다' 소리 들음.",
+                "좌뇌와 우뇌가 썸 타는 중!",
+                "반응속도가 꽤 훌륭합니다."
+            ]};
+        if (score <= 5500) return { rank: "🧠 뇌섹남녀", msgs: [
+                "미친 반응속도! 프로게이머 지망생?",
+                "뇌 주름이 아주 섹시하시네요.",
+                "친구들이랑 내기하면 무조건 이깁니다.",
+                "인간계 상위 1% 피지컬 인정합니다.",
+                "이 정도면 뇌절이 아니라 뇌캐리!"
+            ]};
+        return { rank: "👽 외계인", msgs: [
+                "당신은 사람이 아닙니다. 정체를 밝혀라.",
+                "NASA에서 당신을 연구 대상으로 찾고 있습니다.",
+                "핵 프로그램 쓰셨나요? (아님) 그냥 미쳤다…",
+                "미래를 보는 예지력이 있습니다.",
+                "AI도 울고 갈 처리 속도!"
+            ]};
+    }
+
+    function gameOver(){
+        if (!state.isPlaying) return;
+        state.isPlaying = false;
+        stopTimer();
+        updateHUD();
+
+        const s = Math.round(state.score);
+        const r = getRankData(s);
+        const msg = r.msgs[Math.floor(Math.random() * r.msgs.length)];
+
+        el.finalScore.textContent = s.toLocaleString('ko-KR');
+        el.finalRank.textContent = r.rank;
+        el.finalMsg.textContent = msg;
+
+        el.over.style.display = 'flex';
+    }
+
+    /* ---------- Events ---------- */
+    el.startBtn.addEventListener('click', startGame);
+    el.retryBtn.addEventListener('click', resetGame);
+
+    el.modeMixed.addEventListener('click', () => setMode('mixed'));
+    el.modeMeaning.addEventListener('click', () => setMode('meaning'));
+    el.modeColor.addEventListener('click', () => setMode('color'));
+
+    // Answer buttons: pointerdown for fast response
+    el.ansBtns.forEach(btn => {
+        btn.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            const key = btn.getAttribute('data-color');
+            checkAnswer(key);
+        }, { passive:false });
+    });
+
+    // init
+    setMode('mixed');
+    resetGame();
+</script>
+</body>
+</html>
