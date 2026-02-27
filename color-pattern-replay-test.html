@@ -1,0 +1,639 @@
+<!-- filename example: color-pattern-replay-test.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>컬러 패턴 리플레이: 인지력 테스트</title>
+
+    <!-- https://www.jiraksil.com/service/colorperception -->
+
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --border:#e5e7eb;
+            --text:#111827;
+            --muted:#6b7280;
+
+            --primary:#2563eb;
+            --good:#22c55e;
+            --bad:#ef4444;
+
+            --shadow:0 10px 30px rgba(0,0,0,.08);
+            --radius:16px;
+        }
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;
+            background:var(--bg);
+            color:var(--text);
+        }
+        .wrap{
+            max-width:920px;
+            margin:40px auto;
+            padding:20px;
+        }
+        .title{
+            margin:0;
+            font-size:22px;
+            line-height:1.2;
+        }
+        .desc{
+            margin:10px 0 0;
+            color:var(--muted);
+            line-height:1.6;
+        }
+
+        .card{
+            margin-top:16px;
+            background:var(--card);
+            border:1px solid var(--border);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            overflow:hidden;
+            position:relative;
+        }
+        .topbar{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            flex-wrap:wrap;
+            padding:14px 16px;
+            border-bottom:1px solid var(--border);
+        }
+        .chips{
+            display:flex;
+            gap:10px;
+            align-items:center;
+            flex-wrap:wrap;
+            font-weight:900;
+        }
+        .chip{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            padding:8px 12px;
+            border:1px solid var(--border);
+            border-radius:999px;
+            background:#fff;
+            font-size:14px;
+            user-select:none;
+        }
+        .chip span{ color:var(--muted); font-weight:800; }
+
+        .btns{ display:flex; gap:10px; flex-wrap:wrap; }
+        .btn{
+            appearance:none;
+            border:1px solid var(--border);
+            background:#fff;
+            color:var(--text);
+            border-radius:999px;
+            padding:10px 14px;
+            font-weight:900;
+            cursor:pointer;
+            transition:transform .05s ease, border-color .2s ease, background .2s ease, opacity .2s ease;
+            user-select:none;
+        }
+        .btn:hover{ border-color:#cbd5e1; }
+        .btn:active{ transform:translateY(1px); }
+        .btn.primary{
+            background:var(--primary);
+            border-color:var(--primary);
+            color:#fff;
+        }
+        .btn:disabled{
+            opacity:.5;
+            cursor:not-allowed;
+        }
+
+        .stage{ padding:18px; }
+        .gameBox{
+            border:1px solid var(--border);
+            border-radius:14px;
+            background:#ffffff;
+            padding:16px;
+            min-height:420px;
+        }
+
+        .message{
+            margin:0 0 10px;
+            color:var(--muted);
+            line-height:1.6;
+            font-size:14px;
+            display:flex;
+            align-items:center;
+            gap:8px;
+            flex-wrap:wrap;
+        }
+
+        /* Grid */
+        #grid{
+            display:grid;
+            gap:10px;
+            margin:12px auto 0;
+            width:min(520px, 100%);
+        }
+        .cell{
+            background:#fff;
+            border:1px solid var(--border);
+            border-radius:10px;
+            position:relative;
+            padding-bottom:100%;
+            cursor:pointer;
+            transition:transform .05s ease, border-color .2s ease;
+            user-select:none;
+        }
+        .cell:hover{ border-color:#cbd5e1; }
+        .cell:active{ transform:translateY(1px); }
+        .cell-inner{
+            position:absolute;
+            inset:0;
+            border-radius:10px;
+            background:#fff;
+        }
+
+        /* Palette */
+        #palette{
+            display:none;
+            margin-top:14px;
+            text-align:center;
+        }
+        .palette-row{
+            display:inline-flex;
+            gap:10px;
+            flex-wrap:wrap;
+            justify-content:center;
+            align-items:center;
+        }
+        .palette-color{
+            width:44px;
+            height:44px;
+            border-radius:999px;
+            border:2px solid transparent;
+            cursor:pointer;
+            transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease, opacity .12s ease;
+        }
+        .palette-color:hover{ transform:scale(1.05); }
+        .palette-color.selected{
+            border-color:#111827;
+            box-shadow:0 10px 18px rgba(0,0,0,.18);
+            transform:scale(1.08);
+        }
+
+        .actions{
+            display:flex;
+            justify-content:center;
+            margin-top:14px;
+        }
+
+        .toast{
+            position:fixed;
+            left:50%;
+            bottom:22px;
+            transform:translateX(-50%);
+            background:#111827;
+            color:#fff;
+            padding:10px 14px;
+            border-radius:999px;
+            font-weight:900;
+            font-size:13px;
+            opacity:0;
+            pointer-events:none;
+            transition:opacity .2s ease, transform .2s ease;
+            z-index:9999;
+            box-shadow:0 10px 30px rgba(0,0,0,.25);
+        }
+        .toast.show{
+            opacity:1;
+            transform:translateX(-50%) translateY(-4px);
+        }
+
+        /* Overlay */
+        .overlay{
+            position:absolute;
+            inset:0;
+            background:rgba(17,24,39,.55);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:18px;
+            z-index:50;
+        }
+        .overlay.hidden{ display:none; }
+        .overlayCard{
+            width:min(360px, 100%);
+            background:#fff;
+            border:1px solid var(--border);
+            border-radius:16px;
+            box-shadow:var(--shadow);
+            padding:14px;
+            text-align:center;
+        }
+        .overlayMsg{
+            margin:0 0 12px;
+            line-height:1.6;
+            color:var(--text);
+            font-weight:800;
+        }
+        .overlaySub{
+            margin:0 0 14px;
+            line-height:1.6;
+            color:var(--muted);
+            font-size:13px;
+        }
+        .good{ color:var(--good); }
+        .bad{ color:var(--bad); }
+
+        @media (max-width:520px){
+            .gameBox{ min-height:380px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <h1 class="title">컬러 패턴 리플레이: 인지력 테스트</h1>
+    <p class="desc">
+        잠깐 보여주는 색상 패턴을 기억했다가 그대로 재현하세요. 레벨이 오를수록 그리드가 커지고 더 어려워집니다.
+        기회는 총 5번입니다.
+    </p>
+
+    <div class="card" id="card">
+        <div class="topbar">
+            <div class="chips">
+                <div class="chip">레벨 <span id="levelText">1</span></div>
+                <div class="chip">남은 기회 <span id="chanceText">5</span></div>
+            </div>
+            <div class="btns">
+                <button class="btn" id="resetBtn" type="button">초기화</button>
+                <button class="btn primary" id="submitBtn" type="button" disabled>제출</button>
+            </div>
+        </div>
+
+        <div class="stage">
+            <div class="gameBox">
+                <p class="message" id="message">시작을 눌러 게임을 시작하세요.</p>
+
+                <div id="grid" aria-label="패턴 그리드"></div>
+
+                <div id="palette" aria-label="색상 팔레트">
+                    <div class="palette-row" id="paletteRow"></div>
+                </div>
+
+                <div class="actions"></div>
+            </div>
+        </div>
+
+        <!-- Overlay -->
+        <div class="overlay" id="overlay">
+            <div class="overlayCard">
+                <p class="overlayMsg" id="overlayMsg">패턴을 잠깐 보여줍니다.</p>
+                <p class="overlaySub" id="overlaySub">
+                    잠깐 나타나는 색상 패턴을 기억한 뒤, 동일하게 재현하세요.<br>
+                    난이도는 점점 증가하며, 기회는 총 5번입니다.
+                </p>
+                <button class="btn primary" id="overlayBtn" type="button">시작하기</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast">알림</div>
+
+<script>
+    (() => {
+        /*********************
+         * 설정/상태 변수들  *
+         *********************/
+        const allColors = ["red","green","blue","yellow","purple","orange","cyan","magenta"];
+
+        let currentLevel = 1;
+        let gridSize = 2;
+        let availableColors = [];
+        let originalPattern = [];
+        let userPattern = [];
+        let currentColor = null;
+        let isReplayPhase = false;
+        let remainingChances = 5;
+
+        const SHOW_MS = 3000;
+
+        /*********************
+         * DOM
+         *********************/
+        const levelText = document.getElementById('levelText');
+        const chanceText = document.getElementById('chanceText');
+        const messageEl = document.getElementById('message');
+
+        const gridEl = document.getElementById('grid');
+        const paletteEl = document.getElementById('palette');
+        const paletteRow = document.getElementById('paletteRow');
+
+        const submitBtn = document.getElementById('submitBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        const overlay = document.getElementById('overlay');
+        const overlayMsg = document.getElementById('overlayMsg');
+        const overlaySub = document.getElementById('overlaySub');
+        const overlayBtn = document.getElementById('overlayBtn');
+
+        const toastEl = document.getElementById('toast');
+
+        /*********************
+         * 유틸
+         *********************/
+        function toast(text){
+            toastEl.textContent = text;
+            toastEl.classList.add('show');
+            clearTimeout(toastEl._t);
+            toastEl._t = setTimeout(() => toastEl.classList.remove('show'), 900);
+        }
+
+        function updateHeader(){
+            levelText.textContent = String(currentLevel);
+            chanceText.textContent = String(remainingChances);
+        }
+
+        function getGridSize(level) {
+            if (level <= 4) return 2;
+            else if (level <= 8) return 3;
+            else if (level <= 15) return 4;
+            else if (level <= 24) return 5;
+            else if (level <= 35) return 6;
+            else if (level <= 48) return 7;
+            else return 8;
+        }
+
+        function showOverlay(msg, btnText, onClick, subHtml){
+            overlayMsg.innerHTML = msg;
+            overlayBtn.textContent = btnText;
+            overlaySub.innerHTML = subHtml ?? "";
+            overlayBtn.onclick = onClick;
+            overlay.classList.remove('hidden');
+        }
+
+        function hideOverlay(){
+            overlay.classList.add('hidden');
+        }
+
+        /*********************
+         * 그리드/패턴
+         *********************/
+        function createGrid(){
+            gridEl.innerHTML = "";
+            originalPattern = [];
+            userPattern = [];
+
+            gridEl.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+
+            for(let i=0;i<gridSize;i++){
+                originalPattern[i] = [];
+                userPattern[i] = [];
+                for(let j=0;j<gridSize;j++){
+                    userPattern[i][j] = "";
+
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+
+                    const inner = document.createElement('div');
+                    inner.className = 'cell-inner';
+                    cell.appendChild(inner);
+
+                    cell.addEventListener('click', onCellClick);
+                    gridEl.appendChild(cell);
+                }
+            }
+        }
+
+        function generateOriginalPattern(){
+            for(let i=0;i<gridSize;i++){
+                for(let j=0;j<gridSize;j++){
+                    const c = availableColors[Math.floor(Math.random()*availableColors.length)];
+                    originalPattern[i][j] = c;
+                }
+            }
+        }
+
+        function showPattern(){
+            gridEl.querySelectorAll('.cell').forEach(cell => {
+                const r = Number(cell.dataset.row);
+                const c = Number(cell.dataset.col);
+                cell.firstElementChild.style.backgroundColor = originalPattern[r][c];
+            });
+        }
+
+        function hidePattern(){
+            gridEl.querySelectorAll('.cell').forEach(cell => {
+                cell.firstElementChild.style.backgroundColor = "#ffffff";
+            });
+        }
+
+        /*********************
+         * 팔레트
+         *********************/
+        function setupPalette(){
+            paletteRow.innerHTML = "";
+            paletteEl.style.display = "block";
+
+            availableColors.forEach(color => {
+                const b = document.createElement('button');
+                b.type = "button";
+                b.className = "palette-color";
+                b.style.backgroundColor = color;
+                b.title = color;
+
+                b.addEventListener('click', () => {
+                    paletteRow.querySelectorAll('.palette-color').forEach(x => x.classList.remove('selected'));
+                    b.classList.add('selected');
+                    currentColor = color;
+                });
+
+                paletteRow.appendChild(b);
+            });
+        }
+
+        function clearPaletteSelection(){
+            currentColor = null;
+            paletteRow.querySelectorAll('.palette-color').forEach(x => x.classList.remove('selected'));
+        }
+
+        /*********************
+         * 입력/검사
+         *********************/
+        function onCellClick(e){
+            if(!isReplayPhase) return;
+
+            if(!currentColor){
+                toast("먼저 색상을 선택하세요!");
+                return;
+            }
+
+            const cell = e.currentTarget;
+            const r = Number(cell.dataset.row);
+            const c = Number(cell.dataset.col);
+
+            cell.firstElementChild.style.backgroundColor = currentColor;
+            userPattern[r][c] = currentColor;
+
+            // 제출 가능 여부 갱신
+            submitBtn.disabled = !isAllFilled();
+        }
+
+        function isAllFilled(){
+            for(let i=0;i<gridSize;i++){
+                for(let j=0;j<gridSize;j++){
+                    if(userPattern[i][j] === "") return false;
+                }
+            }
+            return true;
+        }
+
+        function checkPattern(){
+            for(let i=0;i<gridSize;i++){
+                for(let j=0;j<gridSize;j++){
+                    if(userPattern[i][j] !== originalPattern[i][j]) return false;
+                }
+            }
+            return true;
+        }
+
+        /*********************
+         * 레벨 진행
+         *********************/
+        function startLevel(){
+            isReplayPhase = false;
+            submitBtn.disabled = true;
+            paletteEl.style.display = "none";
+            clearPaletteSelection();
+
+            updateHeader();
+
+            gridSize = getGridSize(currentLevel);
+            availableColors = allColors.slice(0, gridSize);
+
+            messageEl.textContent = `레벨 ${currentLevel}: 패턴을 기억하세요!`;
+
+            createGrid();
+            generateOriginalPattern();
+            showPattern();
+
+            // SHOW_MS 후 재현 단계
+            setTimeout(() => {
+                hidePattern();
+                isReplayPhase = true;
+                messageEl.textContent = `레벨 ${currentLevel}: 이제 기억한 패턴을 재현해보세요!`;
+                setupPalette();
+                submitBtn.disabled = true;
+            }, SHOW_MS);
+        }
+
+        /*********************
+         * 버튼/이벤트
+         *********************/
+        submitBtn.addEventListener('click', () => {
+            if(!isReplayPhase) return;
+
+            if(!isAllFilled()){
+                toast("모든 칸을 채워주세요!");
+                return;
+            }
+
+            isReplayPhase = false;
+
+            if(checkPattern()){
+                showOverlay(
+                    `<span class="good">정답입니다!</span><br>레벨 ${currentLevel} 클리어!`,
+                    "다음 레벨",
+                    () => {
+                        currentLevel++;
+                        hideOverlay();
+                        startLevel();
+                    },
+                    `그리드: ${gridSize}×${gridSize} / 색상 ${availableColors.length}종`
+                );
+            }else{
+                remainingChances--;
+                updateHeader();
+
+                if(remainingChances > 0){
+                    showOverlay(
+                        `<span class="bad">오답입니다.</span><br>남은 기회: ${remainingChances}번`,
+                        "다시하기",
+                        () => {
+                            hideOverlay();
+                            startLevel();
+                        },
+                        "같은 레벨에서 다시 도전합니다."
+                    );
+                }else{
+                    showOverlay(
+                        `<span class="bad">테스트 종료</span><br>모든 기회를 소진했습니다.`,
+                        "게임 다시 시작",
+                        () => {
+                            currentLevel = 1;
+                            remainingChances = 5;
+                            hideOverlay();
+                            startLevel();
+                        },
+                        `최종 레벨: <b>${currentLevel}</b>`
+                    );
+                }
+            }
+        });
+
+        resetBtn.addEventListener('click', () => {
+            currentLevel = 1;
+            remainingChances = 5;
+            isReplayPhase = false;
+            submitBtn.disabled = true;
+            paletteEl.style.display = "none";
+            clearPaletteSelection();
+            updateHeader();
+
+            messageEl.textContent = "초기화되었습니다. 시작하기를 눌러 진행하세요.";
+            createGrid();
+            hidePattern();
+
+            showOverlay(
+                "화면에 나타나는 색상 패턴을 잠깐 기억한 후, 동일하게 재현해보세요.",
+                "시작하기",
+                () => {
+                    hideOverlay();
+                    startLevel();
+                },
+                "난이도는 점점 증가하며, 기회는 총 5번입니다."
+            );
+        });
+
+        overlayBtn.addEventListener('click', () => {}); // showOverlay에서 덮어씀
+
+        /*********************
+         * 초기 시작
+         *********************/
+        function init(){
+            updateHeader();
+            gridSize = getGridSize(currentLevel);
+            createGrid();
+            hidePattern();
+
+            showOverlay(
+                "화면에 나타나는 색상 패턴을 잠깐 기억한 후, 동일하게 재현해보세요.",
+                "시작하기",
+                () => {
+                    hideOverlay();
+                    startLevel();
+                },
+                "난이도는 점점 증가하며, 기회는 총 5번입니다."
+            );
+        }
+
+        window.addEventListener('load', init);
+    })();
+</script>
+</body>
+</html>
