@@ -1,0 +1,683 @@
+<!-- filename example: visual-reaction-focus-test.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>시각 반응력 테스트</title>
+    <meta name="description" content="30초 동안 화면 곳곳에 나타나는 아이콘/문자 중 지정된 타겟을 빠르게 찾아 클릭하는 시각 반응력 테스트" />
+
+    <!-- https://www.jiraksil.com/service/focus -->
+
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --border:#e5e7eb;
+            --text:#111827;
+            --muted:#6b7280;
+
+            --primary:#2563eb;
+            --primary2:#1d4ed8;
+            --good:#22c55e;
+            --bad:#ef4444;
+
+            --shadow:0 10px 30px rgba(0,0,0,.08);
+            --radius:16px;
+        }
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;
+            background:var(--bg);
+            color:var(--text);
+        }
+        .wrap{
+            max-width:920px;
+            margin:40px auto;
+            padding:20px;
+        }
+        .titleRow{
+            display:flex;
+            align-items:flex-end;
+            justify-content:space-between;
+            gap:12px;
+            flex-wrap:wrap;
+        }
+        h1{
+            margin:0;
+            font-size:22px;
+            line-height:1.2;
+        }
+        .desc{
+            margin:10px 0 0;
+            color:var(--muted);
+            line-height:1.6;
+        }
+
+        .card{
+            margin-top:16px;
+            background:var(--card);
+            border:1px solid var(--border);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            overflow:hidden;
+            position:relative;
+        }
+        .topbar{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            flex-wrap:wrap;
+            padding:14px 16px;
+            border-bottom:1px solid var(--border);
+        }
+        .chips{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            align-items:center;
+            font-weight:900;
+        }
+        .chip{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            padding:8px 12px;
+            border:1px solid var(--border);
+            border-radius:999px;
+            background:#fff;
+            font-size:14px;
+            user-select:none;
+        }
+        .chip span{ color:var(--muted); font-weight:800; }
+
+        .btns{ display:flex; gap:10px; flex-wrap:wrap; }
+        .btn{
+            appearance:none;
+            border:1px solid var(--border);
+            background:#fff;
+            color:var(--text);
+            border-radius:999px;
+            padding:10px 14px;
+            font-weight:900;
+            cursor:pointer;
+            transition:transform .05s ease, border-color .2s ease, background .2s ease, opacity .2s ease;
+            user-select:none;
+            white-space:nowrap;
+        }
+        .btn:hover{ border-color:#cbd5e1; }
+        .btn:active{ transform:translateY(1px); }
+        .btn.primary{
+            background:var(--primary);
+            border-color:var(--primary);
+            color:#fff;
+        }
+        .btn.primary:hover{ background:var(--primary2); border-color:var(--primary2); }
+        .btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+        .stage{ padding:18px; }
+        .gameBox{
+            border:1px solid var(--border);
+            border-radius:14px;
+            background:#fff;
+            min-height:520px;
+            position:relative;
+            overflow:hidden;
+        }
+
+        /* Game container area */
+        #gameArea{
+            position:relative;
+            width:100%;
+            height:480px;
+            background:#ffffff;
+        }
+
+        /* HUD */
+        #hud{
+            position:absolute;
+            top:10px;
+            left:10px;
+            right:10px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            z-index:20;
+            pointer-events:none;
+            gap:10px;
+            flex-wrap:wrap;
+        }
+        .hudLeft{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            align-items:center;
+        }
+        .pill{
+            pointer-events:none;
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            padding:8px 12px;
+            border-radius:999px;
+            background:rgba(255,255,255,.92);
+            border:1px solid var(--border);
+            font-weight:900;
+            box-shadow:0 6px 18px rgba(0,0,0,.06);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            user-select:none;
+        }
+        .pill .label{ color:var(--muted); font-weight:800; }
+
+        /* Items */
+        .gameItem{
+            position:absolute;
+            cursor:pointer;
+            user-select:none;
+            transition:transform .12s ease, filter .12s ease;
+            will-change:transform, filter;
+        }
+        .gameItem:hover{ filter:brightness(.95); }
+        .gameItem:active{ transform:scale(.92); }
+
+        @keyframes foundAnimation{
+            0%{ transform:scale(1); opacity:1; }
+            100%{ transform:scale(1.5); opacity:0; }
+        }
+        .found{ animation:foundAnimation .45s forwards; pointer-events:none; }
+
+        /* Overlay */
+        .overlay{
+            position:absolute;
+            inset:0;
+            background:rgba(17,24,39,.55);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:18px;
+            z-index:50;
+        }
+        .overlay.hidden{ display:none; }
+        .overlayCard{
+            width:min(380px, 100%);
+            background:#fff;
+            border:1px solid var(--border);
+            border-radius:16px;
+            box-shadow:var(--shadow);
+            padding:14px;
+            text-align:center;
+        }
+        .overlayTitle{
+            margin:0 0 8px;
+            font-size:18px;
+            font-weight:1000;
+        }
+        .overlayText{
+            margin:0;
+            color:var(--muted);
+            line-height:1.6;
+            font-size:14px;
+        }
+        .overlayActions{
+            margin-top:14px;
+            display:flex;
+            gap:10px;
+            justify-content:center;
+            flex-wrap:wrap;
+        }
+
+        .toast{
+            position:fixed;
+            left:50%;
+            bottom:22px;
+            transform:translateX(-50%);
+            background:#111827;
+            color:#fff;
+            padding:10px 14px;
+            border-radius:999px;
+            font-weight:900;
+            font-size:13px;
+            opacity:0;
+            pointer-events:none;
+            transition:opacity .2s ease, transform .2s ease;
+            z-index:9999;
+            box-shadow:0 10px 30px rgba(0,0,0,.25);
+        }
+        .toast.show{
+            opacity:1;
+            transform:translateX(-50%) translateY(-4px);
+        }
+
+        @media (max-width:520px){
+            #gameArea{ height:440px; }
+            .gameBox{ min-height:480px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="titleRow">
+        <h1>시각 반응력 테스트</h1>
+    </div>
+    <p class="desc">
+        화면 곳곳에 나타나는 아이콘/문자 중 <b>Target</b>을 찾아 클릭하세요. 제한 시간 30초 동안 점수를 최대한 올려보세요!
+    </p>
+
+    <div class="card">
+        <div class="topbar">
+            <div class="chips">
+                <div class="chip">시간 <span id="timeChip">30.00</span></div>
+                <div class="chip">타겟 <span id="targetChip">?</span></div>
+                <div class="chip">점수 <span id="scoreChip">0</span></div>
+                <div class="chip">레벨 <span id="levelChip">1</span></div>
+            </div>
+            <div class="btns">
+                <button class="btn" id="soundBtn" type="button" aria-pressed="true">효과음: 켬</button>
+                <button class="btn" id="resetBtn" type="button">초기화</button>
+                <button class="btn primary" id="startBtn" type="button">시작</button>
+            </div>
+        </div>
+
+        <div class="stage">
+            <div class="gameBox">
+                <div id="gameArea" aria-label="게임 영역">
+                    <!-- HUD (게임 영역 위) -->
+                    <div id="hud">
+                        <div class="hudLeft">
+                            <div class="pill"><span class="label">Time</span><span id="timerDisplay">30.00</span></div>
+                            <div class="pill"><span class="label">Target</span><span id="targetDisplay">?</span></div>
+                        </div>
+                        <div class="pill"><span class="label">Score</span><span id="scoreDisplay">0</span></div>
+                    </div>
+
+                    <!-- Overlay (Start / End) -->
+                    <div class="overlay" id="overlay">
+                        <div class="overlayCard">
+                            <div class="overlayTitle" id="overlayTitle">시각 반응력 테스트</div>
+                            <p class="overlayText" id="overlayText">
+                                화면 곳곳에 나타나는 아이콘/문자 중 지정된 <b>Target</b>을 찾아 클릭하세요.<br/>
+                                제한 시간은 <b>30초</b>입니다.
+                            </p>
+                            <div class="overlayActions">
+                                <button class="btn primary" id="overlayMainBtn" type="button">시작하기</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast">알림</div>
+
+<script>
+    (() => {
+        /*********************
+         * 설정 / 상태
+         *********************/
+        const GAME_TIME = 30; // seconds
+        const items = [
+            "😂","😍","👏","🌍","🏆","🚀","🥵","💌","💍","✊","🍀","🦊","☕","🍩","🍕",
+            "😀","🐶","🍎","⭐","🔥","💧","❤️","👍",
+            "문","물","해","🌙","#","A","B","C","Z","!","$","%","&"
+        ];
+
+        let remainingTime = GAME_TIME;
+        let score = 0;
+        let level = 1;
+
+        let timerId = null;
+        let running = false;
+        let currentTarget = "?";
+        let soundOn = true;
+
+        // WebAudio (lazy init)
+        let audioCtx = null;
+
+        /*********************
+         * DOM
+         *********************/
+        const gameArea = document.getElementById('gameArea');
+
+        const timerDisplay = document.getElementById('timerDisplay');
+        const targetDisplay = document.getElementById('targetDisplay');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+
+        const timeChip = document.getElementById('timeChip');
+        const targetChip = document.getElementById('targetChip');
+        const scoreChip = document.getElementById('scoreChip');
+        const levelChip = document.getElementById('levelChip');
+
+        const startBtn = document.getElementById('startBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const soundBtn = document.getElementById('soundBtn');
+
+        const overlay = document.getElementById('overlay');
+        const overlayTitle = document.getElementById('overlayTitle');
+        const overlayText = document.getElementById('overlayText');
+        const overlayMainBtn = document.getElementById('overlayMainBtn');
+
+        const toastEl = document.getElementById('toast');
+
+        /*********************
+         * UI helpers
+         *********************/
+        function toast(text){
+            toastEl.textContent = text;
+            toastEl.classList.add('show');
+            clearTimeout(toastEl._t);
+            toastEl._t = setTimeout(() => toastEl.classList.remove('show'), 900);
+        }
+
+        function fmt2(x){
+            return Number(x).toFixed(2);
+        }
+
+        function syncHud(){
+            timerDisplay.textContent = fmt2(remainingTime);
+            targetDisplay.textContent = currentTarget;
+            scoreDisplay.textContent = String(score);
+
+            timeChip.textContent = fmt2(remainingTime);
+            targetChip.textContent = currentTarget;
+            scoreChip.textContent = String(score);
+            levelChip.textContent = String(level);
+        }
+
+        function showOverlay(title, htmlText, btnText, onClick){
+            overlayTitle.textContent = title;
+            overlayText.innerHTML = htmlText;
+            overlayMainBtn.textContent = btnText;
+            overlayMainBtn.onclick = onClick;
+            overlay.classList.remove('hidden');
+        }
+
+        function hideOverlay(){
+            overlay.classList.add('hidden');
+        }
+
+        function clearItems(){
+            gameArea.querySelectorAll('.gameItem').forEach(el => el.remove());
+        }
+
+        /*********************
+         * Sound
+         *********************/
+        async function ensureAudio(){
+            if (!soundOn) return;
+            if (!audioCtx){
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === "suspended"){
+                try{ await audioCtx.resume(); }catch(e){}
+            }
+        }
+
+        async function playFoundSound(){
+            if (!soundOn) return;
+            await ensureAudio();
+            if (!audioCtx) return;
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(660, audioCtx.currentTime);
+
+            gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.12, audioCtx.currentTime + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.12);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.13);
+        }
+
+        /*********************
+         * Placement helpers
+         *********************/
+        function measureItem(text, fontSize){
+            const dummy = document.createElement('span');
+            dummy.textContent = text;
+            dummy.style.fontSize = fontSize + "px";
+            dummy.style.position = "absolute";
+            dummy.style.visibility = "hidden";
+            dummy.style.left = "-9999px";
+            dummy.style.top = "-9999px";
+            gameArea.appendChild(dummy);
+            const rect = dummy.getBoundingClientRect();
+            dummy.remove();
+            return { width: rect.width, height: rect.height };
+        }
+
+        function overlapsAny(newRect, placed){
+            for (const r of placed){
+                if (newRect.x < r.x + r.width &&
+                    newRect.x + newRect.width > r.x &&
+                    newRect.y < r.y + r.height &&
+                    newRect.y + newRect.height > r.y) return true;
+            }
+            return false;
+        }
+
+        function getNonOverlappingPosition(w, h, areaW, areaH, placed){
+            // HUD 상단 공간 조금 띄움
+            const topPad = 56;
+
+            for (let attempt=0; attempt<120; attempt++){
+                const x = Math.random() * Math.max(1, (areaW - w));
+                const y = topPad + Math.random() * Math.max(1, (areaH - topPad - h));
+                const rect = { x, y, width:w, height:h };
+                if (!overlapsAny(rect, placed)) return { x, y };
+            }
+            // fallback
+            return { x: 6, y: topPad + 6 };
+        }
+
+        /*********************
+         * Game core
+         *********************/
+        function pickTarget(){
+            currentTarget = items[Math.floor(Math.random() * items.length)];
+        }
+
+        function getFontSizeByLevel(lv){
+            // 40px -> 20px
+            return Math.max(20, 40 - lv * 2);
+        }
+
+        function getTotalItemsByLevel(lv){
+            return 5 + lv * 2;
+        }
+
+        function spawnLevel(){
+            if (!running) return;
+
+            clearItems();
+            pickTarget();
+            syncHud();
+
+            const rect = gameArea.getBoundingClientRect();
+            const areaW = rect.width;
+            const areaH = rect.height;
+
+            const placedRects = [];
+            const fontSize = getFontSizeByLevel(level);
+            const totalItems = getTotalItemsByLevel(level);
+
+            // 1) target
+            const targetEl = document.createElement('span');
+            targetEl.className = "gameItem";
+            targetEl.textContent = currentTarget;
+            targetEl.style.fontSize = fontSize + "px";
+
+            const sizeT = measureItem(currentTarget, fontSize);
+            const posT = getNonOverlappingPosition(sizeT.width, sizeT.height, areaW, areaH, placedRects);
+            placedRects.push({ x:posT.x, y:posT.y, width:sizeT.width, height:sizeT.height });
+
+            targetEl.style.left = posT.x + "px";
+            targetEl.style.top  = posT.y + "px";
+
+            targetEl.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                if (!running) return;
+                await playFoundSound();
+                targetEl.classList.add('found');
+
+                setTimeout(() => {
+                    if (!running) return;
+                    score++;
+                    level++;
+                    syncHud();
+                    spawnLevel();
+                }, 220);
+            });
+
+            gameArea.appendChild(targetEl);
+
+            // 2) distractors
+            for (let i=1; i<totalItems; i++){
+                let d;
+                do{
+                    d = items[Math.floor(Math.random() * items.length)];
+                }while(d === currentTarget);
+
+                const el = document.createElement('span');
+                el.className = "gameItem";
+                el.textContent = d;
+                el.style.fontSize = fontSize + "px";
+
+                const size = measureItem(d, fontSize);
+                const pos = getNonOverlappingPosition(size.width, size.height, areaW, areaH, placedRects);
+                placedRects.push({ x:pos.x, y:pos.y, width:size.width, height:size.height });
+
+                el.style.left = pos.x + "px";
+                el.style.top  = pos.y + "px";
+
+                // distractor click = 작은 패널티(선택)
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (!running) return;
+                    // 실수 클릭: 레벨 낮을 땐 패널티 없이, 레벨 높을 때 -0.2초
+                    if (level >= 6){
+                        remainingTime = Math.max(0, remainingTime - 0.2);
+                        syncHud();
+                    }
+                });
+
+                gameArea.appendChild(el);
+            }
+        }
+
+        function stopTimer(){
+            if (timerId){
+                clearInterval(timerId);
+                timerId = null;
+            }
+        }
+
+        function startTimer(){
+            stopTimer();
+            const start = performance.now();
+
+            timerId = setInterval(() => {
+                const elapsed = (performance.now() - start) / 1000;
+                remainingTime = Math.max(0, GAME_TIME - elapsed);
+
+                if (remainingTime <= 0){
+                    remainingTime = 0;
+                    syncHud();
+                    endGame();
+                    return;
+                }
+                syncHud();
+            }, 33); // ~30fps
+        }
+
+        function startGame(){
+            running = true;
+            score = 0;
+            level = 1;
+            remainingTime = GAME_TIME;
+            currentTarget = "?";
+            syncHud();
+
+            hideOverlay();
+            clearItems();
+            startTimer();
+            spawnLevel();
+        }
+
+        function endGame(){
+            running = false;
+            stopTimer();
+            clearItems();
+
+            showOverlay(
+                "테스트 종료",
+                `최종 점수: <b>${score}</b><br/>최종 레벨: <b>${level}</b>`,
+                "다시하기",
+                () => startGame()
+            );
+        }
+
+        function resetGame(){
+            running = false;
+            stopTimer();
+            clearItems();
+            score = 0;
+            level = 1;
+            remainingTime = GAME_TIME;
+            currentTarget = "?";
+            syncHud();
+
+            showOverlay(
+                "시각 반응력 테스트",
+                `화면 곳곳에 나타나는 아이콘/문자 중 지정된 <b>Target</b>을 찾아 클릭하세요.<br/>제한 시간은 <b>30초</b>입니다.`,
+                "시작하기",
+                () => startGame()
+            );
+        }
+
+        /*********************
+         * Events
+         *********************/
+        overlayMainBtn.addEventListener('click', () => {}); // showOverlay에서 덮어씀
+        startBtn.addEventListener('click', () => startGame());
+        resetBtn.addEventListener('click', () => resetGame());
+
+        soundBtn.addEventListener('click', async () => {
+            soundOn = !soundOn;
+            soundBtn.textContent = "효과음: " + (soundOn ? "켬" : "끔");
+            soundBtn.setAttribute("aria-pressed", soundOn ? "true" : "false");
+            if (soundOn){
+                await ensureAudio();
+                toast("효과음 켬");
+            }else{
+                toast("효과음 끔");
+            }
+        });
+
+        // 화면 리사이즈 시 현재 레벨 재배치(겹침 방지)
+        window.addEventListener('resize', () => {
+            if (!running) return;
+            // 빠르게 여러 번 호출되는 것을 완화
+            clearTimeout(window._rz);
+            window._rz = setTimeout(() => spawnLevel(), 120);
+        });
+
+        /*********************
+         * Init
+         *********************/
+        resetGame();
+    })();
+</script>
+</body>
+</html>
