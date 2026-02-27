@@ -1,0 +1,693 @@
+<!-- File: number-dva-test.html -->
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>숫자 동체시력 테스트 - Number DVA Test</title>
+
+    <!-- https://www.jiraksil.com/service/numberdva -->
+
+    <style>
+        :root{
+            --bg:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --line:#e5e7eb;
+            --shadow: 0 14px 34px rgba(0,0,0,.10);
+
+            --primary:#111827;
+            --primary2:#2563eb;
+
+            --good:#16a34a;
+            --bad:#dc2626;
+
+            --panel:#ffffff;
+            --soft:#f8fafc;
+        }
+
+        *{ box-sizing:border-box; }
+        html,body{ height:100%; }
+        body{
+            margin:0;
+            font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+            color:var(--text);
+            background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+        }
+
+        .wrap{
+            min-height:100%;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:24px;
+        }
+
+        .app{
+            width:min(860px, 100%);
+            background:var(--panel);
+            border:1px solid var(--line);
+            border-radius:18px;
+            box-shadow:var(--shadow);
+            overflow:hidden;
+        }
+
+        header{
+            padding:18px;
+            border-bottom:1px solid var(--line);
+            background:#fff;
+        }
+
+        h1{
+            margin:0;
+            font-size:18px;
+            letter-spacing:-0.2px;
+            line-height:1.25;
+        }
+
+        .desc{
+            margin-top:8px;
+            color:var(--muted);
+            font-size:13px;
+            line-height:1.6;
+        }
+
+        main{ padding:18px; }
+
+        .panel{
+            border:1px solid var(--line);
+            border-radius:16px;
+            background:#fff;
+            padding:16px;
+            box-shadow: 0 10px 22px rgba(0,0,0,.06);
+        }
+
+        .status{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+            flex-wrap:wrap;
+            margin-bottom:12px;
+        }
+
+        .pill{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            padding:10px 12px;
+            border:1px solid var(--line);
+            border-radius:999px;
+            background:#fff;
+            font-weight:800;
+            font-variant-numeric: tabular-nums;
+        }
+        .pill small{
+            font-weight:700;
+            color:var(--muted);
+        }
+
+        /* Game area */
+        .game-area{
+            position:relative;
+            width:310px;
+            height:310px;
+            margin:12px auto 0;
+            border:1px solid var(--line);
+            border-radius:16px;
+            background: var(--soft);
+            overflow:hidden;
+        }
+
+        canvas{
+            width:100%;
+            height:100%;
+            display:block;
+        }
+
+        /* Overlays */
+        .overlay{
+            position:absolute;
+            inset:0;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:14px;
+            background: rgba(255,255,255,.78);
+            backdrop-filter: blur(4px);
+            z-index:30;
+        }
+        .overlay.hidden{ display:none; }
+
+        .overlay-card{
+            width: min(260px, 92%);
+            border:1px solid var(--line);
+            border-radius:16px;
+            background:#fff;
+            box-shadow: 0 14px 30px rgba(0,0,0,.10);
+            padding:14px;
+            text-align:center;
+        }
+        .overlay-card h2{
+            margin:0 0 8px;
+            font-size:15px;
+            letter-spacing:-0.2px;
+        }
+        .overlay-card p{
+            margin:0 0 12px;
+            color:var(--muted);
+            font-size:13px;
+            line-height:1.55;
+        }
+
+        /* Buttons */
+        button{
+            appearance:none;
+            border:none;
+            background:none;
+            font:inherit;
+            cursor:pointer;
+        }
+        .btn{
+            width:100%;
+            padding:10px 12px;
+            border-radius:14px;
+            border:1px solid var(--line);
+            background:#fff;
+            font-weight:900;
+            letter-spacing:-0.2px;
+            transition: transform .06s ease, box-shadow .15s ease, border-color .15s ease;
+        }
+        .btn:hover{ box-shadow: 0 12px 22px rgba(0,0,0,.08); }
+        .btn:active{ transform: translateY(1px); }
+        .btn:focus-visible{
+            outline:3px solid rgba(37,99,235,.25);
+            outline-offset:2px;
+            border-color: rgba(37,99,235,.55);
+        }
+        .btn.primary{
+            background:var(--primary);
+            color:#fff;
+            border-color:var(--primary);
+        }
+
+        /* Input screen */
+        .input-screen{
+            position:absolute;
+            inset:0;
+            display:none;
+            align-items:center;
+            justify-content:center;
+            z-index:25;
+            background: rgba(255,255,255,.86);
+            backdrop-filter: blur(4px);
+        }
+        .input-screen.show{ display:flex; }
+
+        .input-box{
+            width:min(280px, 90%);
+            border:1px solid var(--line);
+            border-radius:16px;
+            background:#fff;
+            box-shadow: 0 14px 30px rgba(0,0,0,.10);
+            padding:12px;
+            text-align:center;
+        }
+        .input-box .label{
+            font-size:13px;
+            color:var(--muted);
+            margin-bottom:10px;
+        }
+        .input-row{
+            display:flex;
+            gap:8px;
+        }
+        input{
+            flex:1;
+            height:44px;
+            border-radius:12px;
+            border:1px solid var(--line);
+            padding:0 12px;
+            font-size:16px;
+            font-weight:900;
+            text-align:center;
+            letter-spacing:1px;
+            font-variant-numeric: tabular-nums;
+            outline:none;
+        }
+        input:focus{
+            border-color: rgba(37,99,235,.55);
+            box-shadow: 0 0 0 3px rgba(37,99,235,.18);
+        }
+        .btn.confirm{
+            width:92px;
+            border-radius:12px;
+            border:1px solid var(--primary);
+            background: var(--primary);
+            color:#fff;
+        }
+
+        /* Feedback */
+        .feedback{
+            position:absolute;
+            top:42%;
+            left:50%;
+            transform: translate(-50%, -50%);
+            z-index:28;
+            display:none;
+            font-weight:1000;
+            font-size:40px;
+            letter-spacing:-0.6px;
+            text-shadow: 0 8px 22px rgba(0,0,0,.16);
+            user-select:none;
+            white-space:nowrap;
+        }
+        .feedback.show{ display:block; }
+        .feedback.good{ color: var(--good); }
+        .feedback.bad{ color: var(--bad); }
+
+        footer{
+            padding:14px 18px 18px;
+            border-top:1px solid var(--line);
+            color:var(--muted);
+            font-size:12px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:10px;
+            flex-wrap:wrap;
+        }
+
+        .kbd{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            height:22px;
+            padding:0 8px;
+            border:1px solid var(--line);
+            border-bottom-width:2px;
+            border-radius:8px;
+            background:#fff;
+            color:var(--text);
+            font-weight:900;
+            font-size:12px;
+        }
+
+        @media (max-width:420px){
+            .game-area{ width: 300px; height:300px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="app" role="application" aria-label="숫자 동체시력 테스트">
+
+        <header>
+            <h1>숫자 동체시력 테스트</h1>
+            <div class="desc">
+                빠르게 지나가는 숫자를 기억하고 입력하세요. 점수가 오를수록 난이도가 올라갑니다.<br>
+                기본 제한시간은 <b>30초</b>이며, 숫자 입력 중에는 타이머가 일시정지됩니다.
+            </div>
+        </header>
+
+        <main>
+            <section class="panel">
+                <div class="status">
+                    <div class="pill"><small>남은 시간</small> <span id="timer">30.00</span>초</div>
+                    <div class="pill"><small>점수</small> <span id="score">0</span></div>
+                    <div class="pill" title="단축키">
+                        <span class="kbd">Enter</span> 확인 &nbsp; <span class="kbd">Space</span> 시작/재시작
+                    </div>
+                </div>
+
+                <div class="game-area" id="gameArea">
+                    <canvas id="gameCanvas" aria-label="게임 캔버스"></canvas>
+
+                    <div class="feedback" id="feedback"></div>
+
+                    <!-- Input Screen -->
+                    <div class="input-screen" id="inputScreen" aria-hidden="true">
+                        <div class="input-box">
+                            <div class="label">방금 지나간 숫자를 입력하세요</div>
+                            <div class="input-row">
+                                <input id="userInput" inputmode="numeric" autocomplete="off" placeholder="숫자 입력" />
+                                <button class="btn confirm" id="confirmBtn" type="button">확인</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Start Overlay -->
+                    <div class="overlay" id="startOverlay">
+                        <div class="overlay-card">
+                            <h2>테스트 시작</h2>
+                            <p>빠르게 지나가는 숫자를 기억하세요!</p>
+                            <button class="btn primary" id="startBtn" type="button">테스트 시작</button>
+                        </div>
+                    </div>
+
+                    <!-- End Overlay -->
+                    <div class="overlay hidden" id="endOverlay">
+                        <div class="overlay-card">
+                            <h2>테스트 종료</h2>
+                            <p id="finalScore">최종 점수: 0</p>
+                            <button class="btn primary" id="restartBtn" type="button">다시하기</button>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <div>순수 HTML/CSS/JS 1파일 · 광고/부트스트랩/랭킹 제거</div>
+            <div>© Your Project</div>
+        </footer>
+
+    </div>
+</div>
+
+<script>
+    (function(){
+        'use strict';
+
+        // ===== DOM =====
+        const timerEl = document.getElementById('timer');
+        const scoreEl = document.getElementById('score');
+
+        const gameArea = document.getElementById('gameArea');
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const startOverlay = document.getElementById('startOverlay');
+        const endOverlay = document.getElementById('endOverlay');
+        const finalScoreEl = document.getElementById('finalScore');
+
+        const inputScreen = document.getElementById('inputScreen');
+        const userInput = document.getElementById('userInput');
+        const confirmBtn = document.getElementById('confirmBtn');
+
+        const startBtn = document.getElementById('startBtn');
+        const restartBtn = document.getElementById('restartBtn');
+
+        const feedback = document.getElementById('feedback');
+
+        // ===== State =====
+        let timeLeft = 30.00;
+        let score = 0;
+
+        let timerId = null;
+        let rafId = null;
+
+        let currentNumber = '';
+        let numberObj = null;
+
+        let running = false;
+        let isTimerPaused = false;
+
+        // base speed
+        let speed = 3;
+
+        const directions = ['leftToRight', 'rightToLeft', 'topToBottom', 'bottomToTop'];
+
+        // ===== Helpers =====
+        function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+        function resizeCanvas(){
+            // real pixel ratio for crisp canvas
+            const rect = gameArea.getBoundingClientRect();
+            const ratio = window.devicePixelRatio || 1;
+
+            // gameArea includes border; canvas is full inside
+            const size = Math.min(rect.width, rect.height);
+            const w = Math.floor(size);
+            const h = Math.floor(size);
+
+            canvas.style.width = w + 'px';
+            canvas.style.height = h + 'px';
+            canvas.width = Math.floor(w * ratio);
+            canvas.height = Math.floor(h * ratio);
+
+            ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        }
+
+        function show(el, on){
+            el.classList.toggle('hidden', !on);
+        }
+
+        function showInput(on){
+            inputScreen.classList.toggle('show', !!on);
+            inputScreen.setAttribute('aria-hidden', String(!on));
+        }
+
+        function setOverlay(el, on){
+            el.classList.toggle('hidden', !on);
+        }
+
+        function setText(el, txt){ el.textContent = txt; }
+
+        function format2(n){ return n.toFixed(2); }
+
+        function flash(msg, type){
+            feedback.textContent = msg;
+            feedback.className = 'feedback show ' + (type === 'good' ? 'good' : 'bad');
+            window.clearTimeout(flash._t);
+            flash._t = window.setTimeout(() => {
+                feedback.className = 'feedback';
+            }, 220);
+        }
+
+        function generateRandomNumber(digits){
+            // keep same behavior (no leading zero)
+            const min = Math.pow(10, digits - 1);
+            const max = Math.pow(10, digits) - 1;
+            return String(Math.floor(Math.random() * (max - min + 1)) + min);
+        }
+
+        function makeNumber(){
+            // original code: up to 15 digits (even though comment said max 10)
+            const digitCount = Math.min(1 + Math.floor(score / 2), 15);
+            currentNumber = generateRandomNumber(digitCount);
+
+            const direction = directions[Math.floor(Math.random() * directions.length)];
+
+            const fontSize = 20 + digitCount * 2;
+            ctx.font = fontSize + 'px Arial';
+
+            const textWidth = ctx.measureText(currentNumber).width;
+            const boxW = textWidth + 20;
+            const boxH = fontSize + 20;
+
+            const w = canvas.clientWidth;
+            const h = canvas.clientHeight;
+
+            numberObj = {
+                text: currentNumber,
+                x: 0,
+                y: 0,
+                w: boxW,
+                h: boxH,
+                vx: 0,
+                vy: 0,
+                fontSize,
+                direction
+            };
+
+            // start positions
+            if (direction === 'leftToRight'){
+                numberObj.x = -boxW;
+                numberObj.y = Math.random() * (h - boxH);
+                numberObj.vx = speed;
+            } else if (direction === 'rightToLeft'){
+                numberObj.x = w;
+                numberObj.y = Math.random() * (h - boxH);
+                numberObj.vx = -speed;
+            } else if (direction === 'topToBottom'){
+                numberObj.x = Math.random() * (w - boxW);
+                numberObj.y = -boxH;
+                numberObj.vy = speed;
+            } else { // bottomToTop
+                numberObj.x = Math.random() * (w - boxW);
+                numberObj.y = h;
+                numberObj.vy = -speed;
+            }
+        }
+
+        function outOfCanvas(obj){
+            const w = canvas.clientWidth;
+            const h = canvas.clientHeight;
+            return (
+                obj.x + obj.w < 0 || obj.x > w ||
+                obj.y + obj.h < 0 || obj.y > h
+            );
+        }
+
+        function draw(){
+            const w = canvas.clientWidth;
+            const h = canvas.clientHeight;
+            ctx.clearRect(0, 0, w, h);
+
+            if (!numberObj) return;
+
+            // move
+            numberObj.x += numberObj.vx;
+            numberObj.y += numberObj.vy;
+
+            // box
+            ctx.fillStyle = '#111827';
+            ctx.fillRect(numberObj.x, numberObj.y, numberObj.w, numberObj.h);
+
+            // text
+            ctx.font = numberObj.fontSize + 'px Arial';
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(
+                numberObj.text,
+                numberObj.x + numberObj.w / 2,
+                numberObj.y + numberObj.h / 2
+            );
+
+            // if out, pause and ask input
+            if (outOfCanvas(numberObj)){
+                cancelAnimationFrame(rafId);
+                rafId = null;
+                isTimerPaused = true;
+                showInput(true);
+                userInput.value = '';
+                userInput.focus();
+                return;
+            }
+
+            rafId = requestAnimationFrame(draw);
+        }
+
+        function updateHUD(){
+            timerEl.textContent = format2(timeLeft);
+            scoreEl.textContent = String(score);
+        }
+
+        function startTimer(){
+            stopTimer();
+            timerId = window.setInterval(() => {
+                if (!running) return;
+                if (isTimerPaused) return;
+
+                timeLeft -= 0.01;
+                timeLeft = clamp(timeLeft, 0, 9999);
+
+                updateHUD();
+                if (timeLeft <= 0){
+                    endGame();
+                }
+            }, 10);
+        }
+
+        function stopTimer(){
+            if (timerId){
+                window.clearInterval(timerId);
+                timerId = null;
+            }
+        }
+
+        function stopAnim(){
+            if (rafId){
+                cancelAnimationFrame(rafId);
+                rafId = null;
+            }
+        }
+
+        function startGame(){
+            // reset
+            running = true;
+            isTimerPaused = false;
+
+            timeLeft = 30.00;
+            score = 0;
+            speed = 3;
+
+            updateHUD();
+
+            // UI
+            setOverlay(startOverlay, false);
+            setOverlay(endOverlay, false);
+            showInput(false);
+
+            makeNumber();
+            startTimer();
+            stopAnim();
+            rafId = requestAnimationFrame(draw);
+        }
+
+        function endGame(){
+            running = false;
+            stopTimer();
+            stopAnim();
+            showInput(false);
+
+            finalScoreEl.textContent = '최종 점수: ' + score;
+            setOverlay(endOverlay, true);
+        }
+
+        function handleUserInput(){
+            if (!running) return;
+
+            const input = (userInput.value || '').trim();
+            showInput(false);
+            isTimerPaused = false;
+
+            if (input === currentNumber){
+                score += 1;
+                speed += 0.8;
+                flash('맞춤', 'good');
+            } else {
+                flash('틀림', 'bad');
+            }
+
+            updateHUD();
+            makeNumber();
+
+            stopAnim();
+            rafId = requestAnimationFrame(draw);
+        }
+
+        // ===== Events =====
+        startBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', startGame);
+
+        confirmBtn.addEventListener('click', handleUserInput);
+        userInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter'){
+                e.preventDefault();
+                handleUserInput();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space'){
+                // Space: start/restart when overlays visible
+                if (startOverlay && !startOverlay.classList.contains('hidden')){
+                    e.preventDefault();
+                    startGame();
+                } else if (endOverlay && !endOverlay.classList.contains('hidden')){
+                    e.preventDefault();
+                    startGame();
+                }
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+        });
+
+        // ===== Init =====
+        resizeCanvas();
+        updateHUD();
+        makeNumber();
+        setOverlay(endOverlay, false);
+        setOverlay(startOverlay, true);
+        showInput(false);
+    })();
+</script>
+</body>
+</html>
