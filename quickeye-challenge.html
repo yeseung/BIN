@@ -1,0 +1,580 @@
+<!-- File: quickeye-challenge.html -->
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>퀵아이 챌린지 - 동체시력 & 인지능력 테스트</title>
+  <meta name="description" content="움직이는 숫자와 색상을 기억해 동일한 숫자+색상을 선택하는 시각적 인지 능력 테스트 게임" />
+
+  <!-- https://www.jiraksil.com/service/quickeye -->
+
+  <style>
+    :root{
+      --bg:#ffffff;
+      --panel:#ffffff;
+      --text:#111827;
+      --muted:#6b7280;
+      --line:#e5e7eb;
+      --shadow: 0 10px 30px rgba(0,0,0,.08);
+      --radius:16px;
+      --btn:#111827;
+      --btnText:#ffffff;
+      --danger:#ef4444;
+      --ok:#22c55e;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .wrap{
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 24px 16px 60px;
+    }
+
+    header{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .title{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .title h1{
+      font-size: 20px;
+      margin:0;
+      line-height:1.25;
+      letter-spacing:-0.2px;
+    }
+    .title p{
+      margin:0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .card{
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .hud{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      background: #fafafa;
+      font-size: 14px;
+    }
+
+    .hud .left, .hud .right{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap: 6px;
+      padding: 6px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background:#fff;
+      font-variant-numeric: tabular-nums;
+    }
+    .pill b{ font-weight:700; }
+
+    .game{
+      padding: 16px;
+    }
+
+    #gameArea{
+      position: relative;
+      width: 100%;
+      height: 240px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #f3f4f6;
+      overflow:hidden;
+    }
+
+    #targetBox{
+      position:absolute;
+      left: 0;
+      top: 0;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: 0.5px;
+      user-select:none;
+      box-shadow: 0 10px 20px rgba(0,0,0,.12);
+      transform: translateZ(0);
+      transition: left .08s linear, top .08s linear;
+      border: 1px solid rgba(0,0,0,.08);
+      min-width: 64px;
+    }
+
+    .choices{
+      margin-top: 14px;
+      display:grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .choiceBtn{
+      height: 56px;
+      border-radius: 12px;
+      border: 1px solid rgba(0,0,0,.12);
+      font-weight: 800;
+      font-size: 16px;
+      cursor:pointer;
+      user-select:none;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow: 0 8px 16px rgba(0,0,0,.06);
+      transition: transform .06s ease, filter .06s ease;
+    }
+    .choiceBtn:active{
+      transform: scale(0.98);
+      filter: brightness(0.98);
+    }
+
+    .actions{
+      margin-top: 14px;
+      display:flex;
+      gap: 10px;
+      align-items:center;
+      justify-content:flex-end;
+      flex-wrap: wrap;
+    }
+
+    .btn{
+      appearance:none;
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-weight: 700;
+      cursor:pointer;
+      background: var(--btn);
+      color: var(--btnText);
+      box-shadow: 0 10px 20px rgba(17,24,39,.18);
+    }
+    .btn.secondary{
+      background:#ffffff;
+      color: var(--text);
+      border: 1px solid var(--line);
+      box-shadow: none;
+    }
+
+    /* Overlay */
+    .overlay{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 16px;
+      background: rgba(255,255,255,.78);
+      backdrop-filter: blur(6px);
+    }
+    .overlay.hidden{ display:none; }
+
+    .overlayCard{
+      width: min(420px, 100%);
+      background:#fff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+      text-align:center;
+    }
+    .overlayCard h2{
+      margin: 0 0 6px;
+      font-size: 18px;
+      letter-spacing:-0.2px;
+    }
+    .overlayCard p{
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height:1.6;
+    }
+    .result{
+      margin: 10px 0 14px;
+      font-size: 14px;
+      line-height:1.7;
+      font-variant-numeric: tabular-nums;
+      color: var(--text);
+    }
+
+    .footerNote{
+      text-align:center;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 720px){
+      .choices{
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      #gameArea{ height: 220px; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="title">
+      <h1>퀵아이 챌린지: 동체시력 & 인지능력 테스트</h1>
+      <p>움직이는 <b>숫자+색상</b>을 기억한 뒤, 아래 선택지에서 <b>동일한 숫자와 동일한 색상</b>을 고르세요. (틀림 3회 또는 30초 종료)</p>
+    </div>
+  </header>
+
+  <div class="card">
+    <div class="hud">
+      <div class="left">
+        <span class="pill">시간: <b id="timeText">30.00</b></span>
+        <span class="pill">난이도: <b id="levelText">1.0</b></span>
+      </div>
+      <div class="right">
+        <span class="pill">점수: <b id="scoreText">0</b></span>
+        <span class="pill">틀림: <b id="wrongText">0</b> / 3</span>
+      </div>
+    </div>
+
+    <div class="game">
+      <div id="gameArea">
+        <div id="targetBox"></div>
+
+        <div id="overlay" class="overlay">
+          <div class="overlayCard">
+            <h2 id="overlayTitle">게임 안내</h2>
+            <p id="overlayMsg">화면에 나타나는 <b>숫자+색상</b>과 동일한 박스를 선택하세요.</p>
+            <div class="result" id="resultBox" style="display:none;"></div>
+            <button class="btn" id="startBtn">게임 시작</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="choices" id="choiceArea" aria-label="선택지 영역"></div>
+
+      <div class="actions">
+        <button class="btn secondary" id="resetBtn" type="button">초기화</button>
+      </div>
+
+      <div class="footerNote">순수 HTML + CSS + Vanilla JS 버전 (광고/부트스트랩/랭킹 제거)</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===== 상태 =====
+  let score = 0;
+  let wrongAttempts = 0;
+  let timeLeft = 30.00;
+  let difficulty = 1.0;
+
+  let currentNumber = '';
+  let currentColor = '';
+
+  let timerId = null;
+  let isGameOver = true;
+
+  // ===== DOM =====
+  const timeText = document.getElementById('timeText');
+  const levelText = document.getElementById('levelText');
+  const scoreText = document.getElementById('scoreText');
+  const wrongText = document.getElementById('wrongText');
+
+  const gameArea = document.getElementById('gameArea');
+  const targetBox = document.getElementById('targetBox');
+  const choiceArea = document.getElementById('choiceArea');
+
+  const overlay = document.getElementById('overlay');
+  const overlayTitle = document.getElementById('overlayTitle');
+  const overlayMsg = document.getElementById('overlayMsg');
+  const startBtn = document.getElementById('startBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const resultBox = document.getElementById('resultBox');
+
+  // ===== 유틸 =====
+  function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+
+  function getRandomColor(){
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++){
+      color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+  }
+
+  function getContrastColor(hex){
+    hex = hex.replace('#','');
+    const r = parseInt(hex.substring(0,2), 16);
+    const g = parseInt(hex.substring(2,4), 16);
+    const b = parseInt(hex.substring(4,6), 16);
+    const yiq = ((r*299) + (g*587) + (b*114)) / 1000;
+    return (yiq >= 128) ? '#111827' : '#ffffff';
+  }
+
+  function digitsByDifficulty(diff){
+    // 기존 로직 느낌 유지: difficulty 1 => 2자리, 2 => 3자리 ...
+    return Math.min(Math.floor(diff) + 1, 10);
+  }
+
+  function randomNumberString(digits){
+    const max = Math.pow(10, digits);
+    const n = Math.floor(Math.random() * max);
+    return String(n).padStart(digits, '0');
+  }
+
+  function shuffle(arr){
+    for (let i = arr.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  // ===== UI 업데이트 =====
+  function renderHUD(){
+    timeText.textContent = timeLeft.toFixed(2);
+    levelText.textContent = difficulty.toFixed(1);
+    scoreText.textContent = String(score);
+    wrongText.textContent = String(wrongAttempts);
+  }
+
+  function showOverlay({ title, msg, showResult=false, resultHtml='' , buttonText='게임 시작'}){
+    overlayTitle.textContent = title;
+    overlayMsg.innerHTML = msg;
+    startBtn.textContent = buttonText;
+
+    if (showResult){
+      resultBox.style.display = '';
+      resultBox.innerHTML = resultHtml;
+    } else {
+      resultBox.style.display = 'none';
+      resultBox.innerHTML = '';
+    }
+
+    overlay.classList.remove('hidden');
+  }
+
+  function hideOverlay(){
+    overlay.classList.add('hidden');
+  }
+
+  // ===== 게임 로직 =====
+  function placeTargetRandomly(){
+    const areaRect = gameArea.getBoundingClientRect();
+
+    // targetBox 크기 측정 (렌더 후)
+    const boxRect = targetBox.getBoundingClientRect();
+    const boxW = boxRect.width || 80;
+    const boxH = boxRect.height || 44;
+
+    const maxX = Math.max(0, areaRect.width - boxW);
+    const maxY = Math.max(0, areaRect.height - boxH);
+
+    const x = Math.random() * maxX;
+    const y = Math.random() * maxY;
+
+    targetBox.style.left = x + 'px';
+    targetBox.style.top  = y + 'px';
+  }
+
+  function moveNumber(){
+    const digits = digitsByDifficulty(difficulty);
+
+    currentNumber = randomNumberString(digits);
+    currentColor = getRandomColor();
+
+    targetBox.textContent = currentNumber;
+    targetBox.style.backgroundColor = currentColor;
+    targetBox.style.color = getContrastColor(currentColor);
+
+    // 다음 프레임에 위치 계산 (크기 반영)
+    requestAnimationFrame(placeTargetRandomly);
+
+    updateChoices();
+  }
+
+  function updateChoices(){
+    choiceArea.innerHTML = '';
+    const digits = digitsByDifficulty(difficulty);
+
+    const choices = [];
+
+    // 1) 정답: 동일 숫자 + 동일 색
+    choices.push({ number: currentNumber, color: currentColor });
+
+    // 2) 혼동1: 다른 숫자 + 동일 색
+    let dn1;
+    do { dn1 = randomNumberString(digits); } while (dn1 === currentNumber);
+    choices.push({ number: dn1, color: currentColor });
+
+    // 3) 혼동2: 또 다른 숫자 + 동일 색
+    let dn2;
+    do { dn2 = randomNumberString(digits); } while (dn2 === currentNumber || dn2 === dn1);
+    choices.push({ number: dn2, color: currentColor });
+
+    // 4) 나머지: 랜덤(정답 색상과 동일한 색은 피함)
+    while (choices.length < 10){
+      const n = randomNumberString(digits);
+      const c = getRandomColor();
+
+      const dup = choices.some(x => x.number === n && x.color === c);
+      const sameColorAsAnswer = (c === currentColor);
+
+      if (!dup && !sameColorAsAnswer){
+        choices.push({ number: n, color: c });
+      }
+    }
+
+    shuffle(choices);
+
+    // 렌더
+    for (const ch of choices){
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'choiceBtn';
+      btn.textContent = ch.number;
+      btn.style.backgroundColor = ch.color;
+      btn.style.color = getContrastColor(ch.color);
+      btn.addEventListener('click', () => checkChoice(ch.number, ch.color));
+      choiceArea.appendChild(btn);
+    }
+  }
+
+  function checkChoice(number, color){
+    if (isGameOver) return;
+
+    if (number === currentNumber && color === currentColor){
+      score++;
+      difficulty = +(difficulty + 0.1).toFixed(1);
+    } else {
+      wrongAttempts++;
+      if (wrongAttempts >= 3){
+        endGame();
+        return;
+      }
+    }
+
+    renderHUD();
+    moveNumber();
+  }
+
+  function tick(){
+    timeLeft = +(timeLeft - 0.01).toFixed(2);
+    if (timeLeft <= 0){
+      timeLeft = 0;
+      renderHUD();
+      endGame();
+      return;
+    }
+    renderHUD();
+  }
+
+  function startGame(){
+    // 리셋
+    clearInterval(timerId);
+    score = 0;
+    wrongAttempts = 0;
+    timeLeft = 30.00;
+    difficulty = 1.0;
+    isGameOver = false;
+
+    renderHUD();
+    hideOverlay();
+    moveNumber();
+
+    timerId = setInterval(tick, 10);
+  }
+
+  function endGame(){
+    clearInterval(timerId);
+    timerId = null;
+    isGameOver = true;
+
+    const resultHtml =
+                  `최종 점수: <b>${score}</b><br>` +
+                  `틀린 횟수: <b>${wrongAttempts}</b> / 3<br>` +
+                  `난이도: <b>${difficulty.toFixed(1)}</b>`;
+
+    showOverlay({
+      title: '테스트 종료',
+      msg: '다시 도전해보세요!',
+      showResult: true,
+      resultHtml,
+      buttonText: '다시하기'
+    });
+  }
+
+  function hardReset(){
+    clearInterval(timerId);
+    timerId = null;
+
+    score = 0;
+    wrongAttempts = 0;
+    timeLeft = 30.00;
+    difficulty = 1.0;
+
+    currentNumber = '';
+    currentColor = '';
+    isGameOver = true;
+
+    targetBox.textContent = '';
+    targetBox.style.backgroundColor = '';
+    targetBox.style.color = '';
+    choiceArea.innerHTML = '';
+
+    renderHUD();
+    showOverlay({
+      title: '게임 안내',
+      msg: '화면에 나타나는 <b>숫자+색상</b>과 동일한 박스를 선택하세요.',
+      showResult: false,
+      buttonText: '게임 시작'
+    });
+  }
+
+  // ===== 이벤트 =====
+  startBtn.addEventListener('click', startGame);
+  resetBtn.addEventListener('click', hardReset);
+
+  // 초기 화면
+  hardReset();
+
+  // 창 크기 변경 시 타겟 위치 재조정(게임 중일 때만)
+  window.addEventListener('resize', () => {
+    if (!isGameOver && targetBox.textContent){
+      placeTargetRandomly();
+    }
+  });
+</script>
+</body>
+</html>
