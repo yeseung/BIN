@@ -1,0 +1,636 @@
+<!-- File: number-compare.html -->
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>숫자 비교 Number Compare - Brain Training</title>
+
+  <!-- https://www.jiraksil.com/service/numbercmp -->
+
+  <style>
+    :root{
+      --bg:#ffffff;
+      --surface:#ffffff;
+      --text:#111827;     /* slate-900 */
+      --muted:#6b7280;    /* gray-500 */
+      --line:#e5e7eb;     /* gray-200 */
+      --shadow: 0 12px 30px rgba(0,0,0,.08);
+      --shadow2: 0 6px 16px rgba(0,0,0,.06);
+
+      --primary:#111827;
+      --primary-weak:#f3f4f6;
+
+      --good:#16a34a;
+      --bad:#dc2626;
+      --focus:#2563eb;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+      color:var(--text);
+    }
+
+    .wrap{
+      min-height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+
+    .app{
+      width:min(860px, 100%);
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:18px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    header{
+      padding:18px 18px 12px;
+      border-bottom:1px solid var(--line);
+      background: #fff;
+    }
+
+    .title-row{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+
+    h1{
+      font-size:18px;
+      line-height:1.25;
+      margin:0;
+      letter-spacing:-0.2px;
+    }
+
+    .subtitle{
+      margin-top:8px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    main{
+      padding:18px;
+    }
+
+    .panel{
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:#fff;
+      box-shadow: var(--shadow2);
+      padding:18px;
+    }
+
+    .info{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:14px;
+    }
+
+    .pill-row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .pill{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 12px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#fff;
+      font-size:13px;
+      color:var(--text);
+      user-select:none;
+    }
+    .pill b{
+      font-size:14px;
+      letter-spacing:-0.2px;
+    }
+
+    .numbers{
+      margin:22px 0 18px;
+      text-align:center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .numbers .pair{
+      display:inline-block;
+      width:100%;
+      padding:18px 14px;
+      border:1px solid var(--line);
+      border-radius:16px;
+      background: #fcfcfc;
+    }
+
+    .numbers .value{
+      display:block;
+      font-size:22px;
+      font-weight:800;
+      letter-spacing:1px;
+      line-height:1.3;
+      word-break:break-word;
+    }
+    .numbers .sep{
+      display:block;
+      margin:10px auto;
+      width:48px;
+      height:2px;
+      background:var(--line);
+      border-radius:999px;
+    }
+
+    .btn-row{
+      display:flex;
+      gap:12px;
+      justify-content:center;
+      flex-wrap:wrap;
+      margin-top:8px;
+    }
+
+    button{
+      appearance:none;
+      border:none;
+      background:none;
+      font:inherit;
+      cursor:pointer;
+    }
+
+    .btn{
+      min-width:160px;
+      padding:12px 16px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background: #fff;
+      box-shadow: 0 1px 0 rgba(0,0,0,.02);
+      font-weight:700;
+      letter-spacing:-0.2px;
+      transition: transform .06s ease, box-shadow .15s ease, border-color .15s ease;
+    }
+    .btn:hover{ box-shadow: 0 10px 22px rgba(0,0,0,.08); }
+    .btn:active{ transform: translateY(1px); }
+    .btn:focus-visible{
+      outline: 3px solid rgba(37,99,235,.25);
+      outline-offset:2px;
+      border-color: rgba(37,99,235,.55);
+    }
+
+    .btn.primary{
+      background: var(--primary);
+      color:#fff;
+      border-color: var(--primary);
+    }
+    .btn.primary:hover{ box-shadow: 0 12px 26px rgba(17,24,39,.22); }
+
+    .btn.ghost{
+      background: var(--primary-weak);
+      border-color: #e5e7eb;
+      color: var(--text);
+    }
+
+    .feedback{
+      margin-top:14px;
+      text-align:center;
+      min-height:22px;
+      font-weight:800;
+      opacity:0;
+      transform: translateY(4px);
+      transition: opacity .18s ease, transform .18s ease;
+    }
+    .feedback.show{
+      opacity:1;
+      transform: translateY(0);
+    }
+    .feedback.good{ color: var(--good); }
+    .feedback.bad{ color: var(--bad); }
+
+    .footer{
+      padding:14px 18px 18px;
+      border-top:1px solid var(--line);
+      color:var(--muted);
+      font-size:12px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .kbd{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      height:22px;
+      padding:0 8px;
+      border:1px solid var(--line);
+      border-bottom-width:2px;
+      border-radius:8px;
+      background:#fff;
+      color:var(--text);
+      font-weight:700;
+      font-size:12px;
+    }
+
+    /* Modal */
+    .modal{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      background: rgba(0,0,0,.42);
+      z-index:999;
+    }
+    .modal.show{ display:flex; }
+
+    .modal-card{
+      width:min(520px, 100%);
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:18px;
+      box-shadow: var(--shadow);
+      padding:18px;
+    }
+    .modal-title{
+      font-size:16px;
+      font-weight:900;
+      margin:0 0 10px;
+      letter-spacing:-0.2px;
+    }
+    .modal-text{
+      margin:0 0 14px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+      white-space:pre-line;
+    }
+    .modal-actions{
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+    }
+
+    /* Small screens */
+    @media (max-width:420px){
+      .btn{ min-width: 140px; }
+      .numbers .value{ font-size:19px; }
+    }
+  </style>
+</head>
+
+<body>
+<div class="wrap">
+  <div class="app" role="application" aria-label="Number Compare Game">
+    <header>
+      <div class="title-row">
+        <div>
+          <h1>숫자 비교 (Number Compare)</h1>
+          <div class="subtitle">
+            10자리 숫자 2개를 비교해서 같으면 <b>같다</b>, 다르면 <b>다르다</b>를 선택하세요.<br>
+            제한시간 60초, 오답 3회면 종료됩니다.
+          </div>
+        </div>
+        <button class="btn ghost" id="openHow" type="button" aria-label="도움말 열기">도움말</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel" aria-live="polite">
+        <div class="info">
+          <div class="pill-row">
+            <div class="pill">점수 <b id="score">0</b></div>
+            <div class="pill">남은 시간 <b id="timeLeft">60</b>초</div>
+            <div class="pill">남은 기회 <b id="chances">3</b></div>
+          </div>
+
+          <div class="pill" title="단축키 안내">
+            <span class="kbd">A</span> 같다 &nbsp; <span class="kbd">L</span> 다르다 &nbsp; <span class="kbd">Space</span> 시작/재시작
+          </div>
+        </div>
+
+        <div class="numbers">
+          <div class="pair" aria-label="비교할 숫자">
+            <span class="value" id="num1">0000000000</span>
+            <span class="sep" aria-hidden="true"></span>
+            <span class="value" id="num2">0000000000</span>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn" id="sameBtn" type="button">같다</button>
+          <button class="btn primary" id="diffBtn" type="button">다르다</button>
+        </div>
+
+        <div class="feedback" id="feedback" aria-live="assertive"></div>
+      </section>
+    </main>
+
+    <div class="footer">
+      <div>순수 HTML/CSS/JS 1파일 버전 · 광고/부트스트랩/랭킹 제거</div>
+      <div>© Your Project</div>
+    </div>
+  </div>
+</div>
+
+<!-- Start Modal -->
+<div class="modal show" id="startModal" role="dialog" aria-modal="true" aria-labelledby="startTitle">
+  <div class="modal-card">
+    <h2 class="modal-title" id="startTitle">숫자 비교 뇌훈련 테스트</h2>
+    <p class="modal-text">
+      10자리 숫자 2개를 비교해 같으면 “같다”, 다르면 “다르다”를 누르세요.
+      제한시간은 60초이며 3번 틀리면 종료됩니다.
+
+      준비되셨나요?
+    </p>
+    <div class="modal-actions">
+      <button class="btn primary" id="startBtn" type="button">테스트 시작</button>
+    </div>
+  </div>
+</div>
+
+<!-- End Modal -->
+<div class="modal" id="endModal" role="dialog" aria-modal="true" aria-labelledby="endTitle">
+  <div class="modal-card">
+    <h2 class="modal-title" id="endTitle">테스트 종료</h2>
+    <p class="modal-text" id="endMsg"></p>
+    <div class="modal-actions">
+      <button class="btn" id="closeEnd" type="button">닫기</button>
+      <button class="btn primary" id="restartBtn" type="button">다시하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal" id="howModal" role="dialog" aria-modal="true" aria-labelledby="howTitle">
+  <div class="modal-card">
+    <h2 class="modal-title" id="howTitle">도움말</h2>
+    <p class="modal-text">
+      - 숫자 2개가 완전히 같으면 “같다”
+      - 한 자리라도 다르면 “다르다”
+      - 60초 동안 최대한 많이 맞추기
+      - 오답 3회면 종료
+
+      단축키:
+      - A : 같다
+      - L : 다르다
+      - Space : 시작/재시작
+    </p>
+    <div class="modal-actions">
+      <button class="btn primary" id="closeHow" type="button">확인</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function(){
+    'use strict';
+
+    // ===== State =====
+    let score = 0;
+    let timeLeft = 60;
+    let wrong = 0;
+    let timerId = null;
+    let running = false;
+
+    let currentA = '0000000000';
+    let currentB = '0000000000';
+
+    // ===== Elements =====
+    const $score = document.getElementById('score');
+    const $timeLeft = document.getElementById('timeLeft');
+    const $chances = document.getElementById('chances');
+
+    const $num1 = document.getElementById('num1');
+    const $num2 = document.getElementById('num2');
+
+    const $sameBtn = document.getElementById('sameBtn');
+    const $diffBtn = document.getElementById('diffBtn');
+
+    const $feedback = document.getElementById('feedback');
+
+    const $startModal = document.getElementById('startModal');
+    const $endModal = document.getElementById('endModal');
+    const $howModal = document.getElementById('howModal');
+
+    const $startBtn = document.getElementById('startBtn');
+    const $restartBtn = document.getElementById('restartBtn');
+    const $closeEnd = document.getElementById('closeEnd');
+    const $endMsg = document.getElementById('endMsg');
+
+    const $openHow = document.getElementById('openHow');
+    const $closeHow = document.getElementById('closeHow');
+
+    // ===== Utilities =====
+    function pad10(n){
+      const s = String(n);
+      return s.padStart(10, '0');
+    }
+
+    function randInt(maxExclusive){
+      return Math.floor(Math.random() * maxExclusive);
+    }
+
+    function generatePair(){
+      // num1: 0 ~ 9,999,999,999 (10 digits with pad)
+      const a = pad10(randInt(10000000000));
+
+      let b;
+      if (Math.random() < 0.5){
+        b = a; // same
+      } else {
+        const idx = randInt(10);
+        const arr = a.split('');
+        // make sure digit actually changes
+        let newDigit = String(randInt(10));
+        if (newDigit === arr[idx]) {
+          newDigit = String((Number(newDigit) + 1) % 10);
+        }
+        arr[idx] = newDigit;
+        b = arr.join('');
+      }
+
+      currentA = a;
+      currentB = b;
+
+      $num1.textContent = currentA;
+      $num2.textContent = currentB;
+    }
+
+    function setModal(el, show){
+      el.classList.toggle('show', !!show);
+    }
+
+    function showFeedback(text, type){
+      $feedback.textContent = text;
+      $feedback.className = 'feedback show ' + (type === 'good' ? 'good' : 'bad');
+      window.clearTimeout(showFeedback._t);
+      showFeedback._t = window.setTimeout(() => {
+        $feedback.className = 'feedback';
+      }, 900);
+    }
+
+    function updateHUD(){
+      $score.textContent = String(score);
+      $timeLeft.textContent = String(timeLeft);
+      $chances.textContent = String(3 - wrong);
+    }
+
+    function stopTimer(){
+      if (timerId){
+        window.clearInterval(timerId);
+        timerId = null;
+      }
+    }
+
+    function startTimer(){
+      stopTimer();
+      timerId = window.setInterval(() => {
+        timeLeft -= 1;
+        if (timeLeft <= 0){
+          timeLeft = 0;
+          updateHUD();
+          endGame('시간이 종료되었습니다.');
+          return;
+        }
+        updateHUD();
+      }, 1000);
+    }
+
+    // ===== Game Flow =====
+    function resetGame(){
+      score = 0;
+      timeLeft = 60;
+      wrong = 0;
+      running = true;
+      updateHUD();
+      generatePair();
+      startTimer();
+      $sameBtn.disabled = false;
+      $diffBtn.disabled = false;
+    }
+
+    function startGame(){
+      setModal($startModal, false);
+      setModal($endModal, false);
+      setModal($howModal, false);
+      resetGame();
+    }
+
+    function endGame(reason){
+      running = false;
+      stopTimer();
+      $sameBtn.disabled = true;
+      $diffBtn.disabled = true;
+
+      $endMsg.textContent =
+              reason + "\n" +
+              "당신의 최종 점수는 " + score + "점 입니다!";
+      setModal($endModal, true);
+    }
+
+    function answer(choice){
+      if (!running) return;
+
+      const isSame = (currentA === currentB);
+      const ok = (isSame && choice === 'same') || (!isSame && choice === 'diff');
+
+      if (ok){
+        score += 1;
+        showFeedback('맞췄어요!', 'good');
+      } else {
+        wrong += 1;
+        showFeedback('틀렸어요!', 'bad');
+        if (wrong >= 3){
+          updateHUD();
+          endGame('3번의 오답으로 게임이 종료되었습니다.');
+          return;
+        }
+      }
+
+      updateHUD();
+      generatePair();
+    }
+
+    // ===== Events =====
+    $sameBtn.addEventListener('click', () => answer('same'));
+    $diffBtn.addEventListener('click', () => answer('diff'));
+    $startBtn.addEventListener('click', startGame);
+
+    $restartBtn.addEventListener('click', () => {
+      setModal($endModal, false);
+      startGame();
+    });
+
+    $closeEnd.addEventListener('click', () => {
+      setModal($endModal, false);
+      setModal($startModal, true);
+    });
+
+    $openHow.addEventListener('click', () => setModal($howModal, true));
+    $closeHow.addEventListener('click', () => setModal($howModal, false));
+
+    // click outside modal-card closes (optional)
+    [$howModal, $endModal].forEach(modal => {
+      modal.addEventListener('mousedown', (e) => {
+        if (e.target === modal) setModal(modal, false);
+      });
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      // close on ESC
+      if (e.key === 'Escape'){
+        if ($howModal.classList.contains('show')) setModal($howModal, false);
+        return;
+      }
+
+      // Space: start/restart
+      if (e.code === 'Space'){
+        e.preventDefault();
+        if (!running){
+          if ($endModal.classList.contains('show')){
+            setModal($endModal, false);
+            startGame();
+          } else if ($startModal.classList.contains('show')){
+            startGame();
+          }
+        }
+        return;
+      }
+
+      // During game
+      if (!running) return;
+
+      const k = e.key.toLowerCase();
+      if (k === 'a') answer('same');
+      if (k === 'l') answer('diff');
+    });
+
+    // Initial state
+    updateHUD();
+    generatePair();
+    $sameBtn.disabled = true;
+    $diffBtn.disabled = true;
+    setModal($startModal, true);
+  })();
+</script>
+</body>
+</html>
