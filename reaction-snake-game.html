@@ -1,0 +1,927 @@
+<!-- filename example: reaction-snake-game.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>반응력 강화 뱀 게임</title>
+    <meta name="description" content="빠른 판단과 방향 전환이 필요한 뱀 게임. 집중력/반응속도 훈련용." />
+
+    <!-- https://www.jiraksil.com/service/snake -->
+
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --border:#e5e7eb;
+            --text:#111827;
+            --muted:#6b7280;
+            --primary:#2563eb;
+            --primary2:#1d4ed8;
+            --shadow:0 12px 34px rgba(0,0,0,.08);
+            --radius:16px;
+
+            --canvas:#0b1020;
+            --grid:rgba(255,255,255,.05);
+
+            --snakeHead:#16a34a;
+            --snakeBody:#22c55e;
+
+            --panel:#0f172a;
+            --panelText:#e5e7eb;
+            --panelMuted:#94a3b8;
+        }
+
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;
+            background:var(--bg);
+            color:var(--text);
+        }
+        .wrap{
+            max-width:960px;
+            margin:40px auto;
+            padding:20px;
+        }
+        h1{ margin:0; font-size:22px; line-height:1.2; }
+        .desc{
+            margin:10px 0 0;
+            color:var(--muted);
+            line-height:1.6;
+        }
+
+        .card{
+            margin-top:16px;
+            background:var(--card);
+            border:1px solid var(--border);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            overflow:hidden;
+        }
+
+        .topbar{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            flex-wrap:wrap;
+            padding:14px 16px;
+            border-bottom:1px solid var(--border);
+        }
+        .stats{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            align-items:center;
+            font-weight:900;
+        }
+        .chip{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            padding:8px 12px;
+            border:1px solid var(--border);
+            border-radius:999px;
+            background:#fff;
+            font-size:14px;
+            user-select:none;
+        }
+        .chip span{ color:var(--muted); font-weight:900; }
+
+        .btns{ display:flex; gap:10px; flex-wrap:wrap; }
+        .btn{
+            appearance:none;
+            border:1px solid var(--border);
+            background:#fff;
+            color:var(--text);
+            border-radius:999px;
+            padding:10px 14px;
+            font-weight:1000;
+            cursor:pointer;
+            transition:transform .05s ease, border-color .2s ease, background .2s ease, opacity .2s ease;
+            user-select:none;
+            white-space:nowrap;
+        }
+        .btn:hover{ border-color:#cbd5e1; }
+        .btn:active{ transform:translateY(1px); }
+        .btn.primary{
+            background:var(--primary);
+            border-color:var(--primary);
+            color:#fff;
+        }
+        .btn.primary:hover{ background:var(--primary2); border-color:var(--primary2); }
+        .btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+        .stage{ padding:18px; }
+        .gameShell{
+            display:grid;
+            grid-template-columns: 1fr;
+            gap:14px;
+        }
+
+        .canvasWrap{
+            position:relative;
+            border:1px solid var(--border);
+            border-radius:14px;
+            overflow:hidden;
+            background:var(--canvas);
+        }
+        canvas{
+            display:block;
+            width:100%;
+            max-width:520px;
+            height:auto;
+            margin:0 auto;
+            background:var(--canvas);
+            touch-action:none; /* important for mobile swipe control */
+        }
+
+        /* overlay */
+        .overlay{
+            position:absolute;
+            inset:0;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:18px;
+            background:rgba(2,6,23,.58);
+            z-index:10;
+        }
+        .overlay.hidden{ display:none; }
+        .overlayCard{
+            width:min(420px, 100%);
+            background:#fff;
+            border:1px solid var(--border);
+            border-radius:16px;
+            box-shadow:var(--shadow);
+            padding:14px;
+            text-align:center;
+        }
+        .overlayTitle{
+            margin:0 0 8px;
+            font-size:18px;
+            font-weight:1000;
+        }
+        .overlayText{
+            margin:0;
+            color:var(--muted);
+            line-height:1.6;
+            font-size:14px;
+        }
+        .overlayActions{
+            margin-top:14px;
+            display:flex;
+            gap:10px;
+            justify-content:center;
+            flex-wrap:wrap;
+        }
+
+        /* small footer/help */
+        .help{
+            border:1px dashed var(--border);
+            border-radius:14px;
+            padding:12px 14px;
+            color:var(--muted);
+            line-height:1.6;
+            background:#fff;
+            font-size:13px;
+        }
+        .kbd{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            min-width:28px;
+            padding:2px 8px;
+            border:1px solid var(--border);
+            border-bottom-width:2px;
+            border-radius:8px;
+            font-weight:1000;
+            background:#fff;
+            color:var(--text);
+            margin:0 2px;
+        }
+
+        .toast{
+            position:fixed;
+            left:50%;
+            bottom:22px;
+            transform:translateX(-50%);
+            background:#111827;
+            color:#fff;
+            padding:10px 14px;
+            border-radius:999px;
+            font-weight:900;
+            font-size:13px;
+            opacity:0;
+            pointer-events:none;
+            transition:opacity .2s ease, transform .2s ease;
+            z-index:9999;
+            box-shadow:0 10px 30px rgba(0,0,0,.25);
+        }
+        .toast.show{
+            opacity:1;
+            transform:translateX(-50%) translateY(-4px);
+        }
+
+        @media (min-width:860px){
+            .gameShell{
+                grid-template-columns: 1fr 320px;
+                align-items:start;
+            }
+            canvas{ max-width:none; }
+        }
+
+        .sidePanel{
+            border:1px solid var(--border);
+            border-radius:14px;
+            background:#fff;
+            padding:12px 14px;
+        }
+        .sideTitle{
+            margin:0 0 8px;
+            font-size:14px;
+            font-weight:1000;
+        }
+        .fruitList{
+            display:flex;
+            flex-wrap:wrap;
+            gap:8px 12px;
+            color:var(--muted);
+            font-weight:900;
+            font-size:13px;
+        }
+        .fruitItem{
+            display:inline-flex;
+            gap:6px;
+            align-items:center;
+            padding:6px 10px;
+            border:1px solid var(--border);
+            border-radius:999px;
+            background:#fff;
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <h1>반응력 강화 뱀 게임</h1>
+    <p class="desc">
+        방향 전환을 빠르게! 과일을 먹으며 점수를 올리세요. (PC: 방향키 / 모바일: 스와이프)
+    </p>
+
+    <div class="card">
+        <div class="topbar">
+            <div class="stats">
+                <div class="chip">점수 <span id="scoreChip">0.00</span></div>
+                <div class="chip">길이 <span id="lenChip">3</span></div>
+                <div class="chip">최고 <span id="bestChip">0.00</span></div>
+            </div>
+            <div class="btns">
+                <button class="btn" id="soundBtn" type="button" aria-pressed="false">효과음: 끔</button>
+                <button class="btn" id="pauseBtn" type="button" disabled>일시정지</button>
+                <button class="btn primary" id="startBtn" type="button">시작</button>
+            </div>
+        </div>
+
+        <div class="stage">
+            <div class="gameShell">
+                <div class="canvasWrap">
+                    <canvas id="gameCanvas" width="420" height="420"></canvas>
+
+                    <div class="overlay" id="overlay">
+                        <div class="overlayCard">
+                            <div class="overlayTitle" id="overlayTitle">게임 시작</div>
+                            <p class="overlayText" id="overlayText">
+                                <b>과일</b>을 먹으면 점수와 길이가 늘어납니다.<br/>
+                                벽이나 몸에 부딪히면 종료됩니다.
+                            </p>
+                            <div class="overlayActions">
+                                <button class="btn primary" id="overlayMainBtn" type="button">시작하기</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="sidePanel">
+                        <p class="sideTitle">먹은 과일</p>
+                        <div class="fruitList" id="fruitCounters"></div>
+                    </div>
+
+                    <div style="height:12px"></div>
+
+                    <div class="help">
+                        PC: <span class="kbd">↑</span><span class="kbd">↓</span><span class="kbd">←</span><span class="kbd">→</span>
+                        / 일시정지: <span class="kbd">Space</span><br/>
+                        모바일: 캔버스에서 스와이프(상/하/좌/우)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast">알림</div>
+
+<script>
+    (() => {
+        /*********************
+         * DOM
+         *********************/
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const soundBtn = document.getElementById('soundBtn');
+
+        const scoreChip = document.getElementById('scoreChip');
+        const lenChip = document.getElementById('lenChip');
+        const bestChip = document.getElementById('bestChip');
+        const fruitCounters = document.getElementById('fruitCounters');
+
+        const overlay = document.getElementById('overlay');
+        const overlayTitle = document.getElementById('overlayTitle');
+        const overlayText = document.getElementById('overlayText');
+        const overlayMainBtn = document.getElementById('overlayMainBtn');
+
+        const toastEl = document.getElementById('toast');
+
+        /*********************
+         * Settings / State
+         *********************/
+        const gridSize = 20;
+        const cols = Math.floor(canvas.width / gridSize);
+        const rows = Math.floor(canvas.height / gridSize);
+
+        const MOVE_SCORE = 0.001245;
+        const TURN_SCORE = 0.001231;
+
+        const FRUITS = [
+            { key:"APPLE", emoji:"🍎", score: 1 },
+            { key:"BANANA", emoji:"🍌", score: 2 },
+            { key:"ORANGE", emoji:"🍊", score: 5 },
+            { key:"WATERMELON", emoji:"🍉", score: 10 },
+            { key:"PINEAPPLE", emoji:"🍍", score: 15 }
+        ];
+
+        let snake = [];
+        let foods = [];
+        const NUM_FRUITS = 2;
+
+        let direction = 'right';
+        let lastDirection = 'right';
+        let pendingDirection = null;
+
+        let score = 0;
+        let best = 0;
+        let gameRunning = false;
+        let gamePaused = false;
+        let isDemoMode = true;
+
+        let fruitCounts = {};
+        FRUITS.forEach(f => fruitCounts[f.emoji] = 0);
+
+        // loop timing
+        let rafId = null;
+        let lastTime = 0;
+        let stepMs = 100; // base speed
+
+        // sound
+        let soundOn = false;
+        let audioCtx = null;
+
+        /*********************
+         * UI helpers
+         *********************/
+        function fmt2(n){ return Number(n).toFixed(2); }
+
+        function toast(text){
+            toastEl.textContent = text;
+            toastEl.classList.add('show');
+            clearTimeout(toastEl._t);
+            toastEl._t = setTimeout(() => toastEl.classList.remove('show'), 900);
+        }
+
+        function syncUI(){
+            scoreChip.textContent = fmt2(score);
+            lenChip.textContent = String(snake.length);
+            bestChip.textContent = fmt2(best);
+        }
+
+        function updateFruitCounters(){
+            fruitCounters.innerHTML = "";
+            FRUITS.forEach(f => {
+                const count = fruitCounts[f.emoji] || 0;
+                const el = document.createElement('div');
+                el.className = "fruitItem";
+                el.textContent = `${f.emoji} ${count}`;
+                fruitCounters.appendChild(el);
+            });
+        }
+
+        function showOverlay(title, htmlText, btnText, onClick){
+            overlayTitle.textContent = title;
+            overlayText.innerHTML = htmlText;
+            overlayMainBtn.textContent = btnText;
+            overlayMainBtn.onclick = onClick;
+            overlay.classList.remove('hidden');
+        }
+        function hideOverlay(){ overlay.classList.add('hidden'); }
+
+        /*********************
+         * Sound (WebAudio)
+         *********************/
+        async function ensureAudio(){
+            if (!soundOn) return;
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === "suspended"){
+                try{ await audioCtx.resume(); }catch(e){}
+            }
+        }
+
+        async function beep(freq, durMs, vol){
+            if (!soundOn) return;
+            await ensureAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(freq, now);
+
+            gain.gain.setValueAtTime(0.0001, now);
+            gain.gain.exponentialRampToValueAtTime(vol, now + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + durMs/1000);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + durMs/1000 + 0.02);
+        }
+
+        function eatSound(){ return beep(520, 90, 0.12); }
+        function dieSound(){ return beep(150, 140, 0.14); }
+
+        /*********************
+         * Game helpers
+         *********************/
+        function isOpposite(a,b){
+            return (a==='up'&&b==='down')||(a==='down'&&b==='up')||(a==='left'&&b==='right')||(a==='right'&&b==='left');
+        }
+
+        function cell(x,y){ return { x, y }; }
+
+        function initSnake(){
+            const sx = Math.floor(cols/2);
+            const sy = Math.floor(rows/2);
+            snake = [cell(sx,sy), cell(sx-1,sy), cell(sx-2,sy)];
+        }
+
+        function randomFruit(){
+            return FRUITS[Math.floor(Math.random()*FRUITS.length)];
+        }
+
+        function randomEmptyCell(forbidden=[]){
+            let x = Math.floor(Math.random()*cols);
+            let y = Math.floor(Math.random()*rows);
+
+            const occupied = (xx,yy) =>
+                snake.some(s => s.x===xx && s.y===yy) ||
+                forbidden.some(p => p.x===xx && p.y===yy);
+
+            let safety = 0;
+            while(occupied(x,y) && safety < 5000){
+                x = Math.floor(Math.random()*cols);
+                y = Math.floor(Math.random()*rows);
+                safety++;
+            }
+            return cell(x,y);
+        }
+
+        function populateFoods(){
+            foods = [];
+            for(let i=0;i<NUM_FRUITS;i++){
+                const pos = randomEmptyCell(foods.map(f => f.pos));
+                foods.push({ pos, fruit: randomFruit() });
+            }
+        }
+
+        function speedByLength(){
+            // 길이가 길수록 조금 빨라짐 (최소 60ms)
+            const base = 100;
+            const extra = Math.max(0, snake.length - 3);
+            return Math.max(60, base - extra * 2);
+        }
+
+        /*********************
+         * Drawing
+         *********************/
+        function drawGrid(){
+            ctx.save();
+            ctx.strokeStyle = "rgba(255,255,255,.05)";
+            ctx.lineWidth = 1;
+            for(let x=0;x<=cols;x++){
+                ctx.beginPath();
+                ctx.moveTo(x*gridSize, 0);
+                ctx.lineTo(x*gridSize, rows*gridSize);
+                ctx.stroke();
+            }
+            for(let y=0;y<=rows;y++){
+                ctx.beginPath();
+                ctx.moveTo(0, y*gridSize);
+                ctx.lineTo(cols*gridSize, y*gridSize);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        function drawSnake(){
+            snake.forEach((s, idx) => {
+                ctx.fillStyle = (idx===0) ? getVar('--snakeHead') : getVar('--snakeBody');
+                ctx.fillRect(s.x*gridSize, s.y*gridSize, gridSize, gridSize);
+                // slight rounding effect
+                ctx.fillStyle = "rgba(255,255,255,.12)";
+                ctx.fillRect(s.x*gridSize+2, s.y*gridSize+2, gridSize-4, gridSize-4);
+            });
+        }
+
+        function drawFoods(){
+            ctx.save();
+            ctx.font = `${gridSize}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            foods.forEach(f => {
+                const px = f.pos.x*gridSize + gridSize/2;
+                const py = f.pos.y*gridSize + gridSize/2;
+                ctx.fillText(f.fruit.emoji, px, py);
+            });
+            ctx.restore();
+        }
+
+        function clear(){
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            // background fill
+            ctx.fillStyle = "#0b1020";
+            ctx.fillRect(0,0,canvas.width,canvas.height);
+            drawGrid();
+        }
+
+        function getVar(name){
+            return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        }
+
+        /*********************
+         * Demo AI (simple)
+         *********************/
+        function demoAI(){
+            // chase the first food, but avoid immediate collision when possible
+            const head = snake[0];
+            const target = foods[0]?.pos || head;
+
+            const options = ['up','down','left','right'];
+            const canMove = (dir) => {
+                if (isOpposite(dir, direction)) return false;
+                const nh = { x: head.x, y: head.y };
+                if (dir==='up') nh.y--;
+                if (dir==='down') nh.y++;
+                if (dir==='left') nh.x--;
+                if (dir==='right') nh.x++;
+
+                // wall
+                if (nh.x<0||nh.x>=cols||nh.y<0||nh.y>=rows) return false;
+                // self collision (tail is okay because it moves, but for demo keep simple)
+                if (snake.some((s,i)=> i!==snake.length-1 && s.x===nh.x && s.y===nh.y)) return false;
+                return true;
+            };
+
+            // choose preferred axis
+            const dx = target.x - head.x;
+            const dy = target.y - head.y;
+
+            let prefer = [];
+            if (Math.abs(dx) > Math.abs(dy)){
+                prefer = dx>0 ? ['right','down','up','left'] : ['left','down','up','right'];
+            }else{
+                prefer = dy>0 ? ['down','right','left','up'] : ['up','right','left','down'];
+            }
+
+            for (const d of prefer){
+                if (canMove(d)){
+                    direction = d;
+                    return;
+                }
+            }
+            // fallback
+            const safe = options.filter(canMove);
+            if (safe.length) direction = safe[Math.floor(Math.random()*safe.length)];
+        }
+
+        /*********************
+         * Step update
+         *********************/
+        function step(){
+            // apply pending direction first
+            if (pendingDirection){
+                direction = pendingDirection;
+                pendingDirection = null;
+            }
+
+            if (isDemoMode) demoAI();
+
+            const head = snake[0];
+            const newHead = { x: head.x, y: head.y };
+            if (direction==='up') newHead.y--;
+            if (direction==='down') newHead.y++;
+            if (direction==='left') newHead.x--;
+            if (direction==='right') newHead.x++;
+
+            // wall collision
+            if (newHead.x<0||newHead.x>=cols||newHead.y<0||newHead.y>=rows){
+                return true;
+            }
+
+            // move
+            snake.unshift(newHead);
+
+            // eat?
+            let ate = false;
+            for (let i=0;i<foods.length;i++){
+                if (foods[i].pos.x===newHead.x && foods[i].pos.y===newHead.y){
+                    ate = true;
+                    score += foods[i].fruit.score;
+                    fruitCounts[foods[i].fruit.emoji] = (fruitCounts[foods[i].fruit.emoji]||0) + 1;
+                    eatSound();
+
+                    // respawn that fruit
+                    foods[i] = { pos: randomEmptyCell(foods.map(f=>f.pos)), fruit: randomFruit() };
+                    updateFruitCounters();
+                    break;
+                }
+            }
+
+            if (!ate){
+                snake.pop();
+            }
+
+            // score for moving/turning (same as your original concept)
+            score += MOVE_SCORE;
+            if (direction !== lastDirection){
+                score += TURN_SCORE;
+                lastDirection = direction;
+            }
+
+            // self collision
+            for (let i=1;i<snake.length;i++){
+                if (snake[i].x===newHead.x && snake[i].y===newHead.y){
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /*********************
+         * Loop
+         *********************/
+        function loop(ts){
+            if (!lastTime) lastTime = ts;
+
+            const interval = speedByLength();
+            const delta = ts - lastTime;
+
+            if (!gamePaused && delta >= interval){
+                const dead = step();
+                lastTime = ts;
+
+                if (dead){
+                    if (isDemoMode){
+                        resetToDemo();
+                        return;
+                    }
+                    endGame();
+                    return;
+                }
+                syncUI();
+            }
+
+            clear();
+            drawFoods();
+            drawSnake();
+
+            rafId = requestAnimationFrame(loop);
+        }
+
+        /*********************
+         * Game control
+         *********************/
+        function startGame(){
+            isDemoMode = false;
+            gameRunning = true;
+            gamePaused = false;
+
+            initSnake();
+            populateFoods();
+
+            direction = 'right';
+            lastDirection = 'right';
+            pendingDirection = null;
+
+            score = 0;
+            FRUITS.forEach(f => fruitCounts[f.emoji]=0);
+            updateFruitCounters();
+
+            startBtn.disabled = true;
+            pauseBtn.disabled = false;
+            pauseBtn.textContent = "일시정지";
+
+            hideOverlay();
+
+            stepMs = 100;
+            lastTime = 0;
+
+            if (!rafId){
+                rafId = requestAnimationFrame(loop);
+            }
+        }
+
+        function endGame(){
+            gameRunning = false;
+            gamePaused = false;
+
+            if (score > best){
+                best = score;
+                localStorage.setItem('snakeBest', String(best));
+            }
+            dieSound();
+            syncUI();
+
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            pauseBtn.textContent = "일시정지";
+
+            showOverlay(
+                "게임 오버",
+                `최종 점수: <b>${fmt2(score)}</b><br/>최고 점수: <b>${fmt2(best)}</b><br/><br/>다시 도전해보세요!`,
+                "다시하기",
+                () => startGame()
+            );
+        }
+
+        function togglePause(){
+            if (!gameRunning) return;
+            gamePaused = !gamePaused;
+            pauseBtn.textContent = gamePaused ? "재개" : "일시정지";
+            toast(gamePaused ? "일시정지" : "재개");
+        }
+
+        function resetToDemo(){
+            // demo loop continues in background
+            isDemoMode = true;
+            gameRunning = false;
+            gamePaused = false;
+
+            initSnake();
+            populateFoods();
+
+            direction = 'right';
+            lastDirection = 'right';
+            pendingDirection = null;
+
+            score = 0;
+            FRUITS.forEach(f => fruitCounts[f.emoji]=0);
+            updateFruitCounters();
+
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            pauseBtn.textContent = "일시정지";
+
+            syncUI();
+            lastTime = 0;
+
+            // keep running animation loop
+            if (!rafId){
+                rafId = requestAnimationFrame(loop);
+            }
+
+            showOverlay(
+                "반응력 강화 뱀 게임",
+                `시작을 누르면 플레이 모드로 전환됩니다.<br/>PC: 방향키 / 모바일: 스와이프`,
+                "시작하기",
+                () => startGame()
+            );
+        }
+
+        /*********************
+         * Input (keyboard + touch swipe)
+         *********************/
+        document.addEventListener('keydown', (e) => {
+            // prevent page scroll with arrows
+            if (e.key.startsWith('Arrow')) e.preventDefault();
+
+            if (e.key === ' '){
+                if (gameRunning) togglePause();
+                e.preventDefault();
+                return;
+            }
+
+            let newDir = null;
+            if (e.key === 'ArrowUp') newDir = 'up';
+            if (e.key === 'ArrowDown') newDir = 'down';
+            if (e.key === 'ArrowLeft') newDir = 'left';
+            if (e.key === 'ArrowRight') newDir = 'right';
+
+            if (newDir && !isOpposite(newDir, direction)){
+                pendingDirection = newDir;
+            }
+        }, { passive:false });
+
+        // touch swipe on canvas
+        let touchStartX = null;
+        let touchStartY = null;
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (e.touches.length !== 1) return;
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }, { passive:false });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+        }, { passive:false });
+
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (touchStartX == null || touchStartY == null) return;
+            const endX = e.changedTouches[0].clientX;
+            const endY = e.changedTouches[0].clientY;
+
+            const dx = endX - touchStartX;
+            const dy = endY - touchStartY;
+
+            const absX = Math.abs(dx);
+            const absY = Math.abs(dy);
+
+            const TH = 24; // threshold
+            let newDir = null;
+
+            if (absX > absY && absX > TH){
+                newDir = dx > 0 ? 'right' : 'left';
+            }else if (absY > absX && absY > TH){
+                newDir = dy > 0 ? 'down' : 'up';
+            }
+
+            if (newDir && !isOpposite(newDir, direction)){
+                pendingDirection = newDir;
+            }
+
+            touchStartX = null;
+            touchStartY = null;
+        }, { passive:false });
+
+        /*********************
+         * Buttons
+         *********************/
+        startBtn.addEventListener('click', startGame);
+        overlayMainBtn.addEventListener('click', startGame);
+
+        pauseBtn.addEventListener('click', togglePause);
+
+        soundBtn.addEventListener('click', async () => {
+            soundOn = !soundOn;
+            soundBtn.textContent = "효과음: " + (soundOn ? "켬" : "끔");
+            soundBtn.setAttribute("aria-pressed", soundOn ? "true" : "false");
+            if (soundOn){
+                await ensureAudio();
+                toast("효과음 켬");
+            }else{
+                toast("효과음 끔");
+            }
+        });
+
+        /*********************
+         * Init
+         *********************/
+        best = Number(localStorage.getItem('snakeBest') || "0");
+        initSnake();
+        populateFoods();
+        syncUI();
+        updateFruitCounters();
+
+        // start demo loop + show start overlay
+        showOverlay(
+            "반응력 강화 뱀 게임",
+            `시작을 누르면 플레이 모드로 전환됩니다.<br/>PC: 방향키 / 모바일: 스와이프`,
+            "시작하기",
+            () => startGame()
+        );
+
+        rafId = requestAnimationFrame(loop);
+    })();
+</script>
+</body>
+</html>
