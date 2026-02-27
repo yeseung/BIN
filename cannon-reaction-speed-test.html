@@ -1,0 +1,795 @@
+<!-- filename example: cannon-reaction-speed-test.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>캐논 반응속도 테스트</title>
+
+  <!-- https://www.jiraksil.com/service/cannon -->
+
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --border:#e5e7eb;
+      --text:#111827;
+      --muted:#6b7280;
+
+      --primary:#2563eb;
+      --danger:#ef4444;
+      --good:#22c55e;
+
+      --shadow: 0 10px 30px rgba(0,0,0,.08);
+      --radius:16px;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+    .wrap{
+      max-width:920px;
+      margin:40px auto;
+      padding:20px;
+    }
+    .header{ margin-bottom:14px; }
+    .title{
+      margin:0;
+      font-size:22px;
+      line-height:1.2;
+    }
+    .desc{
+      margin:10px 0 0;
+      color:var(--muted);
+      line-height:1.6;
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .topbar{
+      padding:14px 16px;
+      border-bottom:1px solid var(--border);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .stats{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      font-weight:800;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      background:#fff;
+      font-size:14px;
+    }
+    .chip span{ color:var(--muted); font-weight:700; }
+    .btns{ display:flex; gap:10px; flex-wrap:wrap; }
+    .btn{
+      appearance:none;
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--text);
+      border-radius:999px;
+      padding:10px 14px;
+      font-weight:900;
+      cursor:pointer;
+      transition:transform .05s ease, border-color .2s ease, background .2s ease;
+    }
+    .btn:hover{ border-color:#cbd5e1; }
+    .btn:active{ transform:translateY(1px); }
+    .btn.primary{
+      background:var(--primary);
+      border-color:var(--primary);
+      color:#fff;
+    }
+
+    .gameArea{ padding:16px; }
+
+    /* 게임 컨테이너 */
+    .stage{
+      position:relative;
+      width:100%;
+      height:520px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:#0b0f1a;
+      overflow:hidden;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.03);
+    }
+    @media (max-width:768px){
+      .stage{ height:420px; }
+    }
+
+    canvas{
+      width:100%;
+      height:100%;
+      display:block;
+      touch-action:none;
+      cursor:pointer;
+    }
+
+    /* 오버레이 */
+    .overlay{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      background:rgba(10,15,26,.72);
+      backdrop-filter: blur(4px);
+      z-index:10;
+    }
+    .overlayCard{
+      width:min(520px,100%);
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(17,24,39,.82);
+      color:#fff;
+      border-radius:16px;
+      box-shadow:var(--shadow);
+      padding:18px;
+      text-align:center;
+    }
+    .overlayCard h2{
+      margin:0 0 8px;
+      font-size:18px;
+      letter-spacing:.2px;
+    }
+    .overlayCard p{
+      margin:0;
+      color:rgba(255,255,255,.78);
+      line-height:1.6;
+      font-size:14px;
+    }
+    .overlayCard .btn{
+      width:100%;
+      margin-top:14px;
+      justify-content:center;
+      border-color:transparent;
+    }
+
+    /* HUD */
+    .hud{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      z-index:5;
+      color:#fff;
+      font-weight:900;
+    }
+    .hudRow{
+      position:absolute;
+      top:12px;
+      left:12px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .hudRight{
+      position:absolute;
+      top:12px;
+      right:12px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .hudBadge{
+      background:rgba(0,0,0,.35);
+      border:1px solid rgba(255,255,255,.12);
+      padding:8px 10px;
+      border-radius:999px;
+      font-size:13px;
+      color:rgba(255,255,255,.9);
+    }
+    .hudBadge span{
+      color:rgba(255,255,255,.75);
+      font-weight:800;
+    }
+
+    .footerHint{
+      margin-top:12px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.55;
+    }
+  </style>
+</head>
+
+<body>
+<div class="wrap">
+  <div class="header">
+    <h1 class="title">캐논 반응속도 테스트</h1>
+    <p class="desc">
+      화면을 누르는 동안 터렛이 <b>시계방향으로 회전</b>하며 에너지가 충전됩니다.
+      손을 떼면 발사! 360°(에너지 MAX) 충전 후 발사하면 <b>슈퍼포탄</b>이 나갑니다.
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="topbar">
+      <div class="stats">
+        <div class="chip">상태 <span id="statusText">데모</span></div>
+        <div class="chip">시간 <span id="timeText">0.00s</span></div>
+        <div class="chip">기회 <span id="lifeText">3</span></div>
+      </div>
+      <div class="btns">
+        <button class="btn" id="resetUiBtn" type="button">초기화</button>
+        <button class="btn primary" id="startUiBtn" type="button">시작하기</button>
+      </div>
+    </div>
+
+    <div class="gameArea">
+      <div class="stage" id="game-container">
+        <canvas id="game-canvas"></canvas>
+
+        <div class="hud" aria-hidden="true">
+          <div class="hudRow">
+            <div class="hudBadge">시간: <span id="hudTimer">0.00s</span></div>
+          </div>
+          <div class="hudRight">
+            <div class="hudBadge">기회: <span id="hudLives">3</span></div>
+          </div>
+        </div>
+
+        <!-- 시작 오버레이 -->
+        <div class="overlay" id="overlay">
+          <div class="overlayCard">
+            <h2>캐논 반응속도 테스트</h2>
+            <p>
+              <b>화면을 누르고 있으면</b> 터렛이 회전하며 에너지 충전.<br/>
+              <b>손을 떼면</b> 발사! (에너지 MAX면 슈퍼포탄)<br/>
+              행성이 탱크에 닿으면 기회가 줄어듭니다.
+            </p>
+            <button class="btn primary" id="start-btn" type="button">시작</button>
+          </div>
+        </div>
+
+        <!-- 게임오버 오버레이 -->
+        <div class="overlay" id="gameover-overlay" style="display:none;">
+          <div class="overlayCard">
+            <h2>테스트 종료</h2>
+            <p id="final-score" style="margin-top:6px;"></p>
+            <button class="btn primary" id="restart-btn" type="button">다시하기</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="footerHint">
+        데모는 자동 플레이입니다. “시작하기”를 누르면 데모가 종료되고 실제 플레이가 시작됩니다.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (() => {
+    // ===== Canvas / Context =====
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+
+    const container = document.getElementById('game-container');
+
+    // ===== UI =====
+    const overlay = document.getElementById('overlay');
+    const gameoverOverlay = document.getElementById('gameover-overlay');
+    const finalScoreEl = document.getElementById('final-score');
+
+    const startBtn = document.getElementById('start-btn');
+    const restartBtn = document.getElementById('restart-btn');
+    const startUiBtn = document.getElementById('startUiBtn');
+    const resetUiBtn = document.getElementById('resetUiBtn');
+
+    const statusText = document.getElementById('statusText');
+    const timeText = document.getElementById('timeText');
+    const lifeText = document.getElementById('lifeText');
+
+    const hudTimer = document.getElementById('hudTimer');
+    const hudLives = document.getElementById('hudLives');
+
+    function setStatus(v){ statusText.textContent = v; }
+    function setLives(v){ lifeText.textContent = String(v); hudLives.textContent = String(v); }
+    function setTime(v){ timeText.textContent = v; hudTimer.textContent = v; }
+
+    // ===== Game State =====
+    let gameRunning = false;
+    let isDemo = true;
+
+    let gameStartTime = 0;
+    let lastTime = 0;
+    let nextPlanetSpawn = 0;
+
+    let demoLastShotTime = 0;
+    const demoFireInterval = 400; // ms
+
+    // Tank
+    const tank = {
+      x: 0,
+      y: 0,
+      baseSize: 60,
+      turretLength: 42,
+      turretWidth: 10,
+      angle: -Math.PI / 2
+    };
+
+    // Energy
+    let energy = 0;
+    const maxEnergy = Math.PI * 2;
+    let isPressing = false;
+    const rotateDirection = 1; // 시계방향 고정
+    const rotationSpeed = Math.PI * 1.5; // rad/sec
+
+    // Entities
+    let bullets = [];
+    let planets = [];
+    let explosions = [];
+    let lives = 3;
+
+    // Sound (optional, 실패해도 게임 진행)
+    let explosionSound = null;
+    try{
+      explosionSound = new Audio('https://www.soundjay.com/buttons/button-19.mp3');
+      explosionSound.volume = 0.35;
+    }catch(e){}
+
+    function fitCanvas(){
+      const rect = container.getBoundingClientRect();
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      tank.x = rect.width / 2;
+      tank.y = rect.height / 2;
+    }
+
+    window.addEventListener('resize', fitCanvas);
+    fitCanvas();
+
+    // ===== Helpers =====
+    function distance(x1,y1,x2,y2){
+      const dx = x2-x1, dy = y2-y1;
+      return Math.sqrt(dx*dx + dy*dy);
+    }
+
+    function Bullet(x, y, angle){
+      const speed = 520;
+      this.x = x; this.y = y;
+      this.vx = Math.cos(angle) * speed;
+      this.vy = Math.sin(angle) * speed;
+      this.radius = 5;
+      this.isSuper = false;
+    }
+
+    function Planet(x, y, radius, vx, vy){
+      this.x = x; this.y = y;
+      this.radius = radius;
+      this.vx = vx; this.vy = vy;
+      this.color = `hsl(${Math.floor(Math.random()*360)}, 55%, 55%)`;
+    }
+
+    function Explosion(x, y){
+      this.x = x; this.y = y;
+      this.startTime = performance.now();
+      this.duration = 520;
+    }
+
+    function spawnPlanet(){
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+
+      const edge = Math.floor(Math.random()*4);
+      let x, y;
+      if(edge===0){ x=Math.random()*w; y=-50; }
+      else if(edge===1){ x=w+50; y=Math.random()*h; }
+      else if(edge===2){ x=Math.random()*w; y=h+50; }
+      else { x=-50; y=Math.random()*h; }
+
+      const dx = tank.x - x;
+      const dy = tank.y - y;
+      const d = Math.sqrt(dx*dx + dy*dy) || 1;
+
+      const elapsed = (performance.now() - gameStartTime) / 1000;
+      const difficulty = 1 + elapsed / 30;
+      const speed = (55 + Math.random()*55) * difficulty;
+
+      const vx = (dx / d) * speed;
+      const vy = (dy / d) * speed;
+      const radius = 18 + Math.random()*32;
+
+      planets.push(new Planet(x,y,radius,vx,vy));
+    }
+
+    function drawTank(){
+      // base
+      ctx.fillStyle = '#4b5563';
+      ctx.fillRect(tank.x - tank.baseSize/2, tank.y - tank.baseSize/2, tank.baseSize, tank.baseSize);
+
+      // turret
+      ctx.save();
+      ctx.translate(tank.x, tank.y);
+      ctx.rotate(tank.angle);
+      ctx.fillStyle = '#9ca3af';
+      ctx.fillRect(0, -tank.turretWidth/2, tank.turretLength, tank.turretWidth);
+      ctx.restore();
+
+      // small center dot
+      ctx.fillStyle = 'rgba(255,255,255,.35)';
+      ctx.beginPath();
+      ctx.arc(tank.x, tank.y, 2.2, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    function drawBullet(b){
+      ctx.fillStyle = b.isSuper ? '#fef08a' : '#fde047';
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.radius, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    function drawPlanet(p){
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    function drawExplosion(ex, elapsed){
+      const t = Math.min(1, elapsed / ex.duration);
+      const r = 52 * t;
+
+      ctx.save();
+      ctx.globalAlpha = 1 - t;
+      ctx.fillStyle = 'orange';
+      ctx.beginPath();
+      ctx.arc(ex.x, ex.y, r, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawEnergyBar(){
+      const barW = tank.baseSize;
+      const barH = 8;
+      const x = tank.x - barW/2;
+      const y = tank.y + tank.baseSize/2 + 8;
+
+      ctx.fillStyle = 'rgba(0,0,0,.4)';
+      ctx.fillRect(x, y, barW, barH);
+
+      const fillW = Math.max(0, Math.min(1, energy / maxEnergy)) * barW;
+
+      ctx.save();
+      if(energy >= maxEnergy){
+        ctx.shadowBlur = 14;
+        ctx.shadowColor = 'rgba(255,255,0,.75)';
+      }
+      ctx.fillStyle = energy >= maxEnergy ? '#22c55e' : '#22c55e';
+      ctx.fillRect(x, y, fillW, barH);
+      ctx.restore();
+
+      ctx.strokeStyle = 'rgba(255,255,255,.25)';
+      ctx.strokeRect(x, y, barW, barH);
+    }
+
+    function playExplosion(){
+      if(!explosionSound) return;
+      try{
+        explosionSound.currentTime = 0;
+        explosionSound.play().catch(()=>{});
+      }catch(e){}
+    }
+
+    // ===== Loops =====
+    function resetDemoState(){
+      bullets = [];
+      planets = [];
+      explosions = [];
+      tank.angle = -Math.PI/2;
+      energy = 0;
+
+      gameStartTime = performance.now();
+      lastTime = 0;
+      nextPlanetSpawn = 0;
+
+      demoLastShotTime = performance.now();
+    }
+
+    function gameLoop(ts){
+      if(!lastTime) lastTime = ts;
+      const dt = (ts - lastTime) / 1000;
+      lastTime = ts;
+
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+
+      // background
+      ctx.clearRect(0,0,w,h);
+      ctx.fillStyle = '#0b0f1a';
+      ctx.fillRect(0,0,w,h);
+
+      const elapsedSec = (performance.now() - gameStartTime) / 1000;
+
+      // spawn
+      if(elapsedSec >= nextPlanetSpawn){
+        spawnPlanet();
+        const base = 5;       // start interval
+        const minI = 0.55;    // min interval
+        const interval = Math.max(minI, base - (elapsedSec / 20));
+        nextPlanetSpawn = elapsedSec + interval;
+      }
+
+      // rotation / aiming
+      if(isDemo){
+        // 데모: 가장 가까운 행성 조준 + 발사
+        let target = null;
+        let minDist = Infinity;
+        for(const p of planets){
+          const d = distance(p.x,p.y,tank.x,tank.y);
+          if(d < minDist){ minDist = d; target = p; }
+        }
+
+        if(target){
+          const desired = Math.atan2(target.y - tank.y, target.x - tank.x);
+          let diff = desired - tank.angle;
+          diff = ((diff + Math.PI) % (Math.PI * 2)) - Math.PI;
+
+          const rotDemo = Math.PI * 3;
+          if(Math.abs(diff) < rotDemo*dt) tank.angle = desired;
+          else tank.angle += rotDemo*dt*Math.sign(diff);
+
+          if(Math.abs(diff) < 0.12 && (performance.now() - demoLastShotTime) > demoFireInterval){
+            const bx = tank.x + Math.cos(tank.angle) * tank.turretLength;
+            const by = tank.y + Math.sin(tank.angle) * tank.turretLength;
+            const b = new Bullet(bx, by, tank.angle);
+            b.isSuper = true;
+            b.radius = 5;
+            bullets.push(b);
+            demoLastShotTime = performance.now();
+          }
+        } else {
+          tank.angle += rotationSpeed * dt;
+        }
+      } else {
+        // 실제: 누르는 동안 회전 + 에너지 충전
+        if(isPressing){
+          tank.angle += rotationSpeed * dt * rotateDirection;
+          energy += rotationSpeed * dt;
+          if(energy > maxEnergy) energy = maxEnergy;
+        }
+      }
+
+      // draw tank + energy
+      drawTank();
+      drawEnergyBar();
+
+      // bullets update
+      for(let i=bullets.length-1;i>=0;i--){
+        const b = bullets[i];
+        b.x += b.vx * dt;
+        b.y += b.vy * dt;
+
+        if(b.x < -50 || b.x > w+50 || b.y < -50 || b.y > h+50){
+          bullets.splice(i,1);
+          continue;
+        }
+
+        drawBullet(b);
+
+        // bullet-planet collision
+        for(let j=planets.length-1;j>=0;j--){
+          const p = planets[j];
+          if(distance(b.x,b.y,p.x,p.y) < p.radius + b.radius){
+            explosions.push(new Explosion(p.x,p.y));
+            playExplosion();
+
+            bullets.splice(i,1);
+
+            // fragmentation (일반탄 + 큰 행성)
+            if(!b.isSuper && p.radius > 30){
+              for(let k=0;k<3;k++){
+                const fragR = p.radius / 2;
+                const ang = Math.random() * Math.PI * 2;
+                const spd = Math.hypot(p.vx, p.vy) * 1.2;
+                const vx = Math.cos(ang) * spd;
+                const vy = Math.sin(ang) * spd;
+                planets.push(new Planet(p.x, p.y, fragR, vx, vy));
+              }
+            }
+
+            planets.splice(j,1);
+            break;
+          }
+        }
+      }
+
+      // planets update
+      for(let i=planets.length-1;i>=0;i--){
+        const p = planets[i];
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+
+        drawPlanet(p);
+
+        // tank collision
+        const tankHitDist = p.radius + (tank.baseSize * Math.SQRT2) / 2;
+        if(distance(p.x,p.y,tank.x,tank.y) < tankHitDist){
+          if(isDemo){
+            // 데모는 계속 보여주기: 바로 리셋
+            resetDemoState();
+            setStatus('데모');
+            setLives(3);
+            setTime('0.00s');
+            requestAnimationFrame(gameLoop);
+            return;
+          } else {
+            explosions.push(new Explosion(tank.x,tank.y));
+            planets.splice(i,1);
+
+            lives--;
+            setLives(lives);
+
+            if(lives <= 0){
+              endGame();
+              return;
+            }
+          }
+        }
+      }
+
+      // explosions
+      for(let i=explosions.length-1;i>=0;i--){
+        const ex = explosions[i];
+        const el = performance.now() - ex.startTime;
+        if(el > ex.duration){
+          explosions.splice(i,1);
+          continue;
+        }
+        drawExplosion(ex, el);
+      }
+
+      setTime(elapsedSec.toFixed(2) + 's');
+
+      if(gameRunning){
+        requestAnimationFrame(gameLoop);
+      }
+    }
+
+    // ===== Controls =====
+    function startRealGame(){
+      isDemo = false;
+      setStatus('플레이');
+
+      overlay.style.display = 'none';
+      gameoverOverlay.style.display = 'none';
+
+      bullets = [];
+      planets = [];
+      explosions = [];
+      tank.angle = -Math.PI/2;
+      energy = 0;
+
+      lives = 3;
+      setLives(lives);
+
+      gameStartTime = performance.now();
+      lastTime = 0;
+      nextPlanetSpawn = 0;
+
+      isPressing = false;
+
+      spawnPlanet();
+
+      gameRunning = true;
+      requestAnimationFrame(gameLoop);
+    }
+
+    function endGame(){
+      gameRunning = false;
+      const finalTime = ((performance.now() - gameStartTime) / 1000).toFixed(2);
+      finalScoreEl.textContent = `최종 점수: ${finalTime}초`;
+      gameoverOverlay.style.display = 'flex';
+      setStatus('종료');
+    }
+
+    function startDemo(){
+      isDemo = true;
+      setStatus('데모');
+
+      overlay.style.display = 'flex';
+      gameoverOverlay.style.display = 'none';
+
+      lives = 3;
+      setLives(lives);
+      setTime('0.00s');
+
+      resetDemoState();
+
+      gameRunning = true;
+      requestAnimationFrame(gameLoop);
+    }
+
+    function resetAll(){
+      gameRunning = false;
+      isPressing = false;
+      energy = 0;
+
+      bullets = [];
+      planets = [];
+      explosions = [];
+      tank.angle = -Math.PI/2;
+
+      lives = 3;
+      setLives(lives);
+      setTime('0.00s');
+
+      startDemo();
+    }
+
+    // ===== Input (Vanilla Pointer Events) =====
+    canvas.addEventListener('pointerdown', (e) => {
+      if(!gameRunning || isDemo) return;
+      e.preventDefault();
+      canvas.setPointerCapture?.(e.pointerId);
+      isPressing = true;
+      energy = 0;
+    });
+
+    function releaseShot(){
+      if(!gameRunning || isDemo) return;
+      if(!isPressing) return;
+
+      isPressing = false;
+
+      const bx = tank.x + Math.cos(tank.angle) * tank.turretLength;
+      const by = tank.y + Math.sin(tank.angle) * tank.turretLength;
+
+      if(energy >= maxEnergy){
+        const b = new Bullet(bx, by, tank.angle);
+        b.isSuper = true;
+        b.radius = 22;
+        bullets.push(b);
+      } else {
+        bullets.push(new Bullet(bx, by, tank.angle));
+      }
+      energy = 0;
+    }
+
+    canvas.addEventListener('pointerup', (e) => { e.preventDefault(); releaseShot(); });
+    canvas.addEventListener('pointercancel', releaseShot);
+    canvas.addEventListener('pointerleave', () => { if(isPressing) releaseShot(); });
+
+    // ===== Buttons =====
+    startBtn.addEventListener('click', startRealGame);
+    restartBtn.addEventListener('click', startRealGame);
+    startUiBtn.addEventListener('click', startRealGame);
+    resetUiBtn.addEventListener('click', resetAll);
+
+    // ===== Init =====
+    setLives(3);
+    setTime('0.00s');
+    startDemo();
+  })();
+</script>
+</body>
+</html>
