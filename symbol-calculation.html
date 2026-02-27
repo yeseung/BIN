@@ -1,0 +1,743 @@
+<!-- filename example: symbol-calculation.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>기호 계산 테스트</title>
+    <meta name="description" content="특수문자(이모지)와 대응되는 숫자를 확인해서 계산하는 두뇌 훈련 테스트" />
+
+    <!-- https://www.jiraksil.com/service/spcalculation -->
+
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --border:#e5e7eb;
+            --shadow:0 14px 36px rgba(0,0,0,.08);
+            --radius:16px;
+
+            --primary:#2563eb;
+            --primary2:#1d4ed8;
+
+            --good:#16a34a;
+            --bad:#dc2626;
+
+            --chip:#f9fafb;
+        }
+
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;
+            background:var(--bg);
+            color:var(--text);
+        }
+
+        .wrap{
+            max-width:980px;
+            margin:40px auto;
+            padding:20px;
+        }
+
+        h1{
+            margin:0;
+            font-size:22px;
+            line-height:1.25;
+        }
+
+        .desc{
+            margin:10px 0 0;
+            color:var(--muted);
+            line-height:1.65;
+            max-width:75ch;
+        }
+
+        .card{
+            margin-top:14px;
+            background:var(--card);
+            border:1px solid var(--border);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            overflow:hidden;
+        }
+
+        .topbar{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            flex-wrap:wrap;
+            padding:14px 16px;
+            border-bottom:1px solid var(--border);
+            background:#fff;
+        }
+
+        .chips{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            align-items:center;
+            font-weight:900;
+        }
+        .chip{
+            display:inline-flex;
+            gap:8px;
+            align-items:center;
+            padding:8px 12px;
+            background:var(--chip);
+            border:1px solid var(--border);
+            border-radius:999px;
+            font-size:14px;
+            user-select:none;
+            white-space:nowrap;
+        }
+        .chip span{ color:var(--muted); font-weight:900; }
+
+        .btns{ display:flex; gap:10px; flex-wrap:wrap; }
+        .btn{
+            appearance:none;
+            border:1px solid var(--border);
+            background:#fff;
+            color:var(--text);
+            border-radius:999px;
+            padding:10px 14px;
+            font-weight:1000;
+            cursor:pointer;
+            transition:transform .05s ease, border-color .2s ease, background .2s ease, opacity .2s ease;
+            user-select:none;
+            white-space:nowrap;
+        }
+        .btn:hover{ border-color:#cbd5e1; }
+        .btn:active{ transform:translateY(1px); }
+        .btn.primary{
+            background:var(--primary);
+            border-color:var(--primary);
+            color:#fff;
+        }
+        .btn.primary:hover{
+            background:var(--primary2);
+            border-color:var(--primary2);
+        }
+        .btn:disabled{ opacity:.55; cursor:not-allowed; }
+
+        .stage{
+            padding:16px;
+        }
+
+        .layout{
+            display:grid;
+            grid-template-columns: 1fr;
+            gap:14px;
+            align-items:start;
+        }
+        @media (min-width:920px){
+            .layout{
+                grid-template-columns: 1fr 360px;
+            }
+            .right{
+                position:sticky;
+                top:16px;
+            }
+        }
+
+        .panel{
+            border:1px solid var(--border);
+            border-radius:14px;
+            background:#fff;
+            overflow:hidden;
+        }
+
+        .panelHead{
+            padding:14px 16px;
+            border-bottom:1px solid var(--border);
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+            flex-wrap:wrap;
+        }
+        .panelHead .title{
+            font-weight:1000;
+        }
+        .panelHead .hint{
+            color:var(--muted);
+            font-size:13px;
+        }
+
+        .mapping{
+            padding:16px;
+            display:grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap:10px;
+        }
+        @media (max-width:520px){
+            .mapping{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        }
+
+        .mapBox{
+            border:1px solid var(--border);
+            border-radius:12px;
+            padding:10px 8px;
+            text-align:center;
+            user-select:none;
+            background:#fff;
+            min-height:64px;
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+            gap:6px;
+        }
+        .mapNum{
+            font-weight:1000;
+            font-size:14px;
+            color:var(--muted);
+            line-height:1;
+        }
+        .mapSym{
+            font-weight:1000;
+            font-size:20px;
+            line-height:1;
+        }
+
+        .expr{
+            padding:16px;
+            border-top:1px solid var(--border);
+            background:#fff;
+        }
+        .exprLabel{
+            color:var(--muted);
+            font-size:13px;
+            margin-bottom:8px;
+        }
+        .exprText{
+            font-size:26px;
+            font-weight:1000;
+            line-height:1.2;
+            letter-spacing:.5px;
+            min-height:34px;
+            word-break:break-word;
+            position:relative;
+        }
+
+        .answer{
+            padding:14px 16px 16px;
+            border-top:1px solid var(--border);
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            align-items:center;
+            background:#fff;
+        }
+
+        .input{
+            flex:1 1 200px;
+            min-width:180px;
+            padding:12px 14px;
+            border:1px solid var(--border);
+            border-radius:12px;
+            font-size:16px;
+            outline:none;
+            text-align:center;
+        }
+        .input:focus{
+            border-color:#93c5fd;
+            box-shadow:0 0 0 4px rgba(37,99,235,.12);
+        }
+
+        .feedback{
+            padding:0 16px 14px;
+            display:none;
+            font-weight:1000;
+            font-size:14px;
+            background:#fff;
+        }
+        .feedback.good{ color:var(--good); }
+        .feedback.bad{ color:var(--bad); }
+
+        /* overlay */
+        .overlay{
+            position:fixed;
+            inset:0;
+            background:rgba(2,6,23,.55);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:18px;
+            z-index:9999;
+        }
+        .overlay.hidden{ display:none; }
+        .overlayCard{
+            width:min(440px, 100%);
+            background:#fff;
+            border:1px solid var(--border);
+            border-radius:16px;
+            box-shadow:var(--shadow);
+            padding:16px;
+            text-align:center;
+        }
+        .overlayTitle{
+            margin:0 0 8px;
+            font-size:18px;
+            font-weight:1000;
+        }
+        .overlayText{
+            margin:0;
+            color:var(--muted);
+            line-height:1.65;
+            font-size:14px;
+        }
+        .overlayActions{
+            margin-top:14px;
+            display:flex;
+            justify-content:center;
+            gap:10px;
+            flex-wrap:wrap;
+        }
+
+        .toast{
+            position:fixed;
+            left:50%;
+            bottom:22px;
+            transform:translateX(-50%);
+            background:#111827;
+            color:#fff;
+            padding:10px 14px;
+            border-radius:999px;
+            font-weight:900;
+            font-size:13px;
+            opacity:0;
+            pointer-events:none;
+            transition:opacity .2s ease, transform .2s ease;
+            z-index:10000;
+            box-shadow:0 10px 30px rgba(0,0,0,.25);
+        }
+        .toast.show{
+            opacity:1;
+            transform:translateX(-50%) translateY(-4px);
+        }
+
+        /* correct animation + particles */
+        @keyframes correctPop {
+            0%{ transform:scale(1); }
+            45%{ transform:scale(1.12); }
+            100%{ transform:scale(1); }
+        }
+        .pop{
+            animation: correctPop .35s ease-in-out;
+        }
+
+        @keyframes particle {
+            0%{ opacity:1; transform:translate(-50%,-50%) scale(1) rotate(0deg); }
+            100%{ opacity:0; transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(.2) rotate(360deg); }
+        }
+        .particle{
+            position:absolute;
+            left:50%;
+            top:50%;
+            width:10px;
+            height:10px;
+            border-radius:999px;
+            background:currentColor;
+            opacity:0;
+            animation: particle .7s ease-out forwards;
+            pointer-events:none;
+        }
+
+        .note{
+            margin-top:10px;
+            color:var(--muted);
+            font-size:13px;
+            line-height:1.6;
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <h1>기호 계산 테스트</h1>
+    <p class="desc">
+        아래 매핑표에서 <b>기호(이모지)</b>가 의미하는 <b>숫자</b>를 확인하고, 기호로 표시된 계산식을 풀어 정답을 입력하세요.
+        (제한 시간 60초)
+    </p>
+
+    <div class="card">
+        <div class="topbar">
+            <div class="chips">
+                <div class="chip">시간 <span id="timer">60초</span></div>
+                <div class="chip">점수 <span id="score">0</span></div>
+                <div class="chip">레벨 <span id="level">1</span></div>
+            </div>
+            <div class="btns">
+                <button class="btn" id="newMapBtn" type="button" disabled>매핑 새로고침</button>
+                <button class="btn primary" id="startBtn" type="button">테스트 시작</button>
+            </div>
+        </div>
+
+        <div class="stage">
+            <div class="layout">
+                <div class="panel">
+                    <div class="panelHead">
+                        <div class="title">숫자 ↔ 기호 매핑</div>
+                        <div class="hint">문제마다 기호가 바뀝니다</div>
+                    </div>
+                    <div class="mapping" id="mappingGrid"></div>
+
+                    <div class="expr">
+                        <div class="exprLabel">계산식</div>
+                        <div class="exprText" id="expressionText">—</div>
+                        <div class="note">팁: 기호는 숫자 0~9에만 대응합니다. 여러 자리 숫자는 기호가 이어져 표시됩니다.</div>
+                    </div>
+                </div>
+
+                <div class="panel right">
+                    <div class="panelHead">
+                        <div class="title">정답 입력</div>
+                        <div class="hint">Enter 로 제출</div>
+                    </div>
+                    <div class="answer">
+                        <input class="input" id="answerInput" type="number" placeholder="정답" inputmode="numeric" disabled />
+                        <button class="btn primary" id="submitBtn" type="button" disabled>확인</button>
+                    </div>
+                    <div class="feedback" id="feedback"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- overlays -->
+<div class="overlay" id="startOverlay">
+    <div class="overlayCard">
+        <div class="overlayTitle">기호 계산 브레인 트레이닝</div>
+        <p class="overlayText">
+            삼성서울병원 뇌신경센터에서 소개된 방식처럼,<br />
+            <b>기호 ↔ 숫자</b> 매핑을 보고 계산식을 풀어보세요.
+        </p>
+        <div class="overlayActions">
+            <button class="btn primary" id="overlayStartBtn" type="button">시작하기</button>
+        </div>
+    </div>
+</div>
+
+<div class="overlay hidden" id="endOverlay">
+    <div class="overlayCard">
+        <div class="overlayTitle">테스트 종료!</div>
+        <p class="overlayText" id="finalScore">점수: 0</p>
+        <div class="overlayActions">
+            <button class="btn primary" id="restartBtn" type="button">다시하기</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast">알림</div>
+
+<script>
+    (() => {
+        /*********************
+         * DOM
+         *********************/
+        const timerEl = document.getElementById('timer');
+        const scoreEl = document.getElementById('score');
+        const levelEl = document.getElementById('level');
+
+        const startBtn = document.getElementById('startBtn');
+        const newMapBtn = document.getElementById('newMapBtn');
+
+        const gridEl = document.getElementById('mappingGrid');
+        const exprEl = document.getElementById('expressionText');
+
+        const answerInput = document.getElementById('answerInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const feedbackEl = document.getElementById('feedback');
+
+        const startOverlay = document.getElementById('startOverlay');
+        const endOverlay = document.getElementById('endOverlay');
+        const overlayStartBtn = document.getElementById('overlayStartBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const finalScoreEl = document.getElementById('finalScore');
+
+        const toastEl = document.getElementById('toast');
+
+        /*********************
+         * Game data
+         *********************/
+        const symbols = [
+            '◎','☆','※','○','■','♣','☎','♥','⊙','㉿',
+            '✿','☀','☁','☂','★','☃','✈','✉','♠','♨',
+            '☘','☯','☮','☪','⚾','⚡','✌','☕','✍',
+            '😀','😂','❤️','👍','🎉','😎','🥳','😍','🙌','💡',
+            '🚀','🎯','🔥','🌟','🍀','🧩','⚽','📚','✨','🤖',
+            '🥰','🤩','🤓','😇','🤔','🥺','😤','😱','🥵','🥶'
+        ];
+
+        let numberToSymbol = {};
+        let symbolToNumber = {};
+
+        let score = 0;
+        let level = 1;
+        let timeLeft = 60;
+        let timerId = null;
+        let active = false;
+
+        let currentAnswer = 0;
+
+        /*********************
+         * UI helpers
+         *********************/
+        function toast(msg){
+            toastEl.textContent = msg;
+            toastEl.classList.add('show');
+            clearTimeout(toastEl._t);
+            toastEl._t = setTimeout(()=>toastEl.classList.remove('show'), 900);
+        }
+
+        function setFeedback(text, ok){
+            feedbackEl.textContent = text;
+            feedbackEl.className = 'feedback ' + (ok ? 'good' : 'bad');
+            feedbackEl.style.display = 'block';
+            clearTimeout(feedbackEl._t);
+            feedbackEl._t = setTimeout(()=>{ feedbackEl.style.display='none'; }, 850);
+        }
+
+        function showOverlay(el){ el.classList.remove('hidden'); }
+        function hideOverlay(el){ el.classList.add('hidden'); }
+
+        function setEnabled(on){
+            answerInput.disabled = !on;
+            submitBtn.disabled = !on;
+            newMapBtn.disabled = !on;
+        }
+
+        /*********************
+         * Core
+         *********************/
+        function shuffle(arr){
+            const a = arr.slice();
+            for(let i=a.length-1;i>0;i--){
+                const j = Math.floor(Math.random()*(i+1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        function assignMapping(){
+            const pool = shuffle(symbols);
+            numberToSymbol = {};
+            symbolToNumber = {};
+            for(let i=0;i<=9;i++){
+                const sym = pool[i];
+                numberToSymbol[i] = sym;
+                symbolToNumber[sym] = i;
+            }
+            renderMapping();
+        }
+
+        function renderMapping(){
+            gridEl.innerHTML = '';
+            for(let i=0;i<=9;i++){
+                const box = document.createElement('div');
+                box.className = 'mapBox';
+                box.innerHTML = `<div class="mapNum">${i}</div><div class="mapSym">${escapeHtml(numberToSymbol[i])}</div>`;
+                gridEl.appendChild(box);
+            }
+        }
+
+        function escapeHtml(s){
+            return String(s)
+            .replaceAll('&','&amp;')
+            .replaceAll('<','&lt;')
+            .replaceAll('>','&gt;')
+            .replaceAll('"','&quot;')
+            .replaceAll("'","&#39;");
+        }
+
+        function numToSymbols(num){
+            return String(num).split('').map(d => numberToSymbol[Number(d)]).join('');
+        }
+
+        // 레벨에 맞는 난이도 생성 (음수 방지)
+        function generateExpression(){
+            // 레벨이 오를수록 피연산자 수 증가 (최대 5)
+            const operandsCount = Math.min(2 + Math.floor(level / 2), 5);
+
+            let answer = 0;
+            let display = '';
+            let first = true;
+
+            for(let i=0;i<operandsCount;i++){
+                let n;
+                if(level <= 2){
+                    n = randInt(0, 9);
+                }else if(level <= 5){
+                    n = Math.random() < 0.7 ? randInt(0, 9) : randInt(10, 99);
+                }else{
+                    n = randInt(10, 99);
+                }
+
+                if(first){
+                    answer = n;
+                    display = numToSymbols(n);
+                    first = false;
+                    continue;
+                }
+
+                // 연산자 선택: + 우선, -는 음수 방지
+                let op = Math.random() < 0.5 ? '+' : '-';
+                if(op === '-' && answer <= 0){
+                    op = '+';
+                }
+                if(op === '-' && n > answer){
+                    n = randInt(0, answer); // 0~answer 로 제한
+                }
+
+                if(op === '+') answer += n;
+                else answer -= n;
+
+                display += ` ${op} ${numToSymbols(n)}`;
+            }
+
+            currentAnswer = answer;
+            exprEl.textContent = display + ' = ?';
+        }
+
+        function randInt(min, max){
+            return Math.floor(Math.random()*(max-min+1)) + min;
+        }
+
+        function spawnParticles(){
+            // exprEl 중심에서 파티클 생성
+            const colors = ['#FF5733','#33FF57','#3357FF','#F333FF','#FF33A8','#33FFF5','#FFC300','#DAF7A6','#C70039','#900C3F'];
+            const count = 18;
+
+            for(let i=0;i<count;i++){
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.color = colors[Math.floor(Math.random()*colors.length)];
+
+                const dx = (Math.random()*120 - 60) + 'px';
+                const dy = (Math.random()*120 - 80) + 'px';
+                p.style.setProperty('--dx', dx);
+                p.style.setProperty('--dy', dy);
+
+                exprEl.appendChild(p);
+
+                // force reflow -> start anim
+                p.offsetHeight;
+                p.style.opacity = '1';
+
+                p.addEventListener('animationend', () => p.remove());
+            }
+        }
+
+        function nextQuestion(withNewMap=true){
+            if(withNewMap) assignMapping();
+            generateExpression();
+            answerInput.value = '';
+            answerInput.focus();
+        }
+
+        function check(){
+            if(!active) return;
+
+            const v = answerInput.value.trim();
+            if(!v){
+                toast('정답을 입력하세요');
+                answerInput.focus();
+                return;
+            }
+            const user = Number(v);
+            if(Number.isNaN(user)){
+                toast('숫자를 입력하세요');
+                return;
+            }
+
+            if(user === currentAnswer){
+                score += 1;
+                level += 1;
+                scoreEl.textContent = String(score);
+                levelEl.textContent = String(level);
+
+                setFeedback('정답!', true);
+
+                exprEl.classList.remove('pop');
+                void exprEl.offsetWidth; // reflow
+                exprEl.classList.add('pop');
+                spawnParticles();
+            }else{
+                setFeedback('오답!', false);
+            }
+
+            // 다음 문제(매핑도 새로)
+            setTimeout(()=>nextQuestion(true), 220);
+        }
+
+        function tick(){
+            timeLeft -= 1;
+            timerEl.textContent = `${timeLeft}초`;
+            if(timeLeft <= 0) endGame();
+        }
+
+        function startGame(){
+            active = true;
+            score = 0;
+            level = 1;
+            timeLeft = 60;
+
+            scoreEl.textContent = '0';
+            levelEl.textContent = '1';
+            timerEl.textContent = '60초';
+
+            setEnabled(true);
+            startBtn.disabled = true;
+
+            hideOverlay(startOverlay);
+            hideOverlay(endOverlay);
+
+            nextQuestion(true);
+
+            clearInterval(timerId);
+            timerId = setInterval(tick, 1000);
+        }
+
+        function endGame(){
+            active = false;
+            setEnabled(false);
+            startBtn.disabled = false;
+
+            clearInterval(timerId);
+            timerId = null;
+
+            finalScoreEl.textContent = `점수: ${score}`;
+            showOverlay(endOverlay);
+        }
+
+        /*********************
+         * Events
+         *********************/
+        startBtn.addEventListener('click', startGame);
+        overlayStartBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', startGame);
+
+        submitBtn.addEventListener('click', check);
+        newMapBtn.addEventListener('click', () => {
+            if(!active) return;
+            assignMapping();
+            toast('매핑을 새로고침 했어요');
+        });
+
+        answerInput.addEventListener('keydown', (e) => {
+            if(e.key === 'Enter') check();
+        });
+
+        // initial
+        setEnabled(false);
+        showOverlay(startOverlay);
+        assignMapping();
+        generateExpression();
+    })();
+</script>
+</body>
+</html>
