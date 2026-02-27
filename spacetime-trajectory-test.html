@@ -1,0 +1,896 @@
+<!-- filename example: spacetime-trajectory-test.html -->
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>시공간 인지력 테스트</title>
+    <meta name="description" content="움직이는 물체의 궤적을 예측하고 정확한 타이밍에 반응하는 능력을 측정하는 시공간 인지력 테스트입니다." />
+
+    <!-- https://www.jiraksil.com/service/trajectory -->
+
+    <style>
+        :root{
+            --bg: #ffffff;
+            --panel: #ffffff;
+            --text: #111827;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --shadow: 0 10px 30px rgba(17,24,39,.08);
+            --shadow2: 0 6px 18px rgba(17,24,39,.08);
+            --primary: #2563eb;
+            --danger: #ef4444;
+            --good: #10b981;
+            --warning: #f59e0b;
+            --canvasBgTop: rgba(147, 197, 253, 0.35);
+            --canvasBgBottom: rgba(30, 58, 138, 0.12);
+        }
+
+        *{ box-sizing: border-box; }
+        html, body{ height:100%; }
+        body{
+            margin:0;
+            font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .wrap{
+            max-width: 920px;
+            margin: 0 auto;
+            padding: 18px 14px 40px;
+        }
+
+        .topbar{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            padding: 10px 0 16px;
+        }
+
+        .title{
+            display:flex;
+            flex-direction:column;
+            gap:6px;
+        }
+
+        .title h1{
+            margin:0;
+            font-size: 20px;
+            letter-spacing: -0.2px;
+        }
+        .title p{
+            margin:0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .card{
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .info{
+            display:grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+            padding: 14px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, rgba(37,99,235,.04), rgba(37,99,235,.02));
+        }
+
+        .stat{
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 10px 10px 9px;
+            background: #fff;
+            box-shadow: var(--shadow2);
+            min-height: 58px;
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+            align-items:center;
+            gap:4px;
+        }
+
+        .stat .label{
+            font-size: 12px;
+            color: var(--muted);
+        }
+        .stat .value{
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: -0.2px;
+        }
+
+        .wind{
+            display:flex;
+            align-items:center;
+            gap:8px;
+        }
+        .wind .arrow{
+            font-size: 18px;
+            line-height: 1;
+            margin-top: 2px;
+        }
+
+        .play{
+            padding: 14px;
+            position: relative;
+        }
+
+        .canvas-wrap{
+            position: relative;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: var(--shadow2);
+        }
+
+        canvas{
+            display:block;
+            width: 100%;
+            height: auto;
+            touch-action: none; /* 중요: 터치 스크롤 방지 */
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        /* 파워바 */
+        .powerbar{
+            position:absolute;
+            left: 12px;
+            top: 12px;
+            width: 30px;
+            height: 170px;
+            border: 1px solid var(--border);
+            background: rgba(17,24,39,.04);
+            border-radius: 12px;
+            overflow:hidden;
+            display:flex;
+            flex-direction:column;
+            justify-content:flex-end;
+            box-shadow: var(--shadow2);
+            pointer-events:none;
+        }
+        .powerbar .fill{
+            width:100%;
+            height:0%;
+            background: linear-gradient(to top, var(--good), var(--warning), var(--danger));
+            transition: height .08s linear;
+        }
+        .powerbar .top,
+        .powerbar .bottom{
+            position:absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            font-weight: 800;
+            color: #111827;
+            background: rgba(255,255,255,.85);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 2px 8px;
+            box-shadow: var(--shadow2);
+            white-space:nowrap;
+        }
+        .powerbar .top{ top: -12px; }
+        .powerbar .bottom{ bottom: -12px; }
+
+        .help{
+            margin-top: 14px;
+            padding: 14px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: var(--shadow2);
+        }
+        .help h2{
+            margin:0 0 10px;
+            font-size: 14px;
+            letter-spacing: -0.2px;
+        }
+        .help ul{
+            margin:0;
+            padding-left: 18px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .help li{ margin: 6px 0; }
+        .help strong{ color: var(--text); }
+
+        /* 모달 */
+        .overlay{
+            position: fixed;
+            inset: 0;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background: rgba(17,24,39,.55);
+            backdrop-filter: blur(8px);
+            z-index: 50;
+            padding: 18px;
+        }
+        .modal{
+            width: min(420px, 100%);
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            padding: 18px;
+        }
+        .modal h3{
+            margin: 0 0 10px;
+            font-size: 18px;
+            letter-spacing: -0.2px;
+        }
+        .modal p{
+            margin: 0 0 14px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .modal .row{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            margin-top: 10px;
+        }
+        .btn{
+            appearance:none;
+            border: 1px solid var(--border);
+            background: #fff;
+            color: var(--text);
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-weight: 800;
+            cursor:pointer;
+            min-height: 44px;
+            box-shadow: var(--shadow2);
+            transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+        }
+        .btn:hover{ transform: translateY(-1px); }
+        .btn:active{ transform: translateY(0px); box-shadow: none; }
+        .btn.primary{
+            background: linear-gradient(180deg, rgba(37,99,235,.12), rgba(37,99,235,.06));
+            border-color: rgba(37,99,235,.35);
+            color: #0b2a7a;
+        }
+
+        .hidden{ display:none !important; }
+
+        @media (max-width: 640px){
+            .info{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .powerbar{ left: 10px; top: 10px; width: 26px; height: 140px; border-radius: 10px; }
+            .powerbar .top, .powerbar .bottom{ font-size: 11px; padding: 2px 7px; }
+            .title h1{ font-size: 18px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="topbar">
+        <div class="title">
+            <h1>🎯 시공간 인지력 테스트</h1>
+            <p>발사대를 길게 눌러 파워를 조절하고, 바람/중력을 고려해 빨간 타겟을 맞추세요.</p>
+        </div>
+    </div>
+
+    <div class="card" id="gameContainer">
+        <div class="info">
+            <div class="stat">
+                <div class="label">레벨</div>
+                <div class="value" id="uiLevel">1</div>
+            </div>
+            <div class="stat">
+                <div class="label">점수</div>
+                <div class="value" id="uiScore">0</div>
+            </div>
+            <div class="stat">
+                <div class="label">기회</div>
+                <div class="value" id="uiChances">10</div>
+            </div>
+            <div class="stat">
+                <div class="label">바람</div>
+                <div class="value wind"><span id="uiWind">0.0</span><span class="arrow" id="uiWindArrow">→</span></div>
+            </div>
+        </div>
+
+        <div class="play">
+            <div class="canvas-wrap">
+                <canvas id="gameCanvas" width="800" height="400" aria-label="게임 캔버스"></canvas>
+
+                <div class="powerbar" aria-hidden="true">
+                    <div class="top">파워</div>
+                    <div class="fill" id="powerFill"></div>
+                    <div class="bottom" id="powerPct">0%</div>
+                </div>
+            </div>
+
+            <div class="help">
+                <h2>플레이 방법</h2>
+                <ul>
+                    <li><strong>파워 조절:</strong> 발사대를 누르고 있는 동안 파워가 오르내립니다.</li>
+                    <li><strong>발사:</strong> 원하는 파워에서 손을 떼면 공이 발사됩니다.</li>
+                    <li><strong>목표:</strong> 빨간 타겟을 맞추면 점수 +1.</li>
+                    <li><strong>바람:</strong> 레벨이 높아질수록 바람이 강해져 궤적이 흔들립니다.</li>
+                    <li><strong>기회:</strong> 총 10번. 실패하면 1회 차감, 0이 되면 종료.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 시작 모달 -->
+<div class="overlay" id="startModal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="startTitle">
+        <h3 id="startTitle">🎯 시공간 인지력 테스트</h3>
+        <p>
+            발사대를 길게 눌러 파워를 조절하고,<br/>
+            빨간 타겟을 맞춰 점수를 획득하세요.<br/><br/>
+            <strong style="color:#111827;">바람의 영향을 고려해 궤적을 예측해보세요!</strong>
+        </p>
+        <div class="row">
+            <button class="btn primary" id="btnStart">시작하기</button>
+        </div>
+    </div>
+</div>
+
+<!-- 게임 오버 모달 -->
+<div class="overlay hidden" id="gameOverModal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="overTitle">
+        <h3 id="overTitle">🏁 테스트 완료</h3>
+        <p id="finalText"></p>
+        <div class="row">
+            <button class="btn primary" id="btnRestart">다시하기</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function(){
+        "use strict";
+
+        // ====== Utils ======
+        function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+
+        // ====== Game Class ======
+        function TrajectoryGame(canvas){
+            this.canvas = canvas;
+            this.ctx = canvas.getContext("2d", { alpha: true });
+
+            this.isPlaying = false;
+            this.rafId = null;
+
+            // State
+            this.level = 1;
+            this.score = 0;
+            this.maxChances = 10;
+            this.chances = this.maxChances;
+
+            // Physics
+            this.gravity = 0.4;
+            this.wind = { x: 0, y: 0 };
+
+            // Ball
+            this.ball = {
+                x: 0, y: 0,
+                vx: 0, vy: 0,
+                radius: 8,
+                trail: [],
+                launched: false,
+                launchPower: 0
+            };
+
+            // Power
+            this.power = 0;
+            this.maxPower = 100;
+            this.powerIncreasing = true;
+            this.powerSpeed = 2;
+            this.isCharging = false;
+
+            // Launcher / Targets
+            this.launcher = { x: 0, y: 0, width: 0, height: 0 };
+            this.targets = [];
+
+            // Responsive / DPR
+            this.cssW = 800;
+            this.cssH = 400;
+            this.dpr = 1;
+
+            // Bind
+            this._onResize = this._onResize.bind(this);
+            this._onPointerDown = this._onPointerDown.bind(this);
+            this._onPointerUp = this._onPointerUp.bind(this);
+            this._onPointerCancel = this._onPointerCancel.bind(this);
+
+            this._init();
+        }
+
+        TrajectoryGame.prototype._init = function(){
+            this._onResize();
+            window.addEventListener("resize", this._onResize);
+
+            // Pointer events (PC/모바일 통합)
+            this.canvas.addEventListener("pointerdown", this._onPointerDown, { passive:false });
+            this.canvas.addEventListener("pointerup", this._onPointerUp, { passive:false });
+            this.canvas.addEventListener("pointercancel", this._onPointerCancel, { passive:false });
+            this.canvas.addEventListener("pointerleave", this._onPointerCancel, { passive:false });
+
+            // 우클릭 메뉴 방지
+            this.canvas.addEventListener("contextmenu", function(e){ e.preventDefault(); });
+
+            this._generateTargets();
+            this._generateWind();
+            this._updateUI();
+            this._updatePowerBar();
+            this.draw(); // 대기 화면 1회 그리기
+        };
+
+        TrajectoryGame.prototype._onResize = function(){
+            // 캔버스 CSS 크기(반응형) -> wrap 기준 폭
+            var parent = this.canvas.parentElement;
+            var maxWidth = Math.min(parent.clientWidth, 860);
+            var aspect = 400 / 800;
+
+            this.cssW = Math.max(320, Math.floor(maxWidth));
+            this.cssH = Math.floor(this.cssW * aspect);
+
+            // DPR 스케일링 (고해상도)
+            this.dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
+            this.canvas.style.width = this.cssW + "px";
+            this.canvas.style.height = this.cssH + "px";
+            this.canvas.width = Math.floor(this.cssW * this.dpr);
+            this.canvas.height = Math.floor(this.cssH * this.dpr);
+
+            // draw 단위는 CSS 픽셀 기준으로 맞추기
+            this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+
+            this._updateLauncherPosition();
+        };
+
+        TrajectoryGame.prototype._updateLauncherPosition = function(){
+            // CSS 좌표계(= this.cssW/this.cssH)로 계산
+            this.launcher.x = this.cssW * 0.1;
+            this.launcher.y = this.cssH * 0.875;
+            this.launcher.width = this.cssW * 0.09;
+            this.launcher.height = this.cssH * 0.18;
+        };
+
+        TrajectoryGame.prototype._generateTargets = function(){
+            this.targets = [];
+            var numTargets = Math.min(3 + Math.floor(this.level / 2), 6);
+            for (var i=0; i<numTargets; i++){
+                var targetSize = Math.max(50 - (this.level - 1) * 3, 25);
+                this.targets.push({
+                    x: this.cssW * 0.6 + Math.random() * this.cssW * 0.35,
+                    y: this.cssH * 0.25 + Math.random() * this.cssH * 0.5,
+                    width: targetSize,
+                    height: targetSize,
+                    hit: false,
+                    shaking: false,
+                    disappearing: false
+                });
+            }
+        };
+
+        TrajectoryGame.prototype._generateWind = function(){
+            var windStrength = Math.min(this.level * 0.3, 3);
+            var angle = Math.random() * 2 * Math.PI;
+            this.wind.x = Math.cos(angle) * windStrength * (0.5 + Math.random() * 0.5);
+            this.wind.y = Math.sin(angle) * windStrength * (0.5 + Math.random() * 0.5);
+            this._updateWindUI();
+        };
+
+        TrajectoryGame.prototype._updateWindUI = function(){
+            var speed = Math.sqrt(this.wind.x*this.wind.x + this.wind.y*this.wind.y);
+            document.getElementById("uiWind").textContent = speed.toFixed(1);
+
+            var arrow = "→";
+            var deg = Math.atan2(this.wind.y, this.wind.x) * 180 / Math.PI;
+
+            if (deg >= -22.5 && deg < 22.5) arrow = "→";
+            else if (deg >= 22.5 && deg < 67.5) arrow = "↘";
+            else if (deg >= 67.5 && deg < 112.5) arrow = "↓";
+            else if (deg >= 112.5 && deg < 157.5) arrow = "↙";
+            else if (deg >= 157.5 || deg < -157.5) arrow = "←";
+            else if (deg >= -157.5 && deg < -112.5) arrow = "↖";
+            else if (deg >= -112.5 && deg < -67.5) arrow = "↑";
+            else if (deg >= -67.5 && deg < -22.5) arrow = "↗";
+
+            document.getElementById("uiWindArrow").textContent = arrow;
+        };
+
+        TrajectoryGame.prototype._updateUI = function(){
+            document.getElementById("uiLevel").textContent = this.level;
+            document.getElementById("uiScore").textContent = this.score;
+            document.getElementById("uiChances").textContent = this.chances;
+        };
+
+        TrajectoryGame.prototype._updatePowerBar = function(){
+            var pct = (this.power / this.maxPower) * 100;
+            document.getElementById("powerFill").style.height = pct + "%";
+            document.getElementById("powerPct").textContent = Math.round(pct) + "%";
+        };
+
+        TrajectoryGame.prototype._getPointerPos = function(e){
+            var rect = this.canvas.getBoundingClientRect();
+            var x = (e.clientX - rect.left) * (this.cssW / rect.width);
+            var y = (e.clientY - rect.top) * (this.cssH / rect.height);
+            return { x:x, y:y };
+        };
+
+        TrajectoryGame.prototype._onPointerDown = function(e){
+            if (!this.isPlaying || this.ball.launched) return;
+            e.preventDefault();
+
+            // pointer capture로 이동/이탈에도 안정
+            try{ this.canvas.setPointerCapture(e.pointerId); }catch(_){}
+
+            var p = this._getPointerPos(e);
+            var lx = this.launcher.x, ly = this.launcher.y;
+            var hw = this.launcher.width / 2;
+            var hh = this.launcher.height / 2;
+
+            if (p.x >= lx - hw && p.x <= lx + hw && p.y >= ly - hh && p.y <= ly + hh){
+                this.isCharging = true;
+            }
+        };
+
+        TrajectoryGame.prototype._onPointerUp = function(e){
+            if (!this.isPlaying || !this.isCharging) return;
+            e.preventDefault();
+            this.isCharging = false;
+            this._launchBall();
+        };
+
+        TrajectoryGame.prototype._onPointerCancel = function(e){
+            // 충전 중 이탈/취소되면 발사 처리(원래 코드 mouseleave와 동일)
+            if (!this.isPlaying || !this.isCharging) return;
+            e.preventDefault();
+            this.isCharging = false;
+            this._launchBall();
+        };
+
+        TrajectoryGame.prototype._launchBall = function(){
+            var angle = -Math.PI / 4; // 45도
+            var speed = (this.power / 100) * (this.cssW * 0.02) + (this.cssW * 0.006);
+
+            this.ball.x = this.launcher.x;
+            this.ball.y = this.launcher.y;
+            this.ball.vx = speed * Math.cos(angle);
+            this.ball.vy = speed * Math.sin(angle);
+            this.ball.trail = [];
+            this.ball.launched = true;
+            this.ball.radius = Math.max(6, this.cssW * 0.01);
+            this.ball.launchPower = this.power;
+
+            this.power = 0;
+            this._updatePowerBar();
+        };
+
+        TrajectoryGame.prototype._updatePower = function(){
+            if (!this.isCharging) return;
+
+            if (this.powerIncreasing){
+                this.power += this.powerSpeed;
+                if (this.power >= this.maxPower){
+                    this.power = this.maxPower;
+                    this.powerIncreasing = false;
+                }
+            }else{
+                this.power -= this.powerSpeed;
+                if (this.power <= 0){
+                    this.power = 0;
+                    this.powerIncreasing = true;
+                }
+            }
+            this._updatePowerBar();
+        };
+
+        TrajectoryGame.prototype._miss = function(){
+            this.chances--;
+            this.ball.launched = false;
+            this.ball.trail = [];
+
+            if (this.chances <= 0){
+                this._gameOver();
+            }else{
+                this._updateUI();
+            }
+        };
+
+        TrajectoryGame.prototype._checkTargetCollisions = function(){
+            for (var i=0; i<this.targets.length; i++){
+                var t = this.targets[i];
+                if (t.hit || t.disappearing) continue;
+
+                if (this.ball.x >= t.x - t.width/2 &&
+                    this.ball.x <= t.x + t.width/2 &&
+                    this.ball.y >= t.y - t.height/2 &&
+                    this.ball.y <= t.y + t.height/2){
+                    this._hitTarget(t);
+                    break;
+                }
+            }
+        };
+
+        TrajectoryGame.prototype._hitTarget = function(target){
+            var self = this;
+            target.hit = true;
+            target.shaking = true;
+            this.score++;
+
+            setTimeout(function(){
+                target.shaking = false;
+                target.disappearing = true;
+
+                setTimeout(function(){
+                    target.hit = true;
+                    self._checkLevelComplete();
+                }, 300);
+            }, 500);
+
+            this.ball.launched = false;
+            this.ball.trail = [];
+            this._updateUI();
+        };
+
+        TrajectoryGame.prototype._checkLevelComplete = function(){
+            for (var i=0; i<this.targets.length; i++){
+                if (!this.targets[i].hit) return;
+            }
+            this.level++;
+            this._generateTargets();
+            this._generateWind();
+            this._updateUI();
+        };
+
+        TrajectoryGame.prototype._updatePhysics = function(){
+            if (!this.ball.launched) return;
+
+            // wind
+            this.ball.vx += this.wind.x * 0.01;
+            this.ball.vy += this.wind.y * 0.01;
+
+            // gravity
+            this.ball.vy += this.gravity;
+
+            // position
+            this.ball.x += this.ball.vx;
+            this.ball.y += this.ball.vy;
+
+            // trail
+            this.ball.trail.push({ x:this.ball.x, y:this.ball.y });
+            if (this.ball.trail.length > 30) this.ball.trail.shift();
+
+            // collisions
+            this._checkTargetCollisions();
+
+            // out of bounds
+            if (this.ball.x > this.cssW + 100 || this.ball.y > this.cssH + 100){
+                this._miss();
+                return;
+            }
+            // ground
+            if (this.ball.y > this.cssH - 20){
+                this._miss();
+                return;
+            }
+        };
+
+        TrajectoryGame.prototype._gradeText = function(){
+            if (this.score >= 20) return "전문가";
+            if (this.score >= 15) return "고수";
+            if (this.score >= 10) return "중급자";
+            if (this.score >= 5)  return "초보자";
+            return "연습 필요";
+        };
+
+        TrajectoryGame.prototype._gameOver = function(){
+            this.isPlaying = false;
+            if (this.rafId) cancelAnimationFrame(this.rafId);
+
+            var grade = this._gradeText();
+            var txt = "최종 점수: " + this.score + "점\n"
+                + "도달 레벨: " + this.level + "\n"
+                + "평가: " + grade;
+
+            document.getElementById("finalText").textContent = txt;
+            document.getElementById("gameOverModal").classList.remove("hidden");
+        };
+
+        TrajectoryGame.prototype.start = function(){
+            this.isPlaying = true;
+            this._loop();
+        };
+
+        TrajectoryGame.prototype.restart = function(){
+            this.level = 1;
+            this.score = 0;
+            this.chances = this.maxChances;
+            this.power = 0;
+            this.isCharging = false;
+            this.powerIncreasing = true;
+
+            this.ball.launched = false;
+            this.ball.trail = [];
+
+            this._generateTargets();
+            this._generateWind();
+            this._updateUI();
+            this._updatePowerBar();
+            this.start();
+        };
+
+        TrajectoryGame.prototype._loop = function(){
+            if (!this.isPlaying) return;
+
+            this._updatePower();
+            this._updatePhysics();
+            this.draw();
+
+            var self = this;
+            this.rafId = requestAnimationFrame(function(){ self._loop(); });
+        };
+
+        TrajectoryGame.prototype.draw = function(){
+            var ctx = this.ctx;
+
+            // clear
+            ctx.clearRect(0, 0, this.cssW, this.cssH);
+
+            // background
+            var g = ctx.createLinearGradient(0, 0, 0, this.cssH);
+            g.addColorStop(0, getComputedStyle(document.documentElement).getPropertyValue("--canvasBgTop").trim());
+            g.addColorStop(1, getComputedStyle(document.documentElement).getPropertyValue("--canvasBgBottom").trim());
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, this.cssW, this.cssH);
+
+            // launcher
+            ctx.fillStyle = this.isCharging ? "#2563eb" : "#8b5a2b";
+            ctx.fillRect(
+                this.launcher.x - this.launcher.width/2,
+                this.launcher.y - this.launcher.height/2,
+                this.launcher.width,
+                this.launcher.height
+            );
+            ctx.strokeStyle = "rgba(255,255,255,0.95)";
+            ctx.lineWidth = 2;
+            ctx.strokeRect(
+                this.launcher.x - this.launcher.width/2,
+                this.launcher.y - this.launcher.height/2,
+                this.launcher.width,
+                this.launcher.height
+            );
+
+            // launcher label
+            ctx.fillStyle = "rgba(255,255,255,0.95)";
+            ctx.font = "800 18px ui-sans-serif, system-ui, -apple-system, 'Noto Sans KR', Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("발사대", this.launcher.x, this.launcher.y);
+
+            // targets
+            for (var i=0; i<this.targets.length; i++){
+                var t = this.targets[i];
+                if (t.hit && !t.shaking && !t.disappearing) continue;
+
+                ctx.save();
+
+                if (t.shaking){
+                    var shake = Math.sin(Date.now() * 0.05) * 3;
+                    ctx.translate(shake, shake);
+                }
+                if (t.disappearing){
+                    ctx.globalAlpha = 0.5;
+                    ctx.scale(0.8, 0.8);
+                }
+
+                ctx.fillStyle = "#ef4444";
+                ctx.fillRect(t.x - t.width/2, t.y - t.height/2, t.width, t.height);
+
+                ctx.strokeStyle = "rgba(255,255,255,0.95)";
+                ctx.lineWidth = 2;
+                ctx.strokeRect(t.x - t.width/2, t.y - t.height/2, t.width, t.height);
+
+                ctx.restore();
+            }
+
+            // trail
+            if (this.ball.trail.length > 1){
+                ctx.strokeStyle = "rgba(255,255,255,0.65)";
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(this.ball.trail[0].x, this.ball.trail[0].y);
+                for (var j=1; j<this.ball.trail.length; j++){
+                    ctx.lineTo(this.ball.trail[j].x, this.ball.trail[j].y);
+                }
+                ctx.stroke();
+            }
+
+            // ball
+            if (this.ball.launched){
+                ctx.fillStyle = "#fbbf24";
+                ctx.beginPath();
+                ctx.arc(this.ball.x, this.ball.y, this.ball.radius, 0, Math.PI*2);
+                ctx.fill();
+                ctx.strokeStyle = "rgba(255,255,255,0.95)";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            // wind visualization
+            var windSpeed = Math.sqrt(this.wind.x*this.wind.x + this.wind.y*this.wind.y);
+            if (windSpeed > 0.1){
+                for (var k=0; k<5; k++){
+                    var x = 180 + k * 120;
+                    var y = 48 + Math.sin(Date.now()*0.003 + k) * 10;
+
+                    ctx.strokeStyle = "rgba(255,255,255,0.45)";
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(x + this.wind.x * 10, y + this.wind.y * 10);
+                    ctx.stroke();
+
+                    var ang = Math.atan2(this.wind.y, this.wind.x);
+                    var L = 8;
+                    ctx.beginPath();
+                    ctx.moveTo(x + this.wind.x*10, y + this.wind.y*10);
+                    ctx.lineTo(
+                        x + this.wind.x*10 - L*Math.cos(ang - 0.3),
+                        y + this.wind.y*10 - L*Math.sin(ang - 0.3)
+                    );
+                    ctx.moveTo(x + this.wind.x*10, y + this.wind.y*10);
+                    ctx.lineTo(
+                        x + this.wind.x*10 - L*Math.cos(ang + 0.3),
+                        y + this.wind.y*10 - L*Math.sin(ang + 0.3)
+                    );
+                    ctx.stroke();
+                }
+            }
+
+            // idle message
+            if (!this.isPlaying){
+                ctx.fillStyle = "rgba(255,255,255,0.95)";
+                ctx.font = "800 18px ui-sans-serif, system-ui, -apple-system, 'Noto Sans KR', Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText("시작하기 버튼을 눌러 게임을 시작하세요!", this.cssW/2, this.cssH/2);
+            }
+        };
+
+        // ====== Boot ======
+        var canvas = document.getElementById("gameCanvas");
+        var game = new TrajectoryGame(canvas);
+
+        var startModal = document.getElementById("startModal");
+        var overModal = document.getElementById("gameOverModal");
+
+        document.getElementById("btnStart").addEventListener("click", function(){
+            startModal.classList.add("hidden");
+            game.start();
+        });
+
+        document.getElementById("btnRestart").addEventListener("click", function(){
+            overModal.classList.add("hidden");
+            game.restart();
+        });
+
+        // ESC로 모달 닫기는 원하면 추가 가능(현재는 UX 단순화를 위해 미사용)
+    })();
+</script>
+</body>
+</html>
