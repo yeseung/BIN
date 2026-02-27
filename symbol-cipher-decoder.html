@@ -1,0 +1,693 @@
+<!-- filename example: symbol-cipher-decoder.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>기호 암호 해석 테스트</title>
+    <meta name="description" content="특수문자로 변환된 단어를 보고 한글 단어를 입력하는 두뇌 훈련 테스트" />
+
+    <!-- https://www.jiraksil.com/service/spcaldecode -->
+
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --border:#e5e7eb;
+            --shadow:0 14px 36px rgba(0,0,0,.08);
+            --radius:16px;
+
+            --primary:#2563eb;
+            --primary2:#1d4ed8;
+
+            --good:#16a34a;
+            --bad:#dc2626;
+
+            --chip:#f9fafb;
+        }
+
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;
+            background:var(--bg);
+            color:var(--text);
+        }
+
+        .wrap{
+            max-width:980px;
+            margin:40px auto;
+            padding:20px;
+        }
+
+        .titleRow{
+            display:flex;
+            align-items:flex-start;
+            justify-content:space-between;
+            gap:14px;
+            flex-wrap:wrap;
+            margin-bottom:12px;
+        }
+
+        h1{
+            margin:0;
+            font-size:22px;
+            line-height:1.25;
+        }
+
+        .desc{
+            margin:8px 0 0;
+            color:var(--muted);
+            line-height:1.65;
+            max-width:70ch;
+        }
+
+        .card{
+            margin-top:14px;
+            background:var(--card);
+            border:1px solid var(--border);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            overflow:hidden;
+        }
+
+        .topbar{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            flex-wrap:wrap;
+            padding:14px 16px;
+            border-bottom:1px solid var(--border);
+            background:#fff;
+        }
+
+        .chips{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            align-items:center;
+            font-weight:900;
+        }
+        .chip{
+            display:inline-flex;
+            gap:8px;
+            align-items:center;
+            padding:8px 12px;
+            background:var(--chip);
+            border:1px solid var(--border);
+            border-radius:999px;
+            font-size:14px;
+            user-select:none;
+            white-space:nowrap;
+        }
+        .chip span{ color:var(--muted); font-weight:900; }
+
+        .btns{ display:flex; gap:10px; flex-wrap:wrap; }
+        .btn{
+            appearance:none;
+            border:1px solid var(--border);
+            background:#fff;
+            color:var(--text);
+            border-radius:999px;
+            padding:10px 14px;
+            font-weight:1000;
+            cursor:pointer;
+            transition:transform .05s ease, border-color .2s ease, background .2s ease, opacity .2s ease;
+            user-select:none;
+            white-space:nowrap;
+        }
+        .btn:hover{ border-color:#cbd5e1; }
+        .btn:active{ transform:translateY(1px); }
+        .btn.primary{
+            background:var(--primary);
+            border-color:var(--primary);
+            color:#fff;
+        }
+        .btn.primary:hover{
+            background:var(--primary2);
+            border-color:var(--primary2);
+        }
+        .btn:disabled{ opacity:.55; cursor:not-allowed; }
+
+        .stage{
+            padding:16px;
+        }
+
+        .layout{
+            display:grid;
+            grid-template-columns: 1fr;
+            gap:14px;
+            align-items:start;
+        }
+
+        .mappingPanel{
+            border:1px solid var(--border);
+            border-radius:14px;
+            padding:14px;
+            background:#fff;
+        }
+
+        .mappingHeader{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+            flex-wrap:wrap;
+            margin-bottom:10px;
+        }
+        .mappingHeader .hint{
+            color:var(--muted);
+            font-size:13px;
+            line-height:1.5;
+        }
+
+        .grid{
+            display:grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap:8px;
+        }
+        @media (max-width:720px){
+            .grid{ grid-template-columns: repeat(5, minmax(0, 1fr)); }
+        }
+        @media (max-width:420px){
+            .grid{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        }
+
+        .box{
+            border:1px solid var(--border);
+            border-radius:12px;
+            background:#fff;
+            padding:10px 8px;
+            text-align:center;
+            user-select:none;
+            min-height:58px;
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+            gap:6px;
+        }
+        .hangul{
+            font-weight:1000;
+            font-size:15px;
+            line-height:1;
+        }
+        .symbol{
+            font-weight:1000;
+            font-size:16px;
+            line-height:1;
+            color:var(--primary);
+            word-break:break-all;
+        }
+
+        .qaPanel{
+            border:1px solid var(--border);
+            border-radius:14px;
+            background:#fff;
+            overflow:hidden;
+        }
+
+        .problem{
+            padding:16px;
+            border-bottom:1px solid var(--border);
+            background:#fff;
+        }
+        .problemLabel{
+            color:var(--muted);
+            font-size:13px;
+            margin-bottom:8px;
+        }
+        .problemCode{
+            font-size:26px;
+            font-weight:1000;
+            letter-spacing:1px;
+            line-height:1.2;
+            min-height:34px;
+            word-break:break-word;
+        }
+
+        .answer{
+            padding:14px 16px;
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            align-items:center;
+        }
+
+        .input{
+            flex:1 1 220px;
+            min-width:200px;
+            padding:12px 14px;
+            border:1px solid var(--border);
+            border-radius:12px;
+            font-size:16px;
+            outline:none;
+        }
+        .input:focus{
+            border-color:#93c5fd;
+            box-shadow:0 0 0 4px rgba(37,99,235,.12);
+        }
+
+        .feedback{
+            padding:0 16px 14px;
+            display:none;
+            font-weight:1000;
+            font-size:14px;
+        }
+        .feedback.good{ color:var(--good); }
+        .feedback.bad{ color:var(--bad); }
+
+        /* overlay */
+        .overlay{
+            position:fixed;
+            inset:0;
+            background:rgba(2,6,23,.55);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:18px;
+            z-index:9999;
+        }
+        .overlay.hidden{ display:none; }
+        .overlayCard{
+            width:min(420px, 100%);
+            background:#fff;
+            border:1px solid var(--border);
+            border-radius:16px;
+            box-shadow:var(--shadow);
+            padding:16px;
+            text-align:center;
+        }
+        .overlayTitle{
+            margin:0 0 8px;
+            font-size:18px;
+            font-weight:1000;
+        }
+        .overlayText{
+            margin:0;
+            color:var(--muted);
+            line-height:1.65;
+            font-size:14px;
+        }
+        .overlayActions{
+            margin-top:14px;
+            display:flex;
+            justify-content:center;
+            gap:10px;
+            flex-wrap:wrap;
+        }
+
+        .toast{
+            position:fixed;
+            left:50%;
+            bottom:22px;
+            transform:translateX(-50%);
+            background:#111827;
+            color:#fff;
+            padding:10px 14px;
+            border-radius:999px;
+            font-weight:900;
+            font-size:13px;
+            opacity:0;
+            pointer-events:none;
+            transition:opacity .2s ease, transform .2s ease;
+            z-index:10000;
+            box-shadow:0 10px 30px rgba(0,0,0,.25);
+        }
+        .toast.show{
+            opacity:1;
+            transform:translateX(-50%) translateY(-4px);
+        }
+
+        .note{
+            margin-top:10px;
+            color:var(--muted);
+            font-size:13px;
+            line-height:1.6;
+        }
+
+        @media (min-width:900px){
+            .layout{
+                grid-template-columns: 1fr 360px;
+            }
+            .qaPanel{ position:sticky; top:16px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="titleRow">
+        <div>
+            <h1>기호 암호 해석 테스트</h1>
+            <p class="desc">
+                화면에 보이는 <b>자음/모음 매핑표</b>를 참고해, 아래 <b>기호로 암호화된 단어</b>를 한글로 해석해 입력하세요.
+            </p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="topbar">
+            <div class="chips">
+                <div class="chip">시간 <span id="timer">60초</span></div>
+                <div class="chip">점수 <span id="score">0</span></div>
+            </div>
+            <div class="btns">
+                <button class="btn" id="newProblemBtn" type="button" disabled>새 문제</button>
+                <button class="btn primary" id="startBtn" type="button">테스트 시작</button>
+            </div>
+        </div>
+
+        <div class="stage">
+            <div class="layout">
+                <div class="mappingPanel">
+                    <div class="mappingHeader">
+                        <div style="font-weight:1000">자음/모음 매핑표</div>
+                        <div class="hint">라운드마다 매핑이 바뀝니다</div>
+                    </div>
+                    <div class="grid" id="mappings"></div>
+                    <div class="note">팁: 기호 2개가 한 음절(초성+중성)입니다. (종성은 사용하지 않음)</div>
+                </div>
+
+                <div class="qaPanel">
+                    <div class="problem">
+                        <div class="problemLabel">암호 단어</div>
+                        <div class="problemCode" id="problemCode">—</div>
+                    </div>
+
+                    <div class="answer">
+                        <input class="input" id="userInput" type="text" placeholder="정답을 입력하세요" autocomplete="off" spellcheck="false" disabled />
+                        <button class="btn primary" id="submitBtn" type="button" disabled>확인</button>
+                    </div>
+                    <div class="feedback" id="feedback"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- overlays -->
+<div class="overlay" id="startOverlay">
+    <div class="overlayCard">
+        <div class="overlayTitle">뇌훈련 테스트</div>
+        <p class="overlayText">
+            특수문자로 변환된 단어를 보고 정확한 한글 단어를 입력하세요!<br/>
+            제한 시간 60초 동안 최대한 많이 맞혀보세요.
+        </p>
+        <div class="overlayActions">
+            <button class="btn primary" id="overlayStartBtn" type="button">시작하기</button>
+        </div>
+    </div>
+</div>
+
+<div class="overlay hidden" id="endOverlay">
+    <div class="overlayCard">
+        <div class="overlayTitle">테스트 종료!</div>
+        <p class="overlayText" id="finalScore">최종 점수: 0</p>
+        <div class="overlayActions">
+            <button class="btn primary" id="restartBtn" type="button">다시하기</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast">알림</div>
+
+<script>
+    (() => {
+        /*********************
+         * DOM
+         *********************/
+        const mappingsEl = document.getElementById('mappings');
+        const timerEl = document.getElementById('timer');
+        const scoreEl = document.getElementById('score');
+        const problemCodeEl = document.getElementById('problemCode');
+        const userInputEl = document.getElementById('userInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const startBtn = document.getElementById('startBtn');
+        const newProblemBtn = document.getElementById('newProblemBtn');
+
+        const startOverlay = document.getElementById('startOverlay');
+        const endOverlay = document.getElementById('endOverlay');
+        const overlayStartBtn = document.getElementById('overlayStartBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const finalScoreEl = document.getElementById('finalScore');
+
+        const feedbackEl = document.getElementById('feedback');
+        const toastEl = document.getElementById('toast');
+
+        /*********************
+         * Game data (vanilla)
+         *********************/
+        const consonants = ['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+        const vowels = ['ㅏ','ㅑ','ㅓ','ㅕ','ㅗ','ㅛ','ㅜ','ㅠ','ㅡ','ㅣ','ㅐ','ㅔ'];
+
+        // NOTE: duplicate parentheses removed, keep unique-ish pool
+        const specialChars = [']','-','(',')',',','!','@','|',';','*','[','#','==','$','_','<','^','%','>','+','{','}',':','?','&','.' ];
+        const emojis = ['😀','😎','🎉','🔥','💎','🚀','🌟','🍀','🍎','⚡️','🔔','💡','🎵','📚','💻'];
+
+        // 예시 단어 리스트(종성 없는/있는 단어 혼합 가능하지만, 종성은 무시됩니다)
+        const words = [
+            '파도','노래','바다','우리','나무','무지개','자두','대나무','여우','모래',
+            '소나기','도토리','배추','하나','마루','주차','도시','디저트','바나나',
+            '커피','케이크','가요','가수','그녀','고기','리스트','나이','다이어트',
+            '다이어리','다시마','다시보기','나사','기타','구두'
+        ];
+
+        let mapping = {};       // letter -> symbol
+        let reverse = {};       // symbol -> letter (not used directly here, but handy)
+        let score = 0;
+        let timeLeft = 60;
+        let timerId = null;
+        let active = false;
+
+        let currentAnswer = ''; // actual word
+        let currentEncoded = ''; // encoded symbols
+
+        /*********************
+         * UI helpers
+         *********************/
+        function toast(msg){
+            toastEl.textContent = msg;
+            toastEl.classList.add('show');
+            clearTimeout(toastEl._t);
+            toastEl._t = setTimeout(()=>toastEl.classList.remove('show'), 900);
+        }
+
+        function setFeedback(text, ok){
+            feedbackEl.textContent = text;
+            feedbackEl.className = 'feedback ' + (ok ? 'good' : 'bad');
+            feedbackEl.style.display = 'block';
+            clearTimeout(feedbackEl._t);
+            feedbackEl._t = setTimeout(()=>{ feedbackEl.style.display='none'; }, 800);
+        }
+
+        function setEnabledGameUI(on){
+            userInputEl.disabled = !on;
+            submitBtn.disabled = !on;
+            newProblemBtn.disabled = !on;
+        }
+
+        function showOverlay(el){ el.classList.remove('hidden'); }
+        function hideOverlay(el){ el.classList.add('hidden'); }
+
+        /*********************
+         * Core logic
+         *********************/
+        function getRandomSymbol(){
+            return Math.random() < 0.5
+                ? specialChars[Math.floor(Math.random()*specialChars.length)]
+                : emojis[Math.floor(Math.random()*emojis.length)];
+        }
+
+        function initializeMapping(){
+            mapping = {};
+            reverse = {};
+            const all = consonants.concat(vowels);
+
+            all.forEach(letter => {
+                let sym;
+                let guard = 0;
+                do {
+                    sym = getRandomSymbol();
+                    guard++;
+                } while (Object.values(mapping).includes(sym) && guard < 5000);
+
+                mapping[letter] = sym;
+                reverse[sym] = letter;
+            });
+        }
+
+        function renderMapping(){
+            // order: consonants then vowels
+            const items = [];
+
+            consonants.forEach(con => items.push({ hangul: con, sym: mapping[con] }));
+            vowels.forEach(vow => items.push({ hangul: vow, sym: mapping[vow] }));
+
+            mappingsEl.innerHTML = items.map(it => {
+                return `
+        <div class="box" aria-label="${it.hangul} = ${it.sym}">
+          <div class="hangul">${it.hangul}</div>
+          <div class="symbol">${escapeHtml(it.sym)}</div>
+        </div>
+      `;
+            }).join('');
+        }
+
+        function escapeHtml(s){
+            return String(s)
+            .replaceAll('&','&amp;')
+            .replaceAll('<','&lt;')
+            .replaceAll('>','&gt;')
+            .replaceAll('"','&quot;')
+            .replaceAll("'","&#39;");
+        }
+
+        // 한글 음절 -> (초성, 중성)  (종성은 버림)
+        function splitHangul(char){
+            const initial = ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
+            const medial  = ["ㅏ","ㅐ","ㅑ","ㅒ","ㅓ","ㅔ","ㅕ","ㅖ","ㅗ","ㅘ","ㅙ","ㅚ","ㅛ","ㅜ","ㅝ","ㅞ","ㅟ","ㅠ","ㅡ","ㅢ","ㅣ"];
+
+            const code = char.charCodeAt(0);
+            if (code < 0xAC00 || code > 0xD7A3) return null;
+
+            const syllable = code - 0xAC00;
+            const choseong = Math.floor(syllable / (21 * 28));
+            const jungseong = Math.floor((syllable % (21 * 28)) / 28);
+
+            const con = initial[choseong];
+            const vow = medial[jungseong];
+
+            // 매핑표에는 쌍자음/복모음이 없으니 처리:
+            // - 쌍자음(ㄲㄸㅃㅆㅉ)은 기본자음으로 대체
+            // - 복모음(ㅘㅙㅚㅝㅞㅟㅢㅒㅖ)은 대표 모음으로 축약
+            const conNorm = normalizeConsonant(con);
+            const vowNorm = normalizeVowel(vow);
+
+            if (!mapping[conNorm] || !mapping[vowNorm]) return null;
+            return [conNorm, vowNorm];
+        }
+
+        function normalizeConsonant(con){
+            const map = { "ㄲ":"ㄱ", "ㄸ":"ㄷ", "ㅃ":"ㅂ", "ㅆ":"ㅅ", "ㅉ":"ㅈ" };
+            return map[con] || con;
+        }
+        function normalizeVowel(vow){
+            const map = {
+                "ㅒ":"ㅐ", "ㅖ":"ㅔ",
+                "ㅘ":"ㅗ", "ㅙ":"ㅗ", "ㅚ":"ㅗ",
+                "ㅝ":"ㅜ", "ㅞ":"ㅜ", "ㅟ":"ㅜ",
+                "ㅢ":"ㅡ"
+            };
+            return map[vow] || vow;
+        }
+
+        function generateProblem(){
+            const word = words[Math.floor(Math.random()*words.length)];
+            currentAnswer = word;
+
+            let encoded = '';
+            for (const ch of word){
+                const split = splitHangul(ch);
+                if (!split) continue;
+                const [con, vow] = split;
+                encoded += mapping[con] + mapping[vow];
+            }
+            currentEncoded = encoded;
+            problemCodeEl.textContent = encoded || '—';
+
+            userInputEl.value = '';
+            userInputEl.focus();
+        }
+
+        function nextRound(){
+            initializeMapping();
+            renderMapping();
+            generateProblem();
+        }
+
+        function checkAnswer(){
+            if (!active) return;
+            const val = userInputEl.value.trim();
+
+            if (!val){
+                toast('정답을 입력하세요');
+                userInputEl.focus();
+                return;
+            }
+
+            if (val === currentAnswer){
+                score += 1;
+                scoreEl.textContent = String(score);
+                setFeedback('정답!', true);
+            }else{
+                setFeedback('오답!', false);
+            }
+
+            // 다음 라운드
+            setTimeout(nextRound, 250);
+        }
+
+        function tick(){
+            timeLeft -= 1;
+            timerEl.textContent = `${timeLeft}초`;
+            if (timeLeft <= 0){
+                endGame();
+            }
+        }
+
+        function startGame(){
+            active = true;
+            score = 0;
+            timeLeft = 60;
+
+            scoreEl.textContent = '0';
+            timerEl.textContent = '60초';
+
+            setEnabledGameUI(true);
+            startBtn.disabled = true;
+
+            hideOverlay(startOverlay);
+            hideOverlay(endOverlay);
+
+            nextRound();
+
+            clearInterval(timerId);
+            timerId = setInterval(tick, 1000);
+        }
+
+        function endGame(){
+            active = false;
+            setEnabledGameUI(false);
+            startBtn.disabled = false;
+
+            clearInterval(timerId);
+            timerId = null;
+
+            finalScoreEl.textContent = `최종 점수: ${score}`;
+            showOverlay(endOverlay);
+        }
+
+        /*********************
+         * Events
+         *********************/
+        startBtn.addEventListener('click', startGame);
+        overlayStartBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', startGame);
+
+        submitBtn.addEventListener('click', checkAnswer);
+        newProblemBtn.addEventListener('click', nextRound);
+
+        userInputEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') checkAnswer();
+        });
+
+        // initial state
+        setEnabledGameUI(false);
+        showOverlay(startOverlay);
+    })();
+</script>
+</body>
+</html>
