@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>화살 집중력 테스트 - Arrow Focus Test</title>
+
+    <!-- https://www.jiraksil.com/service/arrow -->
+
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --line:#e5e7eb;
+            --shadow:0 12px 28px rgba(0,0,0,.08);
+            --radius:18px;
+
+            --btn:#111827;
+            --btnText:#fff;
+            --good:#22c55e;
+            --bad:#ef4444;
+            --chip:#f3f4f6;
+        }
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{
+            font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;
+            background:var(--bg);
+            color:var(--text);
+            min-height:100vh;
+            display:flex;
+            justify-content:center;
+            padding:18px;
+            user-select:none;
+            -webkit-user-select:none;
+        }
+        .wrap{width:100%;max-width:900px;}
+        .top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+        .title{font-size:22px;font-weight:900;letter-spacing:-0.2px;}
+        .desc{
+            margin-top:8px;
+            color:var(--muted);
+            font-size:13px;
+            line-height:1.65;
+        }
+        .panel{
+            background:var(--card);
+            border:1px solid var(--line);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            padding:14px;
+        }
+
+        /* HUD */
+        .hud{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            margin-top:10px;
+        }
+        .hudItem{
+            flex:1 1 160px;
+            min-width:160px;
+            background:#fafafa;
+            border:1px solid var(--line);
+            border-radius:14px;
+            padding:10px 12px;
+        }
+        .hudLabel{font-size:12px;color:var(--muted);margin-bottom:6px;}
+        .hudVal{font-size:18px;font-weight:900;}
+        .badge{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            padding:6px 12px;
+            border-radius:999px;
+            background:var(--chip);
+            border:1px solid var(--line);
+            font-weight:900;
+            font-size:12px;
+            color:var(--text);
+        }
+
+        /* Game container */
+        .game{
+            margin-top:12px;
+            background:var(--card);
+            border:1px solid var(--line);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            overflow:hidden;
+            position:relative;
+            height:600px;
+        }
+        canvas{display:block;width:100%;height:100%;}
+
+        /* overlay */
+        .overlay{
+            position:absolute;
+            inset:0;
+            background:rgba(255,255,255,.92);
+            backdrop-filter: blur(8px);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            flex-direction:column;
+            text-align:center;
+            padding:20px;
+            gap:12px;
+            z-index:10;
+            border-radius:var(--radius);
+        }
+        .overlay h2{
+            font-size:22px;
+            font-weight:900;
+            letter-spacing:-0.2px;
+        }
+        .overlay p{
+            color:var(--muted);
+            font-size:14px;
+            line-height:1.7;
+        }
+        .btn{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            padding:12px 16px;
+            border-radius:12px;
+            border:1px solid var(--line);
+            background:var(--btn);
+            color:var(--btnText);
+            font-weight:900;
+            cursor:pointer;
+            width:min(320px, 100%);
+        }
+        .btn.secondary{
+            background:#fff;
+            color:var(--btn);
+        }
+
+        /* responsive */
+        @media (max-width:768px){
+            .game{height:500px;}
+        }
+        @media (max-width:480px){
+            .game{height:420px;}
+            .hudItem{min-width:150px;}
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="top">
+        <div>
+            <div class="title">🎯 화살 집중력 테스트</div>
+            <div class="desc">
+                클릭(또는 터치)하면 아래에서 화살이 즉시 발사됩니다.<br/>
+                화살 끝 원(살)끼리 각도 충돌 시 <b>기회 -1</b> 후 동일 레벨 재시작!<br/>
+                준비된 10개 화살을 모두 꽂으면 다음 레벨로 올라갑니다.
+            </div>
+        </div>
+        <div class="badge">Vanilla JS + Pure CSS</div>
+    </div>
+
+    <div class="panel">
+        <div class="hud">
+            <div class="hudItem">
+                <div class="hudLabel">레벨</div>
+                <div class="hudVal" id="uiLevel">1</div>
+            </div>
+            <div class="hudItem">
+                <div class="hudLabel">기회</div>
+                <div class="hudVal" id="uiLives">10</div>
+            </div>
+            <div class="hudItem">
+                <div class="hudLabel">남은 화살</div>
+                <div class="hudVal" id="uiPrepared">10</div>
+            </div>
+            <div class="hudItem">
+                <div class="hudLabel">회전 속도</div>
+                <div class="hudVal" id="uiSpeed">--</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="game" id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+
+        <div class="overlay" id="overlay">
+            <h2>🎯 집중력 테스트</h2>
+            <p id="overlayText">
+                • 클릭/터치 시 준비된 화살 위치에서 즉시 발사<br/>
+                • 화살끼리 각도 충돌 시 기회 –1 후 동일 레벨 재시작<br/>
+                • 준비된 10개 화살을 모두 꽂으면 다음 레벨!
+            </p>
+            <button class="btn" id="startBtn">테스트 시작</button>
+            <button class="btn secondary" id="howBtn" type="button">설명 다시 보기</button>
+        </div>
+    </div>
+
+    <div class="panel" style="margin-top:12px;">
+        <div style="font-weight:900;margin-bottom:6px;">팁</div>
+        <div style="color:var(--muted);font-size:13px;line-height:1.65;">
+            • 회전 속도가 빨라질수록 “빈 각도” 타이밍이 중요해집니다.<br/>
+            • 모바일은 “짧게 탭”이 유리합니다(스크롤 방지 적용).
+        </div>
+    </div>
+</div>
+
+<script>
+    (() => {
+        const canvas    = document.getElementById("gameCanvas");
+        const ctx       = canvas.getContext("2d");
+        const container = document.getElementById("gameContainer");
+        const overlay   = document.getElementById("overlay");
+        const overlayText = document.getElementById("overlayText");
+        const startBtn  = document.getElementById("startBtn");
+        const howBtn    = document.getElementById("howBtn");
+
+        const uiLevel    = document.getElementById("uiLevel");
+        const uiLives    = document.getElementById("uiLives");
+        const uiPrepared = document.getElementById("uiPrepared");
+        const uiSpeed    = document.getElementById("uiSpeed");
+
+        // 캔버스 크기 동기화
+        function resize(){
+            const dpr = Math.max(1, window.devicePixelRatio || 1);
+            const w = container.clientWidth;
+            const h = container.clientHeight;
+
+            canvas.width  = Math.floor(w * dpr);
+            canvas.height = Math.floor(h * dpr);
+            canvas.style.width  = w + "px";
+            canvas.style.height = h + "px";
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // 논리좌표를 CSS px로
+        }
+        window.addEventListener("resize", resize);
+        resize();
+
+        // ====== 게임 상태 ======
+        let level = 1;
+        let lives = 10;
+        let prepared = 10;
+
+        let arrows = [];               // { offset, id }
+        let rotationAngle = 0;
+        let rotationSpeed = 0.01;
+
+        let animatingShot = false;
+        let currentShot = { x:0, y:0 };
+        let nextShotId = 1;
+
+        // ====== 상수 (원본 로직 유지) ======
+        const baseSpeed       = 0.01;
+        const speedIncrement  = 0.003;
+        const shotSpeed       = 12;
+        const centerR         = 60;
+        const arrowLen        = 65;
+        const tipR            = 10;
+        const spawnGap        = centerR + arrowLen + 40;
+        const uiGap           = tipR*2 + 8;
+        const collisionThresh = 2 * Math.asin(tipR / (centerR + arrowLen));
+
+        function normalizeAngle(theta){
+            const mod = theta % (2*Math.PI);
+            return mod < 0 ? mod + 2*Math.PI : mod;
+        }
+
+        function hudUpdate(){
+            uiLevel.textContent = level;
+            uiLives.textContent = lives;
+            uiPrepared.textContent = prepared;
+            uiSpeed.textContent = (rotationSpeed * 100).toFixed(1);
+        }
+
+        function initLevel(){
+            prepared = 10;
+            arrows = [];
+            nextShotId = 1;
+            animatingShot = false;
+
+            const initCount = Math.min(level + 1, 8);
+            for(let i=0;i<initCount;i++){
+                arrows.push({
+                    offset: normalizeAngle((2*Math.PI/initCount) * i),
+                    id: null
+                });
+            }
+
+            rotationAngle = 0;
+            rotationSpeed = baseSpeed + (level-1) * speedIncrement;
+            hudUpdate();
+        }
+
+        function startGame(){
+            level = 1;
+            lives = 10;
+            initLevel();
+            overlay.style.display = "none";
+            requestAnimationFrame(gameLoop);
+        }
+
+        function retryLevel(){
+            initLevel();
+            overlay.style.display = "none";
+            requestAnimationFrame(gameLoop);
+        }
+
+        function nextLevel(){
+            level++;
+            initLevel();
+            overlay.style.display = "none";
+            requestAnimationFrame(gameLoop);
+        }
+
+        function gameOver(){
+            overlayText.innerHTML = `<p>💥 테스트 종료!</p><p>최종 레벨: <b>${level}</b></p>`;
+            startBtn.textContent = "다시하기";
+            startBtn.onclick = startGame;
+            overlay.style.display = "flex";
+        }
+
+        // ====== drawing ======
+        function drawCircle(x, y, r, fillColor, lineWidth=0, strokeColor="#000"){
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, 2*Math.PI);
+            ctx.fillStyle = fillColor;
+            ctx.fill();
+            if(lineWidth){
+                ctx.lineWidth = lineWidth;
+                ctx.strokeStyle = strokeColor;
+                ctx.stroke();
+            }
+        }
+
+        function drawArrow(offset, id, highlight=false, absolute=false, absPos=null){
+            const cx = container.clientWidth/2;
+            const cy = container.clientHeight/2;
+
+            let x0, y0, x1, y1;
+
+            if(absolute && absPos){
+                x0 = absPos.x;
+                y0 = absPos.y + arrowLen;
+                x1 = absPos.x;
+                y1 = absPos.y;
+            } else {
+                const ang = rotationAngle + offset;
+                const cosAng = Math.cos(ang);
+                const sinAng = Math.sin(ang);
+                x0 = cx + centerR * cosAng;
+                y0 = cy + centerR * sinAng;
+                x1 = cx + (centerR + arrowLen) * cosAng;
+                y1 = cy + (centerR + arrowLen) * sinAng;
+            }
+
+            ctx.strokeStyle = highlight ? "#ef4444" : "#111827";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x0, y0);
+            ctx.lineTo(x1, y1);
+            ctx.stroke();
+
+            // tip
+            drawCircle(x1, y1, tipR, highlight ? "#ef4444" : (id ? "#ef4444" : "#9ca3af"), 2, "#111827");
+
+            if(id){
+                ctx.fillStyle = "#ffffff";
+                ctx.font = "12px sans-serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(id, x1, y1);
+            }
+        }
+
+        // ====== input ======
+        function handleShoot(e){
+            e.preventDefault();
+            if(overlay.style.display !== "none") return;
+
+            if(prepared > 0 && !animatingShot){
+                animatingShot = true;
+                const cx = container.clientWidth/2;
+                currentShot.x = cx;
+                currentShot.y = container.clientHeight/2 + spawnGap;
+            }
+        }
+
+        canvas.addEventListener("click", handleShoot, { passive:false });
+        canvas.addEventListener("touchstart", handleShoot, { passive:false });
+        canvas.addEventListener("touchmove", (e)=>e.preventDefault(), { passive:false });
+        canvas.addEventListener("touchend", (e)=>e.preventDefault(), { passive:false });
+
+        // ====== loop ======
+        function gameLoop(){
+            const W = container.clientWidth;
+            const H = container.clientHeight;
+            const cx = W/2, cy = H/2;
+
+            // white background
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, W, H);
+
+            // rotation
+            rotationAngle = normalizeAngle(rotationAngle + rotationSpeed);
+
+            // placed arrows
+            arrows.forEach(a => drawArrow(a.offset, a.id));
+
+            // center
+            drawCircle(cx, cy, centerR, "#111827", 0);
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "bold 24px sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(level, cx, cy);
+
+            // UI: remaining arrows (max 5)
+            const showCnt = Math.min(prepared, 5);
+            for(let i=0;i<showCnt;i++){
+                const id = nextShotId + i;
+                const y  = cy + spawnGap + i * uiGap;
+                drawCircle(cx, y, tipR, "#111827", 0);
+                ctx.fillStyle = "#ffffff";
+                ctx.font = "12px sans-serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(id, cx, y);
+            }
+
+            // top text
+            ctx.fillStyle = "#111827";
+            ctx.font = "14px sans-serif";
+            ctx.textAlign = "left";
+            ctx.textBaseline = "top";
+            ctx.fillText(`레벨: ${level}`, 16, 14);
+            ctx.fillText(`속도: ${(rotationSpeed*100).toFixed(1)}`, 16, 34);
+
+            ctx.textAlign = "right";
+            ctx.fillText(`기회: ${lives}`, W - 16, 14);
+
+            // shot
+            if(animatingShot){
+                currentShot.y -= shotSpeed;
+                drawArrow(0, null, false, true, currentShot);
+
+                // hit surface
+                if(currentShot.y <= cy + centerR + arrowLen){
+                    animatingShot = false;
+                    prepared--;
+
+                    const newOffset = normalizeAngle(Math.PI/2 - rotationAngle);
+
+                    // collision check
+                    let collided = null;
+                    for(const a of arrows){
+                        let diff = Math.abs(a.offset - newOffset);
+                        if(diff > Math.PI) diff = 2*Math.PI - diff;
+                        if(diff < collisionThresh){ collided = a; break; }
+                    }
+
+                    if(collided){
+                        lives--;
+
+                        if(lives <= 0){
+                            gameOver();
+                            return;
+                        }
+
+                        overlayText.innerHTML = `
+            <p>💥 화살이 겹쳤습니다!</p>
+            <p>남은 기회: <b>${lives}</b></p>
+            <p style="margin-top:6px;color:#6b7280;font-size:13px;">같은 레벨을 다시 시작합니다.</p>
+          `;
+                        startBtn.textContent = "다시하기";
+                        startBtn.onclick = retryLevel;
+                        overlay.style.display = "flex";
+                        hudUpdate();
+                        return;
+                    } else {
+                        arrows.push({ offset:newOffset, id: nextShotId++ });
+                        hudUpdate();
+
+                        if(prepared === 0){
+                            // show completion a moment
+                            setTimeout(() => {
+                                overlayText.innerHTML = `<p>🎉 레벨 <b>${level}</b> 클리어!</p>`;
+                                startBtn.textContent = "다음 레벨 시작";
+                                startBtn.onclick = nextLevel;
+                                overlay.style.display = "flex";
+                            }, 400);
+                            return;
+                        }
+                    }
+                }
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // overlay buttons
+        startBtn.onclick = startGame;
+        howBtn.onclick = () => {
+            overlayText.innerHTML = `
+      <p>🎯 집중력 테스트 설명</p>
+      <p>• 클릭/터치 시 준비된 화살 위치에서 즉시 발사</p>
+      <p>• 화살끼리 각도 충돌 시 기회 –1 후 동일 레벨 재시작</p>
+      <p>• 준비된 10개 화살을 모두 꽂으면 다음 레벨!</p>
+    `;
+        };
+
+        // init view
+        hudUpdate();
+    })();
+</script>
+</body>
+</html>
