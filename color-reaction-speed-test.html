@@ -1,0 +1,638 @@
+<!-- filename example: color-reaction-speed-test.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>컬러 반응속도 테스트</title>
+    <meta name="description" content="격자에서 무작위로 나타나는 녹색 원을 빠르게 클릭하는 30초 컬러 반응속도 테스트" />
+
+    <!-- https://www.jiraksil.com/service/ColorReaction -->
+
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --border:#e5e7eb;
+            --text:#111827;
+            --muted:#6b7280;
+            --primary:#2563eb;
+            --primary2:#1d4ed8;
+            --shadow:0 10px 30px rgba(0,0,0,.08);
+            --radius:16px;
+
+            --hole:#6b3f20;
+            --holeBorder:#3e2713;
+            --green:#22c55e;
+        }
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;
+            background:var(--bg);
+            color:var(--text);
+        }
+        .wrap{
+            max-width:920px;
+            margin:40px auto;
+            padding:20px;
+        }
+        h1{ margin:0; font-size:22px; line-height:1.2; }
+        .desc{
+            margin:10px 0 0;
+            color:var(--muted);
+            line-height:1.6;
+        }
+
+        .card{
+            margin-top:16px;
+            background:var(--card);
+            border:1px solid var(--border);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            overflow:hidden;
+            position:relative;
+        }
+        .topbar{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            flex-wrap:wrap;
+            padding:14px 16px;
+            border-bottom:1px solid var(--border);
+        }
+        .chips{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            align-items:center;
+            font-weight:900;
+        }
+        .chip{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            padding:8px 12px;
+            border:1px solid var(--border);
+            border-radius:999px;
+            background:#fff;
+            font-size:14px;
+            user-select:none;
+        }
+        .chip span{ color:var(--muted); font-weight:800; }
+
+        .btns{ display:flex; gap:10px; flex-wrap:wrap; }
+        .btn{
+            appearance:none;
+            border:1px solid var(--border);
+            background:#fff;
+            color:var(--text);
+            border-radius:999px;
+            padding:10px 14px;
+            font-weight:900;
+            cursor:pointer;
+            transition:transform .05s ease, border-color .2s ease, background .2s ease, opacity .2s ease;
+            user-select:none;
+            white-space:nowrap;
+        }
+        .btn:hover{ border-color:#cbd5e1; }
+        .btn:active{ transform:translateY(1px); }
+        .btn.primary{
+            background:var(--primary);
+            border-color:var(--primary);
+            color:#fff;
+        }
+        .btn.primary:hover{ background:var(--primary2); border-color:var(--primary2); }
+        .btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+        .stage{ padding:18px; }
+        .gameBox{
+            border:1px solid var(--border);
+            border-radius:14px;
+            background:#fff;
+            position:relative;
+            overflow:hidden;
+            padding:14px;
+        }
+
+        /* header inside game */
+        .gameHeader{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:10px;
+            flex-wrap:wrap;
+            padding:10px 12px;
+            border:1px solid var(--border);
+            border-radius:14px;
+            background:#fff;
+            margin-bottom:14px;
+            font-weight:1000;
+        }
+        .gameHeader .muted{ color:var(--muted); font-weight:800; }
+
+        /* grid */
+        .grid{
+            display:grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap:12px;
+        }
+        .hole{
+            position:relative;
+            width:100%;
+            padding-bottom:100%;
+            border-radius:50%;
+            background:var(--hole);
+            border:2px solid var(--holeBorder);
+            cursor:pointer;
+            user-select:none;
+            overflow:hidden;
+            transition:transform .08s ease, filter .12s ease;
+        }
+        .hole:hover{ filter:brightness(.96); }
+        .hole:active{ transform:scale(.96); }
+
+        /* animations */
+        @keyframes successAnimation{
+            0%{ transform:scale(1); }
+            50%{ transform:scale(1.12); }
+            100%{ transform:scale(1); }
+        }
+        .hole.success{ animation:successAnimation .22s ease-out; }
+
+        @keyframes failureAnimation{
+            0%{ transform:translateX(0); }
+            25%{ transform:translateX(-8px); }
+            50%{ transform:translateX(8px); }
+            75%{ transform:translateX(-8px); }
+            100%{ transform:translateX(0); }
+        }
+        .hole.failure{ animation:failureAnimation .22s ease-out; }
+
+        /* overlay */
+        .overlay{
+            position:absolute;
+            inset:0;
+            background:rgba(17,24,39,.55);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:18px;
+            z-index:50;
+        }
+        .overlay.hidden{ display:none; }
+        .overlayCard{
+            width:min(380px, 100%);
+            background:#fff;
+            border:1px solid var(--border);
+            border-radius:16px;
+            box-shadow:var(--shadow);
+            padding:14px;
+            text-align:center;
+        }
+        .overlayTitle{
+            margin:0 0 8px;
+            font-size:18px;
+            font-weight:1000;
+        }
+        .overlayText{
+            margin:0;
+            color:var(--muted);
+            line-height:1.6;
+            font-size:14px;
+        }
+        .overlayActions{
+            margin-top:14px;
+            display:flex;
+            gap:10px;
+            justify-content:center;
+            flex-wrap:wrap;
+        }
+
+        .toast{
+            position:fixed;
+            left:50%;
+            bottom:22px;
+            transform:translateX(-50%);
+            background:#111827;
+            color:#fff;
+            padding:10px 14px;
+            border-radius:999px;
+            font-weight:900;
+            font-size:13px;
+            opacity:0;
+            pointer-events:none;
+            transition:opacity .2s ease, transform .2s ease;
+            z-index:9999;
+            box-shadow:0 10px 30px rgba(0,0,0,.25);
+        }
+        .toast.show{
+            opacity:1;
+            transform:translateX(-50%) translateY(-4px);
+        }
+
+        @media (max-width:520px){
+            .grid{ gap:10px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <h1>컬러 반응속도 테스트</h1>
+    <p class="desc">
+        30초 동안 <b>녹색</b>이 나타나는 원을 최대한 많이 클릭하세요.
+        녹색이 아닌 색을 클릭하면 <b>-1점</b>입니다.
+    </p>
+
+    <div class="card">
+        <div class="topbar">
+            <div class="chips">
+                <div class="chip">시간 <span id="timeChip">30.00</span></div>
+                <div class="chip">점수 <span id="scoreChip">0</span></div>
+                <div class="chip">최고점 <span id="bestChip">0</span></div>
+            </div>
+            <div class="btns">
+                <button class="btn" id="soundBtn" type="button" aria-pressed="true">효과음: 켬</button>
+                <button class="btn" id="resetBtn" type="button">초기화</button>
+                <button class="btn primary" id="startBtn" type="button">시작</button>
+            </div>
+        </div>
+
+        <div class="stage">
+            <div class="gameBox">
+                <div class="gameHeader">
+                    <div><span class="muted">Time</span> <span id="timer">30.00</span></div>
+                    <div><span class="muted">Score</span> <span id="score">0</span></div>
+                </div>
+
+                <div class="grid" id="grid" aria-label="컬러 반응속도 테스트 격자">
+                    <div class="hole" data-index="0" aria-label="hole 1"></div>
+                    <div class="hole" data-index="1" aria-label="hole 2"></div>
+                    <div class="hole" data-index="2" aria-label="hole 3"></div>
+                    <div class="hole" data-index="3" aria-label="hole 4"></div>
+                    <div class="hole" data-index="4" aria-label="hole 5"></div>
+                    <div class="hole" data-index="5" aria-label="hole 6"></div>
+                    <div class="hole" data-index="6" aria-label="hole 7"></div>
+                    <div class="hole" data-index="7" aria-label="hole 8"></div>
+                    <div class="hole" data-index="8" aria-label="hole 9"></div>
+                    <div class="hole" data-index="9" aria-label="hole 10"></div>
+                    <div class="hole" data-index="10" aria-label="hole 11"></div>
+                    <div class="hole" data-index="11" aria-label="hole 12"></div>
+                    <div class="hole" data-index="12" aria-label="hole 13"></div>
+                    <div class="hole" data-index="13" aria-label="hole 14"></div>
+                    <div class="hole" data-index="14" aria-label="hole 15"></div>
+                    <div class="hole" data-index="15" aria-label="hole 16"></div>
+                </div>
+
+                <!-- Overlay -->
+                <div class="overlay" id="overlay">
+                    <div class="overlayCard">
+                        <div class="overlayTitle" id="overlayTitle">컬러 반응속도 테스트</div>
+                        <p class="overlayText" id="overlayText">
+                            30초 동안 <b>녹색</b>이 나타나는 원을 클릭하세요.<br/>
+                            녹색이 아닌 색은 <b>-1점</b>입니다.
+                        </p>
+                        <div class="overlayActions">
+                            <button class="btn primary" id="overlayMainBtn" type="button">시작하기</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast">알림</div>
+
+<script>
+    (() => {
+        /*********************
+         * 상태 / 설정
+         *********************/
+        const TOTAL_TIME = 30; // seconds
+        const holes = Array.from(document.querySelectorAll('.hole'));
+
+        const NEGATIVE_COLORS = ['#ef4444', '#3b82f6', '#f97316', '#a855f7']; // red/blue/orange/purple
+        const GREEN = '#22c55e';
+        const HOLE_BASE = getComputedStyle(document.documentElement).getPropertyValue('--hole').trim() || '#6b3f20';
+
+        // 난이도 파라미터(시간 경과에 따라 빨라짐)
+        const MIN_SPAWN_DELAY = 180;   // ms
+        const MAX_SPAWN_DELAY = 520;   // ms
+        const MIN_HOLD = 260;          // ms (색 유지 최소)
+        const MAX_HOLD = 900;          // ms (색 유지 최대)
+
+        let score = 0;
+        let best = 0;
+        let running = false;
+
+        let startAt = 0;
+        let remaining = TOTAL_TIME;
+
+        let spawnTimer = null;
+
+        // sound
+        let soundOn = true;
+        let audioCtx = null;
+
+        /*********************
+         * DOM
+         *********************/
+        const timerEl = document.getElementById('timer');
+        const scoreEl = document.getElementById('score');
+
+        const timeChip = document.getElementById('timeChip');
+        const scoreChip = document.getElementById('scoreChip');
+        const bestChip = document.getElementById('bestChip');
+
+        const overlay = document.getElementById('overlay');
+        const overlayTitle = document.getElementById('overlayTitle');
+        const overlayText = document.getElementById('overlayText');
+        const overlayMainBtn = document.getElementById('overlayMainBtn');
+
+        const startBtn = document.getElementById('startBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const soundBtn = document.getElementById('soundBtn');
+
+        const toastEl = document.getElementById('toast');
+
+        /*********************
+         * util
+         *********************/
+        function fmt2(x){ return Number(x).toFixed(2); }
+
+        function toast(text){
+            toastEl.textContent = text;
+            toastEl.classList.add('show');
+            clearTimeout(toastEl._t);
+            toastEl._t = setTimeout(() => toastEl.classList.remove('show'), 900);
+        }
+
+        function syncUI(){
+            timerEl.textContent = fmt2(remaining);
+            scoreEl.textContent = String(score);
+
+            timeChip.textContent = fmt2(remaining);
+            scoreChip.textContent = String(score);
+            bestChip.textContent = String(best);
+        }
+
+        function showOverlay(title, htmlText, btnText, onClick){
+            overlayTitle.textContent = title;
+            overlayText.innerHTML = htmlText;
+            overlayMainBtn.textContent = btnText;
+            overlayMainBtn.onclick = onClick;
+            overlay.classList.remove('hidden');
+        }
+        function hideOverlay(){ overlay.classList.add('hidden'); }
+
+        function clearAllHoles(){
+            holes.forEach(h => {
+                h.style.backgroundColor = HOLE_BASE;
+                delete h.dataset.active;
+                delete h.dataset.clicked;
+                h.classList.remove('success','failure');
+            });
+        }
+
+        /*********************
+         * sound
+         *********************/
+        async function ensureAudio(){
+            if (!soundOn) return;
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === "suspended"){
+                try{ await audioCtx.resume(); }catch(e){}
+            }
+        }
+
+        async function beep(freq, durMs, vol){
+            if (!soundOn) return;
+            await ensureAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(freq, now);
+
+            gain.gain.setValueAtTime(0.0001, now);
+            gain.gain.exponentialRampToValueAtTime(vol, now + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + durMs/1000);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start(now);
+            osc.stop(now + durMs/1000 + 0.02);
+        }
+
+        function soundGood(){ return beep(740, 90, 0.12); }
+        function soundBad(){ return beep(220, 110, 0.12); }
+
+        /*********************
+         * timer
+         *********************/
+        function tick(){
+            if (!running) return;
+            const elapsed = (performance.now() - startAt) / 1000;
+            remaining = Math.max(0, TOTAL_TIME - elapsed);
+            syncUI();
+            if (remaining <= 0){
+                endGame();
+                return;
+            }
+            requestAnimationFrame(tick);
+        }
+
+        /*********************
+         * spawner
+         *********************/
+        function randBetween(a,b){ return Math.random() * (b-a) + a; }
+
+        function difficultyFactor(){
+            // 0 -> 1 (시간 경과 비율)
+            const elapsed = Math.min(TOTAL_TIME, TOTAL_TIME - remaining);
+            return elapsed / TOTAL_TIME;
+        }
+
+        function scheduleSpawn(){
+            if (!running) return;
+            const f = difficultyFactor();
+            // 시간이 지날수록 delay 감소
+            const delay = Math.max(
+                MIN_SPAWN_DELAY,
+                MAX_SPAWN_DELAY - f * (MAX_SPAWN_DELAY - MIN_SPAWN_DELAY)
+            );
+            spawnTimer = setTimeout(spawnOne, delay);
+        }
+
+        function spawnOne(){
+            if (!running) return;
+
+            // active 없는 hole만
+            const inactive = holes.filter(h => !h.dataset.active);
+            if (inactive.length){
+                const hole = inactive[Math.floor(Math.random() * inactive.length)];
+
+                // 70% green / 30% negative
+                const isGreen = Math.random() < 0.7;
+                const color = isGreen ? GREEN : NEGATIVE_COLORS[Math.floor(Math.random()*NEGATIVE_COLORS.length)];
+                hole.dataset.active = (isGreen ? "green" : "bad");
+                hole.dataset.color = color;
+                hole.style.backgroundColor = color;
+
+                // 유지 시간도 난이도 상승에 따라 감소
+                const f = difficultyFactor();
+                const holdMin = Math.max(MIN_HOLD, MIN_HOLD + (1-f) * 60); // 거의 동일
+                const holdMax = Math.max(MIN_HOLD, MAX_HOLD - f * (MAX_HOLD - MIN_HOLD));
+                const hold = randBetween(holdMin, holdMax);
+
+                setTimeout(() => {
+                    if (!running) return;
+                    if (hole.dataset.active){
+                        hole.style.backgroundColor = HOLE_BASE;
+                        delete hole.dataset.active;
+                        delete hole.dataset.color;
+                    }
+                }, hold);
+            }
+
+            scheduleSpawn();
+        }
+
+        /*********************
+         * click handler
+         *********************/
+        function onHoleClick(e){
+            if (!running) return;
+
+            const hole = e.currentTarget;
+            if (hole.dataset.clicked) return; // 중복 클릭 방지
+
+            const active = hole.dataset.active; // "green" or "bad" or undefined
+
+            // 활성 색이 없으면 "미스 클릭" (패널티 없음 / 원하면 -1로 바꿀 수 있음)
+            if (!active){
+                hole.dataset.clicked = "1";
+                setTimeout(() => delete hole.dataset.clicked, 0);
+                return;
+            }
+
+            // 판정
+            if (active === "green"){
+                score++;
+                hole.classList.add('success');
+                soundGood();
+            }else{
+                score--;
+                hole.classList.add('failure');
+                soundBad();
+            }
+
+            // 즉시 리셋
+            hole.style.backgroundColor = HOLE_BASE;
+            delete hole.dataset.active;
+            delete hole.dataset.color;
+
+            // UI
+            syncUI();
+
+            setTimeout(() => hole.classList.remove('success','failure'), 220);
+
+            hole.dataset.clicked = "1";
+            setTimeout(() => delete hole.dataset.clicked, 0);
+        }
+
+        holes.forEach(h => {
+            h.addEventListener('pointerdown', onHoleClick);
+        });
+
+        /*********************
+         * start / end / reset
+         *********************/
+        function startGame(){
+            // best는 localStorage 저장
+            score = 0;
+            remaining = TOTAL_TIME;
+            running = true;
+
+            clearTimeout(spawnTimer);
+            clearAllHoles();
+
+            hideOverlay();
+            startAt = performance.now();
+            syncUI();
+            requestAnimationFrame(tick);
+            scheduleSpawn();
+        }
+
+        function endGame(){
+            running = false;
+            clearTimeout(spawnTimer);
+            clearAllHoles();
+
+            if (score > best){
+                best = score;
+                localStorage.setItem('colorReactionBest', String(best));
+            }
+            syncUI();
+
+            showOverlay(
+                "테스트 종료",
+                `최종 점수: <b>${score}</b><br/>최고 점수: <b>${best}</b>`,
+                "다시하기",
+                () => startGame()
+            );
+        }
+
+        function resetGame(){
+            running = false;
+            clearTimeout(spawnTimer);
+            clearAllHoles();
+
+            score = 0;
+            remaining = TOTAL_TIME;
+            syncUI();
+
+            showOverlay(
+                "컬러 반응속도 테스트",
+                `30초 동안 <b>녹색</b>을 최대한 많이 클릭하세요.<br/>녹색이 아닌 색을 클릭하면 <b>-1점</b>입니다.`,
+                "시작하기",
+                () => startGame()
+            );
+        }
+
+        /*********************
+         * buttons
+         *********************/
+        startBtn.addEventListener('click', () => startGame());
+        resetBtn.addEventListener('click', () => resetGame());
+
+        soundBtn.addEventListener('click', async () => {
+            soundOn = !soundOn;
+            soundBtn.textContent = "효과음: " + (soundOn ? "켬" : "끔");
+            soundBtn.setAttribute("aria-pressed", soundOn ? "true" : "false");
+            if (soundOn){
+                await ensureAudio();
+                toast("효과음 켬");
+            }else{
+                toast("효과음 끔");
+            }
+        });
+
+        /*********************
+         * init
+         *********************/
+        best = Number(localStorage.getItem('colorReactionBest') || "0");
+        syncUI();
+        resetGame();
+    })();
+</script>
+</body>
+</html>
