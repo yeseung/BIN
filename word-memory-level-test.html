@@ -1,0 +1,1030 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>단어 카드 기억력 테스트 - Word Memory Test (Level Mode)</title>
+
+    <!-- https://www.jiraksil.com/service/word_memory -->
+
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --line:#e5e7eb;
+            --shadow:0 10px 25px rgba(0,0,0,.08);
+            --radius:18px;
+
+            --primary:#111827;
+            --good:#22c55e;
+            --bad:#ef4444;
+            --warn:#f59e0b;
+            --info:#2563eb;
+            --chip:#f3f4f6;
+        }
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{
+            font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;
+            background:var(--bg);
+            color:var(--text);
+            min-height:100vh;
+            display:flex;
+            justify-content:center;
+            padding:18px;
+            user-select:none;
+            -webkit-user-select:none;
+        }
+        .wrap{width:100%;max-width:900px;}
+        .top{
+            display:flex;
+            align-items:flex-end;
+            justify-content:space-between;
+            gap:12px;
+            flex-wrap:wrap;
+            margin-bottom:12px;
+        }
+        .title{
+            font-size:22px;
+            font-weight:900;
+            letter-spacing:-0.2px;
+        }
+        .subtitle{
+            margin-top:6px;
+            color:var(--muted);
+            font-size:13px;
+            line-height:1.55;
+        }
+        .panel{
+            background:var(--card);
+            border:1px solid var(--line);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            padding:14px;
+        }
+        .hud{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            align-items:stretch;
+        }
+        .hudItem{
+            flex:1 1 160px;
+            border:1px solid var(--line);
+            border-radius:14px;
+            padding:10px 12px;
+            background:#fafafa;
+            min-width:160px;
+        }
+        .hudLabel{font-size:12px;color:var(--muted);margin-bottom:6px;}
+        .hudVal{font-size:18px;font-weight:900;letter-spacing:-0.2px;}
+        .hearts{display:flex;gap:4px;align-items:center;}
+        .heart{font-size:16px;line-height:1;}
+        .heart.lost{opacity:.2;filter:grayscale(1);}
+
+        .game{
+            margin-top:12px;
+            position:relative;
+            min-height:560px;
+            border-radius:var(--radius);
+            border:1px solid var(--line);
+            background:linear-gradient(180deg,#ffffff, #fafbff);
+            box-shadow:var(--shadow);
+            overflow:hidden;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:16px;
+        }
+
+        /* particles */
+        .particle{
+            position:absolute;
+            width:6px;height:6px;border-radius:50%;
+            background:rgba(17,24,39,.08);
+            animation:float 8s linear infinite;
+            pointer-events:none;
+        }
+        @keyframes float{
+            0%{ transform:translateY(0) rotate(0deg); opacity:0; }
+            10%{opacity:1;}
+            90%{opacity:1;}
+            100%{ transform:translateY(-520px) rotate(720deg); opacity:0; }
+        }
+
+        /* layers */
+        .layer{
+            display:none;
+            position:absolute;
+            inset:auto;
+            z-index:10;
+            width:min(520px, 92%);
+            background:rgba(255,255,255,.92);
+            border:1px solid var(--line);
+            border-radius:18px;
+            box-shadow:var(--shadow);
+            padding:18px;
+            text-align:center;
+            backdrop-filter: blur(8px);
+        }
+        .layer.show{display:block;animation:pop .35s ease-out;}
+        @keyframes pop{0%{transform:scale(.92);opacity:0;}100%{transform:scale(1);opacity:1;}}
+        .layerTitle{font-size:22px;font-weight:900;letter-spacing:-0.2px;}
+        .layerText{margin-top:10px;color:var(--muted);font-size:14px;line-height:1.6;}
+
+        .btn{
+            margin-top:14px;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap:8px;
+            padding:12px 16px;
+            border-radius:12px;
+            border:1px solid var(--line);
+            background:var(--primary);
+            color:#fff;
+            font-weight:900;
+            cursor:pointer;
+            width:min(320px, 100%);
+        }
+        .btn.secondary{
+            background:#fff;
+            color:var(--primary);
+        }
+        .btnRow{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+
+        /* countdown */
+        .countdown{
+            display:none;
+            position:absolute;
+            z-index:20;
+            font-size:84px;
+            font-weight:900;
+            color:#111827;
+            letter-spacing:-1px;
+            text-shadow:0 10px 30px rgba(0,0,0,.12);
+            animation:countPop .8s ease-out;
+            pointer-events:none;
+        }
+        @keyframes countPop{
+            0%{transform:scale(1.8);opacity:0;}
+            50%{transform:scale(1);opacity:1;}
+            100%{transform:scale(.85);opacity:0;}
+        }
+
+        /* word show */
+        .wordBox{
+            display:none;
+            position:absolute;
+            z-index:15;
+            padding:18px 26px;
+            border-radius:16px;
+            border:1px solid var(--line);
+            background:#fff;
+            box-shadow:var(--shadow);
+            font-size:36px;
+            font-weight:900;
+            letter-spacing:-0.4px;
+        }
+        .wordBox.show{display:block;}
+        .anim-flip{ animation: flipIn .35s ease-out; }
+        .anim-slide{ animation: slideIn .35s ease-out; }
+        .anim-fade{ animation: fadeIn .35s ease-out; }
+        .anim-zoom{ animation: zoomIn .35s ease-out; }
+        .anim-bounce{ animation: bounceIn .45s ease-out; }
+        .anim-rotate{ animation: rotateIn .45s ease-out; }
+        .anim-left{ animation: slideFromLeft .35s ease-out; }
+        .anim-right{ animation: slideFromRight .35s ease-out; }
+        .anim-elastic{ animation: elasticIn .55s ease-out; }
+
+        @keyframes flipIn{0%{transform:perspective(400px) rotateY(-90deg);opacity:0;}100%{transform:perspective(400px) rotateY(0);opacity:1;}}
+        @keyframes slideIn{0%{transform:translateY(-70px);opacity:0;}100%{transform:translateY(0);opacity:1;}}
+        @keyframes fadeIn{0%{opacity:0;}100%{opacity:1;}}
+        @keyframes zoomIn{0%{transform:scale(.2);opacity:0;}100%{transform:scale(1);opacity:1;}}
+        @keyframes bounceIn{0%{transform:scale(0);}50%{transform:scale(1.18);}70%{transform:scale(.92);}100%{transform:scale(1);}}
+        @keyframes rotateIn{0%{transform:rotate(-180deg) scale(.2);opacity:0;}100%{transform:rotate(0) scale(1);opacity:1;}}
+        @keyframes slideFromLeft{0%{transform:translateX(-160px);opacity:0;}100%{transform:translateX(0);opacity:1;}}
+        @keyframes slideFromRight{0%{transform:translateX(160px);opacity:0;}100%{transform:translateX(0);opacity:1;}}
+        @keyframes elasticIn{0%{transform:scale(0);}55%{transform:scale(1.08);}70%{transform:scale(.96);}85%{transform:scale(1.02);}100%{transform:scale(1);}}
+
+        /* progress */
+        .progress{
+            position:absolute;
+            top:14px;
+            right:14px;
+            z-index:8;
+            display:none;
+            text-align:right;
+            color:rgba(17,24,39,.65);
+            font-size:13px;
+        }
+        .dots{display:flex;gap:6px;justify-content:flex-end;margin-top:6px;}
+        .dot{
+            width:10px;height:10px;border-radius:999px;
+            background:rgba(17,24,39,.12);
+            transition:.2s;
+        }
+        .dot.on{background:var(--good);box-shadow:0 0 0 4px rgba(34,197,94,.15);}
+
+        /* timer bar */
+        .timerWrap{
+            position:absolute;
+            left:0;right:0;bottom:0;
+            height:10px;
+            background:rgba(17,24,39,.08);
+            display:none;
+        }
+        .timerBar{
+            height:100%;
+            width:100%;
+            background:linear-gradient(90deg, var(--good), #86efac);
+            transition:width .1s linear;
+        }
+        .timerBar.warn{ background:linear-gradient(90deg, var(--warn), #fde68a); }
+        .timerBar.bad{ background:linear-gradient(90deg, var(--bad), #fca5a5); }
+
+        /* cards */
+        .cards{
+            width:100%;
+            max-width:760px;
+            display:flex;
+            flex-wrap:wrap;
+            gap:10px;
+            justify-content:center;
+            align-items:flex-start;
+            padding:14px 6px;
+            z-index:5;
+        }
+        .cardsHeader{
+            width:100%;
+            text-align:center;
+            margin-bottom:6px;
+            color:var(--muted);
+            font-size:14px;
+            line-height:1.55;
+        }
+        .chip{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            padding:6px 12px;
+            border-radius:999px;
+            background:var(--chip);
+            border:1px solid var(--line);
+            font-weight:900;
+            color:#111827;
+            font-size:12px;
+            margin-bottom:10px;
+        }
+        .cardBtn{
+            min-width:78px;
+            padding:12px 12px;
+            border-radius:14px;
+            border:1px solid var(--line);
+            background:#fff;
+            box-shadow:0 6px 18px rgba(0,0,0,.06);
+            cursor:pointer;
+            transition:transform .12s, box-shadow .12s, border-color .12s;
+            font-weight:700;
+            color:#111827;
+        }
+        .cardBtn:hover{
+            transform:translateY(-2px);
+            box-shadow:0 10px 24px rgba(0,0,0,.08);
+            border-color:#c7d2fe;
+        }
+        .cardBtn:active{ transform:translateY(0); }
+        .cardBtn.correct{
+            background:linear-gradient(135deg, #16a34a, #22c55e);
+            color:#fff;
+            border-color:transparent;
+            animation: correctPulse .35s;
+        }
+        .cardBtn.wrong{
+            background:linear-gradient(135deg, #dc2626, #ef4444);
+            color:#fff;
+            border-color:transparent;
+            animation: wrongShake .35s;
+        }
+        @keyframes correctPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
+        @keyframes wrongShake{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+
+        /* popups */
+        .scorePop{
+            position:absolute;
+            z-index:30;
+            font-weight:900;
+            color:var(--good);
+            text-shadow:0 8px 18px rgba(34,197,94,.25);
+            animation: scoreFloat .8s ease-out forwards;
+            pointer-events:none;
+        }
+        @keyframes scoreFloat{0%{transform:translateY(0);opacity:1;}100%{transform:translateY(-26px);opacity:0;}}
+        .comboPop{
+            position:absolute;
+            z-index:30;
+            font-weight:900;
+            color:#f59e0b;
+            text-shadow:0 8px 18px rgba(245,158,11,.25);
+            animation: comboFloat 1s ease-out forwards;
+            pointer-events:none;
+        }
+        @keyframes comboFloat{0%{transform:translateY(0) scale(1);opacity:1;}100%{transform:translateY(-46px) scale(1.25);opacity:0;}}
+
+        /* result stats */
+        .stats{
+            margin-top:14px;
+            display:grid;
+            grid-template-columns:repeat(2, 1fr);
+            gap:10px;
+        }
+        .stat{
+            border:1px solid var(--line);
+            border-radius:14px;
+            padding:10px;
+            background:#fff;
+        }
+        .statLabel{font-size:12px;color:var(--muted);margin-bottom:6px;}
+        .statVal{font-size:20px;font-weight:900;}
+        .good{color:var(--good);}
+        .bad{color:var(--bad);}
+        .info{color:var(--info);}
+        .warn{color:var(--warn);}
+
+        @media (max-width:520px){
+            .game{min-height:520px;}
+            .hudItem{min-width:150px;}
+            .wordBox{font-size:30px;}
+            .countdown{font-size:72px;}
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="top">
+        <div>
+            <div class="title">🧠 단어 카드 기억력 테스트 (레벨 모드)</div>
+            <div class="subtitle">
+                화면에 나타나는 단어를 기억한 뒤, 카드에서 찾아 클릭하세요.<br/>
+                레벨이 오를수록 단어 수가 늘고 시간이 빡빡해집니다. 연속 정답은 콤보 보너스!
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="hud">
+            <div class="hudItem">
+                <div class="hudLabel">레벨</div>
+                <div class="hudVal" id="uiLevel">1</div>
+            </div>
+            <div class="hudItem">
+                <div class="hudLabel">점수</div>
+                <div class="hudVal" id="uiScore">0</div>
+            </div>
+            <div class="hudItem">
+                <div class="hudLabel">콤보</div>
+                <div class="hudVal" id="uiCombo">0</div>
+            </div>
+            <div class="hudItem">
+                <div class="hudLabel">생명</div>
+                <div class="hearts" id="uiLives"></div>
+            </div>
+            <div class="hudItem">
+                <div class="hudLabel">남은 시간</div>
+                <div class="hudVal" id="uiTime">--</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="game" id="game">
+        <div id="particles"></div>
+
+        <!-- Start Layer -->
+        <div class="layer show" id="layerStart">
+            <div class="layerTitle">🧠 기억력 테스트</div>
+            <div class="layerText">
+                단어를 잠깐 보여드립니다.<br/>
+                이후 카드에서 <b>기억한 단어만</b> 빠르게 찾아보세요!
+            </div>
+            <button class="btn" id="btnStart">게임 시작</button>
+        </div>
+
+        <!-- LevelUp Layer -->
+        <div class="layer" id="layerLevelup">
+            <div class="layerTitle">🎉 레벨 업!</div>
+            <div class="layerText" style="margin-top:12px;">
+                다음 레벨: <b id="uiNextLevel">2</b><br/>
+                <span id="uiLevelMsg">더 많은 단어를 기억해보세요!</span>
+            </div>
+            <button class="btn" id="btnNext">다음 레벨</button>
+        </div>
+
+        <!-- Result Layer -->
+        <div class="layer" id="layerResult">
+            <div class="layerTitle" id="uiResultTitle">🏁 게임 오버</div>
+            <div class="layerText">수고하셨습니다! 결과를 확인해보세요.</div>
+
+            <div class="stats">
+                <div class="stat">
+                    <div class="statLabel">최종 레벨</div>
+                    <div class="statVal warn" id="uiFinalLevel">1</div>
+                </div>
+                <div class="stat">
+                    <div class="statLabel">총 점수</div>
+                    <div class="statVal good" id="uiFinalScore">0</div>
+                </div>
+                <div class="stat">
+                    <div class="statLabel">최대 콤보</div>
+                    <div class="statVal bad" id="uiFinalCombo">0</div>
+                </div>
+                <div class="stat">
+                    <div class="statLabel">맞춘 단어</div>
+                    <div class="statVal info" id="uiFinalWords">0</div>
+                </div>
+            </div>
+
+            <div class="btnRow">
+                <button class="btn" id="btnRestart">다시 도전</button>
+                <button class="btn secondary" id="btnCloseResult">닫기</button>
+            </div>
+        </div>
+
+        <!-- Countdown -->
+        <div class="countdown" id="countdown"></div>
+
+        <!-- Word Display -->
+        <div class="wordBox" id="wordBox"></div>
+
+        <!-- Progress -->
+        <div class="progress" id="progress">
+            <div><span id="uiFound">0</span> / <span id="uiTotal">0</span></div>
+            <div class="dots" id="dots"></div>
+        </div>
+
+        <!-- Cards -->
+        <div class="cards" id="cards"></div>
+
+        <!-- Timer Bar -->
+        <div class="timerWrap" id="timerWrap">
+            <div class="timerBar" id="timerBar"></div>
+        </div>
+    </div>
+
+    <div class="panel" style="margin-top:12px;">
+        <div style="font-weight:900;margin-bottom:6px;">🎮 게임 방법</div>
+        <div style="color:var(--muted);font-size:13px;line-height:1.65;">
+            1) 단어가 순서대로 잠깐 등장합니다 → 기억하기<br/>
+            2) 카드가 나오면 기억한 단어를 모두 찾기<br/>
+            3) 시간 초과/오답 시 생명 감소<br/>
+            4) 연속 정답 시 콤보 보너스 점수
+        </div>
+    </div>
+</div>
+
+<script>
+    (() => {
+        // ==================== 단어 데이터 (난이도별) ====================
+        const wordsByDifficulty = {
+            easy: [
+                "사과","바나나","포도","딸기","수박","참외","복숭아","귤","레몬","망고",
+                "밥","빵","국","죽","떡","면","밀","쌀","콩","팥",
+                "김치","계란","우유","치즈","버터","소금","설탕","간장","된장","고추장",
+                "물","불","흙","바람","공기","하늘","구름","무지개","안개","이슬",
+                "달","해","별","눈","비","산","강","바다","나무","풀",
+                "꽃","잎","뿌리","줄기","열매","씨앗","숲","들판","호수","폭포",
+                "고양이","강아지","토끼","곰","사자","호랑이","코끼리","기린","원숭이","판다",
+                "새","물고기","닭","돼지","소","말","양","염소","오리","거위",
+                "개미","벌","나비","잠자리","무당벌레","달팽이","개구리","뱀","거북이","악어",
+                "빨강","파랑","노랑","초록","검정","흰색","분홍","주황","보라","갈색",
+                "동그라미","세모","네모","별모양","하트","큰","작은","긴","짧은","둥근",
+                "엄마","아빠","형","누나","동생","친구","선생님","학생","아기","할머니",
+                "할아버지","삼촌","이모","고모","사촌","조카","며느리","사위","손자","손녀",
+                "머리","눈","코","입","귀","손","발","팔","다리","배",
+                "목","어깨","무릎","발목","손목","손가락","발가락","이마","뺨","턱",
+                "책","집","차","문","창문","의자","책상","침대","소파","거울",
+                "컵","접시","숟가락","젓가락","포크","칼","가위","풀","테이프","연필"
+            ],
+            normal: [
+                "학교","병원","회사","공원","시장","도서관","영화관","백화점","마트","약국",
+                "은행","우체국","경찰서","소방서","미술관","박물관","체육관","수영장","놀이터","동물원",
+                "식당","카페","빵집","꽃집","서점","미용실","세탁소","주유소","편의점","호텔",
+                "컴퓨터","휴대폰","텔레비전","냉장고","세탁기","에어컨","청소기","전자레인지","믹서기","드라이기",
+                "운동화","구두","샌들","부츠","슬리퍼","양말","장갑","모자","목도리","안경",
+                "티셔츠","바지","치마","원피스","자켓","코트","점퍼","조끼","셔츠","블라우스",
+                "자동차","버스","지하철","비행기","기차","택시","자전거","오토바이","트럭","배",
+                "의사","간호사","교사","경찰관","소방관","요리사","미용사","기자","배우","가수",
+                "축구","야구","농구","테니스","배드민턴","탁구","수영","달리기","등산","낚시",
+                "독서","영화감상","음악감상","요리","그림그리기","사진촬영","여행","캠핑","게임","퍼즐"
+            ],
+            hard: [
+                "경제학","심리학","철학","사회학","인류학","정치학","생물학","물리학","화학","천문학",
+                "수학","통계학","언어학","고고학","지리학","역사학","법학","의학","약학","공학",
+                "인공지능","블록체인","사물인터넷","빅데이터","클라우드","가상현실","증강현실","드론","로봇공학","나노기술",
+                "머신러닝","딥러닝","알고리즘","데이터베이스","사이버보안","암호화폐","메타버스","디지털트윈","엣지컴퓨팅","5G통신",
+                "지속가능성","기후변화","생태계","생물다양성","재생에너지","탄소중립","순환경제","친환경","유기농","공정무역",
+                "세계문화유산","무형문화재","전통공예","민속예술","고전문학","현대미술","추상화","인상주의","르네상스","바로크",
+                "오페라","발레","뮤지컬","교향곡","협주곡","소나타","재즈","클래식","국악","전통무용"
+            ],
+            extreme: [
+                "형이상학","인식론","존재론","현상학","해석학","구조주의","후기구조주의","해체주의","실존주의","허무주의",
+                "양자역학","상대성이론","초끈이론","암흑물질","암흑에너지","블랙홀","중력파","반물질","힉스입자","쿼크",
+                "양자컴퓨팅","초전도체","그래핀","탄소나노튜브","플라즈마","핵융합","반도체","광통신","초음파","뉴로모픽",
+                "유전공학","합성생물학","단백질공학","줄기세포","유전자편집","크리스퍼","바이오센서","나노로봇","분자기계","정밀의료",
+                "메타인지","인지부조화","조건형성","강화학습","행동수정","인지행동치료","마음챙김","노출치료","작업기억","전망기억",
+                "헌법재판소","국제사법재판소","공정거래위원회","방송통신위원회","개인정보보호위원회","국가인권위원회","선거관리위원회","감사원","검찰청","경찰청"
+            ]
+        };
+
+        // ==================== 레벨 설정 ====================
+        const levelConfig = {
+            1:  { words: 2,  cards: 12, showTime: 800,  selectTime: 15, difficulty: 'easy' },
+            2:  { words: 3,  cards: 15, showTime: 700,  selectTime: 18, difficulty: 'easy' },
+            3:  { words: 4,  cards: 18, showTime: 650,  selectTime: 20, difficulty: 'easy' },
+            4:  { words: 5,  cards: 20, showTime: 600,  selectTime: 22, difficulty: 'normal' },
+            5:  { words: 6,  cards: 24, showTime: 550,  selectTime: 25, difficulty: 'normal' },
+            6:  { words: 7,  cards: 28, showTime: 500,  selectTime: 28, difficulty: 'normal' },
+            7:  { words: 8,  cards: 30, showTime: 450,  selectTime: 30, difficulty: 'hard' },
+            8:  { words: 9,  cards: 32, showTime: 400,  selectTime: 32, difficulty: 'hard' },
+            9:  { words: 10, cards: 35, showTime: 350,  selectTime: 35, difficulty: 'hard' },
+            10: { words: 12, cards: 40, showTime: 300,  selectTime: 40, difficulty: 'extreme' }
+        };
+
+        // ==================== DOM ====================
+        const game = document.getElementById('game');
+        const particles = document.getElementById('particles');
+
+        const layerStart = document.getElementById('layerStart');
+        const layerLevelup = document.getElementById('layerLevelup');
+        const layerResult = document.getElementById('layerResult');
+
+        const btnStart = document.getElementById('btnStart');
+        const btnNext = document.getElementById('btnNext');
+        const btnRestart = document.getElementById('btnRestart');
+        const btnCloseResult = document.getElementById('btnCloseResult');
+
+        const uiLevel = document.getElementById('uiLevel');
+        const uiScore = document.getElementById('uiScore');
+        const uiCombo = document.getElementById('uiCombo');
+        const uiLives = document.getElementById('uiLives');
+        const uiTime = document.getElementById('uiTime');
+
+        const countdown = document.getElementById('countdown');
+        const wordBox = document.getElementById('wordBox');
+
+        const progress = document.getElementById('progress');
+        const uiFound = document.getElementById('uiFound');
+        const uiTotal = document.getElementById('uiTotal');
+        const dots = document.getElementById('dots');
+
+        const cards = document.getElementById('cards');
+
+        const timerWrap = document.getElementById('timerWrap');
+        const timerBar = document.getElementById('timerBar');
+
+        const uiNextLevel = document.getElementById('uiNextLevel');
+        const uiLevelMsg = document.getElementById('uiLevelMsg');
+
+        const uiFinalLevel = document.getElementById('uiFinalLevel');
+        const uiFinalScore = document.getElementById('uiFinalScore');
+        const uiFinalCombo = document.getElementById('uiFinalCombo');
+        const uiFinalWords = document.getElementById('uiFinalWords');
+        const uiResultTitle = document.getElementById('uiResultTitle');
+
+        // ==================== 상태 ====================
+        const state = {
+            level: 1,
+            score: 0,
+            combo: 0,
+            maxCombo: 0,
+            lives: 3,
+            totalCorrect: 0,
+            selectedWords: [],
+            displayedWords: [],
+            foundWords: [],
+            isPlaying: false,
+            timeLeft: 0,
+            totalTime: 0,
+            timer: null
+        };
+
+        const anims = ["flip","slide","fade","zoom","bounce","rotate","left","right","elastic"];
+
+        // ==================== utils ====================
+        function show(el){ el.classList.add('show'); }
+        function hide(el){ el.classList.remove('show'); }
+        function fmt(n){ return (n||0).toLocaleString(); }
+
+        function createParticles(){
+            const count = 22;
+            for(let i=0;i<count;i++){
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.left = (Math.random()*100) + '%';
+                p.style.top = (Math.random()*100) + '%';
+                p.style.animationDelay = (Math.random()*8) + 's';
+                p.style.animationDuration = (6 + Math.random()*4) + 's';
+                particles.appendChild(p);
+            }
+        }
+
+        function getLevelConfig(level){
+            if(level <= 10) return levelConfig[level];
+
+            const base = levelConfig[10];
+            const extra = level - 10;
+            return {
+                words: Math.min(base.words + extra, 20),
+                cards: Math.min(base.cards + extra * 3, 60),
+                showTime: Math.max(base.showTime - extra * 20, 150),
+                selectTime: base.selectTime + extra * 2,
+                difficulty: 'extreme'
+            };
+        }
+
+        function getRandomWords(count, difficulty){
+            let pool = [];
+            const diffs = ['easy','normal','hard','extreme'];
+            const idx = diffs.indexOf(difficulty);
+
+            for(let i=0;i<=idx;i++) pool = pool.concat(wordsByDifficulty[diffs[i]]);
+            const shuffled = [...pool].sort(()=>Math.random()-0.5);
+
+            return shuffled.slice(0, count);
+        }
+
+        function updateHUD(){
+            uiLevel.textContent = state.level;
+            uiScore.textContent = fmt(state.score);
+            uiCombo.textContent = state.combo;
+            uiTime.textContent = state.timer ? (Math.ceil(state.timeLeft) + '초') : '--';
+
+            uiLives.innerHTML = '';
+            for(let i=0;i<3;i++){
+                const span = document.createElement('span');
+                span.className = 'heart' + (i >= state.lives ? ' lost' : '');
+                span.textContent = '❤';
+                uiLives.appendChild(span);
+            }
+        }
+
+        function updateProgress(){
+            const total = state.selectedWords.length;
+            const found = state.foundWords.length;
+            uiFound.textContent = found;
+            uiTotal.textContent = total;
+
+            dots.innerHTML = '';
+            for(let i=0;i<total;i++){
+                const d = document.createElement('div');
+                d.className = 'dot' + (i < found ? ' on' : '');
+                dots.appendChild(d);
+            }
+        }
+
+        function resetBoard(){
+            cards.innerHTML = '';
+            progress.style.display = 'none';
+            timerWrap.style.display = 'none';
+            wordBox.className = 'wordBox';
+            wordBox.style.display = 'none';
+        }
+
+        function showCountdown(cb){
+            let count = 3;
+            countdown.style.display = 'block';
+
+            const tick = () => {
+                if(count > 0){
+                    countdown.textContent = count;
+                    countdown.style.animation = 'none';
+                    void countdown.offsetHeight;
+                    countdown.style.animation = 'countPop .8s ease-out';
+                    count--;
+                    setTimeout(tick, 800);
+                } else {
+                    countdown.textContent = 'GO!';
+                    countdown.style.animation = 'none';
+                    void countdown.offsetHeight;
+                    countdown.style.animation = 'countPop .8s ease-out';
+                    setTimeout(() => {
+                        countdown.style.display = 'none';
+                        cb && cb();
+                    }, 600);
+                }
+            };
+            tick();
+        }
+
+        function stopTimer(){
+            if(state.timer){
+                clearInterval(state.timer);
+                state.timer = null;
+            }
+            updateHUD();
+        }
+
+        function startTimer(seconds){
+            state.totalTime = seconds;
+            state.timeLeft = seconds;
+
+            timerWrap.style.display = 'block';
+            progress.style.display = 'block';
+
+            const render = () => {
+                const pct = Math.max(0, (state.timeLeft / state.totalTime) * 100);
+                timerBar.style.width = pct + '%';
+                timerBar.classList.remove('warn','bad');
+                if(pct <= 20) timerBar.classList.add('bad');
+                else if(pct <= 40) timerBar.classList.add('warn');
+                uiTime.textContent = Math.ceil(state.timeLeft) + '초';
+            };
+
+            render();
+            state.timer = setInterval(() => {
+                state.timeLeft = Math.max(0, state.timeLeft - 0.1);
+                if(state.timeLeft <= 0){
+                    stopTimer();
+                    timeUp();
+                    return;
+                }
+                render();
+            }, 100);
+        }
+
+        function scorePopup(x, y, points){
+            const pop = document.createElement('div');
+            pop.className = 'scorePop';
+            pop.textContent = `+${points}`;
+            pop.style.left = x + 'px';
+            pop.style.top = y + 'px';
+            game.appendChild(pop);
+            setTimeout(() => pop.remove(), 800);
+        }
+
+        function comboPopup(text){
+            const pop = document.createElement('div');
+            pop.className = 'comboPop';
+            pop.textContent = text;
+            pop.style.left = '50%';
+            pop.style.top = '22%';
+            pop.style.transform = 'translateX(-50%)';
+            game.appendChild(pop);
+            setTimeout(() => pop.remove(), 1000);
+        }
+
+        function messageLayer(text, cb){
+            const temp = document.createElement('div');
+            temp.className = 'layer show';
+            temp.style.zIndex = 25;
+            temp.innerHTML = `<div class="layerTitle">${text}</div>`;
+            game.appendChild(temp);
+            setTimeout(() => {
+                temp.remove();
+                cb && cb();
+            }, 1200);
+        }
+
+        // ==================== game flow ====================
+        function startGame(){
+            state.level = 1;
+            state.score = 0;
+            state.combo = 0;
+            state.maxCombo = 0;
+            state.lives = 3;
+            state.totalCorrect = 0;
+            state.isPlaying = true;
+
+            updateHUD();
+            resetBoard();
+            hide(layerStart);
+            hide(layerResult);
+            hide(layerLevelup);
+
+            showCountdown(startLevel);
+        }
+
+        function startLevel(){
+            hide(layerLevelup);
+            resetBoard();
+
+            const cfg = getLevelConfig(state.level);
+            state.selectedWords = getRandomWords(cfg.words, cfg.difficulty);
+            state.foundWords = [];
+
+            updateProgress();
+            showWords(cfg.showTime);
+        }
+
+        function showWords(showTime){
+            let idx = 0;
+
+            const showNext = () => {
+                if(idx >= state.selectedWords.length){
+                    setTimeout(showCards, 220);
+                    return;
+                }
+                const word = state.selectedWords[idx];
+                const anim = anims[idx % anims.length];
+
+                wordBox.textContent = word;
+                wordBox.style.display = 'block';
+                wordBox.className = 'wordBox show anim-' + anim;
+
+                idx++;
+
+                setTimeout(() => {
+                    wordBox.className = 'wordBox';
+                    wordBox.style.display = 'none';
+                    setTimeout(showNext, 160);
+                }, showTime);
+            };
+
+            showNext();
+        }
+
+        function showCards(){
+            const cfg = getLevelConfig(state.level);
+
+            // extra words
+            const extraNeed = Math.max(0, cfg.cards - state.selectedWords.length);
+            const extrasRaw = getRandomWords(extraNeed + 10, cfg.difficulty)
+            .filter(w => !state.selectedWords.includes(w));
+            const extras = extrasRaw.slice(0, extraNeed);
+
+            state.displayedWords = [...state.selectedWords, ...extras]
+            .slice(0, cfg.cards)
+            .sort(()=>Math.random()-0.5);
+
+            const diffNames = { easy:'쉬움', normal:'보통', hard:'어려움', extreme:'극한' };
+
+            cards.innerHTML = `
+      <div class="cardsHeader">
+        <div class="chip">난이도: ${diffNames[cfg.difficulty] || cfg.difficulty}</div><br/>
+        기억한 단어를 선택하세요!
+      </div>
+    `;
+
+            state.displayedWords.forEach((w, i) => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'cardBtn';
+                b.textContent = w;
+                b.dataset.word = w;
+                b.style.opacity = '0';
+                b.style.animation = `fadeIn .28s ${(i*0.03).toFixed(2)}s forwards`;
+                cards.appendChild(b);
+            });
+
+            progress.style.display = 'block';
+            updateProgress();
+            startTimer(cfg.selectTime);
+            updateHUD();
+        }
+
+        function onCardClick(btn){
+            if(!state.isPlaying) return;
+            if(btn.classList.contains('correct') || btn.classList.contains('wrong')) return;
+
+            const word = btn.dataset.word;
+
+            // correct
+            if(state.selectedWords.includes(word) && !state.foundWords.includes(word)){
+                btn.classList.add('correct');
+                state.foundWords.push(word);
+
+                state.combo++;
+                state.maxCombo = Math.max(state.maxCombo, state.combo);
+
+                const base = 100 * state.level;
+                const comboBonus = Math.floor(base * state.combo * 0.1);
+                const pts = base + comboBonus;
+                state.score += pts;
+                state.totalCorrect++;
+
+                // popup position
+                const r = btn.getBoundingClientRect();
+                const g = game.getBoundingClientRect();
+                const x = (r.left - g.left) + r.width/2;
+                const y = (r.top - g.top);
+
+                scorePopup(x, y, pts);
+
+                if(state.combo >= 3){
+                    const text = state.combo >= 6 ? `AMAZING x${state.combo}! 🌟` : `COMBO x${state.combo}! 🔥`;
+                    comboPopup(text);
+                }
+
+                updateHUD();
+                updateProgress();
+
+                if(state.foundWords.length === state.selectedWords.length){
+                    levelComplete();
+                }
+                return;
+            }
+
+            // wrong
+            btn.classList.add('wrong');
+            state.combo = 0;
+            state.lives--;
+
+            updateHUD();
+
+            if(state.lives <= 0){
+                gameOver();
+            }
+        }
+
+        function timeUp(){
+            state.combo = 0;
+            state.lives--;
+            updateHUD();
+
+            if(state.lives <= 0){
+                gameOver();
+                return;
+            }
+            messageLayer('⏰ 시간 초과!', () => resetLevel());
+        }
+
+        function resetLevel(){
+            stopTimer();
+            resetBoard();
+            showCountdown(startLevel);
+        }
+
+        function levelComplete(){
+            stopTimer();
+            state.isPlaying = false;
+
+            // time bonus
+            const bonus = Math.floor(state.timeLeft * 10 * state.level);
+            state.score += bonus;
+
+            updateHUD();
+
+            setTimeout(() => {
+                state.level++;
+                uiNextLevel.textContent = state.level;
+
+                const msgs = [
+                    '더 많은 단어를 기억해보세요!',
+                    '속도가 빨라집니다!',
+                    '집중력을 발휘하세요!',
+                    '대단해요! 계속 도전!',
+                    '기억력 천재시네요!'
+                ];
+                uiLevelMsg.textContent = msgs[Math.min(state.level - 2, msgs.length - 1)] || '계속 도전하세요!';
+
+                resetBoard();
+                show(layerLevelup);
+                state.isPlaying = true;
+            }, 450);
+        }
+
+        function gameOver(){
+            stopTimer();
+            state.isPlaying = false;
+
+            resetBoard();
+
+            uiResultTitle.textContent = '🏁 게임 오버';
+            uiFinalLevel.textContent = state.level;
+            uiFinalScore.textContent = fmt(state.score);
+            uiFinalCombo.textContent = state.maxCombo;
+            uiFinalWords.textContent = state.totalCorrect;
+
+            show(layerResult);
+        }
+
+        // ==================== events ====================
+        btnStart.addEventListener('click', startGame);
+        btnNext.addEventListener('click', () => {
+            hide(layerLevelup);
+            showCountdown(startLevel);
+        });
+        btnRestart.addEventListener('click', () => {
+            hide(layerResult);
+            startGame();
+        });
+        btnCloseResult.addEventListener('click', () => {
+            hide(layerResult);
+            show(layerStart);
+        });
+
+        cards.addEventListener('click', (e) => {
+            const btn = e.target.closest('.cardBtn');
+            if(!btn) return;
+            onCardClick(btn);
+        });
+
+        // ==================== init ====================
+        createParticles();
+        updateHUD();
+        show(layerStart);
+    })();
+</script>
+</body>
+</html>
