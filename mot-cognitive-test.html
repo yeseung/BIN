@@ -1,0 +1,918 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MOT 인지능력 테스트 - MOT Cognitive Test</title>
+
+    <!-- https://www.jiraksil.com/service/mot -->
+
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --line:#e5e7eb;
+            --shadow:0 12px 28px rgba(0,0,0,.08);
+            --radius:18px;
+
+            --accent:#111827;
+            --good:#22c55e;
+            --bad:#ef4444;
+            --warn:#f59e0b;
+            --chip:#f3f4f6;
+        }
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{
+            font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;
+            background:var(--bg);
+            color:var(--text);
+            min-height:100vh;
+            display:flex;
+            justify-content:center;
+            padding:18px;
+            user-select:none;
+            -webkit-user-select:none;
+        }
+        .wrap{width:100%;max-width:900px;}
+        .top{
+            display:flex;
+            justify-content:space-between;
+            align-items:flex-end;
+            gap:12px;
+            flex-wrap:wrap;
+            margin-bottom:12px;
+        }
+        .title{font-size:22px;font-weight:900;letter-spacing:-0.2px;}
+        .desc{
+            margin-top:8px;
+            color:var(--muted);
+            font-size:13px;
+            line-height:1.65;
+        }
+        .badge{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            padding:6px 12px;
+            border-radius:999px;
+            background:var(--chip);
+            border:1px solid var(--line);
+            font-weight:900;
+            font-size:12px;
+        }
+
+        .panel{
+            background:var(--card);
+            border:1px solid var(--line);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            padding:14px;
+        }
+
+        /* Stats */
+        .stats{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+        }
+        .stat{
+            flex:1 1 160px;
+            min-width:160px;
+            background:#fafafa;
+            border:1px solid var(--line);
+            border-radius:14px;
+            padding:10px 12px;
+        }
+        .statLabel{font-size:12px;color:var(--muted);margin-bottom:6px;}
+        .statValue{font-size:18px;font-weight:900;}
+        .statValue.bad{color:var(--bad);}
+
+        /* Game */
+        .game{
+            margin-top:12px;
+            background:var(--card);
+            border:1px solid var(--line);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            overflow:hidden;
+            position:relative;
+            height:600px;
+        }
+        canvas{display:block;width:100%;height:100%;touch-action:none;}
+
+        .phase{
+            position:absolute;
+            top:12px;
+            left:12px;
+            z-index:20;
+            padding:8px 12px;
+            border-radius:999px;
+            background:rgba(17,24,39,.92);
+            color:#fff;
+            font-weight:900;
+            font-size:13px;
+            border:1px solid rgba(255,255,255,.15);
+            backdrop-filter: blur(8px);
+        }
+        .progress{
+            position:absolute;
+            bottom:12px;
+            right:12px;
+            z-index:20;
+            padding:8px 12px;
+            border-radius:999px;
+            background:rgba(255,255,255,.92);
+            color:var(--text);
+            font-weight:900;
+            font-size:13px;
+            border:1px solid var(--line);
+            backdrop-filter: blur(8px);
+            display:none;
+        }
+        .progress.show{display:block;}
+
+        .countdown{
+            position:absolute;
+            inset:0;
+            display:none;
+            align-items:center;
+            justify-content:center;
+            z-index:30;
+            font-size:56px;
+            font-weight:900;
+            color:#111827;
+            background:rgba(255,255,255,.65);
+            backdrop-filter: blur(8px);
+        }
+        .countdown.show{display:flex;}
+
+        /* Modals */
+        .overlay{
+            position:absolute;
+            inset:0;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            z-index:40;
+            background:rgba(255,255,255,.92);
+            backdrop-filter: blur(10px);
+            padding:18px;
+        }
+        .modal{
+            width:min(520px, 100%);
+            border-radius:18px;
+            background:#fff;
+            border:1px solid var(--line);
+            box-shadow:var(--shadow);
+            padding:16px;
+            text-align:center;
+        }
+        .modal h2{
+            font-size:22px;
+            font-weight:900;
+            margin-bottom:10px;
+        }
+        .modal p{
+            color:var(--muted);
+            font-size:14px;
+            line-height:1.65;
+        }
+        .modal .box{
+            margin-top:12px;
+            text-align:left;
+            border:1px solid var(--line);
+            background:#fafafa;
+            border-radius:14px;
+            padding:12px;
+            font-size:13px;
+            color:var(--text);
+            line-height:1.7;
+        }
+        .btnRow{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            justify-content:center;
+            margin-top:14px;
+        }
+        .btn{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            padding:12px 14px;
+            border-radius:12px;
+            border:1px solid var(--line);
+            background:var(--accent);
+            color:#fff;
+            font-weight:900;
+            cursor:pointer;
+            min-width:160px;
+        }
+        .btn.secondary{
+            background:#fff;
+            color:var(--accent);
+        }
+
+        .hidden{display:none!important;}
+
+        .resultGrid{
+            display:grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap:10px;
+            margin-top:12px;
+        }
+        .resultCard{
+            border:1px solid var(--line);
+            background:#fafafa;
+            border-radius:14px;
+            padding:12px;
+            text-align:center;
+        }
+        .resultLabel{font-size:12px;color:var(--muted);margin-bottom:6px;}
+        .resultVal{font-size:18px;font-weight:900;}
+        .gradeBox{
+            margin-top:12px;
+            border:1px solid var(--line);
+            border-radius:14px;
+            padding:12px;
+            background:#fff;
+            text-align:left;
+        }
+        .bar{
+            margin-top:10px;
+            height:12px;
+            border-radius:999px;
+            background:#f3f4f6;
+            overflow:hidden;
+            border:1px solid var(--line);
+        }
+        .bar > div{
+            height:100%;
+            width:0%;
+            background:linear-gradient(90deg, #ef4444, #f59e0b, #22c55e);
+            transition: width 800ms ease;
+        }
+
+        @media (max-width:768px){
+            .game{height:500px;}
+        }
+        @media (max-width:480px){
+            .game{height:420px;}
+            .stat{min-width:150px;}
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="top">
+        <div>
+            <div class="title">🧠 MOT 인지능력 테스트</div>
+            <div class="desc">
+                Multiple Object Tracking(MOT) 기반 시각 추적 과제입니다.<br/>
+                <b>빨간 타겟을 기억 → 회색으로 이동 → 멈추면 타겟을 선택</b> 하세요.<br/>
+                오답을 클릭하면 <b>기회 -1</b> (기회 0이면 종료)
+            </div>
+        </div>
+        <div class="badge">Vanilla JS + Pure CSS</div>
+    </div>
+
+    <div class="panel">
+        <div class="stats">
+            <div class="stat">
+                <div class="statLabel">레벨</div>
+                <div class="statValue" id="uiLevel">1</div>
+            </div>
+            <div class="stat">
+                <div class="statLabel">점수</div>
+                <div class="statValue" id="uiScore">0</div>
+            </div>
+            <div class="stat">
+                <div class="statLabel">정확도</div>
+                <div class="statValue" id="uiAcc">0%</div>
+            </div>
+            <div class="stat">
+                <div class="statLabel">기회</div>
+                <div class="statValue bad" id="uiChances">10</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="game" id="gameWrap">
+        <canvas id="gameCanvas"></canvas>
+
+        <div class="phase" id="phaseIndicator">준비</div>
+        <div class="progress" id="progressIndicator">0/0 선택됨</div>
+        <div class="countdown" id="countdown"></div>
+
+        <!-- Start Modal -->
+        <div class="overlay" id="startModal">
+            <div class="modal">
+                <h2>🧠 MOT 인지능력 테스트</h2>
+                <p>여러 개의 움직이는 객체 중 특정 타겟을 끝까지 추적하는 능력을 측정합니다.</p>
+
+                <div class="box">
+                    <b>측정 능력</b><br/>
+                    • 동체시력 / 시각 추적<br/>
+                    • 선택적 주의력<br/>
+                    • 작업 기억<br/>
+                    • 공간 지각 능력
+                </div>
+
+                <div class="btnRow">
+                    <button class="btn" id="startBtn" type="button">테스트 시작</button>
+                    <button class="btn secondary" id="howBtn" type="button">설명 보기</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Over Modal -->
+        <div class="overlay hidden" id="gameOverModal">
+            <div class="modal">
+                <h2>📊 테스트 완료</h2>
+                <div id="finalResults"></div>
+                <div class="btnRow">
+                    <button class="btn" id="restartBtn" type="button">다시 테스트</button>
+                    <button class="btn secondary" id="resetBtn" type="button">처음으로</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel" style="margin-top:12px;">
+        <div style="font-weight:900;margin-bottom:8px;">플레이 방법</div>
+        <div style="color:var(--muted);font-size:13px;line-height:1.75;">
+            1) <b>빨간색</b>으로 깜빡이는 타겟을 기억<br/>
+            2) 모두 회색으로 바뀌고 움직이는 동안 추적<br/>
+            3) 멈추면 기억한 타겟을 클릭해서 선택<br/>
+            ※ 오답 클릭 시 <b>기회 -1</b>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function(){
+        // ====== DOM ======
+        var canvas = document.getElementById('gameCanvas');
+        var ctx = canvas.getContext('2d');
+        var gameWrap = document.getElementById('gameWrap');
+
+        var uiLevel = document.getElementById('uiLevel');
+        var uiScore = document.getElementById('uiScore');
+        var uiAcc = document.getElementById('uiAcc');
+        var uiChances = document.getElementById('uiChances');
+
+        var phaseIndicator = document.getElementById('phaseIndicator');
+        var progressIndicator = document.getElementById('progressIndicator');
+        var countdownEl = document.getElementById('countdown');
+
+        var startModal = document.getElementById('startModal');
+        var gameOverModal = document.getElementById('gameOverModal');
+        var finalResults = document.getElementById('finalResults');
+
+        var startBtn = document.getElementById('startBtn');
+        var howBtn = document.getElementById('howBtn');
+        var restartBtn = document.getElementById('restartBtn');
+        var resetBtn = document.getElementById('resetBtn');
+
+        // ====== Canvas resize (DPR) ======
+        function resize(){
+            var dpr = Math.max(1, window.devicePixelRatio || 1);
+            var rect = gameWrap.getBoundingClientRect();
+            var w = rect.width;
+            var h = rect.height;
+
+            canvas.width = Math.floor(w * dpr);
+            canvas.height = Math.floor(h * dpr);
+            canvas.style.width = w + 'px';
+            canvas.style.height = h + 'px';
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // ====== Game class ======
+        function MultipleObjectTracker(){
+            // state: ready, showing, moving, selecting, finished
+            this.gameState = 'ready';
+            this.level = 1;
+
+            this.attempts = 0;
+            this.score = 0;
+            this.totalAttempts = 0;
+            this.totalCorrect = 0;
+            this.chancesRemaining = 10;
+
+            this.objects = [];
+            this.targets = [];
+            this.selectedObjects = [];
+
+            this.showDuration = 2000;
+            this.moveDuration = 6000;
+            this.phaseStartTime = 0;
+            this.animationId = null;
+
+            this.objectCount = 6;
+            this.targetCount = 1;
+            this.objectRadius = 20;
+            this.speed = 3;
+
+            this._bindInput();
+            this.updateUI();
+            this.draw();
+        }
+
+        MultipleObjectTracker.prototype._bindInput = function(){
+            var self = this;
+
+            canvas.addEventListener('click', function(e){ self.handlePointer(e.clientX, e.clientY); }, { passive:false });
+            canvas.addEventListener('touchstart', function(e){
+                e.preventDefault();
+                var t = e.touches[0];
+                self.handlePointer(t.clientX, t.clientY);
+            }, { passive:false });
+
+            canvas.addEventListener('touchmove', function(e){ e.preventDefault(); }, { passive:false });
+            canvas.addEventListener('touchend', function(e){ e.preventDefault(); }, { passive:false });
+        };
+
+        MultipleObjectTracker.prototype.handlePointer = function(clientX, clientY){
+            if(this.gameState !== 'selecting') return;
+
+            var rect = canvas.getBoundingClientRect();
+            var x = (clientX - rect.left);
+            var y = (clientY - rect.top);
+
+            this.selectObject(x, y);
+        };
+
+        MultipleObjectTracker.prototype.generateLevel = function(){
+            // 원본 로직 유지 (적응 난이도)
+            if (this.attempts < 2) {
+                this.objectCount = 6;  this.targetCount = 1;  this.speed = 2.5;
+                this.moveDuration = 6000; this.showDuration = 2000;
+            } else if (this.attempts < 5) {
+                this.objectCount = 8;  this.targetCount = 2;  this.speed = 3.5;
+                this.moveDuration = 7000; this.showDuration = 1800;
+            } else if (this.attempts < 8) {
+                this.objectCount = 8;  this.targetCount = 2;  this.speed = 4.5;
+                this.moveDuration = 8000; this.showDuration = 1600;
+            } else if (this.attempts < 12) {
+                this.objectCount = 10; this.targetCount = 3;  this.speed = 4.5;
+                this.moveDuration = 9000; this.showDuration = 1500;
+            } else {
+                this.objectCount = 12; this.targetCount = 3;  this.speed = 5.5;
+                this.moveDuration = 10000; this.showDuration = 1300;
+            }
+
+            this.objects = [];
+            this.targets = [];
+            this.selectedObjects = [];
+
+            for (var i=0;i<this.objectCount;i++){
+                this.objects.push(this.createObject());
+            }
+
+            // Fisher-Yates
+            var shuffled = this.objects.slice();
+            for (var a=shuffled.length-1;a>0;a--){
+                var j = Math.floor(Math.random()*(a+1));
+                var tmp = shuffled[a];
+                shuffled[a] = shuffled[j];
+                shuffled[j] = tmp;
+            }
+
+            this.targets = shuffled.slice(0, this.targetCount);
+            for (var k=0;k<this.targets.length;k++){
+                this.targets[k].isTarget = true;
+                this.targets[k].showTarget = true;
+            }
+        };
+
+        MultipleObjectTracker.prototype.createObject = function(){
+            var r = this.objectRadius;
+            var margin = r + 10;
+            var W = gameWrap.clientWidth;
+            var H = gameWrap.clientHeight;
+            var x, y;
+            var tries = 0;
+
+            do {
+                x = margin + Math.random() * (W - 2*margin);
+                y = margin + Math.random() * (H - 2*margin);
+                tries++;
+            } while(this._checkCollision(x,y) && tries < 60);
+
+            var ang = Math.random()*Math.PI*2;
+            return {
+                x:x, y:y,
+                vx: Math.cos(ang)*this.speed,
+                vy: Math.sin(ang)*this.speed,
+                radius:r,
+                isTarget:false,
+                showTarget:false,
+                selected:false,
+                isCorrect:false,
+                isWrong:false,
+                shakeStartTime:0,
+                id: Date.now() + Math.random()
+            };
+        };
+
+        MultipleObjectTracker.prototype._checkCollision = function(x,y){
+            for (var i=0;i<this.objects.length;i++){
+                var o = this.objects[i];
+                var dx = x - o.x, dy = y - o.y;
+                var d = Math.sqrt(dx*dx + dy*dy);
+                if (d < this.objectRadius*2.5) return true;
+            }
+            return false;
+        };
+
+        MultipleObjectTracker.prototype.startRound = function(){
+            this.attempts++;
+            this.generateLevel();
+            this.gameState = 'showing';
+            this.phaseStartTime = Date.now();
+            this.updatePhaseIndicator('빨간공 기억');
+
+            var self = this;
+            setTimeout(function(){ self.startMoving(); }, this.showDuration);
+
+            this.updateUI();
+        };
+
+        MultipleObjectTracker.prototype.startMoving = function(){
+            for (var i=0;i<this.targets.length;i++){
+                this.targets[i].showTarget = false;
+            }
+            this.gameState = 'moving';
+            this.phaseStartTime = Date.now();
+            this.updatePhaseIndicator('👀 집중');
+
+            var self = this;
+            setTimeout(function(){ self.startSelecting(); }, this.moveDuration);
+        };
+
+        MultipleObjectTracker.prototype.startSelecting = function(){
+            this.gameState = 'selecting';
+            this.updatePhaseIndicator('✋ 선택');
+            this.updateProgressIndicator();
+            progressIndicator.classList.add('show');
+
+            // stop
+            for (var i=0;i<this.objects.length;i++){
+                this.objects[i].vx = 0;
+                this.objects[i].vy = 0;
+            }
+        };
+
+        MultipleObjectTracker.prototype.updatePhysics = function(){
+            if(this.gameState !== 'moving') return;
+
+            var W = gameWrap.clientWidth;
+            var H = gameWrap.clientHeight;
+
+            for (var i=0;i<this.objects.length;i++){
+                var obj = this.objects[i];
+                obj.x += obj.vx;
+                obj.y += obj.vy;
+
+                // wall bounce
+                if (obj.x - obj.radius <= 0 || obj.x + obj.radius >= W) {
+                    obj.vx = -obj.vx;
+                    obj.x = Math.max(obj.radius, Math.min(W - obj.radius, obj.x));
+                }
+                if (obj.y - obj.radius <= 0 || obj.y + obj.radius >= H) {
+                    obj.vy = -obj.vy;
+                    obj.y = Math.max(obj.radius, Math.min(H - obj.radius, obj.y));
+                }
+
+                // object collisions
+                for (var j=i+1;j<this.objects.length;j++){
+                    var other = this.objects[j];
+                    var dx = obj.x - other.x;
+                    var dy = obj.y - other.y;
+                    var dist = Math.sqrt(dx*dx + dy*dy);
+
+                    if(dist < obj.radius + other.radius){
+                        var angle = Math.atan2(dy, dx);
+                        var sin = Math.sin(angle);
+                        var cos = Math.cos(angle);
+
+                        var vx1 = obj.vx * cos + obj.vy * sin;
+                        var vy1 = obj.vy * cos - obj.vx * sin;
+                        var vx2 = other.vx * cos + other.vy * sin;
+                        var vy2 = other.vy * cos - other.vx * sin;
+
+                        obj.vx = vx2 * cos - vy1 * sin;
+                        obj.vy = vy1 * cos + vx2 * sin;
+                        other.vx = vx1 * cos - vy2 * sin;
+                        other.vy = vy2 * cos + vx1 * sin;
+
+                        // separate overlap
+                        var overlap = obj.radius + other.radius - dist;
+                        var sx = (dx / dist) * overlap * 0.5;
+                        var sy = (dy / dist) * overlap * 0.5;
+                        obj.x += sx; obj.y += sy;
+                        other.x -= sx; other.y -= sy;
+                    }
+                }
+            }
+        };
+
+        MultipleObjectTracker.prototype.selectObject = function(x,y){
+            for (var i=0;i<this.objects.length;i++){
+                var obj = this.objects[i];
+                var dx = x - obj.x;
+                var dy = y - obj.y;
+                var dist = Math.sqrt(dx*dx + dy*dy);
+
+                if(dist <= obj.radius){
+                    // 이미 오답으로 처리된 공은 무시
+                    if(obj.isWrong) return;
+
+                    if(!obj.selected){
+                        obj.selected = true;
+                        this.selectedObjects.push(obj);
+
+                        if(obj.isTarget){
+                            this.score += 1;
+                            obj.isCorrect = true;
+                        } else {
+                            this.chancesRemaining--;
+                            obj.isWrong = true;
+                            obj.isCorrect = false;
+                            obj.shakeStartTime = Date.now();
+
+                            if(this.chancesRemaining <= 0){
+                                var self = this;
+                                setTimeout(function(){ self.endGame(); }, 700);
+                                this.updateUI();
+                                return;
+                            }
+                        }
+
+                        this.updateUI();
+                        this.updateProgressIndicator();
+
+                        // targets selected?
+                        var targetsSelected = 0;
+                        for (var s=0;s<this.selectedObjects.length;s++){
+                            if(this.selectedObjects[s].isTarget) targetsSelected++;
+                        }
+
+                        if(targetsSelected >= this.targetCount){
+                            var self2 = this;
+                            setTimeout(function(){ self2.evaluateRound(); }, 700);
+                        }
+
+                    } else if (obj.isTarget && obj.isCorrect) {
+                        // 정답 재클릭 취소 허용(원본 유지)
+                        obj.selected = false;
+                        obj.isCorrect = false;
+                        this.score = Math.max(0, this.score - 1);
+
+                        var newArr = [];
+                        for (var k=0;k<this.selectedObjects.length;k++){
+                            if(this.selectedObjects[k].id !== obj.id) newArr.push(this.selectedObjects[k]);
+                        }
+                        this.selectedObjects = newArr;
+
+                        this.updateUI();
+                        this.updateProgressIndicator();
+                    }
+                    return;
+                }
+            }
+        };
+
+        MultipleObjectTracker.prototype.evaluateRound = function(){
+            var correct = 0;
+            for (var i=0;i<this.selectedObjects.length;i++){
+                if(this.selectedObjects[i].isTarget) correct++;
+            }
+            this.totalAttempts += this.targetCount;
+            this.totalCorrect += correct;
+
+            progressIndicator.classList.remove('show');
+            this.startRound();
+        };
+
+        MultipleObjectTracker.prototype.endGame = function(){
+            this.gameState = 'finished';
+            progressIndicator.classList.remove('show');
+
+            var totalAccuracy = this.totalAttempts > 0 ? (this.totalCorrect / this.totalAttempts) * 100 : 0;
+            var avgScore = this.attempts > 0 ? (this.score / this.attempts) : 0;
+
+            // 등급(원본 기준)
+            var grade = '';
+            var performance = 0;
+            if (this.score >= 25) { grade='전문가'; performance=95; }
+            else if (this.score >= 20) { grade='고급'; performance=85; }
+            else if (this.score >= 15) { grade='중급'; performance=75; }
+            else if (this.score >= 10) { grade='초급'; performance=60; }
+            else { grade='연습 필요'; performance=40; }
+
+            finalResults.innerHTML =
+                '<div class="resultGrid">' +
+                '<div class="resultCard"><div class="resultLabel">총점</div><div class="resultVal">'+ this.score +'</div></div>' +
+                '<div class="resultCard"><div class="resultLabel">도전 횟수</div><div class="resultVal">'+ this.attempts +'</div></div>' +
+                '<div class="resultCard"><div class="resultLabel">전체 정확도</div><div class="resultVal">'+ totalAccuracy.toFixed(1) +'%</div></div>' +
+                '<div class="resultCard"><div class="resultLabel">평균 점수</div><div class="resultVal">'+ avgScore.toFixed(1) +'</div></div>' +
+                '</div>' +
+                '<div class="gradeBox">' +
+                '<div style="font-weight:900;font-size:16px;">🏆 인지능력 등급: <span style="color:#111827">'+ grade +'</span></div>' +
+                '<div class="bar"><div id="perfBar"></div></div>' +
+                '<div style="margin-top:10px;color:#6b7280;font-size:13px;line-height:1.7;">' +
+                '<b>성능 점수:</b> '+ performance +'/100<br/>' +
+                '측정: 동체시력/시각추적 · 선택적 주의력 · 작업기억 · 공간지각' +
+                '</div>' +
+                '</div>';
+
+            gameOverModal.classList.remove('hidden');
+            // bar animate
+            setTimeout(function(){
+                var bar = document.getElementById('perfBar');
+                if(bar) bar.style.width = performance + '%';
+            }, 30);
+        };
+
+        MultipleObjectTracker.prototype.draw = function(){
+            var W = gameWrap.clientWidth;
+            var H = gameWrap.clientHeight;
+
+            // white bg
+            ctx.clearRect(0,0,W,H);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0,0,W,H);
+
+            // subtle vignette
+            var g = ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.max(W,H)/1.3);
+            g.addColorStop(0,'rgba(17,24,39,0.02)');
+            g.addColorStop(1,'rgba(17,24,39,0.06)');
+            ctx.fillStyle = g;
+            ctx.fillRect(0,0,W,H);
+
+            // objects
+            for (var i=0;i<this.objects.length;i++){
+                var o = this.objects[i];
+
+                ctx.save();
+
+                // wrong shake
+                if(o.isWrong && o.shakeStartTime){
+                    var elapsed = Date.now() - o.shakeStartTime;
+                    if(elapsed < 700){
+                        var intensity = 4 * (1 - elapsed/700);
+                        ctx.translate((Math.random()-0.5)*intensity, (Math.random()-0.5)*intensity);
+                    }
+                }
+
+                // color
+                var fill = '#9ca3af'; // gray
+                if(this.gameState === 'finished' && o.isTarget) fill = '#22c55e';
+                else if(o.selected && o.isCorrect) fill = '#22c55e';
+                else if(o.selected && o.isWrong) fill = '#ef4444';
+                else if(o.showTarget && this.gameState === 'showing') fill = '#ef4444';
+
+                // blink while showing
+                if(o.showTarget && this.gameState === 'showing'){
+                    var t = Date.now() - this.phaseStartTime;
+                    if(Math.sin(t * 0.010) > 0) fill = '#ff1744';
+                }
+
+                // draw circle
+                ctx.beginPath();
+                ctx.arc(o.x, o.y, o.radius, 0, Math.PI*2);
+                ctx.fillStyle = fill;
+                ctx.fill();
+
+                // border
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#111827';
+                ctx.stroke();
+
+                // selected ring
+                if(o.selected){
+                    ctx.lineWidth = 4;
+                    ctx.strokeStyle = o.isCorrect ? '#22c55e' : (o.isWrong ? '#ef4444' : '#f59e0b');
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+            }
+        };
+
+        MultipleObjectTracker.prototype.updatePhaseIndicator = function(text){
+            phaseIndicator.textContent = text;
+        };
+
+        MultipleObjectTracker.prototype.updateProgressIndicator = function(){
+            if(this.gameState !== 'selecting') return;
+            var targetsSelected = 0;
+            for (var i=0;i<this.selectedObjects.length;i++){
+                if(this.selectedObjects[i].isTarget) targetsSelected++;
+            }
+            progressIndicator.textContent = targetsSelected + '/' + this.targetCount + ' 선택됨';
+        };
+
+        MultipleObjectTracker.prototype.gameLoop = function(){
+            if(this.gameState === 'finished') return;
+
+            this.updatePhysics();
+            this.draw();
+
+            var self = this;
+            this.animationId = requestAnimationFrame(function(){ self.gameLoop(); });
+        };
+
+        MultipleObjectTracker.prototype.updateUI = function(){
+            // 레벨 계산(원본 방식 유지)
+            var lv = 1;
+            if (this.attempts >= 12) lv = 5;
+            else if (this.attempts >= 8) lv = 4;
+            else if (this.attempts >= 5) lv = 3;
+            else if (this.attempts >= 2) lv = 2;
+
+            uiLevel.textContent = lv;
+            uiScore.textContent = this.score;
+            uiChances.textContent = this.chancesRemaining;
+
+            var acc = this.totalAttempts > 0 ? ((this.totalCorrect / this.totalAttempts) * 100).toFixed(1) : '0.0';
+            uiAcc.textContent = acc + '%';
+        };
+
+        MultipleObjectTracker.prototype.start = function(){
+            this.gameState = 'ready';
+            this.gameLoop();
+        };
+
+        // ====== Countdown helper ======
+        function showCountdown(sec, done){
+            countdownEl.classList.add('show');
+
+            function tick(){
+                if(sec > 0){
+                    countdownEl.textContent = sec;
+                    sec--;
+                    setTimeout(tick, 1000);
+                } else {
+                    countdownEl.textContent = '시작!';
+                    setTimeout(function(){
+                        countdownEl.classList.remove('show');
+                        done();
+                    }, 450);
+                }
+            }
+            tick();
+        }
+
+        // ====== App flow ======
+        var game = new MultipleObjectTracker();
+
+        function startGameFlow(){
+            startModal.classList.add('hidden');
+            gameOverModal.classList.add('hidden');
+
+            // 새 인스턴스로 리셋
+            game = new MultipleObjectTracker();
+            game.start();
+
+            showCountdown(3, function(){ game.startRound(); });
+        }
+
+        startBtn.addEventListener('click', startGameFlow);
+        restartBtn.addEventListener('click', startGameFlow);
+
+        resetBtn.addEventListener('click', function(){
+            // "처음으로" = 시작 모달 다시 표시
+            gameOverModal.classList.add('hidden');
+            startModal.classList.remove('hidden');
+        });
+
+        howBtn.addEventListener('click', function(){
+            alert(
+                "플레이 방법\\n\\n" +
+                "1) 빨간 타겟을 기억\\n" +
+                "2) 회색으로 변한 공들이 움직이는 동안 추적\\n" +
+                "3) 멈추면 기억한 타겟을 클릭\\n\\n" +
+                "오답 클릭 시 기회 -1 (0이면 종료)"
+            );
+        });
+
+        // 탭 숨김 시(원본의 paused 로직은 제대로 복구가 없어서) 이동 중이면 즉시 선택 단계로 넘기지 않고 정지 처리
+        document.addEventListener('visibilitychange', function(){
+            if(!game) return;
+            if(document.hidden && game.gameState === 'moving'){
+                // 안전하게 "선택"으로 전환
+                game.startSelecting();
+            }
+        });
+
+    })();
+</script>
+</body>
+</html>
