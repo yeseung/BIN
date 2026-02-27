@@ -1,0 +1,693 @@
+<!-- file: fps-tier-checker.html -->
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FPS 티어 판독기</title>
+    <meta name="description" content="30초 만에 뽀록인지 실력인지 판독. 타겟을 정확히 클릭해 점수를 올리세요." />
+
+    <style>
+        /* ===================================================
+           FPS Tier Checker (White + Clean)
+           - No Ads / No Bootstrap / No jQuery / No Rank
+           =================================================== */
+        :root{
+            --bg:#f7f8fb;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --border:#e5e7eb;
+            --shadow: 0 14px 34px rgba(0,0,0,.08);
+
+            --blue:#2563eb;
+            --cyan:#06b6d4;
+            --danger:#ef4444;
+            --gold:#f59e0b;
+            --stage:#0b1220;
+        }
+
+        *{ box-sizing:border-box; }
+        html,body{ height:100%; }
+        body{
+            margin:0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif;
+            background: radial-gradient(1200px 600px at 50% -10%, rgba(37,99,235,.10), transparent 55%),
+            radial-gradient(900px 500px at 80% 10%, rgba(6,182,212,.10), transparent 60%),
+            var(--bg);
+            color: var(--text);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .page{
+            max-width: 920px;
+            margin: 0 auto;
+            padding: 18px 14px 70px;
+        }
+
+        .topbar{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            margin-bottom: 14px;
+        }
+
+        .brand{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            font-weight: 1000;
+            letter-spacing: -.3px;
+            font-size: 16px;
+        }
+        .brand-badge{
+            width:36px;height:36px;
+            border-radius: 12px;
+            display:grid;
+            place-items:center;
+            color:#fff;
+            background: linear-gradient(135deg, var(--blue), var(--cyan));
+            box-shadow: 0 12px 22px rgba(37,99,235,.18);
+        }
+
+        .card{
+            background: var(--card);
+            border:1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            overflow:hidden;
+        }
+        .card-pad{ padding: 16px; }
+
+        h1{
+            margin: 0 0 8px;
+            font-size: 18px;
+            letter-spacing: -.3px;
+            font-weight: 1000;
+        }
+        .desc{
+            margin:0 0 12px;
+            color: var(--muted);
+            line-height:1.65;
+            font-size: 14px;
+        }
+
+        /* ---------- HUD ---------- */
+        .hud{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            margin-top: 12px;
+        }
+        .hud-item{
+            flex: 1 1 150px;
+            border:1px solid var(--border);
+            border-radius: 14px;
+            padding: 10px 12px;
+            background:#fff;
+            box-shadow: 0 10px 20px rgba(0,0,0,.06);
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+            min-width: 140px;
+        }
+        .hud-label{
+            color: var(--muted);
+            font-weight: 900;
+            font-size: 11px;
+            letter-spacing: .6px;
+            text-transform: uppercase;
+        }
+        .hud-value{
+            font-variant-numeric: tabular-nums;
+            font-weight: 1000;
+            font-size: 18px;
+        }
+        .hud-score{ color: var(--blue); }
+        .hud-combo{ color: var(--gold); }
+
+        .hearts{
+            display:flex;
+            gap:6px;
+            align-items:center;
+        }
+        .heart{
+            width: 14px; height: 14px;
+            display:inline-block;
+            background: var(--danger);
+            border-radius: 4px;
+            transform: rotate(45deg);
+            position:relative;
+            box-shadow: 0 6px 14px rgba(239,68,68,.20);
+        }
+        .heart::before,
+        .heart::after{
+            content:"";
+            position:absolute;
+            width: 14px; height: 14px;
+            background: var(--danger);
+            border-radius: 50%;
+            top: -7px; left: 0;
+        }
+        .heart::after{ left: -7px; top: 0; }
+        .heart.lost{
+            background:#cbd5e1;
+            box-shadow:none;
+            opacity:.65;
+        }
+        .heart.lost::before,
+        .heart.lost::after{ background:#cbd5e1; }
+
+        /* ---------- Stage ---------- */
+        .stage-wrap{
+            margin-top: 12px;
+            border:1px solid var(--border);
+            border-radius: 18px;
+            overflow:hidden;
+            box-shadow: var(--shadow);
+            background:#fff;
+        }
+
+        #stage{
+            position:relative;
+            height: 460px;
+            background: radial-gradient(1200px 600px at 50% 50%, rgba(255,255,255,.06), transparent 55%),
+            var(--stage);
+            overflow:hidden;
+            cursor: crosshair;
+            touch-action: none;
+            user-select:none;
+        }
+
+        /* subtle grid */
+        #stage::before{
+            content:"";
+            position:absolute; inset:0;
+            background-image:
+                    linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px);
+            background-size: 44px 44px;
+            opacity: .22;
+            pointer-events:none;
+        }
+
+        /* center dot */
+        #stage::after{
+            content:"";
+            position:absolute;
+            left:50%; top:50%;
+            width:6px; height:6px;
+            background: rgba(255,255,255,.28);
+            border-radius: 50%;
+            transform: translate(-50%,-50%);
+            pointer-events:none;
+        }
+
+        @media (max-width: 640px){
+            #stage{ height: 360px; }
+        }
+
+        /* ---------- Overlays ---------- */
+        .overlay{
+            position:absolute; inset:0;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            flex-direction:column;
+            text-align:center;
+            gap: 10px;
+            padding: 18px;
+            background: rgba(11,18,32,.82);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 100;
+        }
+        .overlay h2{
+            margin:0;
+            font-size: 26px;
+            font-weight: 1000;
+            letter-spacing:-.5px;
+            color: #ffffff;
+        }
+        .overlay p{
+            margin:0;
+            max-width: 640px;
+            color: rgba(255,255,255,.78);
+            font-weight: 800;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+        .btn{
+            border:0;
+            cursor:pointer;
+            border-radius: 999px;
+            padding: 14px 22px;
+            font-weight: 1000;
+            font-size: 15px;
+            transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
+            user-select:none;
+            color:#fff;
+            background: linear-gradient(135deg, var(--blue), var(--cyan));
+            box-shadow: 0 14px 26px rgba(37,99,235,.22);
+            min-width: 220px;
+        }
+        .btn:active{ transform: scale(.98); }
+        .btn:hover{ filter: brightness(1.05); }
+
+        .result-box{
+            width: min(520px, 92vw);
+            border: 1px solid rgba(255,255,255,.12);
+            border-radius: 18px;
+            padding: 14px;
+            background: rgba(255,255,255,.06);
+            box-shadow: 0 18px 40px rgba(0,0,0,.25);
+            margin-top: 4px;
+        }
+        .result-score{
+            font-variant-numeric: tabular-nums;
+            font-weight: 1000;
+            font-size: 42px;
+            color:#fff;
+            letter-spacing:-1px;
+            margin: 4px 0 8px;
+        }
+        .result-meta{
+            color: rgba(255,255,255,.78);
+            font-weight: 900;
+            font-size: 14px;
+            line-height:1.6;
+        }
+
+        /* ---------- Targets ---------- */
+        .target{
+            position:absolute;
+            border-radius: 999px;
+            background: radial-gradient(circle at 30% 30%, #ff7aa0, #ef4444);
+            border: 2px solid rgba(255,255,255,.9);
+            box-shadow: 0 0 0 2px rgba(239,68,68,.20), 0 18px 28px rgba(0,0,0,.30);
+            transform-origin:center;
+            cursor:pointer;
+            z-index: 10;
+            animation: spawnPop .16s cubic-bezier(.17,.89,.32,1.28), shrink linear forwards;
+        }
+        .target.gold{
+            background: radial-gradient(circle at 30% 30%, #ffe08a, #f59e0b);
+            box-shadow: 0 0 0 2px rgba(245,158,11,.20), 0 18px 28px rgba(0,0,0,.30);
+        }
+        @keyframes spawnPop{ from{ transform: scale(0); } to{ transform: scale(1); } }
+        @keyframes shrink{
+            0%{ transform: scale(1); opacity:1; }
+            75%{ opacity:1; }
+            100%{ transform: scale(0); opacity:0; }
+        }
+
+        /* hit ripple */
+        .hit{
+            position:absolute;
+            border-radius: 999px;
+            border: 2px solid rgba(255,255,255,.92);
+            box-shadow: 0 0 16px rgba(255,255,255,.55);
+            pointer-events:none;
+            z-index: 20;
+            animation: ripple .28s ease-out forwards;
+        }
+        @keyframes ripple{
+            from{ width:6px; height:6px; opacity:1; border-width:4px; }
+            to{ width:64px; height:64px; opacity:0; border-width:0px; }
+        }
+
+        /* floating text */
+        .float{
+            position:absolute;
+            pointer-events:none;
+            z-index: 30;
+            font-weight: 1000;
+            font-variant-numeric: tabular-nums;
+            text-shadow: 0 6px 18px rgba(0,0,0,.35);
+            animation: floatUp .6s ease-out forwards;
+            transform: translate(-50%,-50%);
+            white-space:nowrap;
+        }
+        @keyframes floatUp{
+            0%{ opacity:0; transform: translate(-50%,-50%) scale(.6); }
+            20%{ opacity:1; transform: translate(-50%,-50%) scale(1.12); }
+            100%{ opacity:0; transform: translate(-50%,-110%) scale(1); }
+        }
+
+        /* stage shake */
+        .shake{ animation: shake .28s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake{
+            10%, 90%{ transform: translateX(-2px); }
+            20%, 80%{ transform: translateX(2px); }
+            30%, 50%, 70%{ transform: translateX(-4px); }
+            40%, 60%{ transform: translateX(4px); }
+        }
+    </style>
+</head>
+
+<body>
+<div class="page">
+    <div class="topbar">
+        <div class="brand">
+            <div class="brand-badge">🎯</div>
+            <div>FPS 티어 판독기</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-pad">
+            <h1>30초 만에 뽀록인지 실력인지 판독</h1>
+            <p class="desc">
+                무작위로 나타나는 타겟을 클릭해 점수를 올리세요. 타겟은 점점 작아지고 빨라집니다.<br>
+                <b style="color:var(--danger)">허공(배경)을 클릭하면 생명이 깎입니다.</b>
+                <span style="color:var(--gold); font-weight:1000;"> 황금 타겟은 점수 3배!</span>
+            </p>
+
+            <div class="hud" aria-label="HUD">
+                <div class="hud-item">
+                    <div>
+                        <div class="hud-label">score</div>
+                        <div class="hud-value hud-score" id="scoreTxt">0</div>
+                    </div>
+                    <div style="color:var(--muted); font-weight:900; font-size:12px;">+콤보 보너스</div>
+                </div>
+
+                <div class="hud-item">
+                    <div>
+                        <div class="hud-label">lives</div>
+                        <div class="hearts" id="hearts"></div>
+                    </div>
+                    <div style="color:var(--muted); font-weight:900; font-size:12px;">미스 = -1</div>
+                </div>
+
+                <div class="hud-item">
+                    <div>
+                        <div class="hud-label">combo</div>
+                        <div class="hud-value hud-combo" id="comboTxt">0</div>
+                    </div>
+                    <div style="color:var(--muted); font-weight:900; font-size:12px;">연속 명중</div>
+                </div>
+            </div>
+
+            <div class="stage-wrap">
+                <div id="stage" aria-label="Game Stage">
+                    <!-- Start overlay -->
+                    <div class="overlay" id="startOverlay">
+                        <h2>FPS 티어 판독기</h2>
+                        <p>
+                            반응속도 + 정확도 테스트<br />
+                            타겟 클릭 / 허공 클릭 금지 / 황금 타겟 3배
+                        </p>
+                        <button class="btn" id="startBtn" type="button">테스트 시작</button>
+                    </div>
+
+                    <!-- Gameover overlay -->
+                    <div class="overlay" id="overOverlay" style="display:none;">
+                        <h2 style="color:#ffdde0;">MISSION FAILED</h2>
+                        <p id="resultMsg" style="font-weight:1000;">손목... 괜찮으세요?</p>
+
+                        <div class="result-box">
+                            <div style="color:rgba(255,255,255,.75); font-weight:900; font-size:12px; letter-spacing:.8px;">
+                                FINAL SCORE
+                            </div>
+                            <div class="result-score" id="finalScore">0</div>
+                            <div class="result-meta">
+                                MAX COMBO: <span id="finalCombo">0</span>
+                            </div>
+                        </div>
+
+                        <button class="btn" id="retryBtn" type="button" style="margin-top:6px;">RETRY</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    /************************************************************
+     * FPS Tier Checker (Vanilla JS)
+     * - No Rank / No external libs
+     ************************************************************/
+    const $ = (sel) => document.querySelector(sel);
+
+    const config = {
+        startLives: 3,
+        baseShrinkTime: 2000,
+        minShrinkTime: 600,
+        spawnRate: 1000,
+        minSpawnRate: 400,
+        goldChance: 0.10,
+        baseTargetSize: 70,
+        minTargetSize: 30,
+        // targetsClicked가 늘어날수록 size 감소
+        sizeDecayPerClick: 0.15
+    };
+
+    const stage = $('#stage');
+    const scoreTxt = $('#scoreTxt');
+    const comboTxt = $('#comboTxt');
+    const heartsEl = $('#hearts');
+
+    const startOverlay = $('#startOverlay');
+    const overOverlay = $('#overOverlay');
+
+    const startBtn = $('#startBtn');
+    const retryBtn = $('#retryBtn');
+
+    const resultMsg = $('#resultMsg');
+    const finalScoreEl = $('#finalScore');
+    const finalComboEl = $('#finalCombo');
+
+    const state = {
+        isPlaying: false,
+        score: 0,
+        combo: 0,
+        maxCombo: 0,
+        lives: config.startLives,
+        spawnTimer: null,
+        targetsClicked: 0
+    };
+
+    function resetUI(){
+        scoreTxt.textContent = "0";
+        comboTxt.textContent = "0";
+        renderHearts(config.startLives);
+    }
+
+    function renderHearts(lives){
+        heartsEl.innerHTML = "";
+        for (let i=0; i<config.startLives; i++){
+            const d = document.createElement('span');
+            d.className = 'heart' + (i >= lives ? ' lost' : '');
+            heartsEl.appendChild(d);
+        }
+    }
+
+    function formatNum(n){ return Math.round(n).toLocaleString('ko-KR'); }
+
+    function startGame(){
+        clearTimeout(state.spawnTimer);
+
+        // cleanup targets/effects
+        stage.querySelectorAll('.target, .hit, .float').forEach(n => n.remove());
+
+        state.isPlaying = true;
+        state.score = 0;
+        state.combo = 0;
+        state.maxCombo = 0;
+        state.lives = config.startLives;
+        state.targetsClicked = 0;
+
+        updateHUD();
+
+        startOverlay.style.display = 'none';
+        overOverlay.style.display = 'none';
+
+        spawnLoop();
+    }
+
+    function spawnLoop(){
+        if (!state.isPlaying) return;
+
+        createTarget();
+
+        // 난이도: 점수(또는 클릭 수)에 따라 스폰 가속
+        const accel = state.score * 0.0005; // 점수 기반 가속
+        let nextSpawn = Math.max(config.minSpawnRate, config.spawnRate - (accel * 1000));
+        nextSpawn *= (0.8 + Math.random() * 0.4);
+
+        state.spawnTimer = setTimeout(spawnLoop, nextSpawn);
+    }
+
+    function createTarget(){
+        const rect = stage.getBoundingClientRect();
+        const stageW = rect.width;
+        const stageH = rect.height;
+
+        const size = Math.max(
+            config.minTargetSize,
+            config.baseTargetSize - (state.targetsClicked * config.sizeDecayPerClick)
+        );
+
+        const x = Math.random() * (stageW - size);
+        const y = Math.random() * (stageH - size);
+
+        const isGold = Math.random() < config.goldChance;
+
+        // duration: 점수 올라갈수록 더 빨리 사라짐
+        const dur = Math.max(
+            config.minShrinkTime,
+            config.baseShrinkTime - (state.score * 0.0008 * 1000)
+        ) * (isGold ? 0.7 : 1);
+
+        const t = document.createElement('div');
+        t.className = 'target' + (isGold ? ' gold' : '');
+        t.style.left = x + 'px';
+        t.style.top = y + 'px';
+        t.style.width = size + 'px';
+        t.style.height = size + 'px';
+        t.style.animationDuration = `0.16s, ${dur}ms`;
+
+        // hit
+        t.addEventListener('pointerdown', (e) => {
+            if (!state.isPlaying) return;
+            e.preventDefault();
+            e.stopPropagation();
+            handleHit(t, e.clientX, e.clientY, isGold);
+        }, { passive:false });
+
+        // time over miss
+        t.addEventListener('animationend', (e) => {
+            if (e.animationName !== 'shrink') return;
+            t.remove();
+            if (state.isPlaying){
+                // center of target (screen coords)
+                const cx = rect.left + x + size/2;
+                const cy = rect.top + y + size/2;
+                handleMiss(cx, cy, true);
+            }
+        });
+
+        stage.appendChild(t);
+    }
+
+    // background miss: pointerdown on stage (not target)
+    stage.addEventListener('pointerdown', (e) => {
+        if (!state.isPlaying) return;
+        // 타겟이 아닌 곳 클릭 시 미스
+        if (!e.target.classList.contains('target')){
+            handleMiss(e.clientX, e.clientY, false);
+        }
+    });
+
+    function handleHit(targetEl, clientX, clientY, isGold){
+        targetEl.remove();
+
+        state.targetsClicked++;
+        state.combo++;
+        if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+
+        let points = 100 + (state.combo * 10);
+        if (isGold) points *= 3;
+
+        state.score += points;
+
+        createEffects(clientX, clientY, isGold, points);
+        updateHUD();
+    }
+
+    function handleMiss(clientX, clientY, isTimeOver){
+        state.combo = 0;
+        state.lives--;
+        updateHUD();
+
+        // shake
+        stage.classList.add('shake');
+        setTimeout(() => stage.classList.remove('shake'), 300);
+
+        showFloat(clientX, clientY, isTimeOver ? "TIME!" : "-1 LIFE", "var(--danger)");
+
+        if (state.lives <= 0){
+            gameOver();
+        }
+    }
+
+    function createEffects(clientX, clientY, isGold, points){
+        const rect = stage.getBoundingClientRect();
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+
+        // ripple
+        const hit = document.createElement('div');
+        hit.className = 'hit';
+        hit.style.left = (x - 32) + 'px';
+        hit.style.top = (y - 32) + 'px';
+        if (isGold) hit.style.borderColor = 'rgba(245,158,11,.95)';
+        stage.appendChild(hit);
+        setTimeout(() => hit.remove(), 350);
+
+        showFloat(clientX, clientY, `+${formatNum(points)}`, isGold ? "var(--gold)" : "#ffffff");
+
+        if (state.combo > 1){
+            showFloat(clientX, clientY - 26, `${state.combo} COMBO`, "var(--cyan)");
+        }
+    }
+
+    function showFloat(clientX, clientY, text, color){
+        const rect = stage.getBoundingClientRect();
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+
+        const f = document.createElement('div');
+        f.className = 'float';
+        f.textContent = text;
+        f.style.left = x + 'px';
+        f.style.top = y + 'px';
+        f.style.color = color;
+
+        stage.appendChild(f);
+        setTimeout(() => f.remove(), 700);
+    }
+
+    function updateHUD(){
+        scoreTxt.textContent = formatNum(state.score);
+        comboTxt.textContent = String(state.combo);
+        renderHearts(state.lives);
+    }
+
+    function gameOver(){
+        state.isPlaying = false;
+        clearTimeout(state.spawnTimer);
+
+        // clear remaining targets
+        stage.querySelectorAll('.target').forEach(n => n.remove());
+
+        const s = state.score;
+
+        let msg = "마우스 감도 조절이 필요해 보입니다.";
+        if (s > 8000) msg = "핵 사용 의심 계정입니다.";
+        else if (s > 5000) msg = "국가대표 저격수!";
+        else if (s > 2000) msg = "평균 이상은 하시네요.";
+        else msg = "사무직 요망… (연습이 살길)";
+
+        resultMsg.textContent = msg;
+        finalScoreEl.textContent = formatNum(s);
+        finalComboEl.textContent = String(state.maxCombo);
+
+        overOverlay.style.display = 'flex';
+    }
+
+    // buttons
+    startBtn.addEventListener('click', startGame);
+    retryBtn.addEventListener('click', startGame);
+
+    // init
+    resetUI();
+    updateHUD();
+</script>
+</body>
+</html>
