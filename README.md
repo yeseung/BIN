@@ -65,6 +65,7 @@
 ![스크린샷 2026-02-27 오후 4 17 47](https://github.com/user-attachments/assets/1818aa50-4d6f-4872-8a1f-d781dccd14fb)
 ![스크린샷 2026-02-27 오후 4 44 55](https://github.com/user-attachments/assets/53990d97-340a-4840-9f07-bbfc184f4514)
 ![스크린샷 2026-02-27 오후 4 53 08](https://github.com/user-attachments/assets/d8c8e8a5-df09-413c-9ecc-631eb0fca026)
+![스크린샷 2026-02-27 오후 4 58 51](https://github.com/user-attachments/assets/40f4a5c2-4dcf-4f2b-9b14-c4f03df8a902)
 
 
 
