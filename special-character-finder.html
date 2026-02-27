@@ -1,0 +1,564 @@
+<!-- filename example: special-character-finder.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>특수문자 찾기 뇌훈련 테스트</title>
+    <meta name="description" content="제시된 특수문자/이모지를 6x6 타일에서 찾아 클릭하는 60초 뇌훈련 게임" />
+
+    <!-- https://www.jiraksil.com/service/charbrain -->
+
+    <style>
+        :root{
+            --bg:#f6f7fb;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --border:#e5e7eb;
+            --shadow:0 14px 36px rgba(0,0,0,.08);
+            --radius:16px;
+
+            --primary:#2563eb;
+            --primary2:#1d4ed8;
+
+            --good:#16a34a;
+            --bad:#dc2626;
+
+            --tile:#ffffff;
+            --tileHover:#f9fafb;
+            --tileActive:#eef2ff;
+            --tileFound:#ecfdf5;
+        }
+
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;
+            background:var(--bg);
+            color:var(--text);
+        }
+
+        .wrap{
+            max-width:980px;
+            margin:40px auto;
+            padding:20px;
+        }
+
+        h1{
+            margin:0;
+            font-size:22px;
+            line-height:1.25;
+        }
+        .desc{
+            margin:10px 0 0;
+            color:var(--muted);
+            line-height:1.65;
+            max-width:80ch;
+        }
+
+        .card{
+            margin-top:14px;
+            background:var(--card);
+            border:1px solid var(--border);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            overflow:hidden;
+        }
+
+        .topbar{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            flex-wrap:wrap;
+            padding:14px 16px;
+            border-bottom:1px solid var(--border);
+            background:#fff;
+        }
+
+        .chips{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            align-items:center;
+            font-weight:900;
+        }
+        .chip{
+            display:inline-flex;
+            gap:8px;
+            align-items:center;
+            padding:8px 12px;
+            background:#f9fafb;
+            border:1px solid var(--border);
+            border-radius:999px;
+            font-size:14px;
+            user-select:none;
+            white-space:nowrap;
+        }
+        .chip span{ color:var(--muted); font-weight:900; }
+
+        .btns{ display:flex; gap:10px; flex-wrap:wrap; }
+        .btn{
+            appearance:none;
+            border:1px solid var(--border);
+            background:#fff;
+            color:var(--text);
+            border-radius:999px;
+            padding:10px 14px;
+            font-weight:1000;
+            cursor:pointer;
+            transition:transform .05s ease, border-color .2s ease, background .2s ease, opacity .2s ease;
+            user-select:none;
+            white-space:nowrap;
+        }
+        .btn:hover{ border-color:#cbd5e1; }
+        .btn:active{ transform:translateY(1px); }
+        .btn.primary{
+            background:var(--primary);
+            border-color:var(--primary);
+            color:#fff;
+        }
+        .btn.primary:hover{
+            background:var(--primary2);
+            border-color:var(--primary2);
+        }
+        .btn:disabled{ opacity:.55; cursor:not-allowed; }
+
+        .stage{
+            padding:16px;
+        }
+
+        .targets{
+            border:1px solid var(--border);
+            background:#fff;
+            border-radius:14px;
+            padding:14px 16px;
+        }
+        .targetsTitle{
+            font-weight:1000;
+            margin:0 0 8px;
+            font-size:14px;
+            color:var(--muted);
+        }
+        .targetsRow{
+            display:flex;
+            flex-wrap:wrap;
+            gap:10px;
+            align-items:center;
+            min-height:40px;
+            font-size:28px;
+            user-select:none;
+        }
+        .targetBadge{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            min-width:44px;
+            padding:6px 10px;
+            border-radius:12px;
+            border:1px solid var(--border);
+            background:#fff;
+            box-shadow:0 8px 18px rgba(0,0,0,.05);
+            line-height:1;
+        }
+
+        .tiles{
+            margin-top:14px;
+            display:grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap:8px;
+            max-width:520px;
+        }
+        @media (max-width:520px){
+            .tiles{ gap:6px; }
+        }
+
+        .tile{
+            height:56px;
+            border-radius:14px;
+            border:1px solid var(--border);
+            background:var(--tile);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:26px;
+            cursor:pointer;
+            user-select:none;
+            transition:transform .06s ease, background .2s ease, border-color .2s ease;
+        }
+        .tile:hover{
+            background:var(--tileHover);
+            border-color:#cbd5e1;
+        }
+        .tile:active{
+            transform:scale(.97);
+            background:var(--tileActive);
+        }
+        .tile.found{
+            background:var(--tileFound);
+            border-color:#86efac;
+            cursor:default;
+        }
+        .tile.disabled{
+            pointer-events:none;
+            opacity:.75;
+        }
+
+        /* overlays */
+        .overlay{
+            position:fixed;
+            inset:0;
+            background:rgba(2,6,23,.55);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:18px;
+            z-index:9999;
+        }
+        .overlay.hidden{ display:none; }
+        .overlayCard{
+            width:min(440px, 100%);
+            background:#fff;
+            border:1px solid var(--border);
+            border-radius:16px;
+            box-shadow:var(--shadow);
+            padding:16px;
+            text-align:center;
+        }
+        .overlayTitle{
+            margin:0 0 8px;
+            font-size:18px;
+            font-weight:1000;
+        }
+        .overlayText{
+            margin:0;
+            color:var(--muted);
+            line-height:1.65;
+            font-size:14px;
+        }
+        .overlayActions{
+            margin-top:14px;
+            display:flex;
+            justify-content:center;
+            gap:10px;
+            flex-wrap:wrap;
+        }
+
+        .toast{
+            position:fixed;
+            left:50%;
+            bottom:22px;
+            transform:translateX(-50%);
+            background:#111827;
+            color:#fff;
+            padding:10px 14px;
+            border-radius:999px;
+            font-weight:900;
+            font-size:13px;
+            opacity:0;
+            pointer-events:none;
+            transition:opacity .2s ease, transform .2s ease;
+            z-index:10000;
+            box-shadow:0 10px 30px rgba(0,0,0,.25);
+        }
+        .toast.show{
+            opacity:1;
+            transform:translateX(-50%) translateY(-4px);
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <h1>특수문자 찾기 뇌훈련 테스트</h1>
+    <p class="desc">
+        상단에 제시된 <b>특수문자/이모지</b>를 아래 <b>6×6 타일</b>에서 찾아 클릭하세요.
+        <b>60초</b> 동안 최대한 많이 맞히면 점수가 올라갑니다. (레벨이 올라갈수록 찾아야 할 개수가 증가)
+    </p>
+
+    <div class="card">
+        <div class="topbar">
+            <div class="chips">
+                <div class="chip">시간 <span id="timer">60.00초</span></div>
+                <div class="chip">점수 <span id="score">0</span></div>
+                <div class="chip">레벨 <span id="level">1</span></div>
+            </div>
+            <div class="btns">
+                <button class="btn" id="resetBtn" type="button" disabled>초기화</button>
+                <button class="btn primary" id="startBtn" type="button">테스트 시작</button>
+            </div>
+        </div>
+
+        <div class="stage">
+            <div class="targets">
+                <div class="targetsTitle">찾아야 할 특수문자</div>
+                <div class="targetsRow" id="targetsRow">—</div>
+            </div>
+
+            <div class="tiles" id="tiles"></div>
+        </div>
+    </div>
+</div>
+
+<!-- overlays -->
+<div class="overlay" id="startOverlay">
+    <div class="overlayCard">
+        <div class="overlayTitle">특수문자 브레인 트레이닝 🧠</div>
+        <p class="overlayText">
+            제시된 특수문자를 <b>모두</b> 찾아 클릭하면 다음 레벨로 넘어가고 점수가 올라갑니다.
+        </p>
+        <div class="overlayActions">
+            <button class="btn primary" id="overlayStartBtn" type="button">시작하기</button>
+        </div>
+    </div>
+</div>
+
+<div class="overlay hidden" id="endOverlay">
+    <div class="overlayCard">
+        <div class="overlayTitle">테스트 종료!</div>
+        <p class="overlayText" id="finalScore">점수: 0</p>
+        <div class="overlayActions">
+            <button class="btn primary" id="restartBtn" type="button">다시하기</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast">알림</div>
+
+<script>
+    (() => {
+        /*********************
+         * DOM
+         *********************/
+        const timerEl = document.getElementById('timer');
+        const scoreEl = document.getElementById('score');
+        const levelEl = document.getElementById('level');
+
+        const startBtn = document.getElementById('startBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        const targetsRow = document.getElementById('targetsRow');
+        const tilesEl = document.getElementById('tiles');
+
+        const startOverlay = document.getElementById('startOverlay');
+        const endOverlay = document.getElementById('endOverlay');
+        const overlayStartBtn = document.getElementById('overlayStartBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const finalScoreEl = document.getElementById('finalScore');
+
+        const toastEl = document.getElementById('toast');
+
+        /*********************
+         * Data
+         *********************/
+        const pool = [
+            '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '_', '=', '+',
+            '[', ']', '{', '}', ';', ':', ',', '.', '/', '?', '|', '\\', '<', '>', '~', '`',
+            '§', '¶', '©', '®', '™', '°', '±', '÷', '×', '¿', '¬', 'µ', '₩', '€', '£', '¥', '₽', '¢', '¤', '₹',
+            '😊','😂','😍','👍','🔥','💯','🎉','🌟','❤️','😉','😎','🎈','🎁','✨','💡','📌','🔔','🛑','⚡','✔️','✖️',
+            '➕','➖','🌀','💤','🎯','🚀','🌈','😩','🤯','😬','😰','😱','🥵','🥶','😳','🤪','😵','🤮','🤧','😷','🤒','🤕',
+            '🤑','🤠','🥳','😇','🤓','🧐','🤡','🤥','🤫','🤭','🥺'
+        ];
+
+        let score = 0;
+        let level = 1;
+        const maxLevel = 5;
+
+        let timeLeft = 60.00;
+        let timerId = null;
+
+        let active = false;
+
+        let targets = [];            // 현재 레벨 목표 문자들
+        let foundSet = new Set();    // 찾은 목표들
+
+        /*********************
+         * UI helpers
+         *********************/
+        function toast(msg){
+            toastEl.textContent = msg;
+            toastEl.classList.add('show');
+            clearTimeout(toastEl._t);
+            toastEl._t = setTimeout(()=>toastEl.classList.remove('show'), 900);
+        }
+
+        function show(el){ el.classList.remove('hidden'); }
+        function hide(el){ el.classList.add('hidden'); }
+
+        function setControls(on){
+            resetBtn.disabled = !on;
+            startBtn.disabled = on; // 게임 중엔 start 비활성
+        }
+
+        function renderTargets(){
+            targetsRow.innerHTML = '';
+            targets.forEach(ch => {
+                const badge = document.createElement('span');
+                badge.className = 'targetBadge';
+                badge.textContent = ch;
+                // 찾으면 흐리게
+                if(foundSet.has(ch)){
+                    badge.style.opacity = '0.35';
+                    badge.style.filter = 'grayscale(1)';
+                }
+                targetsRow.appendChild(badge);
+            });
+            if(targets.length === 0) targetsRow.textContent = '—';
+        }
+
+        /*********************
+         * Core
+         *********************/
+        function shuffle(arr){
+            const a = arr.slice();
+            for(let i=a.length-1;i>0;i--){
+                const j = Math.floor(Math.random()*(i+1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        function pickUnique(count, source){
+            const s = source.slice();
+            const out = [];
+            for(let i=0;i<count;i++){
+                const idx = Math.floor(Math.random()*s.length);
+                out.push(s.splice(idx,1)[0]);
+            }
+            return out;
+        }
+
+        function buildBoard(){
+            // 목표는 level 개 (1~5)
+            targets = pickUnique(level, pool);
+            foundSet = new Set();
+
+            // 36칸 중 목표 문자 1개씩은 반드시 포함
+            const remainCount = 36 - targets.length;
+            const restPool = pool.filter(ch => !targets.includes(ch));
+            const rest = pickUnique(remainCount, restPool);
+
+            const board = shuffle([...targets, ...rest]);
+
+            // render
+            tilesEl.innerHTML = '';
+            board.forEach(ch => {
+                const t = document.createElement('div');
+                t.className = 'tile';
+                t.textContent = ch;
+                t.dataset.char = ch;
+
+                t.addEventListener('click', () => onTileClick(t));
+                tilesEl.appendChild(t);
+            });
+
+            renderTargets();
+        }
+
+        function onTileClick(tile){
+            if(!active) return;
+            if(tile.classList.contains('found')) return;
+
+            const ch = tile.dataset.char;
+
+            // 목표가 아니면 그냥 작은 피드백 정도로 끝
+            if(!targets.includes(ch)){
+                tile.classList.add('disabled');
+                setTimeout(()=>tile.classList.remove('disabled'), 140);
+                return;
+            }
+
+            // 목표면 처리
+            tile.classList.add('found');
+            foundSet.add(ch);
+            renderTargets();
+
+            // 이번 레벨 목표 전부 찾았나?
+            if(foundSet.size === targets.length){
+                score += 1;
+                scoreEl.textContent = String(score);
+
+                if(level < maxLevel) level += 1;
+                levelEl.textContent = String(level);
+
+                // 다음 라운드
+                setTimeout(buildBoard, 350);
+            }
+        }
+
+        function tick(){
+            timeLeft = Math.max(0, timeLeft - 0.01);
+            timerEl.textContent = timeLeft.toFixed(2) + '초';
+            if(timeLeft <= 0){
+                endGame();
+            }
+        }
+
+        function resetGame(){
+            score = 0;
+            level = 1;
+            timeLeft = 60.00;
+            scoreEl.textContent = '0';
+            levelEl.textContent = '1';
+            timerEl.textContent = '60.00초';
+            targets = [];
+            foundSet = new Set();
+            tilesEl.innerHTML = '';
+            targetsRow.textContent = '—';
+            clearInterval(timerId);
+            timerId = null;
+        }
+
+        function startGame(){
+            active = true;
+            setControls(true);
+
+            hide(startOverlay);
+            hide(endOverlay);
+
+            resetGame();
+            active = true; // resetGame이 active를 바꾸지 않으니 명시
+            setControls(true);
+
+            buildBoard();
+
+            clearInterval(timerId);
+            timerId = setInterval(tick, 10);
+        }
+
+        function endGame(){
+            active = false;
+            setControls(false);
+
+            clearInterval(timerId);
+            timerId = null;
+
+            finalScoreEl.textContent = `점수: ${score}`;
+            show(endOverlay);
+        }
+
+        /*********************
+         * Events
+         *********************/
+        startBtn.addEventListener('click', startGame);
+        overlayStartBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', startGame);
+
+        resetBtn.addEventListener('click', () => {
+            if(!active){
+                toast('게임을 시작해 주세요');
+                return;
+            }
+            // 점수/시간은 유지하지 않고 보드만 새로고침하는 “소프트 리셋”
+            buildBoard();
+            toast('새 문제로 바꿨어요');
+        });
+
+        // initial
+        setControls(false);
+        show(startOverlay);
+    })();
+</script>
+</body>
+</html>
