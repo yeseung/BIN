@@ -1,0 +1,669 @@
+<!-- File: evasion-skill-test.html -->
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>회피 능력 테스트 : Evasion Skill Test</title>
+
+    <!-- https://www.jiraksil.com/service/evasion -->
+
+    <style>
+        :root{
+            --bg:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --line:#e5e7eb;
+            --shadow: 0 14px 34px rgba(0,0,0,.10);
+
+            --primary:#111827;
+            --good:#16a34a;
+            --bad:#dc2626;
+
+            --panel:#ffffff;
+            --soft:#f8fafc;
+        }
+
+        *{ box-sizing:border-box; }
+        html,body{ height:100%; }
+        body{
+            margin:0;
+            font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR",
+            Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+            color:var(--text);
+            background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+        }
+
+        .wrap{
+            min-height:100%;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:24px;
+        }
+
+        .app{
+            width:min(860px, 100%);
+            background:var(--panel);
+            border:1px solid var(--line);
+            border-radius:18px;
+            box-shadow:var(--shadow);
+            overflow:hidden;
+        }
+
+        header{
+            padding:18px;
+            border-bottom:1px solid var(--line);
+            background:#fff;
+        }
+        h1{
+            margin:0;
+            font-size:18px;
+            letter-spacing:-0.2px;
+            line-height:1.25;
+        }
+        .desc{
+            margin-top:8px;
+            color:var(--muted);
+            font-size:13px;
+            line-height:1.6;
+        }
+
+        main{ padding:18px; }
+
+        .panel{
+            border:1px solid var(--line);
+            border-radius:16px;
+            background:#fff;
+            padding:16px;
+            box-shadow: 0 10px 22px rgba(0,0,0,.06);
+        }
+
+        .status{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+            flex-wrap:wrap;
+            margin-bottom:12px;
+        }
+
+        .pill{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            padding:10px 12px;
+            border:1px solid var(--line);
+            border-radius:999px;
+            background:#fff;
+            font-weight:900;
+            font-variant-numeric: tabular-nums;
+        }
+        .pill small{
+            font-weight:800;
+            color:var(--muted);
+        }
+
+        .kbd{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            height:22px;
+            padding:0 8px;
+            border:1px solid var(--line);
+            border-bottom-width:2px;
+            border-radius:8px;
+            background:#fff;
+            color:var(--text);
+            font-weight:900;
+            font-size:12px;
+        }
+
+        .game-wrap{
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            padding:10px 0 0;
+        }
+
+        .game{
+            position:relative;
+            background: var(--soft);
+            border:1px solid var(--line);
+            border-radius:16px;
+            overflow:hidden;
+            width:400px;
+            height:400px;
+            touch-action:none;
+        }
+
+        canvas{
+            display:block;
+            width:100%;
+            height:100%;
+            background:#fff;
+        }
+
+        /* overlays */
+        .overlay{
+            position:absolute;
+            inset:0;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:14px;
+            background: rgba(255,255,255,.80);
+            backdrop-filter: blur(4px);
+            z-index:30;
+        }
+        .overlay.hidden{ display:none; }
+
+        .card{
+            width:min(300px, 92%);
+            border:1px solid var(--line);
+            border-radius:16px;
+            background:#fff;
+            box-shadow: 0 14px 30px rgba(0,0,0,.10);
+            padding:14px;
+            text-align:center;
+        }
+        .card h2{
+            margin:0 0 8px;
+            font-size:15px;
+            letter-spacing:-0.2px;
+        }
+        .card p{
+            margin:0 0 12px;
+            color:var(--muted);
+            font-size:13px;
+            line-height:1.55;
+            white-space:pre-line;
+        }
+
+        button{
+            appearance:none;
+            border:none;
+            background:none;
+            font:inherit;
+            cursor:pointer;
+        }
+        .btn{
+            width:100%;
+            padding:10px 12px;
+            border-radius:14px;
+            border:1px solid var(--line);
+            background:#fff;
+            font-weight:900;
+            letter-spacing:-0.2px;
+            transition: transform .06s ease, box-shadow .15s ease, border-color .15s ease;
+        }
+        .btn:hover{ box-shadow: 0 12px 22px rgba(0,0,0,.08); }
+        .btn:active{ transform: translateY(1px); }
+        .btn:focus-visible{
+            outline:3px solid rgba(37,99,235,.25);
+            outline-offset:2px;
+            border-color: rgba(37,99,235,.55);
+        }
+        .btn.primary{
+            background:var(--primary);
+            color:#fff;
+            border-color:var(--primary);
+        }
+
+        footer{
+            padding:14px 18px 18px;
+            border-top:1px solid var(--line);
+            color:var(--muted);
+            font-size:12px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:10px;
+            flex-wrap:wrap;
+        }
+
+        @media (max-width:600px){
+            .game{ width:340px; height:360px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="app" role="application" aria-label="회피 능력 테스트">
+        <header>
+            <h1>회피 능력 테스트</h1>
+            <div class="desc">
+                가운데의 플레이어 도형을 움직여 다가오는 도형들을 피해 최대한 오래 생존하세요.<br>
+                시간이 지날수록 <b>적의 수</b>가 늘어납니다.
+            </div>
+        </header>
+
+        <main>
+            <section class="panel">
+                <div class="status">
+                    <div class="pill"><small>시간</small> <span id="time">0.00</span>s</div>
+                    <div class="pill"><small>적의 수</small> <span id="enemyCount">0</span></div>
+                    <div class="pill" title="단축키">
+                        <span class="kbd">Space</span> 시작/재시작
+                    </div>
+                </div>
+
+                <div class="game-wrap">
+                    <div class="game" id="gameBox">
+                        <canvas id="gameCanvas" aria-label="게임 캔버스"></canvas>
+
+                        <!-- Start -->
+                        <div class="overlay" id="startOverlay">
+                            <div class="card">
+                                <h2>회피 능력 테스트</h2>
+                                <p>중간의 도형을 움직여<br>다른 도형들을 피하세요!</p>
+                                <button class="btn primary" id="startBtn" type="button">시작하기</button>
+                            </div>
+                        </div>
+
+                        <!-- Game Over -->
+                        <div class="overlay hidden" id="overOverlay">
+                            <div class="card">
+                                <h2>테스트 종료!</h2>
+                                <p id="overText"></p>
+                                <button class="btn primary" id="restartBtn" type="button">다시하기</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </main>
+
+        <footer>
+            <div>순수 HTML/CSS/JS 1파일 · 광고/부트스트랩/랭킹 제거</div>
+            <div>© Your Project</div>
+        </footer>
+    </div>
+</div>
+
+<script>
+    (function(){
+        'use strict';
+
+        // ===== DOM =====
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const timeEl = document.getElementById('time');
+        const enemyCountEl = document.getElementById('enemyCount');
+
+        const startOverlay = document.getElementById('startOverlay');
+        const overOverlay = document.getElementById('overOverlay');
+        const overText = document.getElementById('overText');
+
+        const startBtn = document.getElementById('startBtn');
+        const restartBtn = document.getElementById('restartBtn');
+
+        // ===== Game Config (원본 로직 최대한 유지) =====
+        const shapes = ['circle', 'square', 'triangle', 'diamond', 'star', 'hexagon'];
+        const colors = ['#FF4136', '#FF851B', '#FFDC00', '#2ECC40', '#0074D9', '#B10DC9'];
+
+        let gameWidth = 400;
+        let gameHeight = 400;
+
+        let player = null;
+        let enemies = [];
+
+        let gameStarted = false;
+        let gameOver = false;
+
+        let startTime = 0;
+        let elapsedTime = 0;
+        let lastEnemyAddTime = 0;
+
+        // input position (mouse/touch)
+        let mouseX = 0;
+        let mouseY = 0;
+
+        // animation
+        let rafId = null;
+
+        // ===== Utils =====
+        function setOverlay(el, on){
+            el.classList.toggle('hidden', !on);
+        }
+
+        function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+        function resizeCanvas(){
+            // 원본과 동일한 브레이크포인트 유지
+            if (window.innerWidth <= 600) {
+                gameWidth = 340;
+                gameHeight = 360;
+            } else {
+                gameWidth = 400;
+                gameHeight = 400;
+            }
+
+            const ratio = window.devicePixelRatio || 1;
+            canvas.style.width = gameWidth + 'px';
+            canvas.style.height = gameHeight + 'px';
+            canvas.width = Math.floor(gameWidth * ratio);
+            canvas.height = Math.floor(gameHeight * ratio);
+            ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        }
+
+        function shapeSize(){
+            return Math.min(gameWidth, gameHeight) / 8;
+        }
+
+        function initGame(){
+            resizeCanvas();
+
+            const s = shapeSize();
+            player = {
+                x: gameWidth / 2,
+                y: gameHeight / 2,
+                size: s,
+                color: '#009900',
+                shape: 'pentagon'
+            };
+
+            enemies = [];
+            for (let i = 0; i < 4; i++){
+                enemies.push(createEnemy());
+            }
+
+            gameStarted = false;
+            gameOver = false;
+
+            elapsedTime = 0;
+            lastEnemyAddTime = 0;
+
+            mouseX = player.x;
+            mouseY = player.y;
+
+            timeEl.textContent = '0.00';
+            enemyCountEl.textContent = String(enemies.length);
+
+            setOverlay(overOverlay, false);
+            setOverlay(startOverlay, true);
+        }
+
+        function createEnemy(){
+            const s = shapeSize();
+            let x, y, distance;
+            const minDistance = player.size * 3;
+
+            do{
+                x = Math.random() * gameWidth;
+                y = Math.random() * gameHeight;
+                const dx = x - player.x;
+                const dy = y - player.y;
+                distance = Math.sqrt(dx*dx + dy*dy);
+            } while (distance < minDistance);
+
+            return {
+                x, y,
+                size: s,
+                dx: (Math.random() - 0.5) * 2,
+                dy: (Math.random() - 0.5) * 2,
+                shape: shapes[Math.floor(Math.random() * shapes.length)],
+                color: colors[Math.floor(Math.random() * colors.length)],
+                speed: 1.5
+            };
+        }
+
+        function drawShape(shape, x, y, size, color){
+            ctx.fillStyle = color;
+            ctx.beginPath();
+
+            switch(shape){
+                case 'circle':
+                    ctx.arc(x, y, size/2, 0, Math.PI*2);
+                    break;
+
+                case 'square':
+                    ctx.rect(x - size/2, y - size/2, size, size);
+                    break;
+
+                case 'triangle':
+                    ctx.moveTo(x, y - size/2);
+                    ctx.lineTo(x - size/2, y + size/2);
+                    ctx.lineTo(x + size/2, y + size/2);
+                    break;
+
+                case 'diamond':
+                    ctx.moveTo(x, y - size/2);
+                    ctx.lineTo(x + size/2, y);
+                    ctx.lineTo(x, y + size/2);
+                    ctx.lineTo(x - size/2, y);
+                    break;
+
+                case 'pentagon':
+                    for (let i=0; i<5; i++){
+                        const angle = (i * 2 * Math.PI / 5) - Math.PI/2;
+                        const px = x + size/2 * Math.cos(angle);
+                        const py = y + size/2 * Math.sin(angle);
+                        if (i === 0) ctx.moveTo(px, py);
+                        else ctx.lineTo(px, py);
+                    }
+                    break;
+
+                case 'star':
+                    for (let i=0; i<10; i++){
+                        const angle = (i * Math.PI / 5) - Math.PI/2;
+                        const radius = (i % 2 === 0) ? size/2 : size/4;
+                        const px = x + radius * Math.cos(angle);
+                        const py = y + radius * Math.sin(angle);
+                        if (i === 0) ctx.moveTo(px, py);
+                        else ctx.lineTo(px, py);
+                    }
+                    break;
+
+                case 'hexagon':
+                    for (let i=0; i<6; i++){
+                        const angle = (i * 2 * Math.PI / 6) - Math.PI/2;
+                        const px = x + size/2 * Math.cos(angle);
+                        const py = y + size/2 * Math.sin(angle);
+                        if (i === 0) ctx.moveTo(px, py);
+                        else ctx.lineTo(px, py);
+                    }
+                    break;
+            }
+
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function moveEnemies(){
+            enemies.forEach(enemy => {
+                enemy.x += enemy.dx * enemy.speed;
+                enemy.y += enemy.dy * enemy.speed;
+
+                if (enemy.x - enemy.size/2 < 0 || enemy.x + enemy.size/2 > gameWidth){
+                    enemy.dx = -enemy.dx;
+                    enemy.speed = Math.min(enemy.speed * 1.1, 3);
+                }
+                if (enemy.y - enemy.size/2 < 0 || enemy.y + enemy.size/2 > gameHeight){
+                    enemy.dy = -enemy.dy;
+                    enemy.speed = Math.min(enemy.speed * 1.1, 3);
+                }
+            });
+        }
+
+        function handleEnemyCollisions(){
+            for (let i=0; i<enemies.length; i++){
+                for (let j=i+1; j<enemies.length; j++){
+                    const e1 = enemies[i];
+                    const e2 = enemies[j];
+
+                    const dx = e1.x - e2.x;
+                    const dy = e1.y - e2.y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+
+                    const minDist = (e1.size + e2.size) / 2;
+
+                    if (dist < minDist && dist > 0.0001){
+                        const overlap = minDist - dist;
+                        const adjustX = (dx / dist) * (overlap / 2);
+                        const adjustY = (dy / dist) * (overlap / 2);
+
+                        e1.x += adjustX; e1.y += adjustY;
+                        e2.x -= adjustX; e2.y -= adjustY;
+
+                        const normalX = dx / dist;
+                        const normalY = dy / dist;
+                        const tangentX = -normalY;
+                        const tangentY = normalX;
+
+                        const dpTan1 = e1.dx * tangentX + e1.dy * tangentY;
+                        const dpTan2 = e2.dx * tangentX + e2.dy * tangentY;
+
+                        const dpNorm1 = e1.dx * normalX + e1.dy * normalY;
+                        const dpNorm2 = e2.dx * normalX + e2.dy * normalY;
+
+                        // equal mass elastic collision
+                        const m1 = dpNorm2;
+                        const m2 = dpNorm1;
+
+                        e1.dx = tangentX * dpTan1 + normalX * m1;
+                        e1.dy = tangentY * dpTan1 + normalY * m1;
+                        e2.dx = tangentX * dpTan2 + normalX * m2;
+                        e2.dy = tangentY * dpTan2 + normalY * m2;
+                    }
+                }
+            }
+        }
+
+        function checkPlayerCollision(){
+            return enemies.some(enemy => {
+                const dx = enemy.x - player.x;
+                const dy = enemy.y - (player.y - player.size/2); // 원본 y 보정 유지
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                return dist < (player.size + enemy.size) / 2;
+            });
+        }
+
+        function updatePlayer(){
+            if (!gameStarted){
+                player.x = gameWidth / 2;
+                player.y = gameHeight / 2;
+                return;
+            }
+            if (gameOver) return;
+
+            player.x = mouseX;
+            player.y = mouseY;
+
+            player.x = clamp(player.x, player.size/2, gameWidth - player.size/2);
+            player.y = clamp(player.y, player.size,   gameHeight - player.size/2);
+        }
+
+        function drawFrame(){
+            ctx.clearRect(0,0,gameWidth,gameHeight);
+
+            if (gameStarted && !gameOver){
+                moveEnemies();
+                handleEnemyCollisions();
+
+                if (checkPlayerCollision()){
+                    endGame();
+                }
+
+                elapsedTime = (Date.now() - startTime) / 1000;
+
+                if (elapsedTime - lastEnemyAddTime >= 5){
+                    enemies.push(createEnemy());
+                    lastEnemyAddTime = elapsedTime;
+                }
+
+                timeEl.textContent = elapsedTime.toFixed(2);
+                enemyCountEl.textContent = String(enemies.length);
+            }
+
+            updatePlayer();
+
+            // player: 손가락 위로 보이게 y 조정(원본 유지)
+            drawShape(player.shape, player.x, player.y - player.size/2, player.size, player.color);
+            enemies.forEach(e => drawShape(e.shape, e.x, e.y, e.size, e.color));
+
+            rafId = requestAnimationFrame(drawFrame);
+        }
+
+        function startGame(){
+            if (gameStarted && !gameOver) return;
+
+            gameStarted = true;
+            gameOver = false;
+            startTime = Date.now();
+            lastEnemyAddTime = 0;
+
+            setOverlay(startOverlay, false);
+            setOverlay(overOverlay, false);
+        }
+
+        function endGame(){
+            gameOver = true;
+
+            overText.textContent =
+                `생존 시간: ${elapsedTime.toFixed(2)}초\n` +
+                `적의 수: ${enemies.length}`;
+
+            setOverlay(overOverlay, true);
+        }
+
+        function restartGame(){
+            initGame();
+            startGame();
+        }
+
+        // ===== Input Events =====
+        function setPointerPos(clientX, clientY){
+            const rect = canvas.getBoundingClientRect();
+            mouseX = clientX - rect.left;
+            mouseY = clientY - rect.top;
+        }
+
+        canvas.addEventListener('mousemove', (e) => {
+            setPointerPos(e.clientX, e.clientY);
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const t = e.touches[0];
+            setPointerPos(t.clientX, t.clientY);
+        }, { passive:false });
+
+        canvas.addEventListener('click', () => {
+            if (!gameStarted && !gameOver) startGame();
+        });
+
+        canvas.addEventListener('touchstart', (e) => {
+            if (!gameStarted && !gameOver){
+                e.preventDefault();
+                startGame();
+            }
+        }, { passive:false });
+
+        startBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', restartGame);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space'){
+                // Space: start or restart
+                e.preventDefault();
+                if (!gameStarted && !gameOver) startGame();
+                else if (gameOver) restartGame();
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            // 리사이즈 시 초기화(원본 동작과 유사)
+            initGame();
+        });
+
+        // ===== Init =====
+        initGame();
+        drawFrame();
+    })();
+</script>
+</body>
+</html>
