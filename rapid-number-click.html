@@ -1,0 +1,336 @@
+<!-- 파일명 예시: rapid-number-click.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>순발력 숫자 클릭</title>
+
+    <style>
+        :root{
+            --bg:#ffffff;
+            --panel:#f6f8fb;
+            --border:#e6ebf2;
+            --text:#111827;
+            --muted:#6b7280;
+            --chip:#93a2b7;
+            --chipText:#ffffff;
+            --primary:#2f7cf6;
+            --shadow:0 18px 38px rgba(16,24,40,.10);
+            --radius:28px;
+        }
+
+        *{box-sizing:border-box}
+        html,body{height:100%}
+        body{
+            margin:0;
+            background:var(--bg);
+            font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif;
+            color:var(--text);
+        }
+
+        .wrap{
+            min-height:100%;
+            display:flex;
+            align-items:flex-start;
+            justify-content:center;
+            padding:54px 16px 60px;
+        }
+
+        .container{
+            width:min(980px, 100%);
+            text-align:center;
+        }
+
+        h1{
+            margin:0;
+            font-size:48px;
+            font-weight:900;
+            letter-spacing:-.5px;
+        }
+        h1 .zap{font-size:34px; vertical-align:middle; margin-left:6px}
+
+        .sub{
+            margin:12px 0 30px;
+            color:var(--muted);
+            font-weight:700;
+            font-size:22px;
+        }
+
+        .stage{
+            width:100%;
+            height:min(560px, 66vh);
+            background:var(--panel);
+            border:3px solid var(--border);
+            border-radius:var(--radius);
+            position:relative;
+            overflow:hidden;
+            box-shadow:0 10px 24px rgba(16,24,40,.06) inset;
+        }
+
+        .ball{
+            position:absolute;
+            width:92px;
+            height:92px;
+            border-radius:999px;
+            background:var(--chip);
+            color:var(--chipText);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:34px;
+            font-weight:900;
+            box-shadow:0 14px 26px rgba(16,24,40,.14);
+            cursor:pointer;
+            user-select:none;
+            transform:translate(-50%, -50%);
+            transition:transform .08s ease;
+            outline:none;
+        }
+        .ball:active{transform:translate(-50%,-50%) scale(.98)}
+
+        .ball.active{
+            background:var(--primary);
+        }
+
+        .hud{
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:14px;
+            margin-top:18px;
+            flex-wrap:wrap;
+        }
+
+        .pill{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            padding:10px 14px;
+            border:1px solid var(--border);
+            border-radius:999px;
+            background:#fff;
+            font-weight:800;
+            color:#111827;
+            box-shadow:0 8px 18px rgba(16,24,40,.06);
+        }
+        .pill .label{color:var(--muted); font-weight:800}
+        .btn{
+            border:none;
+            background:#111827;
+            color:#fff;
+            font-weight:900;
+            padding:12px 16px;
+            border-radius:14px;
+            cursor:pointer;
+            box-shadow:0 14px 28px rgba(17,24,39,.18);
+        }
+        .btn:active{transform:scale(.99)}
+        .btn.secondary{background:#eef2ff; color:#1f2a44; box-shadow:none; border:1px solid var(--border)}
+
+        .toast{
+            margin-top:16px;
+            color:var(--muted);
+            font-weight:800;
+            min-height:24px;
+        }
+
+        @media (max-width:520px){
+            h1{font-size:38px}
+            .sub{font-size:18px}
+            .ball{width:78px;height:78px;font-size:30px}
+        }
+    </style>
+</head>
+<body>
+
+<div class="wrap">
+    <div class="container">
+        <h1>순발력 숫자 클릭 <span class="zap">⚡</span></h1>
+        <p class="sub">1부터 10까지 최대한 빠르게 클릭하세요!</p>
+
+        <div id="stage" class="stage" aria-label="게임 영역"></div>
+
+        <div class="hud">
+            <div class="pill"><span class="label">다음 숫자</span> <span id="nextNum">1</span></div>
+            <div class="pill"><span class="label">시간</span> <span id="time">0.000s</span></div>
+            <button id="btnStart" class="btn">시작 / 다시배치</button>
+            <button id="btnReset" class="btn secondary">리셋</button>
+        </div>
+
+        <div id="toast" class="toast">시작 버튼을 누르세요.</div>
+    </div>
+</div>
+
+<script>
+    /* ===========================
+       순발력 숫자 클릭 (1~10)
+       - 순수 HTML/CSS/JS
+       - Bootstrap/광고 없음
+    =========================== */
+
+    const COUNT = 10;
+    const BALL_SIZE = 92; // CSS ball width/height와 맞추면 좋음(모바일은 자동 스케일이라 약간 여유)
+    let state = "idle";   // idle | running | done
+    let next = 1;
+    let startAt = 0;
+    let raf = 0;
+
+    const stage = document.getElementById("stage");
+    const nextNumEl = document.getElementById("nextNum");
+    const timeEl = document.getElementById("time");
+    const toast = document.getElementById("toast");
+    const btnStart = document.getElementById("btnStart");
+    const btnReset = document.getElementById("btnReset");
+
+    function fmt(ms){
+        return (ms/1000).toFixed(3) + "s";
+    }
+
+    function shuffle(arr){
+        for(let i=arr.length-1;i>0;i--){
+            const j = Math.floor(Math.random()*(i+1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    // 겹침 최소화를 위한 간단 배치(반복 시도)
+    function placeBalls(){
+        stage.innerHTML = "";
+        const rect = stage.getBoundingClientRect();
+        const w = rect.width;
+        const h = rect.height;
+
+        const numbers = shuffle(Array.from({length:COUNT}, (_,i)=>i+1));
+        const placed = [];
+
+        const padding = 40;
+        const r = Math.min(BALL_SIZE/2, 46); // 반지름(여유)
+        const minDist = r*2 + 10;
+
+        function rand(min,max){ return Math.random()*(max-min)+min; }
+
+        for(const n of numbers){
+            let x=0,y=0, ok=false;
+            for(let t=0;t<600;t++){
+                x = rand(padding, w - padding);
+                y = rand(padding, h - padding);
+
+                ok = true;
+                for(const p of placed){
+                    const dx = x - p.x;
+                    const dy = y - p.y;
+                    if(Math.hypot(dx,dy) < minDist){
+                        ok=false; break;
+                    }
+                }
+                if(ok) break;
+            }
+
+            placed.push({x,y});
+
+            const b = document.createElement("button");
+            b.type = "button";
+            b.className = "ball";
+            b.textContent = n;
+            b.dataset.num = String(n);
+            b.style.left = x + "px";
+            b.style.top  = y + "px";
+            b.setAttribute("aria-label", `숫자 ${n}`);
+
+            stage.appendChild(b);
+        }
+    }
+
+    function setNext(n){
+        next = n;
+        nextNumEl.textContent = String(next);
+        // 활성 표시
+        stage.querySelectorAll(".ball").forEach(el=>{
+            el.classList.toggle("active", Number(el.dataset.num) === next);
+        });
+    }
+
+    function loop(now){
+        if(state !== "running") return;
+        timeEl.textContent = fmt(now - startAt);
+        raf = requestAnimationFrame(loop);
+    }
+
+    function startGame(){
+        placeBalls();
+        state = "running";
+        setNext(1);
+        timeEl.textContent = "0.000s";
+        toast.textContent = "시작! 1부터 순서대로 클릭하세요.";
+        startAt = performance.now();
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(loop);
+    }
+
+    function finishGame(){
+        state = "done";
+        cancelAnimationFrame(raf);
+        const end = performance.now();
+        const total = end - startAt;
+        timeEl.textContent = fmt(total);
+        toast.textContent = `완료! 기록: ${fmt(total)} (다시 하려면 시작/다시배치)`;
+    }
+
+    function resetAll(){
+        cancelAnimationFrame(raf);
+        state = "idle";
+        next = 1;
+        nextNumEl.textContent = "1";
+        timeEl.textContent = "0.000s";
+        toast.textContent = "시작 버튼을 누르세요.";
+        stage.innerHTML = "";
+    }
+
+    stage.addEventListener("click", (e) => {
+        const target = e.target.closest(".ball");
+        if(!target) return;
+
+        if(state === "idle"){
+            toast.textContent = "먼저 시작 버튼을 눌러주세요.";
+            return;
+        }
+        if(state !== "running") return;
+
+        const num = Number(target.dataset.num);
+
+        if(num !== next){
+            // 오답 피드백(살짝 흔들림 느낌)
+            target.animate(
+                [{transform:"translate(-50%,-50%) scale(1)"},{transform:"translate(-50%,-50%) scale(.94)"},{transform:"translate(-50%,-50%) scale(1)"}],
+                {duration:160, easing:"ease-out"}
+            );
+            toast.textContent = `${next}부터 클릭하세요!`;
+            return;
+        }
+
+        // 정답: 제거하고 다음 진행
+        target.remove();
+        if(next === COUNT){
+            finishGame();
+        }else{
+            setNext(next + 1);
+            toast.textContent = `좋아요! 다음은 ${next} 입니다.`;
+        }
+    });
+
+    btnStart.addEventListener("click", startGame);
+    btnReset.addEventListener("click", resetAll);
+
+    // 창 크기 변경 시 배치가 깨질 수 있어 running/done 상태에서는 다시배치 권장
+    window.addEventListener("resize", () => {
+        if(state === "running" || state === "done"){
+            // 그냥 안내만 (자동 재배치하면 플레이 중 불공정)
+            toast.textContent = "화면 크기가 바뀌었습니다. 정확한 플레이를 위해 ‘시작/다시배치’를 눌러주세요.";
+        }
+    });
+</script>
+
+</body>
+</html>
