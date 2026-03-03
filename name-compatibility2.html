@@ -1,0 +1,481 @@
+<!-- 파일명 예시: name-compatibility-test.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>이름 궁합 테스트</title>
+
+    <style>
+        :root{
+            --bg:#ffffff;
+            --panel:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --border:#e9edf5;
+
+            --pink:#ff2d8f;
+            --pink2:#ff4aa2;
+            --pinkSoft:#fff1f7;
+
+            --shadow:0 22px 48px rgba(16,24,40,.12);
+            --shadow2:0 14px 28px rgba(16,24,40,.10);
+
+            --radius:26px;
+        }
+
+        *{box-sizing:border-box}
+        html,body{height:100%}
+        body{
+            margin:0;
+            background:var(--bg);
+            font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif;
+            color:var(--text);
+        }
+
+        .wrap{
+            min-height:100%;
+            display:flex;
+            align-items:flex-start;
+            justify-content:center;
+            padding:46px 16px 70px;
+        }
+
+        .container{
+            width:min(980px,100%);
+        }
+
+        h1{
+            text-align:center;
+            margin:0 0 26px;
+            font-size:54px;
+            font-weight:950;
+            letter-spacing:-.7px;
+        }
+
+        .card{
+            background:var(--panel);
+            border-radius:34px;
+            box-shadow:var(--shadow);
+            overflow:hidden;
+            border:1px solid rgba(0,0,0,.02);
+        }
+
+        .topbar{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            padding:18px 20px;
+            border-bottom:1px solid #f1f4f9;
+        }
+
+        .brand{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            font-weight:950;
+            font-size:22px;
+        }
+
+        .brand .emoji{font-size:20px}
+
+        .resetMini{
+            display:inline-flex;
+            align-items:center;
+            gap:10px;
+            border:2px solid #d7dde6;
+            background:#fff;
+            padding:12px 16px;
+            border-radius:14px;
+            font-weight:950;
+            cursor:pointer;
+        }
+        .resetMini:active{transform:scale(.99)}
+
+        .body{
+            padding:26px 20px 24px;
+            text-align:center;
+        }
+
+        .desc{
+            color:var(--muted);
+            font-weight:800;
+            margin:4px 0 22px;
+            font-size:18px;
+        }
+
+        .inputs{
+            display:flex;
+            gap:18px;
+            align-items:center;
+            justify-content:center;
+            flex-wrap:wrap;
+            margin-bottom:18px;
+        }
+
+        .input{
+            width:min(320px, 44vw);
+            min-width:220px;
+            border:2px solid #d7dde6;
+            border-radius:12px;
+            padding:16px 14px;
+            font-size:20px;
+            font-weight:900;
+            text-align:center;
+            outline:none;
+        }
+        .input:focus{
+            border-color:rgba(255,45,143,.55);
+            box-shadow:0 0 0 5px rgba(255,45,143,.12);
+        }
+
+        .heart{
+            width:44px;
+            height:44px;
+            display:grid;
+            place-items:center;
+            font-size:26px;
+            color:var(--pink);
+        }
+
+        .btnMain{
+            width:100%;
+            border:none;
+            background:linear-gradient(180deg, var(--pink2), var(--pink));
+            color:#fff;
+            font-weight:950;
+            font-size:22px;
+            padding:18px 18px;
+            border-radius:16px;
+            cursor:pointer;
+            box-shadow:0 18px 34px rgba(255,45,143,.22);
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap:12px;
+        }
+        .btnMain:active{transform:scale(.99)}
+
+        .resultWrap{
+            margin-top:22px;
+            background:var(--pinkSoft);
+            border:2px solid rgba(255,45,143,.30);
+            border-radius:22px;
+            padding:26px 16px 22px;
+            box-shadow:0 10px 22px rgba(255,45,143,.08) inset;
+        }
+
+        .pair{
+            font-weight:950;
+            color:var(--pink);
+            font-size:28px;
+        }
+
+        .percent{
+            font-weight:950;
+            color:var(--pink);
+            font-size:88px;
+            margin:8px 0 14px;
+            letter-spacing:-1px;
+        }
+
+        .comment{
+            width:min(720px, 100%);
+            margin:0 auto 18px;
+            background:#fff;
+            border:2px solid #f6d48a;
+            border-radius:14px;
+            padding:12px 14px;
+            font-weight:900;
+            text-align:left;
+        }
+
+        .process{
+            width:min(680px, 100%);
+            margin:0 auto;
+            background:#fff;
+            border-radius:18px;
+            border:1px solid #eef2f7;
+            box-shadow:var(--shadow2);
+            padding:18px 14px 18px;
+        }
+
+        .processTitle{
+            font-weight:950;
+            margin:0 0 12px;
+        }
+
+        .processInner{
+            font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-weight:800;
+            color:#111827;
+            display:flex;
+            flex-direction:column;
+            gap:10px;
+            align-items:center;
+            justify-content:center;
+        }
+
+        .rowText{
+            font-size:20px;
+            letter-spacing:6px;
+            text-align:center;
+        }
+        .rowNums{
+            font-size:20px;
+            letter-spacing:10px;
+            text-align:center;
+            color:#374151;
+        }
+
+        .shareRow{
+            margin-top:16px;
+            display:flex;
+            justify-content:center;
+        }
+
+        .btnShare{
+            border:2px solid #d7dde6;
+            background:#fff;
+            color:#111827;
+            font-weight:950;
+            font-size:20px;
+            padding:14px 18px;
+            border-radius:16px;
+            cursor:pointer;
+            display:inline-flex;
+            gap:10px;
+            align-items:center;
+        }
+        .btnShare:active{transform:scale(.99)}
+
+        .hidden{display:none !important}
+
+        @media (max-width:720px){
+            h1{font-size:44px}
+            .percent{font-size:74px}
+            .input{width:86vw}
+            .rowText{letter-spacing:4px}
+            .rowNums{letter-spacing:8px}
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="container">
+        <h1>이름 궁합 테스트</h1>
+
+        <div class="card">
+            <div class="topbar">
+                <div class="brand"><span class="emoji">💘</span>이름 궁합 테스트</div>
+                <button id="btnResetMini" class="resetMini" type="button">🔄 다시하기</button>
+            </div>
+
+            <div class="body">
+                <div class="desc">재미로 보는 우리 둘의 사랑 점수는?</div>
+
+                <div class="inputs">
+                    <input id="name1" class="input" type="text" placeholder="예: 김빛나" value="김빛나" />
+                    <div class="heart">♡</div>
+                    <input id="name2" class="input" type="text" placeholder="예: 하예승" value="하예승" />
+                </div>
+
+                <button id="btnCalc" class="btnMain" type="button">🧮 궁합 확인하기</button>
+
+                <div id="resultWrap" class="resultWrap hidden">
+                    <div id="pair" class="pair">-</div>
+                    <div id="percent" class="percent">0%</div>
+
+                    <div id="comment" class="comment">-</div>
+
+                    <div class="process">
+                        <div class="processTitle">계산 과정</div>
+                        <div id="processInner" class="processInner"></div>
+                    </div>
+
+                    <div class="shareRow">
+                        <button id="btnShare" class="btnShare" type="button">🔗 결과 공유하기</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* =========================================================
+       이름 궁합(재미용)
+       - 간단한 "궁합 수" 규칙(완전 랜덤 아님, 입력에 따라 항상 동일 결과)
+       - 한글/영문/숫자 모두 입력 가능
+       - 결과 % + 메시지 + 계산 과정(혼합/합산)
+    ========================================================= */
+
+    const $ = (id) => document.getElementById(id);
+
+    const name1El = $("name1");
+    const name2El = $("name2");
+    const btnCalc = $("btnCalc");
+    const btnResetMini = $("btnResetMini");
+    const resultWrap = $("resultWrap");
+    const pairEl = $("pair");
+    const percentEl = $("percent");
+    const commentEl = $("comment");
+    const processInner = $("processInner");
+    const btnShare = $("btnShare");
+
+    /* ---- (1) 글자 점수 테이블: 한글은 유니코드 기반, 그 외는 코드포인트 기반 ----
+       - 목표: "입력값에 따라 재현되는 수열"을 만들기
+       - 너무 복잡한 한자획수/자모획수 대신, 안정적/가벼운 방식으로
+    */
+    function charScore(ch){
+        const code = ch.codePointAt(0);
+
+        // 한글(가-힣) 범위: 0xAC00~0xD7A3
+        if(code >= 0xAC00 && code <= 0xD7A3){
+            // 1~9로 분산
+            return (code - 0xAC00) % 9 + 1;
+        }
+        // 영문/숫자/기타: 1~9
+        return code % 9 + 1;
+    }
+
+    function sanitizeName(s){
+        return (s || "").trim().replace(/\s+/g, "");
+    }
+
+    function interleaveChars(a, b){
+        const arrA = [...a];
+        const arrB = [...b];
+        const out = [];
+        const max = Math.max(arrA.length, arrB.length);
+        for(let i=0;i<max;i++){
+            if(i < arrA.length) out.push(arrA[i]);
+            if(i < arrB.length) out.push(arrB[i]);
+        }
+        return out;
+    }
+
+    function buildInitialNumbers(chars){
+        return chars.map(charScore);
+    }
+
+    function reduceOnce(nums){
+        const next = [];
+        for(let i=0;i<nums.length-1;i++){
+            next.push((nums[i] + nums[i+1]) % 10);
+        }
+        return next;
+    }
+
+    function toPercentFromLastTwo(a, b){
+        // 마지막 2자리로 % 생성 (00~99)
+        return a * 10 + b;
+    }
+
+    function commentByPercent(p){
+        if(p >= 90) return "완벽 조합이에요! 같이 있으면 서로가 더 빛날 수 있어요 😍";
+        if(p >= 75) return "꽤 잘 맞아요! 텐션도 좋고 케미가 살아있네요 ✨";
+        if(p >= 60) return "좋은 편이에요! 대화만 잘 맞추면 더 올라갈 수 있어요 🙂";
+        if(p >= 45) return "나쁘지 않아요~ 서로 맞춰가는 재미가 있겠네요 😉";
+        if(p >= 30) return "조금 다른 점이 있어요. 대신 배울 점도 많을 수 있어요 🤝";
+        return "쉽진 않지만… 노력하면 또 방법은 있어요! 💪";
+    }
+
+    function renderProcess(chars, rows){
+        processInner.innerHTML = "";
+
+        // 첫 줄: 글자 배열(스크린샷처럼 띄어쓰기 크게)
+        const rowText = document.createElement("div");
+        rowText.className = "rowText";
+        rowText.textContent = chars.join(" ");
+        processInner.appendChild(rowText);
+
+        // 각 숫자 줄 출력
+        rows.forEach(nums=>{
+            const rowNums = document.createElement("div");
+            rowNums.className = "rowNums";
+            rowNums.textContent = nums.join(" ");
+            processInner.appendChild(rowNums);
+        });
+    }
+
+    function calculate(){
+        const n1 = sanitizeName(name1El.value);
+        const n2 = sanitizeName(name2El.value);
+
+        if(!n1 || !n2){
+            alert("이름을 두 개 모두 입력해 주세요.");
+            return;
+        }
+
+        const chars = interleaveChars(n1, n2);           // 글자 교차 배열
+        const first = buildInitialNumbers(chars);        // 첫 숫자열
+        const rows = [first];
+
+        // 숫자 2개 남을 때까지 줄이기
+        let cur = first;
+        while(cur.length > 2){
+            cur = reduceOnce(cur);
+            rows.push(cur);
+        }
+
+        const pct = toPercentFromLastTwo(cur[0], cur[1]);
+
+        // 출력
+        pairEl.textContent = `${n1} & ${n2}`;
+        percentEl.textContent = `${pct}%`;
+        commentEl.textContent = commentByPercent(pct);
+
+        renderProcess(chars, rows);
+
+        resultWrap.classList.remove("hidden");
+        resultWrap.scrollIntoView({behavior:"smooth", block:"start"});
+    }
+
+    function resetAll(){
+        resultWrap.classList.add("hidden");
+        processInner.innerHTML = "";
+        percentEl.textContent = "0%";
+        commentEl.textContent = "-";
+    }
+
+    async function share(){
+        const n1 = sanitizeName(name1El.value);
+        const n2 = sanitizeName(name2El.value);
+        const pct = percentEl.textContent;
+
+        const text = `💘 이름 궁합 테스트\n${n1} & ${n2} = ${pct}`;
+
+        try{
+            if(navigator.share){
+                await navigator.share({ title:"이름 궁합 테스트", text });
+            }else{
+                await navigator.clipboard.writeText(text);
+                alert("공유 문구를 복사했어요!\n\n" + text);
+            }
+        }catch(e){
+            // 사용자가 취소해도 에러로 잡히는 케이스가 있어 조용히 처리
+        }
+    }
+
+    btnCalc.addEventListener("click", calculate);
+    btnResetMini.addEventListener("click", () => {
+        name1El.value = "";
+        name2El.value = "";
+        resetAll();
+        name1El.focus();
+    });
+    btnShare.addEventListener("click", share);
+
+    // Enter로 계산
+    [name1El, name2El].forEach(el=>{
+        el.addEventListener("keydown", (e)=>{
+            if(e.key === "Enter") calculate();
+        });
+    });
+</script>
+
+</body>
+</html>
