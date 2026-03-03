@@ -1,0 +1,365 @@
+<!-- 파일명 예시: online-fortune-cookie.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>온라인 포춘 쿠키</title>
+
+    <style>
+        :root{
+            --bg:#ffffff;
+            --panel:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --border:#e9eef5;
+
+            --mint1:#d8f7c8;
+            --mint2:#bff0a8;
+
+            --orange1:#ffb43a;
+            --orange2:#f08a00;
+
+            --cream:#fff6da;
+            --creamBorder:#f1d39c;
+            --accent:#d97706;
+
+            --shadow:0 22px 48px rgba(16,24,40,.12);
+            --shadowSoft:0 14px 28px rgba(16,24,40,.12);
+            --radius:30px;
+        }
+
+        *{box-sizing:border-box}
+        html,body{height:100%}
+        body{
+            margin:0;
+            background:var(--bg);
+            font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif;
+            color:var(--text);
+        }
+
+        .wrap{
+            min-height:100%;
+            display:flex;
+            align-items:flex-start;
+            justify-content:center;
+            padding:46px 16px 70px;
+        }
+
+        .container{
+            width:min(1100px, 100%);
+            text-align:center;
+        }
+
+        h1{
+            margin:0 0 26px;
+            font-size:56px;
+            font-weight:950;
+            letter-spacing:-.8px;
+        }
+
+        .panel{
+            background:var(--panel);
+            border-radius:44px;
+            box-shadow:var(--shadow);
+            padding:44px 28px 46px;
+            border:1px solid rgba(0,0,0,.02);
+        }
+
+        /* Mint stage (cookie area) */
+        .stage{
+            width:min(620px, 100%);
+            margin:0 auto 26px;
+            background:linear-gradient(135deg, var(--mint1), var(--mint2));
+            border-radius:26px;
+            padding:40px 24px;
+            position:relative;
+            box-shadow:inset 0 10px 18px rgba(255,255,255,.55);
+            overflow:hidden;
+        }
+        .spark{
+            position:absolute;
+            right:22px;
+            bottom:18px;
+            width:22px;
+            height:22px;
+            opacity:.35;
+            transform:rotate(18deg);
+        }
+        .spark::before,
+        .spark::after{
+            content:"";
+            position:absolute;
+            inset:0;
+            background:#ffffff;
+            clip-path:polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+        }
+        .spark::after{transform:scale(.58); opacity:.75}
+
+        /* cookie */
+        .cookieWrap{
+            height:220px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            position:relative;
+        }
+
+        .cookie{
+            width:260px;
+            height:180px;
+            position:relative;
+            filter:drop-shadow(0 18px 20px rgba(16,24,40,.16));
+        }
+
+        .cookie .half{
+            position:absolute;
+            top:18px;
+            width:150px;
+            height:150px;
+            background:radial-gradient(circle at 35% 30%, #ffd27a, #e8a53f 70%, #cf8a27);
+            border-radius:55% 45% 55% 45%;
+            border:3px solid rgba(120,70,10,.15);
+        }
+
+        .cookie .left{
+            left:22px;
+            transform:rotate(-12deg);
+        }
+        .cookie .right{
+            right:22px;
+            transform:rotate(12deg);
+        }
+        .cookie .ridge{
+            position:absolute;
+            width:80px;
+            height:18px;
+            border-radius:999px;
+            background:rgba(120,70,10,.16);
+            top:62px;
+            left:90px;
+            transform:rotate(-18deg);
+            filter:blur(.2px);
+        }
+        .cookie .ridge2{
+            position:absolute;
+            width:70px;
+            height:14px;
+            border-radius:999px;
+            background:rgba(120,70,10,.12);
+            top:92px;
+            left:98px;
+            transform:rotate(14deg);
+        }
+
+        .cookie.open .left{
+            animation:openLeft .45s ease forwards;
+        }
+        .cookie.open .right{
+            animation:openRight .45s ease forwards;
+        }
+        @keyframes openLeft{
+            to{ transform:translateX(-58px) rotate(-26deg); }
+        }
+        @keyframes openRight{
+            to{ transform:translateX(58px) rotate(26deg); }
+        }
+
+        /* message card */
+        .msg{
+            position:absolute;
+            left:50%;
+            top:50%;
+            transform:translate(-50%,-50%);
+            width:min(520px, 92%);
+            background:var(--cream);
+            border:2px solid var(--creamBorder);
+            border-radius:18px;
+            padding:18px 18px;
+            display:flex;
+            align-items:center;
+            gap:14px;
+            box-shadow:var(--shadowSoft);
+            opacity:0;
+            pointer-events:none;
+        }
+
+        .msg.show{
+            opacity:1;
+            pointer-events:auto;
+            animation:pop .28s ease-out;
+        }
+        @keyframes pop{
+            from{transform:translate(-50%,-50%) scale(.98); opacity:.2}
+            to{transform:translate(-50%,-50%) scale(1); opacity:1}
+        }
+
+        .star{
+            width:34px;
+            height:34px;
+            border-radius:10px;
+            display:grid;
+            place-items:center;
+            color:#f59e0b;
+            background:rgba(245,158,11,.12);
+            font-size:22px;
+        }
+
+        .msgText{
+            font-size:24px;
+            font-weight:950;
+            color:var(--accent);
+            text-align:left;
+            line-height:1.25;
+        }
+
+        /* button */
+        .actions{
+            display:flex;
+            justify-content:center;
+            gap:14px;
+            flex-wrap:wrap;
+            margin-top:6px;
+        }
+
+        .btn{
+            border:none;
+            cursor:pointer;
+            font-weight:950;
+            padding:16px 26px;
+            border-radius:18px;
+            font-size:22px;
+            display:inline-flex;
+            align-items:center;
+            gap:12px;
+            box-shadow:0 16px 28px rgba(16,24,40,.14);
+        }
+
+        .btn.primary{
+            background:linear-gradient(180deg, var(--orange1), var(--orange2));
+            color:#fff;
+        }
+        .btn.secondary{
+            background:#fff;
+            color:#111827;
+            border:2px solid #d7dde6;
+            box-shadow:none;
+        }
+        .btn:active{transform:scale(.99)}
+        .btn[disabled]{opacity:.55; cursor:not-allowed; transform:none}
+
+        .toast{
+            margin-top:16px;
+            min-height:26px;
+            color:var(--muted);
+            font-weight:850;
+        }
+
+        @media (max-width:640px){
+            h1{font-size:44px}
+            .panel{padding:34px 16px 38px; border-radius:34px}
+            .cookie{width:240px}
+            .msgText{font-size:20px}
+            .btn{font-size:20px}
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="container">
+        <h1>온라인 포춘 쿠키</h1>
+
+        <div class="panel">
+            <div class="stage" aria-label="포춘 쿠키 영역">
+                <div class="cookieWrap">
+                    <div id="cookie" class="cookie" aria-hidden="true">
+                        <div class="half left"></div>
+                        <div class="half right"></div>
+                        <div class="ridge"></div>
+                        <div class="ridge2"></div>
+                    </div>
+
+                    <div id="msg" class="msg" role="status" aria-live="polite">
+                        <div class="star">⭐</div>
+                        <div id="msgText" class="msgText">오늘은 좋은 일이 생길 거예요.</div>
+                    </div>
+                </div>
+                <div class="spark" aria-hidden="true"></div>
+            </div>
+
+            <div class="actions">
+                <button id="btnOpen" class="btn primary" type="button">⚡ 포춘 쿠키 열기</button>
+                <button id="btnReset" class="btn secondary" type="button">↩️ 다시 하기</button>
+            </div>
+
+            <div id="toast" class="toast">버튼을 눌러 포춘 쿠키를 열어보세요.</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* =========================
+       Online Fortune Cookie
+       - 순수 HTML/CSS/JS
+       - 광고/Bootstrap 없음
+    ========================= */
+
+    const fortunes = [
+        "큰 결정을 내릴 때가 왔습니다.",
+        "오늘은 뜻밖의 행운이 찾아옵니다.",
+        "지금 시작하면 생각보다 빨리 풀립니다.",
+        "새로운 인연이 좋은 기회를 가져옵니다.",
+        "작은 친절이 큰 도움으로 돌아옵니다.",
+        "미루던 일을 정리하면 마음이 가벼워집니다.",
+        "한 번 더 확인하면 실수가 사라집니다.",
+        "당신의 선택이 정답이 됩니다.",
+        "지금은 속도보다 방향이 중요합니다.",
+        "가장 가까운 곳에 답이 있습니다."
+    ];
+
+    const cookie = document.getElementById("cookie");
+    const msg = document.getElementById("msg");
+    const msgText = document.getElementById("msgText");
+    const btnOpen = document.getElementById("btnOpen");
+    const btnReset = document.getElementById("btnReset");
+    const toast = document.getElementById("toast");
+
+    let opened = false;
+
+    function pickFortune(){
+        const i = Math.floor(Math.random() * fortunes.length);
+        return fortunes[i];
+    }
+
+    function openCookie(){
+        if(opened) return;
+        opened = true;
+
+        cookie.classList.add("open");
+
+        // 애니메이션 후 메시지 표시
+        const text = pickFortune();
+        setTimeout(() => {
+            msgText.textContent = text;
+            msg.classList.add("show");
+            toast.textContent = "포춘이 공개되었습니다! 다시 하려면 ‘다시 하기’를 누르세요.";
+        }, 320);
+
+        btnOpen.disabled = true;
+    }
+
+    function reset(){
+        opened = false;
+        cookie.classList.remove("open");
+        msg.classList.remove("show");
+        btnOpen.disabled = false;
+        toast.textContent = "버튼을 눌러 포춘 쿠키를 열어보세요.";
+    }
+
+    btnOpen.addEventListener("click", openCookie);
+    btnReset.addEventListener("click", reset);
+</script>
+
+</body>
+</html>
