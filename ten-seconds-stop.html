@@ -1,0 +1,191 @@
+<!-- 파일명 예시: ten-seconds-from-two.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10.000초 멈추기</title>
+
+    <style>
+        :root{
+            --bg:#ffffff;
+            --text:#1f2937;
+            --muted:#6b7280;
+            --green:#57c96b;
+            --blue:#4ea9ff;
+            --radius:28px;
+            --shadow:0 20px 40px rgba(0,0,0,.08);
+        }
+
+        *{box-sizing:border-box}
+        body{
+            margin:0;
+            background:var(--bg);
+            font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif;
+            color:var(--text);
+        }
+
+        .wrap{
+            min-height:100vh;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:40px 16px;
+        }
+
+        .container{
+            width:min(960px,100%);
+            text-align:center;
+        }
+
+        h1{
+            font-size:48px;
+            font-weight:800;
+            margin:0 0 12px;
+        }
+
+        .sub{
+            color:var(--muted);
+            font-weight:600;
+            margin-bottom:28px;
+        }
+
+        .card{
+            background:var(--green);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            padding:60px 20px;
+            cursor:pointer;
+            user-select:none;
+            transition:.15s;
+        }
+        .card:active{transform:scale(.995)}
+
+        .time{
+            font-size:100px;
+            font-weight:900;
+            color:#fff;
+            margin:10px 0;
+            font-variant-numeric:tabular-nums;
+        }
+
+        .hint{
+            font-size:26px;
+            font-weight:800;
+            color:#fff;
+            margin-top:10px;
+        }
+
+        .result{ background:var(--blue); }
+
+        .meta{
+            font-size:30px;
+            font-weight:800;
+            color:#fff;
+            margin-top:8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="wrap">
+    <div class="container">
+        <h1>10.000초 멈추기 ⏱️</h1>
+        <p class="sub">10초가 되었다고 생각될 때 클릭하세요!</p>
+
+        <div id="card" class="card" role="button" aria-label="타이머 카드" tabindex="0">
+            <div id="time" class="time">0.000s</div>
+            <div id="meta" class="meta" style="display:none;"></div>
+            <div id="hint" class="hint">클릭하면 시작</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const TARGET = 10000;       // 목표 10초
+    const START_OFFSET = 0;     // 시작 오프셋(필요 없으면 0)
+    const HIDE_AFTER = 3000;    // ✅ 3초 이후부터 숨김
+
+    let state = "idle";         // idle | running | result
+    let startTime = 0;
+    let raf = 0;
+
+    const card  = document.getElementById("card");
+    const timeEl = document.getElementById("time");
+    const hintEl = document.getElementById("hint");
+    const metaEl = document.getElementById("meta");
+
+    function format(ms){
+        return (ms / 1000).toFixed(3) + "s";
+    }
+
+    function loop(now){
+        const elapsed = now - startTime + START_OFFSET;
+
+        if (state === "running") {
+            // ✅ 3초까지는 숫자 표시, 이후는 ?로 숨김
+            if (elapsed < HIDE_AFTER) {
+                timeEl.textContent = format(elapsed);
+            } else {
+                timeEl.textContent = "?.???s";
+            }
+            raf = requestAnimationFrame(loop);
+        }
+    }
+
+    function start(){
+        startTime = performance.now();
+        state = "running";
+
+        hintEl.textContent = "10초라고 생각될 때 클릭!";
+        metaEl.style.display = "none";
+        card.classList.remove("result");
+
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(loop);
+    }
+
+    function stop(){
+        cancelAnimationFrame(raf);
+        state = "result";
+
+        const end = performance.now();
+        const elapsed = end - startTime + START_OFFSET;
+        const error = Math.round(Math.abs(elapsed - TARGET));
+
+        timeEl.textContent = format(elapsed);
+        metaEl.textContent = "오차: " + error + "ms";
+        metaEl.style.display = "block";
+
+        hintEl.textContent = "다시 하려면 클릭";
+        card.classList.add("result");
+    }
+
+    function reset(){
+        cancelAnimationFrame(raf);
+        state = "idle";
+
+        timeEl.textContent = "0.000s";
+        hintEl.textContent = "클릭하면 시작";
+        metaEl.style.display = "none";
+        card.classList.remove("result");
+    }
+
+    function handleAction(){
+        if (state === "idle") start();
+        else if (state === "running") stop();
+        else reset();
+    }
+
+    card.addEventListener("click", handleAction);
+
+    card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleAction();
+        }
+    });
+</script>
+
+</body>
+</html>
