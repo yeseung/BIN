@@ -1,0 +1,469 @@
+<!-- 파일명 예시: dice-roller.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>주사위 굴리기</title>
+
+    <style>
+        :root{
+            --bg:#ffffff;
+            --panel:#ffffff;
+            --soft:#f3f5f9;
+            --border:#e9edf5;
+            --text:#111827;
+            --muted:#6b7280;
+
+            --green:#49d33b;
+            --purple:#6d28d9;
+            --blue:#1d9bf0;
+
+            --shadow:0 22px 48px rgba(16,24,40,.12);
+            --shadow2:0 14px 26px rgba(16,24,40,.10);
+
+            --radius:26px;
+        }
+
+        *{box-sizing:border-box}
+        html,body{height:100%}
+        body{
+            margin:0;
+            background:var(--bg);
+            font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif;
+            color:var(--text);
+        }
+
+        .wrap{
+            min-height:100%;
+            display:flex;
+            align-items:flex-start;
+            justify-content:center;
+            padding:46px 16px 70px;
+        }
+
+        .container{
+            width:min(980px,100%);
+        }
+
+        h1{
+            text-align:center;
+            margin:0 0 26px;
+            font-size:54px;
+            font-weight:950;
+            letter-spacing:-.7px;
+        }
+
+        .card{
+            background:var(--panel);
+            border-radius:34px;
+            box-shadow:var(--shadow);
+            overflow:hidden;
+            border:1px solid rgba(0,0,0,.02);
+        }
+
+        .body{
+            padding:26px 22px 22px;
+        }
+
+        .controls{
+            display:grid;
+            grid-template-columns:1fr;
+            gap:18px;
+            max-width:520px;
+        }
+
+        .label{
+            font-size:22px;
+            font-weight:950;
+            margin-bottom:10px;
+        }
+
+        .row{
+            display:flex;
+            align-items:center;
+            gap:16px;
+            flex-wrap:wrap;
+        }
+
+        .range{
+            -webkit-appearance:none;
+            appearance:none;
+            width:280px;
+            height:8px;
+            border-radius:999px;
+            background:#e5e7eb;
+            outline:none;
+        }
+        .range::-webkit-slider-thumb{
+            -webkit-appearance:none;
+            appearance:none;
+            width:26px;
+            height:26px;
+            border-radius:999px;
+            background:#ffffff;
+            border:6px solid var(--green);
+            box-shadow:0 10px 16px rgba(16,24,40,.10);
+            cursor:pointer;
+        }
+        .range::-moz-range-thumb{
+            width:26px;
+            height:26px;
+            border-radius:999px;
+            background:#ffffff;
+            border:6px solid var(--green);
+            box-shadow:0 10px 16px rgba(16,24,40,.10);
+            cursor:pointer;
+        }
+
+        .numBox{
+            width:92px;
+            height:54px;
+            border:2px solid #d7dde6;
+            border-radius:12px;
+            font-size:22px;
+            font-weight:950;
+            text-align:center;
+            outline:none;
+            background:#fff;
+        }
+        .numBox:focus{
+            border-color:rgba(109,40,217,.55);
+            box-shadow:0 0 0 5px rgba(109,40,217,.10);
+        }
+
+        .colorBtn{
+            width:46px;
+            height:46px;
+            border-radius:12px;
+            border:2px solid #d7dde6;
+            background:#fff;
+            cursor:pointer;
+            display:grid;
+            place-items:center;
+            box-shadow:0 10px 18px rgba(16,24,40,.06);
+        }
+        .colorBtn .swatch{
+            width:26px;
+            height:26px;
+            border-radius:8px;
+            border:1px solid rgba(0,0,0,.12);
+        }
+
+        .soundBtn{
+            width:46px;
+            height:46px;
+            border-radius:12px;
+            border:none;
+            cursor:pointer;
+            background:#eef2ff;
+            color:#1f2a44;
+            font-size:22px;
+            display:grid;
+            place-items:center;
+        }
+        .soundBtn:active{transform:scale(.98)}
+        .soundBtn.off{opacity:.55}
+
+        .hr{
+            height:1px;
+            background:#eef2f7;
+            margin:22px 0 22px;
+        }
+
+        .stage{
+            background:var(--soft);
+            border-radius:28px;
+            height:320px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            box-shadow:inset 0 12px 24px rgba(16,24,40,.06);
+            padding:18px;
+        }
+
+        .diceArea{
+            display:flex;
+            gap:18px;
+            flex-wrap:wrap;
+            justify-content:center;
+            align-items:center;
+        }
+
+        /* Dice */
+        .dice{
+            width:92px;
+            height:92px;
+            border-radius:14px;
+            background:#fff;
+            border:3px solid #111827;
+            box-shadow:0 16px 26px rgba(16,24,40,.12);
+            position:relative;
+            display:inline-block;
+        }
+
+        .pip{
+            width:14px;
+            height:14px;
+            border-radius:999px;
+            background:#111827;
+            position:absolute;
+            transform:translate(-50%,-50%);
+        }
+
+        /* pip positions (3x3 grid) */
+        .pos-1{left:25%; top:25%}
+        .pos-2{left:50%; top:25%}
+        .pos-3{left:75%; top:25%}
+        .pos-4{left:25%; top:50%}
+        .pos-5{left:50%; top:50%}
+        .pos-6{left:75%; top:50%}
+        .pos-7{left:25%; top:75%}
+        .pos-8{left:50%; top:75%}
+        .pos-9{left:75%; top:75%}
+
+        /* button bottom */
+        .footer{
+            padding:22px 22px 26px;
+            border-top:1px solid #f1f4f9;
+        }
+
+        .rollBtn{
+            width:100%;
+            border:none;
+            cursor:pointer;
+            font-weight:950;
+            font-size:24px;
+            padding:20px 18px;
+            border-radius:22px;
+            color:#fff;
+            background:linear-gradient(90deg, var(--purple), var(--blue));
+            box-shadow:0 20px 36px rgba(29,155,240,.18);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:12px;
+        }
+        .rollBtn:active{transform:scale(.99)}
+        .rollBtn[disabled]{opacity:.6; cursor:not-allowed; transform:none}
+
+        .toast{
+            margin-top:12px;
+            color:var(--muted);
+            font-weight:800;
+            text-align:center;
+            min-height:22px;
+        }
+
+        @media (max-width:720px){
+            h1{font-size:44px}
+            .stage{height:300px}
+            .range{width:220px}
+            .dice{width:82px;height:82px}
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="container">
+        <h1>주사위 굴리기</h1>
+
+        <div class="card">
+            <div class="body">
+                <div class="controls">
+
+                    <div>
+                        <div class="label">주사위 개수</div>
+                        <div class="row">
+                            <input id="countRange" class="range" type="range" min="1" max="6" value="1" />
+                            <input id="countInput" class="numBox" type="number" min="1" max="6" value="1" />
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="label">주사위 색상</div>
+                        <div class="row">
+                            <button id="btnColorWhite" class="colorBtn" type="button" aria-label="흰색">
+                                <span class="swatch" style="background:#ffffff"></span>
+                            </button>
+                            <button id="btnColorBlack" class="colorBtn" type="button" aria-label="검정색">
+                                <span class="swatch" style="background:#111827"></span>
+                            </button>
+                            <button id="btnSound" class="soundBtn" type="button" aria-label="사운드 토글">🔊</button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="hr"></div>
+
+                <div class="stage">
+                    <div id="diceArea" class="diceArea" aria-label="주사위 표시 영역"></div>
+                </div>
+            </div>
+
+            <div class="footer">
+                <button id="btnRoll" class="rollBtn" type="button">▶ 굴리기</button>
+                <div id="toast" class="toast">주사위 개수와 색상을 설정한 뒤 굴려보세요.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* =========================================================
+       Dice Roller (Pure JS)
+       - 주사위 개수: 1~6
+       - 색상: 흰/검 (테두리/점 반전)
+       - 간단 굴림 애니메이션 + 사운드 토글(웹오디오)
+    ========================================================= */
+
+    const $ = (id) => document.getElementById(id);
+
+    const countRange = $("countRange");
+    const countInput = $("countInput");
+    const diceArea = $("diceArea");
+    const btnRoll = $("btnRoll");
+    const toast = $("toast");
+
+    const btnColorWhite = $("btnColorWhite");
+    const btnColorBlack = $("btnColorBlack");
+    const btnSound = $("btnSound");
+
+    let diceCount = 1;
+    let theme = "white"; // white | black
+    let soundOn = true;
+
+    function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+
+    function setCount(n){
+        diceCount = clamp(Number(n || 1), 1, 6);
+        countRange.value = String(diceCount);
+        countInput.value = String(diceCount);
+        renderDice(Array(diceCount).fill(1));
+    }
+
+    function setTheme(t){
+        theme = t;
+        btnColorWhite.style.outline = (theme === "white") ? "4px solid rgba(73,211,59,.25)" : "none";
+        btnColorBlack.style.outline = (theme === "black") ? "4px solid rgba(73,211,59,.25)" : "none";
+        // 다시 렌더해서 색 적용
+        const current = [...diceArea.querySelectorAll(".dice")].map(d => Number(d.dataset.value || 1));
+        renderDice(current.length ? current : Array(diceCount).fill(1));
+    }
+
+    function toggleSound(){
+        soundOn = !soundOn;
+        btnSound.classList.toggle("off", !soundOn);
+        btnSound.textContent = soundOn ? "🔊" : "🔇";
+    }
+
+    /* --- Dice drawing --- */
+    const PIPS = {
+        1: [5],
+        2: [1,9],
+        3: [1,5,9],
+        4: [1,3,7,9],
+        5: [1,3,5,7,9],
+        6: [1,3,4,6,7,9]
+    };
+
+    function renderDice(values){
+        diceArea.innerHTML = "";
+        values.forEach(v => {
+            const die = document.createElement("div");
+            die.className = "dice";
+            die.dataset.value = String(v);
+
+            // theme colors
+            if(theme === "white"){
+                die.style.background = "#ffffff";
+                die.style.borderColor = "#111827";
+            }else{
+                die.style.background = "#111827";
+                die.style.borderColor = "#111827";
+            }
+
+            const pipColor = (theme === "white") ? "#111827" : "#ffffff";
+
+            (PIPS[v] || []).forEach(pos=>{
+                const pip = document.createElement("div");
+                pip.className = "pip pos-" + pos;
+                pip.style.background = pipColor;
+                die.appendChild(pip);
+            });
+
+            diceArea.appendChild(die);
+        });
+    }
+
+    /* --- Roll animation --- */
+    function rand1to6(){ return Math.floor(Math.random()*6)+1; }
+
+    function playTick(){
+        if(!soundOn) return;
+        try{
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.type = "square";
+            o.frequency.value = 520;
+            g.gain.value = 0.02;
+            o.connect(g); g.connect(ctx.destination);
+            o.start();
+            o.stop(ctx.currentTime + 0.05);
+            setTimeout(()=>ctx.close(), 120);
+        }catch(e){}
+    }
+
+    async function roll(){
+        btnRoll.disabled = true;
+        toast.textContent = "굴리는 중...";
+
+        const duration = 700; // ms
+        const start = performance.now();
+
+        function frame(now){
+            const t = now - start;
+
+            // 계속 랜덤 표시
+            const vals = Array.from({length:diceCount}, rand1to6);
+            renderDice(vals);
+            playTick();
+
+            if(t < duration){
+                requestAnimationFrame(frame);
+            }else{
+                // 최종 값 확정
+                const finalVals = Array.from({length:diceCount}, rand1to6);
+                renderDice(finalVals);
+
+                const sum = finalVals.reduce((a,b)=>a+b,0);
+                toast.textContent = `결과: [${finalVals.join(", ")}]  합계: ${sum}`;
+                btnRoll.disabled = false;
+            }
+        }
+
+        requestAnimationFrame(frame);
+    }
+
+    /* events */
+    countRange.addEventListener("input", e => setCount(e.target.value));
+    countInput.addEventListener("input", e => setCount(e.target.value));
+
+    btnColorWhite.addEventListener("click", () => setTheme("white"));
+    btnColorBlack.addEventListener("click", () => setTheme("black"));
+    btnSound.addEventListener("click", toggleSound);
+
+    btnRoll.addEventListener("click", roll);
+
+    /* init */
+    setTheme("white");
+    setCount(1);
+    toggleSound(); // off 한번 만들지 않게
+    toggleSound(); // 다시 on
+</script>
+
+</body>
+</html>
