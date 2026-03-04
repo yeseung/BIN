@@ -1,0 +1,605 @@
+<!-- 파일명 예시: metronome.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>메트로놈</title>
+
+    <style>
+        :root{
+            --bg:#ffffff;
+            --panel:#ffffff;
+            --soft:#f3f5f9;
+            --border:#e9edf5;
+
+            --text:#111827;
+            --muted:#6b7280;
+
+            --red:#ff4a4a;
+            --green:#35c759;
+            --blue:#1d9bf0;
+
+            --shadow:0 22px 48px rgba(16,24,40,.12);
+            --shadow2:0 14px 26px rgba(16,24,40,.10);
+            --radius:28px;
+        }
+
+        *{box-sizing:border-box}
+        html,body{height:100%}
+        body{
+            margin:0;
+            background:var(--bg);
+            font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif;
+            color:var(--text);
+        }
+
+        .wrap{
+            min-height:100%;
+            display:flex;
+            justify-content:center;
+            padding:42px 16px 70px;
+        }
+        .container{ width:min(980px,100%); }
+
+        h1{
+            text-align:center;
+            margin:0 0 22px;
+            font-size:54px;
+            font-weight:950;
+            letter-spacing:-.7px;
+        }
+        h1 .emoji{font-size:.85em; vertical-align:-2px; margin-right:8px}
+
+        .card{
+            background:var(--panel);
+            border-radius:34px;
+            box-shadow:var(--shadow);
+            border:1px solid rgba(0,0,0,.02);
+            overflow:hidden;
+            padding:26px 22px 28px;
+        }
+
+        .stage{
+            display:flex;
+            justify-content:center;
+            padding:6px 0 10px;
+        }
+
+        /* Metronome body (simple SVG-ish look with pure CSS) */
+        .metro{
+            width:min(420px, 100%);
+            height:360px;
+            position:relative;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            margin:4px auto 6px;
+        }
+        .body{
+            width:320px;
+            height:280px;
+            background:linear-gradient(180deg,#2c3e50,#1f2d3a);
+            border-radius:14px 14px 22px 22px;
+            clip-path:polygon(18% 0,82% 0,100% 100%,0 100%);
+            box-shadow:0 18px 30px rgba(16,24,40,.18);
+            position:relative;
+        }
+        .body::after{
+            content:"";
+            position:absolute;
+            left:18px; right:18px;
+            bottom:16px;
+            height:46px;
+            border-radius:18px;
+            background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0));
+        }
+
+        /* pendulum */
+        .pivot{
+            position:absolute;
+            left:50%;
+            bottom:44px;
+            width:18px;height:18px;
+            border-radius:999px;
+            background:#cfd6df;
+            transform:translateX(-50%);
+            box-shadow:0 8px 16px rgba(0,0,0,.22);
+        }
+        .armWrap{
+            position:absolute;
+            left:50%;
+            bottom:52px;
+            width:10px;
+            height:230px;
+            transform-origin:50% 92%;
+            transform:translateX(-50%) rotate(0deg);
+            will-change:transform;
+        }
+        .arm{
+            position:absolute;
+            left:50%;
+            top:0;
+            width:6px;
+            height:100%;
+            background:linear-gradient(180deg,#f3f4f6,#cdd5df);
+            border-radius:999px;
+            transform:translateX(-50%);
+            box-shadow:0 10px 18px rgba(0,0,0,.18);
+        }
+        .weight{
+            position:absolute;
+            left:50%;
+            top:68px;
+            width:34px;
+            height:44px;
+            background:#ff4a4a;
+            border-radius:6px;
+            transform:translateX(-50%);
+            box-shadow:0 12px 18px rgba(0,0,0,.22);
+        }
+        .weight::after{
+            content:"";
+            position:absolute;
+            inset:5px 6px;
+            border-radius:5px;
+            border:2px solid rgba(255,255,255,.28);
+        }
+
+        .readout{
+            text-align:center;
+            padding:12px 0 6px;
+        }
+        .bpmNum{
+            font-size:86px;
+            font-weight:950;
+            color:var(--red);
+            line-height:1;
+            font-variant-numeric:tabular-nums;
+        }
+        .subTxt{
+            margin-top:6px;
+            color:#9aa3af;
+            font-weight:950;
+            letter-spacing:.5px;
+        }
+
+        /* slider */
+        .sliderRow{
+            display:flex;
+            justify-content:center;
+            padding:6px 0 18px;
+        }
+        .slider{
+            width:min(720px, 100%);
+            -webkit-appearance:none;
+            appearance:none;
+            height:6px;
+            border-radius:999px;
+            background:#e5e7eb;
+            outline:none;
+        }
+        .slider::-webkit-slider-thumb{
+            -webkit-appearance:none;
+            appearance:none;
+            width:18px;height:18px;
+            border-radius:999px;
+            background:#ffffff;
+            border:2px solid #d1d5db;
+            box-shadow:0 10px 16px rgba(16,24,40,.14);
+            cursor:pointer;
+        }
+        .slider::-moz-range-thumb{
+            width:18px;height:18px;
+            border-radius:999px;
+            background:#ffffff;
+            border:2px solid #d1d5db;
+            box-shadow:0 10px 16px rgba(16,24,40,.14);
+            cursor:pointer;
+        }
+
+        /* controls */
+        .controls{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:18px;
+            align-items:end;
+            padding:6px 2px 16px;
+        }
+        @media (max-width:720px){
+            .controls{grid-template-columns:1fr; gap:14px}
+        }
+
+        .ctrl{
+            background:transparent;
+        }
+        .ctrl label{
+            display:block;
+            font-weight:950;
+            margin-bottom:10px;
+        }
+        .select{
+            width:100%;
+            border:2px solid #d7dde6;
+            border-radius:12px;
+            padding:12px 14px;
+            font-weight:900;
+            font-size:16px;
+            outline:none;
+            background:#fff;
+        }
+        .select:focus{
+            border-color:rgba(29,155,240,.40);
+            box-shadow:0 0 0 5px rgba(29,155,240,.10);
+        }
+
+        /* toggle */
+        .toggleRow{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            border:2px solid #eef2f7;
+            border-radius:14px;
+            padding:10px 12px;
+            background:#fff;
+        }
+        .tLabel{font-weight:950}
+        .switch{
+            position:relative;
+            width:58px;
+            height:32px;
+            border-radius:999px;
+            background:#d1d5db;
+            cursor:pointer;
+            transition:.15s;
+            flex:0 0 auto;
+        }
+        .switch::after{
+            content:"";
+            position:absolute;
+            top:4px; left:4px;
+            width:24px; height:24px;
+            border-radius:999px;
+            background:#fff;
+            box-shadow:0 10px 16px rgba(16,24,40,.16);
+            transition:.15s;
+        }
+        .switch.on{
+            background:rgba(53,199,89,.55);
+        }
+        .switch.on::after{
+            left:30px;
+        }
+
+        /* buttons */
+        .btnRow{
+            display:flex;
+            gap:16px;
+            justify-content:center;
+            padding-top:8px;
+            flex-wrap:wrap;
+        }
+        .btn{
+            border:none;
+            cursor:pointer;
+            border-radius:999px;
+            padding:18px 26px;
+            font-size:22px;
+            font-weight:950;
+            min-width:240px;
+            background:#fff;
+            box-shadow:0 18px 34px rgba(16,24,40,.10);
+            border:2px solid #e5e7eb;
+        }
+        .btn:active{transform:scale(.995)}
+        .btnStop{
+            border-color:rgba(255,74,74,.60);
+            color:var(--red);
+        }
+        .btnStop span{
+            display:inline-flex;
+            align-items:center;
+            gap:10px;
+        }
+        .btnTap{
+            color:#9ca3af;
+            border-color:#e5e7eb;
+            background:#fafafa;
+        }
+        .btnTap.enabled{
+            color:#111827;
+            background:#fff;
+        }
+
+        /* small note */
+        .toast{
+            text-align:center;
+            color:var(--muted);
+            font-weight:900;
+            min-height:22px;
+            padding-top:10px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="container">
+        <h1><span class="emoji">🥁</span>메트로놈</h1>
+
+        <div class="card">
+            <div class="stage">
+                <div class="metro" aria-label="메트로놈 애니메이션">
+                    <div class="body"></div>
+
+                    <div id="armWrap" class="armWrap">
+                        <div class="arm"></div>
+                        <div class="weight"></div>
+                    </div>
+                    <div class="pivot"></div>
+                </div>
+            </div>
+
+            <div class="readout">
+                <div id="bpmNum" class="bpmNum">0</div>
+                <div id="subTxt" class="subTxt">GET READY</div>
+            </div>
+
+            <div class="sliderRow">
+                <input id="bpmSlider" class="slider" type="range" min="40" max="240" value="120" />
+            </div>
+
+            <div class="controls">
+                <div class="ctrl">
+                    <label for="meter">박자</label>
+                    <select id="meter" class="select">
+                        <option value="2">2/4</option>
+                        <option value="3">3/4</option>
+                        <option value="4" selected>4/4</option>
+                        <option value="5">5/4</option>
+                        <option value="6">6/8</option>
+                    </select>
+                </div>
+
+                <div class="ctrl">
+                    <label>첫 박 강세</label>
+                    <div class="toggleRow">
+                        <div class="tLabel">ON / OFF</div>
+                        <div id="accentSwitch" class="switch on" role="switch" aria-checked="true" tabindex="0"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="btnRow">
+                <button id="btnStartStop" class="btn btnStop" type="button">
+                    <span>⛔ STOP</span>
+                </button>
+                <button id="btnTap" class="btn btnTap enabled" type="button">탭 템포</button>
+            </div>
+
+            <div id="toast" class="toast"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* =========================================================
+       Metronome (Vanilla JS + WebAudio)
+       - BPM 슬라이더(40~240)
+       - 박자 선택(2/4,3/4,4/4,5/4,6/8 -> 내부적으로 beatsPerBar)
+       - 첫 박 강세 토글
+       - START/STOP
+       - TAP TEMPO
+       - 펜듈럼 애니메이션(각 비트마다 좌/우)
+    ========================================================= */
+
+    const $ = (id) => document.getElementById(id);
+
+    const armWrap = $("armWrap");
+    const bpmSlider = $("bpmSlider");
+    const bpmNum = $("bpmNum");
+    const subTxt = $("subTxt");
+    const meterSel = $("meter");
+    const accentSwitch = $("accentSwitch");
+    const btnStartStop = $("btnStartStop");
+    const btnTap = $("btnTap");
+    const toast = $("toast");
+
+    let audioCtx = null;
+    let isRunning = false;
+
+    let bpm = 120;
+    let beatsPerBar = 4;
+    let accentOn = true;
+
+    let nextNoteTime = 0;
+    let currentBeat = 0; // 0..beatsPerBar-1
+    let schedulerTimer = null;
+
+    // scheduling
+    const lookaheadMs = 25;
+    const scheduleAheadSec = 0.15;
+
+    // pendulum
+    let swingDir = 1;
+    let swingDeg = 18;
+
+    // tap tempo
+    let tapTimes = [];
+
+    function setUIBpm(v){
+        bpm = Math.max(20, Number(v));
+        bpmNum.textContent = isRunning ? String(Math.round(bpm)) : "0";
+        bpmSlider.value = String(Math.round(bpm));
+    }
+    function setSub(txt){
+        subTxt.textContent = txt;
+    }
+
+    function ensureAudio(){
+        if(audioCtx) return;
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function playClick(time, strong=false){
+        // short beep click
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = "square";
+        osc.frequency.value = strong ? 1200 : 900;
+
+        gain.gain.setValueAtTime(0.0001, time);
+        gain.gain.exponentialRampToValueAtTime(strong ? 0.35 : 0.22, time + 0.002);
+        gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.03);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start(time);
+        osc.stop(time + 0.04);
+    }
+
+    function secondsPerBeat(){
+        return 60 / bpm;
+    }
+
+    function scheduleNote(time){
+        const strong = accentOn && currentBeat === 0;
+        playClick(time, strong);
+
+        // pendulum swing each beat (visual only)
+        swingDir *= -1;
+        const deg = swingDir * swingDeg;
+        armWrap.style.transform = `translateX(-50%) rotate(${deg}deg)`;
+
+        currentBeat = (currentBeat + 1) % beatsPerBar;
+    }
+
+    function scheduler(){
+        const now = audioCtx.currentTime;
+        while(nextNoteTime < now + scheduleAheadSec){
+            scheduleNote(nextNoteTime);
+            nextNoteTime += secondsPerBeat();
+        }
+    }
+
+    function start(){
+        ensureAudio();
+        audioCtx.resume?.();
+
+        isRunning = true;
+        currentBeat = 0;
+        nextNoteTime = audioCtx.currentTime + 0.08;
+
+        bpmNum.textContent = String(Math.round(bpm));
+        setSub("PLAYING");
+
+        btnStartStop.innerHTML = `<span>⛔ STOP</span>`;
+        toast.textContent = "";
+
+        // initial pendulum pose
+        swingDir = 1;
+        armWrap.style.transform = `translateX(-50%) rotate(${swingDeg}deg)`;
+
+        schedulerTimer = setInterval(scheduler, lookaheadMs);
+    }
+
+    function stop(){
+        isRunning = false;
+
+        if(schedulerTimer){
+            clearInterval(schedulerTimer);
+            schedulerTimer = null;
+        }
+
+        bpmNum.textContent = "0";
+        setSub("GET READY");
+
+        btnStartStop.innerHTML = `<span>⏵ START</span>`;
+        toast.textContent = "정지됨";
+
+        // reset pendulum to center
+        armWrap.style.transform = `translateX(-50%) rotate(0deg)`;
+    }
+
+    function toggleRun(){
+        if(isRunning) stop();
+        else start();
+    }
+
+    /* ---------- events ---------- */
+    bpmSlider.addEventListener("input", (e)=>{
+        bpm = Number(e.target.value);
+        if(isRunning) bpmNum.textContent = String(Math.round(bpm));
+    });
+
+    meterSel.addEventListener("change", ()=>{
+        beatsPerBar = Number(meterSel.value);
+        currentBeat = 0;
+    });
+
+    function toggleAccent(){
+        accentOn = !accentOn;
+        accentSwitch.classList.toggle("on", accentOn);
+        accentSwitch.setAttribute("aria-checked", String(accentOn));
+        currentBeat = 0;
+    }
+    accentSwitch.addEventListener("click", toggleAccent);
+    accentSwitch.addEventListener("keydown", (e)=>{
+        if(e.key === "Enter" || e.key === " "){
+            e.preventDefault();
+            toggleAccent();
+        }
+    });
+
+    btnStartStop.addEventListener("click", toggleRun);
+
+    /* ---------- tap tempo ---------- */
+    function tap(){
+        const now = performance.now();
+
+        // if idle time > 2s, reset taps
+        if(tapTimes.length && (now - tapTimes[tapTimes.length-1] > 2000)){
+            tapTimes = [];
+        }
+        tapTimes.push(now);
+
+        // keep last 6
+        if(tapTimes.length > 6) tapTimes.shift();
+
+        if(tapTimes.length >= 2){
+            const intervals = [];
+            for(let i=1;i<tapTimes.length;i++){
+                intervals.push(tapTimes[i]-tapTimes[i-1]);
+            }
+            const avg = intervals.reduce((a,b)=>a+b,0) / intervals.length;
+            const nextBpm = Math.round(60000 / avg);
+
+            const clamped = Math.max(40, Math.min(240, nextBpm));
+            bpm = clamped;
+            bpmSlider.value = String(clamped);
+
+            if(isRunning) bpmNum.textContent = String(clamped);
+            toast.textContent = `탭 템포: ${clamped} BPM`;
+        }else{
+            toast.textContent = "탭 템포 측정 중...";
+        }
+    }
+    btnTap.addEventListener("click", tap);
+
+    /* ---------- init ---------- */
+    (function init(){
+        // initial state like screenshot (STOP button visible)
+        // but 실제로는 정지 상태에서 START로 시작하는게 자연스러워서, 여기선 START로 둠
+        // 스샷 스타일을 원하면 아래 줄을 stop() 대신 start()로 바꿔도 됨.
+        stop();
+        bpmSlider.value = "120";
+        bpm = 120;
+        beatsPerBar = Number(meterSel.value);
+    })();
+</script>
+
+</body>
+</html>
