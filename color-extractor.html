@@ -1,0 +1,914 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>컬러 추출기</title>
+    <meta
+            name="description"
+            content="이미지에서 주요 색상을 추출하는 바닐라 자바스크립트 기반 컬러 추출기입니다."
+    />
+    <style>
+        :root {
+            --bg: #060606;
+            --card: #171717;
+            --card-2: #121212;
+            --line: #343434;
+            --line-soft: #2a2a2a;
+            --text: #f5f5f5;
+            --muted: #a3a3a3;
+            --accent: #ff5a5f;
+            --accent-2: #4fb6ff;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --radius: 24px;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+        }
+
+        .wrap {
+            max-width: 1360px;
+            margin: 0 auto;
+            padding: 28px 18px 56px;
+        }
+
+        .page-header {
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            margin: 0 0 10px;
+            font-size: 42px;
+            line-height: 1.2;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+        }
+
+        .page-desc {
+            margin: 0;
+            color: var(--muted);
+            font-size: 18px;
+            line-height: 1.7;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(320px, 0.94fr);
+            gap: 24px;
+            align-items: start;
+        }
+
+        .card {
+            background: linear-gradient(180deg, #181818 0%, #141414 100%);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 28px;
+        }
+
+        .section-title {
+            margin: 0 0 8px;
+            font-size: 22px;
+            font-weight: 800;
+            line-height: 1.3;
+        }
+
+        .section-desc {
+            margin: 0 0 22px;
+            color: var(--muted);
+            font-size: 16px;
+            line-height: 1.7;
+        }
+
+        .drop-zone {
+            position: relative;
+            border: 2px dashed #3b3b3b;
+            border-radius: 22px;
+            min-height: 228px;
+            background: #151515;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
+            overflow: hidden;
+        }
+
+        .drop-zone:hover,
+        .drop-zone.dragover {
+            border-color: #5b5b5b;
+            background: #191919;
+        }
+
+        .drop-zone-content {
+            color: var(--muted);
+            line-height: 1.8;
+            font-size: 18px;
+        }
+
+        .drop-zone-icon {
+            font-size: 52px;
+            line-height: 1;
+            margin-bottom: 10px;
+            color: #d1d5db;
+        }
+
+        .drop-zone-content strong {
+            display: block;
+            color: var(--text);
+            font-size: 20px;
+            margin-bottom: 4px;
+            font-weight: 800;
+        }
+
+        .drop-zone-content small {
+            display: block;
+            font-size: 15px;
+            color: var(--muted);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .control-block {
+            margin-top: 18px;
+        }
+
+        .control-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .control-label {
+            font-size: 17px;
+            font-weight: 800;
+        }
+
+        .control-value {
+            color: var(--text);
+            font-size: 17px;
+            font-weight: 800;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 18px;
+        }
+
+        .btn {
+            appearance: none;
+            border: none;
+            border-radius: 14px;
+            padding: 13px 18px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 800;
+            transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+            font-family: inherit;
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-primary {
+            background: #262626;
+            color: var(--text);
+            border: 1px solid #3a3a3a;
+        }
+
+        .btn-primary:hover {
+            background: #2d2d2d;
+        }
+
+        .btn-light {
+            background: #202020;
+            color: var(--text);
+            border: 1px solid #353535;
+        }
+
+        .btn-light:hover {
+            background: #292929;
+        }
+
+        .preview-label {
+            margin: 18px 0 10px;
+            font-size: 15px;
+            color: var(--text);
+            font-weight: 800;
+        }
+
+        .image-preview {
+            width: 100%;
+            min-height: 290px;
+            border: 1px solid var(--line-soft);
+            border-radius: 18px;
+            background: #121212;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding: 12px;
+        }
+
+        .image-preview img {
+            max-width: 100%;
+            max-height: 420px;
+            object-fit: contain;
+            display: block;
+            border-radius: 10px;
+        }
+
+        .right-panel-empty {
+            min-height: 648px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: var(--muted);
+            gap: 14px;
+        }
+
+        .right-panel-empty .emoji {
+            font-size: 54px;
+            line-height: 1;
+        }
+
+        .right-panel-empty .headline {
+            font-size: 18px;
+            line-height: 1.8;
+        }
+
+        .palette-strip {
+            display: flex;
+            overflow: hidden;
+            border-radius: 16px;
+            margin-top: 8px;
+            margin-bottom: 18px;
+            height: 72px;
+            border: 1px solid var(--line-soft);
+        }
+
+        .palette-strip-segment {
+            height: 100%;
+            min-width: 24px;
+        }
+
+        .color-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .color-item {
+            display: grid;
+            grid-template-columns: 48px minmax(0, 1fr);
+            gap: 14px;
+            align-items: center;
+            padding: 2px 0;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: background-color 0.15s ease;
+        }
+
+        .color-item:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .swatch {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            flex-shrink: 0;
+        }
+
+        .color-info {
+            min-width: 0;
+        }
+
+        .hex {
+            font-size: 18px;
+            font-weight: 900;
+            line-height: 1.2;
+            word-break: break-all;
+            text-transform: uppercase;
+        }
+
+        .rgb-meta {
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        .copy-all-btn {
+            width: 100%;
+            margin-top: 18px;
+            background: #212121;
+            color: var(--text);
+            border: 1px solid #3a3a3a;
+        }
+
+        .copy-all-btn:hover {
+            background: #292929;
+        }
+
+        .tips-list {
+            margin: 0;
+            padding-left: 22px;
+            color: var(--muted);
+            font-size: 17px;
+            line-height: 2;
+        }
+
+        .message {
+            display: none;
+            margin-top: 16px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: 700;
+            line-height: 1.6;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message.success {
+            background: rgba(34, 197, 94, 0.12);
+            border: 1px solid rgba(34, 197, 94, 0.35);
+            color: #86efac;
+        }
+
+        .message.error {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            color: #fca5a5;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        canvas {
+            display: none;
+        }
+
+        @media (max-width: 1100px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .right-panel-empty {
+                min-height: 320px;
+            }
+        }
+
+        @media (max-width: 760px) {
+            .wrap {
+                padding: 22px 14px 42px;
+            }
+
+            .page-title {
+                font-size: 34px;
+            }
+
+            .page-desc,
+            .drop-zone-content {
+                font-size: 16px;
+            }
+
+            .card {
+                padding: 22px 16px;
+            }
+
+            .btn-row {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .image-preview {
+                min-height: 220px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-title {
+                font-size: 30px;
+            }
+
+            .palette-strip {
+                height: 58px;
+            }
+
+            .color-item {
+                grid-template-columns: 40px minmax(0, 1fr);
+                gap: 10px;
+            }
+
+            .swatch {
+                width: 40px;
+                height: 40px;
+            }
+
+            .hex {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+<main class="wrap">
+    <header class="page-header">
+        <h1 class="page-title">컬러 추출기</h1>
+        <p class="page-desc">이미지에서 주요 색상을 추출하세요</p>
+    </header>
+
+    <section class="layout">
+        <div class="card">
+            <h2 class="section-title">이미지 업로드</h2>
+            <p class="section-desc">색상을 추출할 이미지를 선택하세요</p>
+
+            <label id="dropZone" class="drop-zone" for="fileInput">
+                <div class="drop-zone-content">
+                    <div class="drop-zone-icon">⇪</div>
+                    <strong>클릭하거나 이미지를 드래그하세요</strong>
+                    <small>PNG, JPG, WebP, GIF 지원 · Ctrl+V로 붙여넣기 가능</small>
+                </div>
+            </label>
+            <input
+                    id="fileInput"
+                    class="file-input"
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
+            />
+
+            <div class="control-block">
+                <div class="control-head">
+                    <div class="control-label">추출할 색상 수</div>
+                    <div class="control-value"><span id="colorCountValue">6</span>개</div>
+                </div>
+                <input id="colorCountRange" type="range" min="2" max="12" step="1" value="6" />
+            </div>
+
+            <div class="btn-row">
+                <button id="extractBtn" class="btn btn-primary" type="button">다시 추출</button>
+                <button id="resetBtn" class="btn btn-light" type="button">초기화</button>
+            </div>
+
+            <div class="preview-label">업로드된 이미지</div>
+            <div class="image-preview" id="imagePreview">
+                <span style="color: var(--muted); font-size: 15px;">아직 업로드된 이미지가 없습니다</span>
+            </div>
+
+            <div id="leftMessage" class="message"></div>
+        </div>
+
+        <div class="card" id="resultCard">
+            <div id="emptyState" class="right-panel-empty">
+                <div class="emoji">🎨</div>
+                <div class="headline">이미지를 업로드하면<br />주요 색상이 추출됩니다</div>
+            </div>
+
+            <div id="resultContent" class="hidden">
+                <h2 class="section-title">추출된 색상</h2>
+                <p class="section-desc"><span id="extractedCountText">6</span>개의 주요 색상</p>
+
+                <div id="paletteStrip" class="palette-strip"></div>
+                <div id="colorList" class="color-list"></div>
+
+                <button id="copyAllBtn" class="btn copy-all-btn" type="button">모든 색상 복사</button>
+                <div id="rightMessage" class="message"></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2 class="section-title">사용 팁</h2>
+        <ul class="tips-list">
+            <li>로고, 사진, 일러스트 등 다양한 이미지에서 색상을 추출할 수 있습니다</li>
+            <li>추출된 색상을 클릭하면 HEX 코드가 복사됩니다</li>
+            <li>브랜드 컬러 팔레트를 만들 때 유용합니다</li>
+            <li>슬라이더로 추출할 색상 수를 조절할 수 있습니다</li>
+        </ul>
+    </section>
+
+    <canvas id="workCanvas"></canvas>
+</main>
+
+<script>
+    const dropZone = document.getElementById("dropZone");
+    const fileInput = document.getElementById("fileInput");
+    const colorCountRange = document.getElementById("colorCountRange");
+    const colorCountValue = document.getElementById("colorCountValue");
+    const extractBtn = document.getElementById("extractBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const imagePreview = document.getElementById("imagePreview");
+    const leftMessage = document.getElementById("leftMessage");
+
+    const resultCard = document.getElementById("resultCard");
+    const emptyState = document.getElementById("emptyState");
+    const resultContent = document.getElementById("resultContent");
+    const extractedCountText = document.getElementById("extractedCountText");
+    const paletteStrip = document.getElementById("paletteStrip");
+    const colorList = document.getElementById("colorList");
+    const copyAllBtn = document.getElementById("copyAllBtn");
+    const rightMessage = document.getElementById("rightMessage");
+
+    const workCanvas = document.getElementById("workCanvas");
+    const ctx = workCanvas.getContext("2d", { willReadFrequently: true });
+
+    let currentImage = null;
+    let currentImageURL = "";
+    let currentPalette = [];
+
+    function showMessage(target, text, type = "success") {
+        target.textContent = text;
+        target.className = `message show ${type}`;
+        clearTimeout(target._timer);
+        target._timer = setTimeout(() => {
+            target.className = "message";
+            target.textContent = "";
+        }, 1500);
+    }
+
+    function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+    }
+
+    function rgbToHex(r, g, b) {
+        return (
+            "#" +
+            clamp(Math.round(r), 0, 255).toString(16).padStart(2, "0") +
+            clamp(Math.round(g), 0, 255).toString(16).padStart(2, "0") +
+            clamp(Math.round(b), 0, 255).toString(16).padStart(2, "0")
+        );
+    }
+
+    function getContrastTextColor(r, g, b) {
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        return luminance > 0.62 ? "#111111" : "#ffffff";
+    }
+
+    function updateSliderText() {
+        colorCountValue.textContent = colorCountRange.value;
+        extractedCountText.textContent = colorCountRange.value;
+    }
+
+    function clearPreview() {
+        imagePreview.innerHTML = `<span style="color: var(--muted); font-size: 15px;">아직 업로드된 이미지가 없습니다</span>`;
+    }
+
+    function renderImagePreview(url) {
+        imagePreview.innerHTML = "";
+        const img = document.createElement("img");
+        img.src = url;
+        img.alt = "업로드한 이미지";
+        imagePreview.appendChild(img);
+    }
+
+    function resetResults() {
+        currentPalette = [];
+        emptyState.classList.remove("hidden");
+        resultContent.classList.add("hidden");
+        paletteStrip.innerHTML = "";
+        colorList.innerHTML = "";
+    }
+
+    function renderPalette(palette) {
+        currentPalette = palette.slice();
+        emptyState.classList.add("hidden");
+        resultContent.classList.remove("hidden");
+        extractedCountText.textContent = String(palette.length);
+
+        paletteStrip.innerHTML = "";
+        colorList.innerHTML = "";
+
+        const total = palette.reduce((sum, item) => sum + item.count, 0) || 1;
+
+        palette.forEach((item) => {
+            const percent = Math.round((item.count / total) * 100);
+            const hex = rgbToHex(item.r, item.g, item.b).toUpperCase();
+            const rgbText = `RGB(${item.r}, ${item.g}, ${item.b})`;
+
+            const seg = document.createElement("div");
+            seg.className = "palette-strip-segment";
+            seg.style.backgroundColor = hex;
+            seg.style.width = `${Math.max(percent, 6)}%`;
+            paletteStrip.appendChild(seg);
+
+            const row = document.createElement("div");
+            row.className = "color-item";
+            row.title = `${hex} 복사`;
+            row.addEventListener("click", () => copyText(hex));
+
+            const swatch = document.createElement("div");
+            swatch.className = "swatch";
+            swatch.style.backgroundColor = hex;
+
+            const info = document.createElement("div");
+            info.className = "color-info";
+
+            const hexEl = document.createElement("div");
+            hexEl.className = "hex";
+            hexEl.textContent = hex;
+
+            const metaEl = document.createElement("div");
+            metaEl.className = "rgb-meta";
+            metaEl.textContent = `${rgbText} · ${percent}%`;
+
+            info.appendChild(hexEl);
+            info.appendChild(metaEl);
+
+            row.appendChild(swatch);
+            row.appendChild(info);
+            colorList.appendChild(row);
+        });
+    }
+
+    async function copyText(text) {
+        try {
+            await navigator.clipboard.writeText(text);
+            showMessage(rightMessage, `${text} 복사됨`, "success");
+        } catch (e) {
+            showMessage(rightMessage, "복사하지 못했습니다.", "error");
+        }
+    }
+
+    async function copyAllColors() {
+        if (!currentPalette.length) {
+            showMessage(rightMessage, "복사할 색상이 없습니다.", "error");
+            return;
+        }
+
+        const text = currentPalette
+        .map((item) => rgbToHex(item.r, item.g, item.b).toUpperCase())
+        .join("\n");
+
+        try {
+            await navigator.clipboard.writeText(text);
+            showMessage(rightMessage, "모든 색상을 복사했습니다.", "success");
+        } catch (e) {
+            showMessage(rightMessage, "복사하지 못했습니다.", "error");
+        }
+    }
+
+    function processFile(file) {
+        if (!file || !file.type.startsWith("image/")) {
+            showMessage(leftMessage, "이미지 파일만 업로드할 수 있습니다.", "error");
+            return;
+        }
+
+        if (currentImageURL) {
+            URL.revokeObjectURL(currentImageURL);
+        }
+
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+
+        img.onload = () => {
+            currentImage = img;
+            currentImageURL = url;
+            renderImagePreview(url);
+            extractColors();
+        };
+
+        img.onerror = () => {
+            showMessage(leftMessage, "이미지를 불러오지 못했습니다.", "error");
+        };
+
+        img.src = url;
+    }
+
+    function quantizeImageData(imageData, colorCount) {
+        const data = imageData.data;
+        const buckets = new Map();
+        const step = 24;
+
+        for (let i = 0; i < data.length; i += 4) {
+            const alpha = data[i + 3];
+            if (alpha < 20) continue;
+
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+
+            // 너무 밝거나 너무 어두운 픽셀 가중치
+            const brightness = (r * 0.299 + g * 0.587 + b * 0.114);
+            let weight = 1;
+            if (brightness > 245 || brightness < 10) {
+                weight = 0.5;
+            }
+
+            const qr = Math.round(r / step) * step;
+            const qg = Math.round(g / step) * step;
+            const qb = Math.round(b / step) * step;
+            const key = `${qr},${qg},${qb}`;
+
+            if (!buckets.has(key)) {
+                buckets.set(key, { rSum: 0, gSum: 0, bSum: 0, count: 0 });
+            }
+
+            const bucket = buckets.get(key);
+            bucket.rSum += r * weight;
+            bucket.gSum += g * weight;
+            bucket.bSum += b * weight;
+            bucket.count += weight;
+        }
+
+        let colors = Array.from(buckets.values())
+        .filter((item) => item.count > 0)
+        .map((item) => ({
+            r: Math.round(item.rSum / item.count),
+            g: Math.round(item.gSum / item.count),
+            b: Math.round(item.bSum / item.count),
+            count: item.count
+        }))
+        .sort((a, b) => b.count - a.count);
+
+        colors = mergeSimilarColors(colors, 28);
+        colors = colors.sort((a, b) => b.count - a.count).slice(0, colorCount);
+
+        return colors;
+    }
+
+    function mergeSimilarColors(colors, threshold) {
+        const merged = [];
+
+        colors.forEach((color) => {
+            let found = null;
+
+            for (const item of merged) {
+                const dist = Math.sqrt(
+                    Math.pow(item.r - color.r, 2) +
+                    Math.pow(item.g - color.g, 2) +
+                    Math.pow(item.b - color.b, 2)
+                );
+
+                if (dist < threshold) {
+                    found = item;
+                    break;
+                }
+            }
+
+            if (found) {
+                const total = found.count + color.count;
+                found.r = Math.round((found.r * found.count + color.r * color.count) / total);
+                found.g = Math.round((found.g * found.count + color.g * color.count) / total);
+                found.b = Math.round((found.b * found.count + color.b * color.count) / total);
+                found.count = total;
+            } else {
+                merged.push({ ...color });
+            }
+        });
+
+        return merged;
+    }
+
+    function extractColors() {
+        if (!currentImage) {
+            showMessage(leftMessage, "먼저 이미지를 업로드하세요.", "error");
+            return;
+        }
+
+        const targetColorCount = Number(colorCountRange.value);
+        const maxSize = 220;
+        let width = currentImage.naturalWidth;
+        let height = currentImage.naturalHeight;
+
+        const scale = Math.min(1, maxSize / Math.max(width, height));
+        width = Math.max(1, Math.round(width * scale));
+        height = Math.max(1, Math.round(height * scale));
+
+        workCanvas.width = width;
+        workCanvas.height = height;
+        ctx.clearRect(0, 0, width, height);
+        ctx.drawImage(currentImage, 0, 0, width, height);
+
+        const imageData = ctx.getImageData(0, 0, width, height);
+        const palette = quantizeImageData(imageData, targetColorCount);
+
+        if (!palette.length) {
+            showMessage(leftMessage, "색상을 추출하지 못했습니다.", "error");
+            resetResults();
+            return;
+        }
+
+        renderPalette(palette);
+        showMessage(leftMessage, "주요 색상을 추출했습니다.", "success");
+    }
+
+    function resetAll() {
+        if (currentImageURL) {
+            URL.revokeObjectURL(currentImageURL);
+        }
+        currentImage = null;
+        currentImageURL = "";
+        fileInput.value = "";
+        colorCountRange.value = 6;
+        updateSliderText();
+        clearPreview();
+        resetResults();
+        leftMessage.className = "message";
+        rightMessage.className = "message";
+    }
+
+    dropZone.addEventListener("dragenter", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("dragover");
+    });
+
+    dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("dragover");
+    });
+
+    dropZone.addEventListener("dragleave", (e) => {
+        e.preventDefault();
+        if (e.target === dropZone) {
+            dropZone.classList.remove("dragover");
+        }
+    });
+
+    dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("dragover");
+        const file = e.dataTransfer.files && e.dataTransfer.files[0];
+        if (file) {
+            processFile(file);
+        }
+    });
+
+    fileInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            processFile(file);
+        }
+    });
+
+    document.addEventListener("paste", (e) => {
+        const items = e.clipboardData?.items || [];
+        for (const item of items) {
+            if (item.type && item.type.startsWith("image/")) {
+                const file = item.getAsFile();
+                if (file) {
+                    processFile(file);
+                    break;
+                }
+            }
+        }
+    });
+
+    colorCountRange.addEventListener("input", () => {
+        updateSliderText();
+        if (currentImage) {
+            extractColors();
+        }
+    });
+
+    extractBtn.addEventListener("click", extractColors);
+    resetBtn.addEventListener("click", resetAll);
+    copyAllBtn.addEventListener("click", copyAllColors);
+
+    updateSliderText();
+    resetResults();
+</script>
+</body>
+</html>
