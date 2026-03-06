@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>숫자 기억력 테스트</title>
+
+    <!-- https://www.jiraksil.com/service/numbermemory -->
+
+    <meta
+            name="description"
+            content="점점 더 긴 숫자를 기억해서 입력하는 숫자 기억력 테스트입니다."
+    />
+    <style>
+        :root {
+            --bg: #f4f7fb;
+            --card: #ffffff;
+            --text: #1f2937;
+            --subtext: #6b7280;
+            --line: #e5e7eb;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --primary-soft: #dbeafe;
+            --danger: #ef4444;
+            --success: #16a34a;
+            --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+            --radius: 22px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(180deg, #f8fbff 0%, #f3f6fb 100%);
+            color: var(--text);
+            font-family: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+        }
+
+        .wrap {
+            max-width: 920px;
+            margin: 0 auto;
+            padding: 24px 16px 60px;
+        }
+
+        .page-header {
+            margin-bottom: 20px;
+        }
+
+        .page-title {
+            margin: 0 0 10px;
+            font-size: 32px;
+            line-height: 1.25;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .page-desc {
+            margin: 0;
+            font-size: 16px;
+            line-height: 1.75;
+            color: var(--subtext);
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        #game-display {
+            position: relative;
+            padding: 28px 22px 26px;
+            overflow: hidden;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        .stats-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .stat-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 44px;
+            padding: 10px 14px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: #f8fafc;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .stat-pill strong {
+            color: var(--primary);
+        }
+
+        #game-info {
+            width: 100%;
+            margin-bottom: 20px;
+            padding: 18px;
+            border-radius: 18px;
+            border: 1px solid var(--line);
+            background: #f8fafc;
+            color: var(--subtext);
+            font-size: 16px;
+            line-height: 1.8;
+            text-align: center;
+        }
+
+        .play-area {
+            min-height: 360px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 10px 0;
+        }
+
+        #hidden-number {
+            display: none;
+            min-height: 88px;
+            margin-bottom: 18px;
+            font-size: clamp(44px, 8vw, 74px);
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-align: center;
+            word-break: break-all;
+        }
+
+        #countdown {
+            width: min(240px, 70%);
+            height: 8px;
+            margin-bottom: 24px;
+            display: none;
+            overflow: hidden;
+            background: #e5e7eb;
+            border-radius: 999px;
+        }
+
+        #countdown-inner {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+            border-radius: 999px;
+            transition: width 1s linear;
+        }
+
+        .input-wrap {
+            width: 100%;
+            max-width: 420px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        #user-input {
+            width: 100%;
+            padding: 16px 18px;
+            border: 2px solid #d1d5db;
+            border-radius: 16px;
+            outline: none;
+            font-size: 28px;
+            font-weight: 700;
+            text-align: center;
+            color: var(--text);
+            background: #fff;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+        }
+
+        #user-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.12);
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .btn {
+            appearance: none;
+            border: none;
+            border-radius: 14px;
+            padding: 14px 20px;
+            min-width: 140px;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.22);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background: #eef2ff;
+            color: #3730a3;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e7ff;
+        }
+
+        #game-result {
+            margin-top: 18px;
+            padding: 18px 20px;
+            border-radius: 18px;
+            background: #f8fafc;
+            border: 1px solid var(--line);
+            text-align: center;
+        }
+
+        .end-game {
+            font-size: 18px;
+            line-height: 1.8;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .end-game strong {
+            font-size: 32px;
+            color: var(--primary);
+            display: inline-block;
+            margin-top: 8px;
+        }
+
+        .toast {
+            position: absolute;
+            top: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 18px;
+            border-radius: 999px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 800;
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.16);
+            z-index: 10;
+            animation: fadeDown 0.2s ease;
+            pointer-events: none;
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        @keyframes fadeDown {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -8px);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            20% { transform: translateX(-6px); }
+            40% { transform: translateX(6px); }
+            60% { transform: translateX(-5px); }
+            80% { transform: translateX(5px); }
+            100% { transform: translateX(0); }
+        }
+
+        .shake {
+            animation: shake 0.35s ease;
+        }
+
+        .info-card {
+            margin-top: 20px;
+            padding: 22px;
+            line-height: 1.8;
+            font-size: 15px;
+            color: var(--subtext);
+        }
+
+        .info-card strong {
+            color: var(--text);
+        }
+
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 26px;
+            }
+
+            #game-display {
+                padding: 18px 14px 20px;
+            }
+
+            #game-info {
+                font-size: 15px;
+                padding: 16px;
+            }
+
+            .play-area {
+                min-height: 320px;
+            }
+
+            #user-input {
+                font-size: 24px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .wrap {
+                padding: 18px 12px 44px;
+            }
+
+            .page-title {
+                font-size: 24px;
+            }
+
+            .page-desc {
+                font-size: 15px;
+            }
+
+            .stats-row {
+                align-items: stretch;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .btn-row {
+                width: 100%;
+            }
+
+            .input-wrap {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<main class="wrap">
+    <header class="page-header">
+        <h1 class="page-title">숫자 기억력 테스트</h1>
+        <p class="page-desc">
+            화면에 잠시 보이는 숫자를 기억한 뒤 정확하게 입력하는 테스트입니다.
+            라운드가 올라갈수록 숫자 길이가 점점 길어지며, 순간 기억력과 집중력을 함께 확인할 수 있습니다.
+        </p>
+    </header>
+
+    <section id="game-display" class="card">
+        <div class="stats-row">
+            <div class="stats-group">
+                <div class="stat-pill">점수 <strong id="score">1</strong></div>
+                <div class="stat-pill">남은 기회 <strong id="remaining-chances">3</strong></div>
+                <div class="stat-pill">숫자 길이 <strong id="digit-length">2</strong>자리</div>
+            </div>
+        </div>
+
+        <div id="game-info">
+            테스트 시작 버튼을 누르면 화면에 숫자가 잠시 표시됩니다.<br />
+            숫자가 사라진 뒤 기억한 숫자를 입력하면 다음 단계로 넘어갑니다.
+        </div>
+
+        <div class="play-area">
+            <div id="hidden-number"></div>
+
+            <div id="countdown">
+                <div id="countdown-inner"></div>
+            </div>
+
+            <div class="input-wrap">
+                <input
+                        type="text"
+                        id="user-input"
+                        inputmode="numeric"
+                        autocomplete="off"
+                        placeholder="기억한 숫자를 입력하세요"
+                        hidden
+                />
+
+                <div class="btn-row">
+                    <button id="input-submit" class="btn btn-primary" style="display:none;">숫자 제출</button>
+                    <button id="start-game" class="btn btn-primary">테스트 시작</button>
+                    <button id="restart-game" class="btn btn-secondary" style="display:none;">다시하기</button>
+                </div>
+            </div>
+
+            <div id="game-result" hidden></div>
+        </div>
+    </section>
+
+    <section class="info-card card">
+        <strong>숫자 기억력 테스트란?</strong><br />
+        숫자 기억력 테스트는 짧은 시간 동안 제시된 숫자를 저장했다가 다시 떠올리는 능력을 확인하는 방식입니다.
+        집중력, 주의력, 작업 기억과도 관련이 있으며, 가볍게 두뇌 훈련용으로 활용하기 좋습니다.
+    </section>
+</main>
+
+<script>
+    let score = 1;
+    let chances = 3;
+    let currentNumber = "";
+    let currentLength = 2;
+    let countdownTimer = null;
+
+    const scoreEl = document.getElementById("score");
+    const chancesEl = document.getElementById("remaining-chances");
+    const digitLengthEl = document.getElementById("digit-length");
+    const gameInfoEl = document.getElementById("game-info");
+    const countdownEl = document.getElementById("countdown");
+    const countdownInnerEl = document.getElementById("countdown-inner");
+    const hiddenNumberEl = document.getElementById("hidden-number");
+    const userInputEl = document.getElementById("user-input");
+    const inputSubmitEl = document.getElementById("input-submit");
+    const startGameEl = document.getElementById("start-game");
+    const restartGameEl = document.getElementById("restart-game");
+    const gameResultEl = document.getElementById("game-result");
+    const gameDisplayEl = document.getElementById("game-display");
+
+    function updateStats() {
+        scoreEl.textContent = score;
+        chancesEl.textContent = chances;
+        digitLengthEl.textContent = currentLength;
+    }
+
+    function showToast(message, type) {
+        const toast = document.createElement("div");
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        gameDisplayEl.appendChild(toast);
+
+        setTimeout(() => {
+            toast.remove();
+        }, 700);
+    }
+
+    function shakeElement(element) {
+        element.classList.remove("shake");
+        void element.offsetWidth;
+        element.classList.add("shake");
+
+        setTimeout(() => {
+            element.classList.remove("shake");
+        }, 400);
+    }
+
+    function getRandomColor() {
+        const colors = [
+            "#1d4ed8",
+            "#7c3aed",
+            "#0f766e",
+            "#b45309",
+            "#be123c",
+            "#334155",
+            "#166534",
+            "#92400e"
+        ];
+        return colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    function generateRandomNumber(length) {
+        const min = Math.pow(10, length - 1);
+        const max = Math.pow(10, length) - 1;
+        return String(Math.floor(Math.random() * (max - min + 1)) + min);
+    }
+
+    function clearCountdownTimer() {
+        if (countdownTimer) {
+            clearInterval(countdownTimer);
+            countdownTimer = null;
+        }
+    }
+
+    function showCountdown(duration) {
+        clearCountdownTimer();
+        let remaining = duration;
+        countdownInnerEl.style.width = "100%";
+
+        countdownTimer = setInterval(() => {
+            remaining--;
+            const percentage = Math.max((remaining / duration) * 100, 0);
+            countdownInnerEl.style.width = percentage + "%";
+
+            if (remaining <= 0) {
+                clearCountdownTimer();
+            }
+        }, 1000);
+    }
+
+    function showNumber() {
+        inputSubmitEl.style.display = "none";
+        userInputEl.hidden = true;
+        gameInfoEl.style.display = "none";
+        gameResultEl.hidden = true;
+
+        currentNumber = generateRandomNumber(currentLength);
+        hiddenNumberEl.textContent = currentNumber;
+        hiddenNumberEl.style.color = getRandomColor();
+        hiddenNumberEl.style.display = "block";
+
+        const duration = 1 + (currentLength - 1);
+        countdownEl.style.display = "block";
+        showCountdown(duration);
+
+        setTimeout(hideNumber, duration * 1000);
+    }
+
+    function hideNumber() {
+        clearCountdownTimer();
+        countdownEl.style.display = "none";
+        hiddenNumberEl.style.display = "none";
+
+        userInputEl.hidden = false;
+        userInputEl.value = "";
+        inputSubmitEl.style.display = "inline-block";
+        userInputEl.focus();
+    }
+
+    function endGame() {
+        clearCountdownTimer();
+
+        userInputEl.hidden = true;
+        hiddenNumberEl.style.display = "none";
+        countdownEl.style.display = "none";
+        startGameEl.style.display = "none";
+        inputSubmitEl.style.display = "none";
+        restartGameEl.style.display = "inline-block";
+
+        gameResultEl.innerHTML = `
+        <div class="end-game">
+          테스트 종료<br />
+          최종 점수<br />
+          <strong>${score}</strong>
+        </div>
+      `;
+        gameResultEl.hidden = false;
+    }
+
+    function checkAnswer() {
+        const userInput = userInputEl.value.trim();
+
+        if (!userInput) {
+            alert("숫자를 입력해주세요.");
+            userInputEl.focus();
+            return;
+        }
+
+        if (userInput === currentNumber) {
+            score++;
+            currentLength++;
+            updateStats();
+            showToast("정답!", "success");
+        } else {
+            chances--;
+            updateStats();
+            shakeElement(userInputEl);
+
+            if (chances <= 0) {
+                endGame();
+                return;
+            }
+
+            showToast("오답!", "error");
+        }
+
+        setTimeout(() => {
+            userInputEl.value = "";
+            userInputEl.hidden = true;
+            showNumber();
+        }, 800);
+    }
+
+    function resetGame() {
+        clearCountdownTimer();
+
+        score = 1;
+        chances = 3;
+        currentLength = 2;
+        currentNumber = "";
+
+        updateStats();
+
+        gameInfoEl.style.display = "block";
+        gameResultEl.hidden = true;
+        gameResultEl.innerHTML = "";
+        userInputEl.value = "";
+        userInputEl.hidden = true;
+        hiddenNumberEl.style.display = "none";
+        countdownEl.style.display = "none";
+        countdownInnerEl.style.width = "100%";
+
+        restartGameEl.style.display = "none";
+        startGameEl.style.display = "inline-block";
+        inputSubmitEl.style.display = "none";
+    }
+
+    startGameEl.addEventListener("click", () => {
+        startGameEl.style.display = "none";
+        showNumber();
+    });
+
+    restartGameEl.addEventListener("click", () => {
+        resetGame();
+        startGameEl.style.display = "none";
+        showNumber();
+    });
+
+    inputSubmitEl.addEventListener("click", checkAnswer);
+
+    userInputEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            checkAnswer();
+        }
+    });
+
+    userInputEl.addEventListener("input", () => {
+        userInputEl.value = userInputEl.value.replace(/[^0-9]/g, "");
+    });
+
+    updateStats();
+</script>
+</body>
+</html>
