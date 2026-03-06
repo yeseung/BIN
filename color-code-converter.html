@@ -1,0 +1,786 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>컬러 코드 변환기</title>
+  <meta
+          name="description"
+          content="HEX, RGB, HSL 색상 형식을 서로 변환하는 컬러 코드 변환기입니다."
+  />
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --card-soft: #f8fafc;
+      --line: #e5e7eb;
+      --text: #111827;
+      --muted: #6b7280;
+      --primary: #111827;
+      --primary-hover: #1f2937;
+      --accent: #2563eb;
+      --accent-soft: #dbeafe;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      --radius: 24px;
+      --red: #ef4444;
+      --green: #22c55e;
+      --blue: #3b82f6;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(180deg, #f9fbff 0%, #f3f6fb 100%);
+      color: var(--text);
+      font-family: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+    }
+
+    .wrap {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 28px 18px 56px;
+    }
+
+    .page-header {
+      margin-bottom: 22px;
+    }
+
+    .page-title {
+      margin: 0 0 8px;
+      font-size: 42px;
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -0.03em;
+    }
+
+    .page-desc {
+      margin: 0;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.7;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      margin-top: 18px;
+    }
+
+    .preview-box {
+      overflow: hidden;
+      padding: 0;
+    }
+
+    .preview-color {
+      height: 180px;
+      border-radius: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      transition: background-color 0.15s ease;
+    }
+
+    .preview-text {
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
+    }
+
+    .preview-hex {
+      margin: 0;
+      font-size: clamp(30px, 5vw, 54px);
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+    }
+
+    .preview-rgb {
+      margin: 10px 0 0;
+      font-size: 20px;
+      font-weight: 500;
+      opacity: 0.95;
+    }
+
+    .section-title {
+      margin: 0 0 20px;
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+
+    .picker-row {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .picker-trigger {
+      width: 84px;
+      height: 84px;
+      border-radius: 0;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      cursor: pointer;
+      transition: transform 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .picker-trigger:hover {
+      transform: scale(1.02);
+    }
+
+    .picker-hidden {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+      width: 1px;
+      height: 1px;
+    }
+
+    .picker-help {
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.7;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    .field-card {
+      min-height: 236px;
+    }
+
+    .field-title {
+      margin: 0 0 18px;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .input {
+      width: 100%;
+      height: 56px;
+      border: 1px solid #d1d5db;
+      border-radius: 14px;
+      outline: none;
+      background: #fff;
+      color: var(--text);
+      padding: 0 14px;
+      font-size: 18px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      font-family: inherit;
+    }
+
+    .input:focus {
+      border-color: #94a3b8;
+      box-shadow: 0 0 0 5px rgba(148, 163, 184, 0.15);
+    }
+
+    .hex-wrap {
+      margin-top: 56px;
+    }
+
+    .channel-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .channel-row {
+      display: grid;
+      grid-template-columns: 26px 1fr 22px;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .channel-label {
+      font-size: 20px;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .channel-label.r {
+      color: var(--red);
+    }
+
+    .channel-label.g {
+      color: var(--green);
+    }
+
+    .channel-label.b {
+      color: var(--blue);
+    }
+
+    .channel-suffix {
+      color: var(--muted);
+      font-size: 18px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .copy-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .copy-row {
+      display: grid;
+      grid-template-columns: 110px 1fr 64px;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .copy-label {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .copy-value {
+      height: 50px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fbfcfe;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      font-size: 16px;
+      color: var(--text);
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    .copy-btn {
+      appearance: none;
+      border: none;
+      background: transparent;
+      color: var(--primary);
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      padding: 10px 8px;
+      border-radius: 10px;
+      transition: background-color 0.15s ease;
+      font-family: inherit;
+    }
+
+    .copy-btn:hover {
+      background: #f3f4f6;
+    }
+
+    .info-list {
+      margin: 0;
+      padding-left: 22px;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 2;
+    }
+
+    .message {
+      display: none;
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.6;
+    }
+
+    .message.show {
+      display: block;
+    }
+
+    .message.success {
+      background: #ecfdf5;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+    }
+
+    .message.error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+    }
+
+    @media (max-width: 980px) {
+      .grid-3 {
+        grid-template-columns: 1fr;
+      }
+
+      .field-card {
+        min-height: auto;
+      }
+
+      .hex-wrap {
+        margin-top: 0;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .wrap {
+        padding: 22px 14px 42px;
+      }
+
+      .page-title {
+        font-size: 34px;
+      }
+
+      .page-desc,
+      .picker-help {
+        font-size: 16px;
+      }
+
+      .preview-color {
+        height: 150px;
+      }
+
+      .copy-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .copy-btn {
+        justify-self: start;
+        padding-left: 0;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .page-title {
+        font-size: 30px;
+      }
+
+      .preview-rgb {
+        font-size: 17px;
+      }
+
+      .channel-row {
+        grid-template-columns: 22px 1fr 18px;
+      }
+
+      .copy-label {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <header class="page-header">
+    <h1 class="page-title">🎨 컬러 코드 변환기</h1>
+    <p class="page-desc">HEX, RGB, HSL 색상 형식을 서로 변환합니다.</p>
+  </header>
+
+  <section class="card preview-box">
+    <div id="previewColor" class="preview-color">
+      <div class="preview-text">
+        <h2 id="previewHex" class="preview-hex">#007DBF</h2>
+        <p id="previewRgb" class="preview-rgb">rgb(0, 125, 191)</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2 class="section-title">컬러 피커</h2>
+    <div class="picker-row">
+      <label for="colorPicker" id="pickerTrigger" class="picker-trigger" aria-label="색상 선택"></label>
+      <input id="colorPicker" class="picker-hidden" type="color" value="#007dbf" />
+      <div class="picker-help">클릭하여 색상을 선택하세요</div>
+    </div>
+  </section>
+
+  <section class="grid-3">
+    <div class="card field-card">
+      <h2 class="field-title">HEX</h2>
+      <div class="hex-wrap">
+        <input id="hexInput" class="input" type="text" value="#007dbf" />
+      </div>
+    </div>
+
+    <div class="card field-card">
+      <h2 class="field-title">RGB</h2>
+      <div class="channel-list">
+        <div class="channel-row">
+          <div class="channel-label r">R</div>
+          <input id="rInput" class="input" type="number" min="0" max="255" value="0" />
+          <div class="channel-suffix"></div>
+        </div>
+        <div class="channel-row">
+          <div class="channel-label g">G</div>
+          <input id="gInput" class="input" type="number" min="0" max="255" value="125" />
+          <div class="channel-suffix"></div>
+        </div>
+        <div class="channel-row">
+          <div class="channel-label b">B</div>
+          <input id="bInput" class="input" type="number" min="0" max="255" value="191" />
+          <div class="channel-suffix"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card field-card">
+      <h2 class="field-title">HSL</h2>
+      <div class="channel-list">
+        <div class="channel-row">
+          <div class="channel-label">H</div>
+          <input id="hInput" class="input" type="number" min="0" max="360" value="201" />
+          <div class="channel-suffix">°</div>
+        </div>
+        <div class="channel-row">
+          <div class="channel-label">S</div>
+          <input id="sInput" class="input" type="number" min="0" max="100" value="100" />
+          <div class="channel-suffix">%</div>
+        </div>
+        <div class="channel-row">
+          <div class="channel-label">L</div>
+          <input id="lInput" class="input" type="number" min="0" max="100" value="37" />
+          <div class="channel-suffix">%</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2 class="section-title">복사 가능한 형식</h2>
+
+    <div class="copy-list">
+      <div class="copy-row">
+        <div class="copy-label">HEX</div>
+        <div id="copyHexUpper" class="copy-value">#007DBF</div>
+        <button class="copy-btn" type="button" data-copy-target="copyHexUpper">복사</button>
+      </div>
+      <div class="copy-row">
+        <div class="copy-label">HEX (소문자)</div>
+        <div id="copyHexLower" class="copy-value">#007dbf</div>
+        <button class="copy-btn" type="button" data-copy-target="copyHexLower">복사</button>
+      </div>
+      <div class="copy-row">
+        <div class="copy-label">RGB</div>
+        <div id="copyRgb" class="copy-value">rgb(0, 125, 191)</div>
+        <button class="copy-btn" type="button" data-copy-target="copyRgb">복사</button>
+      </div>
+      <div class="copy-row">
+        <div class="copy-label">RGBA</div>
+        <div id="copyRgba" class="copy-value">rgba(0, 125, 191, 1)</div>
+        <button class="copy-btn" type="button" data-copy-target="copyRgba">복사</button>
+      </div>
+      <div class="copy-row">
+        <div class="copy-label">HSL</div>
+        <div id="copyHsl" class="copy-value">hsl(201, 100%, 37%)</div>
+        <button class="copy-btn" type="button" data-copy-target="copyHsl">복사</button>
+      </div>
+      <div class="copy-row">
+        <div class="copy-label">HSLA</div>
+        <div id="copyHsla" class="copy-value">hsla(201, 100%, 37%, 1)</div>
+        <button class="copy-btn" type="button" data-copy-target="copyHsla">복사</button>
+      </div>
+    </div>
+
+    <div id="copyMessage" class="message"></div>
+  </section>
+
+  <section class="card">
+    <h2 class="section-title">색상 형식 정보</h2>
+    <ul class="info-list">
+      <li><strong>HEX</strong>: 16진수 표기법 (#RRGGBB)</li>
+      <li><strong>RGB</strong>: 빨강, 초록, 파랑 (0-255)</li>
+      <li><strong>HSL</strong>: 색상(0-360), 채도(0-100%), 밝기(0-100%)</li>
+      <li>모든 형식은 실시간으로 동기화됩니다.</li>
+    </ul>
+  </section>
+</main>
+
+<script>
+  const colorPicker = document.getElementById("colorPicker");
+  const pickerTrigger = document.getElementById("pickerTrigger");
+
+  const previewColor = document.getElementById("previewColor");
+  const previewHex = document.getElementById("previewHex");
+  const previewRgb = document.getElementById("previewRgb");
+
+  const hexInput = document.getElementById("hexInput");
+  const rInput = document.getElementById("rInput");
+  const gInput = document.getElementById("gInput");
+  const bInput = document.getElementById("bInput");
+  const hInput = document.getElementById("hInput");
+  const sInput = document.getElementById("sInput");
+  const lInput = document.getElementById("lInput");
+
+  const copyMessage = document.getElementById("copyMessage");
+
+  const copyHexUpper = document.getElementById("copyHexUpper");
+  const copyHexLower = document.getElementById("copyHexLower");
+  const copyRgb = document.getElementById("copyRgb");
+  const copyRgba = document.getElementById("copyRgba");
+  const copyHsl = document.getElementById("copyHsl");
+  const copyHsla = document.getElementById("copyHsla");
+
+  function showMessage(text, type = "success") {
+    copyMessage.textContent = text;
+    copyMessage.className = `message show ${type}`;
+    clearTimeout(showMessage._timer);
+    showMessage._timer = setTimeout(() => {
+      copyMessage.className = "message";
+      copyMessage.textContent = "";
+    }, 1400);
+  }
+
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function padHex(value) {
+    return value.toString(16).padStart(2, "0");
+  }
+
+  function normalizeHex(value) {
+    let hex = String(value).trim().replace(/^#/, "");
+
+    if (hex.length === 3) {
+      hex = hex.split("").map((ch) => ch + ch).join("");
+    }
+
+    if (!/^[0-9a-fA-F]{6}$/.test(hex)) {
+      return null;
+    }
+
+    return "#" + hex.toLowerCase();
+  }
+
+  function hexToRgb(hex) {
+    const clean = normalizeHex(hex);
+    if (!clean) return null;
+
+    const raw = clean.slice(1);
+    return {
+      r: parseInt(raw.slice(0, 2), 16),
+      g: parseInt(raw.slice(2, 4), 16),
+      b: parseInt(raw.slice(4, 6), 16)
+    };
+  }
+
+  function rgbToHex(r, g, b) {
+    return (
+            "#" +
+            padHex(clamp(Math.round(r), 0, 255)) +
+            padHex(clamp(Math.round(g), 0, 255)) +
+            padHex(clamp(Math.round(b), 0, 255))
+    );
+  }
+
+  function rgbToHsl(r, g, b) {
+    r /= 255;
+    g /= 255;
+    b /= 255;
+
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h = 0;
+    let s = 0;
+    const l = (max + min) / 2;
+
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+      switch (max) {
+        case r:
+          h = (g - b) / d + (g < b ? 6 : 0);
+          break;
+        case g:
+          h = (b - r) / d + 2;
+          break;
+        case b:
+          h = (r - g) / d + 4;
+          break;
+      }
+
+      h /= 6;
+    }
+
+    return {
+      h: Math.round(h * 360),
+      s: Math.round(s * 100),
+      l: Math.round(l * 100)
+    };
+  }
+
+  function hslToRgb(h, s, l) {
+    h = ((Number(h) % 360) + 360) % 360;
+    s = clamp(Number(s), 0, 100) / 100;
+    l = clamp(Number(l), 0, 100) / 100;
+
+    const c = (1 - Math.abs(2 * l - 1)) * s;
+    const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+    const m = l - c / 2;
+
+    let r1 = 0;
+    let g1 = 0;
+    let b1 = 0;
+
+    if (h >= 0 && h < 60) {
+      r1 = c; g1 = x; b1 = 0;
+    } else if (h >= 60 && h < 120) {
+      r1 = x; g1 = c; b1 = 0;
+    } else if (h >= 120 && h < 180) {
+      r1 = 0; g1 = c; b1 = x;
+    } else if (h >= 180 && h < 240) {
+      r1 = 0; g1 = x; b1 = c;
+    } else if (h >= 240 && h < 300) {
+      r1 = x; g1 = 0; b1 = c;
+    } else {
+      r1 = c; g1 = 0; b1 = x;
+    }
+
+    return {
+      r: Math.round((r1 + m) * 255),
+      g: Math.round((g1 + m) * 255),
+      b: Math.round((b1 + m) * 255)
+    };
+  }
+
+  function getContrastTextColor(r, g, b) {
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.6 ? "#111827" : "#ffffff";
+  }
+
+  function updateUiFromRgb(r, g, b) {
+    r = clamp(Math.round(r), 0, 255);
+    g = clamp(Math.round(g), 0, 255);
+    b = clamp(Math.round(b), 0, 255);
+
+    const hex = rgbToHex(r, g, b);
+    const hsl = rgbToHsl(r, g, b);
+
+    colorPicker.value = hex;
+    pickerTrigger.style.backgroundColor = hex;
+    previewColor.style.backgroundColor = hex;
+
+    const contrastColor = getContrastTextColor(r, g, b);
+    previewHex.style.color = contrastColor;
+    previewRgb.style.color = contrastColor;
+
+    previewHex.textContent = hex.toUpperCase();
+    previewRgb.textContent = `rgb(${r}, ${g}, ${b})`;
+
+    hexInput.value = hex;
+
+    rInput.value = r;
+    gInput.value = g;
+    bInput.value = b;
+
+    hInput.value = hsl.h;
+    sInput.value = hsl.s;
+    lInput.value = hsl.l;
+
+    copyHexUpper.textContent = hex.toUpperCase();
+    copyHexLower.textContent = hex.toLowerCase();
+    copyRgb.textContent = `rgb(${r}, ${g}, ${b})`;
+    copyRgba.textContent = `rgba(${r}, ${g}, ${b}, 1)`;
+    copyHsl.textContent = `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
+    copyHsla.textContent = `hsla(${hsl.h}, ${hsl.s}%, ${hsl.l}%, 1)`;
+  }
+
+  function updateFromHex() {
+    const rgb = hexToRgb(hexInput.value);
+    if (!rgb) return;
+    updateUiFromRgb(rgb.r, rgb.g, rgb.b);
+  }
+
+  function updateFromRgb() {
+    const r = clamp(Number(rInput.value || 0), 0, 255);
+    const g = clamp(Number(gInput.value || 0), 0, 255);
+    const b = clamp(Number(bInput.value || 0), 0, 255);
+
+    updateUiFromRgb(r, g, b);
+  }
+
+  function updateFromHsl() {
+    const h = clamp(Number(hInput.value || 0), 0, 360);
+    const s = clamp(Number(sInput.value || 0), 0, 100);
+    const l = clamp(Number(lInput.value || 0), 0, 100);
+
+    const rgb = hslToRgb(h, s, l);
+    updateUiFromRgb(rgb.r, rgb.g, rgb.b);
+  }
+
+  colorPicker.addEventListener("input", () => {
+    const rgb = hexToRgb(colorPicker.value);
+    if (!rgb) return;
+    updateUiFromRgb(rgb.r, rgb.g, rgb.b);
+  });
+
+  pickerTrigger.addEventListener("click", () => {
+    colorPicker.click();
+  });
+
+  hexInput.addEventListener("input", updateFromHex);
+  hexInput.addEventListener("blur", () => {
+    const normalized = normalizeHex(hexInput.value);
+    if (normalized) {
+      hexInput.value = normalized;
+      updateFromHex();
+    }
+  });
+
+  [rInput, gInput, bInput].forEach((input) => {
+    input.addEventListener("input", updateFromRgb);
+    input.addEventListener("blur", () => {
+      input.value = clamp(Number(input.value || 0), 0, 255);
+      updateFromRgb();
+    });
+  });
+
+  [hInput, sInput, lInput].forEach((input) => {
+    input.addEventListener("input", updateFromHsl);
+  });
+
+  hInput.addEventListener("blur", () => {
+    hInput.value = clamp(Number(hInput.value || 0), 0, 360);
+    updateFromHsl();
+  });
+
+  [sInput, lInput].forEach((input) => {
+    input.addEventListener("blur", () => {
+      input.value = clamp(Number(input.value || 0), 0, 100);
+      updateFromHsl();
+    });
+  });
+
+  document.querySelectorAll(".copy-btn").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const targetId = button.getAttribute("data-copy-target");
+      const target = document.getElementById(targetId);
+      const text = target.textContent;
+
+      try {
+        await navigator.clipboard.writeText(text);
+        showMessage("복사했습니다.");
+      } catch (e) {
+        showMessage("복사하지 못했습니다.", "error");
+      }
+    });
+  });
+
+  updateUiFromRgb(0, 125, 191);
+</script>
+</body>
+</html>
