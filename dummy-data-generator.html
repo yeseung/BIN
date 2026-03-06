@@ -1,0 +1,649 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>더미 데이터 생성기</title>
+    <meta
+            name="description"
+            content="테스트용 더미 데이터를 JSON 또는 CSV 형식으로 생성하는 바닐라 자바스크립트 도구입니다."
+    />
+    <style>
+        :root {
+            --bg: #f6f8fb;
+            --card: #ffffff;
+            --card-2: #f8fafc;
+            --line: #e5e7eb;
+            --line-soft: #eef2f7;
+            --text: #111827;
+            --muted: #6b7280;
+            --accent: #2563eb;
+            --accent-dark: #1d4ed8;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --radius: 24px;
+            --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(180deg, #f9fbff 0%, #f3f6fb 100%);
+            color: var(--text);
+            font-family: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+        }
+
+        .wrap {
+            max-width: 1380px;
+            margin: 0 auto;
+            padding: 28px 18px 56px;
+        }
+
+        .page-header {
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            margin: 0 0 10px;
+            font-size: 42px;
+            line-height: 1.2;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: var(--text);
+        }
+
+        .page-desc {
+            margin: 0;
+            color: var(--muted);
+            font-size: 18px;
+            line-height: 1.7;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 420px minmax(0, 1fr);
+            gap: 24px;
+            align-items: start;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 28px;
+        }
+
+        .section-title {
+            margin: 0 0 20px;
+            font-size: 22px;
+            font-weight: 800;
+            line-height: 1.3;
+            color: var(--text);
+        }
+
+        .sub-title {
+            margin: 0 0 14px;
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        .field-group {
+            margin-bottom: 22px;
+        }
+
+        .check-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .check-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 18px;
+            line-height: 1.5;
+            color: var(--text);
+            user-select: none;
+            cursor: pointer;
+        }
+
+        .check-item input[type="checkbox"] {
+            appearance: none;
+            width: 26px;
+            height: 26px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            position: relative;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.18s ease;
+        }
+
+        .check-item input[type="checkbox"]:checked {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+
+        .check-item input[type="checkbox"]:checked::after {
+            content: "✓";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -54%);
+            font-size: 16px;
+            font-weight: 900;
+            color: #ffffff;
+        }
+
+        .label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        .input,
+        .select {
+            width: 100%;
+            height: 58px;
+            border: 1px solid #d1d5db;
+            border-radius: 16px;
+            outline: none;
+            background: #ffffff;
+            color: var(--text);
+            padding: 0 16px;
+            font-size: 18px;
+            font-family: inherit;
+            transition: border-color 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .input:focus,
+        .select:focus {
+            border-color: #93c5fd;
+            box-shadow: 0 0 0 5px rgba(59, 130, 246, 0.12);
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 18px;
+        }
+
+        .btn {
+            appearance: none;
+            border: none;
+            border-radius: 14px;
+            padding: 14px 18px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 800;
+            font-family: inherit;
+            transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: #2563eb;
+            color: #ffffff;
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.18);
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-light {
+            background: #ffffff;
+            color: var(--text);
+            border: 1px solid var(--line);
+        }
+
+        .btn-light:hover {
+            background: #f8fafc;
+        }
+
+        .result-card {
+            min-height: 744px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .result-empty {
+            min-height: 520px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: var(--muted);
+            font-size: 18px;
+            line-height: 1.8;
+            background: #fafbfd;
+            border: 1px dashed #dbe2ea;
+            border-radius: 18px;
+        }
+
+        .result-output {
+            display: none;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .result-output.show {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .output-box {
+            flex: 1;
+            min-height: 520px;
+            border: 1px solid var(--line-soft);
+            border-radius: 18px;
+            background: #f8fafc;
+            color: #111827;
+            padding: 18px 20px;
+            font-size: 16px;
+            line-height: 1.8;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            white-space: pre-wrap;
+            word-break: break-word;
+            overflow: auto;
+        }
+
+        .message {
+            display: none;
+            margin-top: 16px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: 700;
+            line-height: 1.6;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message.success {
+            background: #ecfdf5;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+        }
+
+        .message.error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+        }
+
+        @media (max-width: 1100px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .result-card {
+                min-height: auto;
+            }
+
+            .result-empty,
+            .output-box {
+                min-height: 360px;
+            }
+        }
+
+        @media (max-width: 760px) {
+            .wrap {
+                padding: 22px 14px 42px;
+            }
+
+            .page-title {
+                font-size: 34px;
+            }
+
+            .page-desc {
+                font-size: 16px;
+            }
+
+            .card {
+                padding: 22px 16px;
+            }
+
+            .check-item {
+                font-size: 16px;
+            }
+
+            .input,
+            .select {
+                font-size: 16px;
+            }
+
+            .btn-row {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-title {
+                font-size: 30px;
+            }
+
+            .output-box {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+<main class="wrap">
+    <header class="page-header">
+        <h1 class="page-title">더미 데이터</h1>
+        <p class="page-desc">테스트용 더미 데이터를 생성하세요</p>
+    </header>
+
+    <section class="layout">
+        <div class="card">
+            <h2 class="section-title">설정</h2>
+
+            <div class="field-group">
+                <div class="sub-title">필드 선택</div>
+                <div class="check-list">
+                    <label class="check-item"><input type="checkbox" value="이름" checked /> <span>이름</span></label>
+                    <label class="check-item"><input type="checkbox" value="이메일" checked /> <span>이메일</span></label>
+                    <label class="check-item"><input type="checkbox" value="전화번호" checked /> <span>전화번호</span></label>
+                    <label class="check-item"><input type="checkbox" value="회사" /> <span>회사</span></label>
+                    <label class="check-item"><input type="checkbox" value="직책" /> <span>직책</span></label>
+                    <label class="check-item"><input type="checkbox" value="도시" /> <span>도시</span></label>
+                    <label class="check-item"><input type="checkbox" value="UUID" /> <span>UUID</span></label>
+                    <label class="check-item"><input type="checkbox" value="날짜" /> <span>날짜</span></label>
+                    <label class="check-item"><input type="checkbox" value="숫자" /> <span>숫자</span></label>
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label class="label" for="countInput">생성 개수</label>
+                <input id="countInput" class="input" type="number" min="1" max="1000" value="10" />
+            </div>
+
+            <div class="field-group">
+                <label class="label" for="formatSelect">출력 형식</label>
+                <select id="formatSelect" class="select">
+                    <option value="json">JSON</option>
+                    <option value="csv">CSV</option>
+                </select>
+            </div>
+
+            <button id="generateBtn" class="btn btn-primary" type="button">생성</button>
+            <div id="leftMessage" class="message"></div>
+        </div>
+
+        <div class="card result-card">
+            <h2 class="section-title">결과</h2>
+
+            <div id="resultEmpty" class="result-empty">
+                필드를 선택하고 생성 버튼을 클릭하세요
+            </div>
+
+            <div id="resultOutput" class="result-output">
+                <div id="outputBox" class="output-box"></div>
+
+                <div class="btn-row">
+                    <button id="copyBtn" class="btn btn-primary" type="button" style="width:auto;">복사</button>
+                    <button id="downloadBtn" class="btn btn-light" type="button">다운로드</button>
+                </div>
+            </div>
+
+            <div id="rightMessage" class="message"></div>
+        </div>
+    </section>
+</main>
+
+<script>
+    const countInput = document.getElementById("countInput");
+    const formatSelect = document.getElementById("formatSelect");
+    const generateBtn = document.getElementById("generateBtn");
+
+    const resultEmpty = document.getElementById("resultEmpty");
+    const resultOutput = document.getElementById("resultOutput");
+    const outputBox = document.getElementById("outputBox");
+    const copyBtn = document.getElementById("copyBtn");
+    const downloadBtn = document.getElementById("downloadBtn");
+
+    const leftMessage = document.getElementById("leftMessage");
+    const rightMessage = document.getElementById("rightMessage");
+
+    let currentOutputText = "";
+    let currentFormat = "json";
+
+    const surnames = ["김", "이", "박", "최", "정", "강", "조", "윤", "장", "임", "한", "오", "서", "신", "권"];
+    const givenNames = [
+        "민준", "서준", "도윤", "예준", "시우", "하준", "주원", "지호", "지우", "현우",
+        "서연", "지우", "하윤", "민서", "서현", "지민", "예은", "수아", "윤서", "채원",
+        "준호", "지훈", "시현", "도현", "유진", "지은", "하린", "서윤", "현진", "민지"
+    ];
+
+    const emailDomains = ["gmail.com", "naver.com", "kakao.com", "daum.net", "outlook.com"];
+    const companies = ["삼성전자", "네이버", "카카오", "LG전자", "현대자동차", "쿠팡", "배달의민족", "토스", "SK하이닉스", "라인"];
+    const jobs = ["사원", "주임", "대리", "과장", "차장", "부장", "팀장", "매니저", "디자이너", "개발자"];
+    const cities = ["서울", "부산", "인천", "대구", "대전", "광주", "울산", "수원", "세종", "제주"];
+
+    function showMessage(target, text, type = "success") {
+        target.textContent = text;
+        target.className = `message show ${type}`;
+        clearTimeout(target._timer);
+        target._timer = setTimeout(() => {
+            target.className = "message";
+            target.textContent = "";
+        }, 1500);
+    }
+
+    function randomItem(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function randomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function randomName() {
+        return randomItem(surnames) + randomItem(givenNames);
+    }
+
+    function slugifyKoreanName(name) {
+        return (
+            name
+            .replace(/\s+/g, "")
+            .split("")
+            .map((ch) => ch.charCodeAt(0))
+            .join("")
+            .slice(0, 8) + randomInt(10, 99)
+        );
+    }
+
+    function randomEmail(name) {
+        return `${slugifyKoreanName(name)}@${randomItem(emailDomains)}`;
+    }
+
+    function randomPhone() {
+        return `010-${randomInt(1000, 9999)}-${randomInt(1000, 9999)}`;
+    }
+
+    function randomUUID() {
+        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === "x" ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
+    function randomDate() {
+        const year = randomInt(2023, 2026);
+        const month = String(randomInt(1, 12)).padStart(2, "0");
+        const day = String(randomInt(1, 28)).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+    }
+
+    function randomNumberString() {
+        return String(randomInt(1, 999));
+    }
+
+    function getSelectedFields() {
+        return Array.from(document.querySelectorAll('.check-item input[type="checkbox"]:checked'))
+        .map((input) => input.value);
+    }
+
+    function generateRow(fields) {
+        const name = randomName();
+        const row = {};
+
+        fields.forEach((field) => {
+            switch (field) {
+                case "이름":
+                    row["name"] = name;
+                    break;
+                case "이메일":
+                    row["email"] = randomEmail(name);
+                    break;
+                case "전화번호":
+                    row["phone"] = randomPhone();
+                    break;
+                case "회사":
+                    row["company"] = randomItem(companies);
+                    break;
+                case "직책":
+                    row["job"] = randomItem(jobs);
+                    break;
+                case "도시":
+                    row["city"] = randomItem(cities);
+                    break;
+                case "UUID":
+                    row["uuid"] = randomUUID();
+                    break;
+                case "날짜":
+                    row["date"] = randomDate();
+                    break;
+                case "숫자":
+                    row["num"] = randomNumberString();
+                    break;
+            }
+        });
+
+        return row;
+    }
+
+    function generateData(fields, count) {
+        const result = [];
+        for (let i = 0; i < count; i++) {
+            result.push(generateRow(fields));
+        }
+        return result;
+    }
+
+    function toJson(data) {
+        return JSON.stringify(data, null, 2);
+    }
+
+    function escapeCsv(value) {
+        const str = String(value ?? "");
+        if (/[",\n]/.test(str)) {
+            return `"${str.replace(/"/g, '""')}"`;
+        }
+        return str;
+    }
+
+    function toCsv(data, fields) {
+        const header = fields.map(escapeCsv).join(",");
+        const rows = data.map((row) =>
+            fields.map((field) => escapeCsv(row[field])).join(",")
+        );
+        return [header, ...rows].join("\n");
+    }
+
+    function renderOutput(text, format) {
+        currentOutputText = text;
+        currentFormat = format;
+        outputBox.textContent = text;
+        resultEmpty.style.display = "none";
+        resultOutput.classList.add("show");
+    }
+
+    async function copyOutput() {
+        if (!currentOutputText) {
+            showMessage(rightMessage, "복사할 내용이 없습니다.", "error");
+            return;
+        }
+
+        try {
+            await navigator.clipboard.writeText(currentOutputText);
+            showMessage(rightMessage, "복사했습니다.", "success");
+        } catch (e) {
+            showMessage(rightMessage, "복사하지 못했습니다.", "error");
+        }
+    }
+
+    function downloadOutput() {
+        if (!currentOutputText) {
+            showMessage(rightMessage, "다운로드할 내용이 없습니다.", "error");
+            return;
+        }
+
+        const extension = currentFormat === "csv" ? "csv" : "json";
+        const mimeType = currentFormat === "csv" ? "text/csv;charset=utf-8" : "application/json;charset=utf-8";
+        const blob = new Blob([currentOutputText], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `dummy-data.${extension}`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        showMessage(rightMessage, "다운로드했습니다.", "success");
+    }
+
+    function generate() {
+        const fields = getSelectedFields();
+        const count = Math.max(1, Math.min(1000, Number(countInput.value) || 0));
+        const format = formatSelect.value;
+
+        if (!fields.length) {
+            showMessage(leftMessage, "최소 1개 이상의 필드를 선택하세요.", "error");
+            return;
+        }
+
+        countInput.value = count;
+
+        const data = generateData(fields, count);
+        const output = format === "csv" ? toCsv(data, fields) : toJson(data);
+
+        renderOutput(output, format);
+        showMessage(leftMessage, `${count}개의 더미 데이터를 생성했습니다.`, "success");
+    }
+
+    generateBtn.addEventListener("click", generate);
+    copyBtn.addEventListener("click", copyOutput);
+    downloadBtn.addEventListener("click", downloadOutput);
+</script>
+</body>
+</html>
