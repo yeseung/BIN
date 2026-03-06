@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Spin the Wheel</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet" />
+
+    <!-- GSAP (for smooth spinning) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <style>
+        :root{
+            --bg: #f6f7fb;
+            --card: #ffffff;
+            --text: #222;
+            --sub: #666;
+            --border: rgba(0,0,0,.08);
+            --shadow: 0 14px 40px rgba(0,0,0,.08);
+            --accent: #ff6b9d;
+            --accent2: #87ceeb;
+            --radius: 18px;
+        }
+
+        *{ box-sizing:border-box; }
+        html, body{ height:100%; }
+        body{
+            margin:0;
+            font-family: "Jua","Outfit", system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", sans-serif;
+            background: radial-gradient(1200px 600px at 20% 10%, rgba(255,107,157,.12), transparent 55%),
+            radial-gradient(1000px 700px at 85% 80%, rgba(135,206,250,.14), transparent 60%),
+            linear-gradient(180deg, #ffffff, var(--bg));
+            color: var(--text);
+            overflow-x:hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .wrap{
+            width: min(680px, 100%);
+            margin: 0 auto;
+            padding: 22px 14px 40px;
+        }
+
+        header{
+            text-align:center;
+            margin-bottom: 14px;
+        }
+
+        .title{
+            font-weight: 900;
+            letter-spacing: 1px;
+            font-size: clamp(26px, 5.8vw, 44px);
+            margin: 8px 0 6px;
+            color: transparent;
+            background: linear-gradient(90deg, #ff6b9d, #ffb347, #87ceeb, #98fb98, #dda0dd, #ff6b9d);
+            background-size: 260% 100%;
+            -webkit-background-clip:text;
+            background-clip:text;
+            animation: shimmer 4s linear infinite;
+        }
+        .subtitle{
+            margin:0;
+            color: var(--sub);
+            font-family: "Outfit", "Jua", sans-serif;
+            font-size: 14px;
+        }
+
+        @keyframes shimmer{
+            0%{ background-position: 0% 50%; }
+            100%{ background-position: 260% 50%; }
+        }
+
+        .panel{
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 14px 14px;
+        }
+
+        /* label box */
+        .label-panel{ margin-top: 14px; }
+        .label-head{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .label-title{
+            font-weight: 800;
+            color: #e8446d;
+            font-size: 16px;
+        }
+        .label-count{
+            font-family:"Outfit", sans-serif;
+            font-size: 13px;
+            color:#999;
+        }
+
+        .label-row{
+            display:flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .label-row input{
+            flex:1;
+            border: 1px solid rgba(0,0,0,.12);
+            border-radius: 12px;
+            padding: 11px 12px;
+            font-size: 15px;
+            outline:none;
+            background:#fff;
+            transition: box-shadow .15s, border-color .15s;
+            font-family:"Jua","Outfit",sans-serif;
+        }
+        .label-row input:focus{
+            border-color: rgba(255,107,157,.55);
+            box-shadow: 0 0 0 4px rgba(255,107,157,.14);
+        }
+
+        .btn{
+            border:none;
+            cursor:pointer;
+            user-select:none;
+            font-family:"Jua","Outfit",sans-serif;
+        }
+        .btn-add{
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent), #ffb347);
+            color:#fff;
+            font-size: 22px;
+            font-weight: 900;
+            box-shadow: 0 10px 22px rgba(255,107,157,.22);
+            transition: transform .15s, filter .15s, opacity .15s;
+        }
+        .btn-add:hover{ transform: translateY(-1px) scale(1.04); filter: brightness(1.02); }
+        .btn-add:disabled{ opacity:.35; cursor:not-allowed; transform:none; box-shadow:none; }
+
+        .label-list{
+            display:flex;
+            flex-wrap:wrap;
+            gap: 8px;
+            min-height: 34px;
+            max-height: 130px;
+            overflow:auto;
+            padding-right: 2px;
+        }
+        .tag{
+            display:inline-flex;
+            align-items:center;
+            gap: 8px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,107,157,.25);
+            background: linear-gradient(135deg, rgba(255,107,157,.10), rgba(135,206,250,.12));
+            color:#e8446d;
+            font-size: 14px;
+            animation: tagIn .18s ease-out;
+        }
+        @keyframes tagIn{
+            from{ transform: scale(.9); opacity:0; }
+            to{ transform: scale(1); opacity:1; }
+        }
+        .tag .x{
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display:grid;
+            place-items:center;
+            background: rgba(255,80,80,.14);
+            color:#d95555;
+            font-size: 12px;
+            line-height:1;
+            transition: background .15s;
+        }
+        .tag .x:hover{ background: rgba(255,80,80,.26); }
+
+        .empty{
+            width:100%;
+            color:#aaa;
+            font-size: 13px;
+            padding: 6px 0;
+            text-align:center;
+            font-family:"Outfit", sans-serif;
+        }
+
+        /* wheel */
+        .wheel-area{
+            margin-top: 14px;
+            display:grid;
+            place-items:center;
+            gap: 12px;
+        }
+
+        .roulette{
+            position: relative;
+            width: min(560px, 92vw);
+            aspect-ratio: 1 / 1;
+            border-radius: 50%;
+            background: radial-gradient(circle at 50% 50%, rgba(255,255,255,.9), rgba(255,255,255,.55));
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            overflow: visible;
+        }
+
+        #wheel{
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 10px 26px rgba(0,0,0,.08));
+        }
+
+        .pointer{
+            position:absolute;
+            top: -14px;
+            left: 50%;
+            z-index: 5;
+            transform: translateX(-50%);
+            width: 52px;
+            height: 68px;
+        }
+
+        /* spin button */
+        .spin-wrap{ display:flex; justify-content:center; width:100%; }
+        #spin-button{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap: 10px;
+            padding: 14px 44px;
+            border-radius: 999px;
+            border: 1px solid rgba(0,0,0,.06);
+            background: linear-gradient(135deg, var(--accent), #ffb347, var(--accent2));
+            color:#fff;
+            font-size: clamp(18px, 4.6vw, 24px);
+            font-weight: 900;
+            letter-spacing: 1px;
+            box-shadow: 0 14px 34px rgba(255,107,157,.25);
+            transition: transform .15s, box-shadow .15s, opacity .15s;
+        }
+        #spin-button:hover{ transform: translateY(-2px) scale(1.03); box-shadow: 0 18px 44px rgba(255,107,157,.33); }
+        #spin-button:active{ transform: translateY(0) scale(.98); }
+        #spin-button:disabled{ opacity:.45; cursor:not-allowed; transform:none; box-shadow:none; }
+
+        /* result */
+        #result{
+            min-height: 46px;
+            margin-top: 6px;
+            text-align:center;
+            font-size: clamp(20px, 5.4vw, 34px);
+            font-weight: 900;
+            color: #e8446d;
+            text-shadow: 0 8px 22px rgba(255,107,157,.22);
+        }
+
+        /* mobile */
+        @media (max-width: 420px){
+            .panel{ padding: 12px; }
+            .btn-add{ width: 42px; height: 42px; }
+            .pointer{ width: 44px; height: 58px; top: -10px; }
+            #spin-button{ padding: 13px 34px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <header>
+        <h1 class="title">🎡 돌려보아요~ 🎡</h1>
+        <p class="subtitle">항목을 추가하고 룰렛을 돌려보세요 (최대 12개)</p>
+    </header>
+
+    <!-- Label Panel -->
+    <section class="panel label-panel" aria-label="항목 설정">
+        <div class="label-head">
+            <span class="label-title">✏️ 항목 설정</span>
+            <span class="label-count" id="label-count">0 / 12</span>
+        </div>
+
+        <div class="label-row">
+            <input id="label-input" type="text" maxlength="10" placeholder="이름을 입력하세요..." autocomplete="off" />
+            <button class="btn btn-add" id="add-label-btn" type="button" aria-label="항목 추가">+</button>
+        </div>
+
+        <div class="label-list" id="label-list"></div>
+    </section>
+
+    <!-- Wheel -->
+    <section class="wheel-area">
+        <div class="roulette" aria-label="룰렛">
+            <!-- Pointer SVG -->
+            <svg class="pointer" viewBox="0 0 50 65" role="img" aria-label="포인터">
+                <defs>
+                    <linearGradient id="pin-grad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#FF6B9D" />
+                        <stop offset="100%" stop-color="#E8446D" />
+                    </linearGradient>
+                    <filter id="pin-shadow">
+                        <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.15" />
+                    </filter>
+                </defs>
+                <path
+                        d="M 7 0 L 43 0 L 43 10 Q 43 15 39 17 L 27 55 Q 25 63 23 55 L 11 17 Q 7 15 7 10 Z"
+                        fill="url(#pin-grad)"
+                        stroke="#fff"
+                        stroke-width="2"
+                        filter="url(#pin-shadow)"
+                />
+                <rect x="5" y="0" width="40" height="7" rx="3.5" fill="#fff" opacity="0.5" />
+            </svg>
+
+            <div id="wheel"></div>
+        </div>
+
+        <div class="spin-wrap">
+            <button class="btn" id="spin-button" type="button" disabled>
+                🎲 돌리기!
+            </button>
+        </div>
+
+        <div id="result" aria-live="polite"></div>
+    </section>
+</div>
+
+<script>
+    let isSpinning = false;
+    let currentRotation = 0;
+
+    // Web Audio API
+    let audioCtx;
+    function initAudio(){
+        if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if(audioCtx.state === "suspended") audioCtx.resume();
+    }
+    function playTickSound(){
+        if(!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(220, audioCtx.currentTime + 0.04);
+        gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.04);
+    }
+
+    // Items
+    const items = [];
+    const MAX_ITEMS = 12;
+
+    // Colors
+    const WHEEL_COLORS = [
+        "#FF6B9D","#FFB347","#87CEEB","#98FB98",
+        "#DDA0DD","#FF8A80","#80DEEA","#FFD54F",
+        "#CE93D8","#A5D6A7","#FF8A65","#90CAF9"
+    ];
+
+    // Elements
+    const inputEl = document.getElementById("label-input");
+    const listEl = document.getElementById("label-list");
+    const countEl = document.getElementById("label-count");
+    const addBtn = document.getElementById("add-label-btn");
+    const spinBtn = document.getElementById("spin-button");
+    const wheelEl = document.getElementById("wheel");
+    const resultEl = document.getElementById("result");
+    const pointerEl = document.querySelector(".pointer");
+
+    // Pointer base
+    gsap.set(pointerEl, { transformOrigin: "50% 0%" });
+
+    function updateUI(){
+        countEl.textContent = `${items.length} / ${MAX_ITEMS}`;
+        addBtn.disabled = items.length >= MAX_ITEMS;
+
+        if(items.length === 0){
+            listEl.innerHTML = `<div class="empty">항목을 추가하면 룰렛이 생성됩니다</div>`;
+        }else{
+            listEl.innerHTML = items.map((t, i) => `
+          <span class="tag">
+            ${escapeHtml(t)}
+            <button class="btn x" type="button" data-i="${i}" aria-label="삭제">✕</button>
+          </span>
+        `).join("");
+        }
+
+        rebuildWheel();
+    }
+
+    function escapeHtml(s){
+        return s.replace(/[&<>"']/g, (m) => ({
+            "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+        }[m]));
+    }
+
+    function addLabel(){
+        const text = inputEl.value.trim();
+        if(!text) return;
+        if(items.length >= MAX_ITEMS) return;
+
+        items.push(text);
+        inputEl.value = "";
+        inputEl.focus();
+        updateUI();
+    }
+
+    function removeLabel(index){
+        items.splice(index, 1);
+        updateUI();
+    }
+
+    function rebuildWheel(){
+        currentRotation = 0;
+        gsap.set(wheelEl, { rotation: 0 });
+        resultEl.textContent = "";
+
+        if(items.length < 2){
+            wheelEl.innerHTML = "";
+            spinBtn.disabled = true;
+            return;
+        }
+        spinBtn.disabled = false;
+        createRouletteWheel();
+    }
+
+    function createRouletteWheel(){
+        const numItems = items.length;
+        const anglePerItem = 360 / numItems;
+
+        // responsive-ish drawing
+        const radius = 240;
+        const center = 255;
+
+        let svg = `<svg viewBox="0 0 510 510" width="100%" height="100%" role="img" aria-label="룰렛 휠">`;
+        svg += `
+        <defs>
+          <radialGradient id="hub" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#fff"/>
+            <stop offset="70%" stop-color="#ffe6ef"/>
+            <stop offset="100%" stop-color="#ffb6c1"/>
+          </radialGradient>
+          <filter id="ts">
+            <feDropShadow dx="0" dy="1" stdDeviation="0.8" flood-color="#000" flood-opacity="0.15"/>
+          </filter>
+        </defs>
+      `;
+
+        // outer ring
+        svg += `<circle cx="${center}" cy="${center}" r="${radius + 8}" fill="none" stroke="#fff" stroke-width="6" opacity="0.85"/>`;
+        svg += `<circle cx="${center}" cy="${center}" r="${radius + 2}" fill="none" stroke="rgba(0,0,0,0.08)" stroke-width="1.5"/>`;
+
+        // notches
+        for(let i=0; i<numItems; i++){
+            const a = i * anglePerItem;
+            const rad = (a - 90) * Math.PI / 180;
+            const x = center + (radius + 5) * Math.cos(rad);
+            const y = center + (radius + 5) * Math.sin(rad);
+            svg += `<circle cx="${x}" cy="${y}" r="4" fill="#fff" opacity="0.95"/>`;
+        }
+
+        for(let i=0; i<numItems; i++){
+            const startAngle = i * anglePerItem;
+            const endAngle = startAngle + anglePerItem;
+
+            const startRad = (startAngle - 90) * Math.PI / 180;
+            const endRad = (endAngle - 90) * Math.PI / 180;
+
+            const sx = center + radius * Math.cos(startRad);
+            const sy = center + radius * Math.sin(startRad);
+            const ex = center + radius * Math.cos(endRad);
+            const ey = center + radius * Math.sin(endRad);
+
+            const largeArcFlag = anglePerItem > 180 ? 1 : 0;
+
+            svg += `
+          <path d="M ${center} ${center} L ${sx} ${sy} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${ex} ${ey} Z"
+            fill="${WHEEL_COLORS[i % WHEEL_COLORS.length]}"
+            stroke="#fff"
+            stroke-width="2.5"
+            opacity="0.94"/>
+        `;
+
+            const textAngle = startAngle + anglePerItem / 2;
+            const maxFontSize = numItems <= 4 ? 20 : numItems <= 6 ? 17 : numItems <= 8 ? 15 : 13;
+            const labelText = items[i].length > 6 ? items[i].slice(0, 6) + ".." : items[i];
+
+            svg += `
+          <g transform="translate(${center}, ${center}) rotate(${textAngle - 90})">
+            <text x="${radius * 0.58}" y="0" dominant-baseline="middle" text-anchor="middle"
+              fill="#fff" font-size="${maxFontSize}" font-weight="900"
+              font-family="Jua, Outfit, sans-serif"
+              filter="url(#ts)" stroke="#00000020" stroke-width="0.35">${escapeHtml(labelText)}</text>
+          </g>
+        `;
+        }
+
+        // hub
+        svg += `<circle cx="${center}" cy="${center}" r="24" fill="url(#hub)" stroke="#fff" stroke-width="3"/>`;
+        svg += `<circle cx="${center}" cy="${center}" r="9" fill="#FF6B9D" stroke="#fff" stroke-width="2"/>`;
+        svg += `<circle cx="${center}" cy="${center}" r="${radius}" fill="none" stroke="#fff" stroke-width="2" opacity="0.35"/>`;
+
+        svg += `</svg>`;
+        wheelEl.innerHTML = svg;
+    }
+
+    function spin(){
+        if(isSpinning || items.length < 2) return;
+        initAudio();
+
+        isSpinning = true;
+        spinBtn.disabled = true;
+        resultEl.textContent = "";
+
+        const anglePerItem = 360 / items.length;
+        const winningIndex = Math.floor(Math.random() * items.length);
+
+        // map winningIndex to pointer region
+        const border = 360 - (winningIndex + 1) * anglePerItem;
+        const offset = 8 + Math.random() * (anglePerItem - 16);
+        const targetMod = (border + offset) % 360;
+
+        const fullSpins = 12 * 360;
+        const currentMod = currentRotation % 360;
+        let extra = targetMod - currentMod;
+        if(extra < 0) extra += 360;
+
+        const finalTarget = currentRotation + fullSpins + extra;
+        currentRotation = finalTarget;
+
+        let lastDivider = Math.floor(gsap.getProperty(wheelEl, "rotation") / anglePerItem);
+
+        const wobbleCount = Math.random() > 0.5 ? 3 : 2;
+        const wobbleBase = 2.4 + Math.random() * 1.8;
+
+        const tl = gsap.timeline();
+
+        tl.to(wheelEl, {
+            rotation: finalTarget + wobbleBase,
+            duration: 6.2,
+            ease: "power2.out",
+            onUpdate: () => {
+                const rot = gsap.getProperty(wheelEl, "rotation");
+                const divider = Math.floor(rot / anglePerItem);
+                const distToNext = anglePerItem - (rot % anglePerItem);
+
+                if(divider !== lastDivider){
+                    lastDivider = divider;
+                    gsap.killTweensOf(pointerEl);
+                    gsap.fromTo(pointerEl, { rotation: -34 }, { rotation: 0, duration: 0.45, ease: "elastic.out(1.5, 0.25)", overwrite: "auto" });
+                    playTickSound();
+                }else if(distToNext <= 5){
+                    const bendRatio = Math.max(0, 1 - (distToNext / 5));
+                    const bendAngle = -34 * Math.pow(bendRatio, 1.5);
+                    const currentPointerRot = gsap.getProperty(pointerEl, "rotation");
+                    if(bendAngle < currentPointerRot){
+                        gsap.killTweensOf(pointerEl);
+                        gsap.set(pointerEl, { rotation: bendAngle });
+                    }
+                }
+            }
+        });
+
+        for(let i=0; i<wobbleCount; i++){
+            const decay = 1 - (i + 1) / (wobbleCount + 1);
+            const amp = wobbleBase * decay;
+            const dir = (i % 2 === 0) ? -1 : 1;
+            const target = finalTarget + amp * dir * 0.6;
+            const dur = 0.6 + i * 0.15;
+            tl.to(wheelEl, { rotation: target, duration: dur, ease: "sine.inOut" });
+        }
+
+        tl.to(wheelEl, {
+            rotation: finalTarget,
+            duration: 0.45,
+            ease: "sine.out",
+            onComplete: () => {
+                isSpinning = false;
+                spinBtn.disabled = false;
+                gsap.to(pointerEl, { rotation: 0, duration: 0.25, ease: "power2.out" });
+
+                const result = items[winningIndex];
+                const color = WHEEL_COLORS[winningIndex % WHEEL_COLORS.length];
+                resultEl.innerHTML = `🎉 <span style="color:${color}">${escapeHtml(result)}</span> 🎉`;
+            }
+        });
+    }
+
+    // events
+    addBtn.addEventListener("click", addLabel);
+    spinBtn.addEventListener("click", spin);
+
+    inputEl.addEventListener("keydown", (e) => {
+        if(e.key === "Enter"){
+            e.preventDefault();
+            addLabel();
+        }
+    });
+
+    listEl.addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-i]");
+        if(!btn) return;
+        removeLabel(Number(btn.dataset.i));
+    });
+
+    // init
+    updateUI();
+</script>
+</body>
+</html>
