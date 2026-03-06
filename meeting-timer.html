@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>회의 타이머</title>
+    <meta name="description" content="회의 시간을 관리하는 심플한 회의 타이머입니다." />
+    <style>
+        :root {
+            --bg: #f5f7fb;
+            --card: #ffffff;
+            --card-soft: #f8fafc;
+            --text: #111827;
+            --muted: #6b7280;
+            --line: #e5e7eb;
+            --primary: #111827;
+            --primary-hover: #1f2937;
+            --danger: #dc2626;
+            --danger-hover: #b91c1c;
+            --progress-bg: #e5e7eb;
+            --progress-fill: #111827;
+            --warning: #ef4444;
+            --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+            --radius: 24px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(180deg, #f9fbff 0%, #f3f6fb 100%);
+            color: var(--text);
+            font-family: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+        }
+
+        .wrap {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 28px 18px 56px;
+        }
+
+        .page-header {
+            margin-bottom: 18px;
+        }
+
+        .page-title {
+            margin: 0 0 8px;
+            font-size: 42px;
+            font-weight: 800;
+            line-height: 1.2;
+            letter-spacing: -0.03em;
+        }
+
+        .page-desc {
+            margin: 0;
+            color: var(--muted);
+            font-size: 18px;
+            line-height: 1.7;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .timer-card {
+            padding: 34px 34px 28px;
+            margin-top: 26px;
+        }
+
+        .timer-display {
+            text-align: center;
+            font-size: clamp(72px, 10vw, 124px);
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: 0.04em;
+            margin: 10px 0 28px;
+            color: var(--text);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .timer-display.warning {
+            color: var(--warning);
+        }
+
+        .setup-area {
+            display: block;
+        }
+
+        .field-group {
+            margin-bottom: 22px;
+        }
+
+        .field-label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .minutes-input {
+            width: 100%;
+            height: 64px;
+            padding: 0 18px;
+            border-radius: 16px;
+            border: 1px solid #d1d5db;
+            outline: none;
+            background: #fff;
+            color: var(--text);
+            font-size: 34px;
+            font-weight: 700;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .minutes-input:focus {
+            border-color: #94a3b8;
+            box-shadow: 0 0 0 5px rgba(148, 163, 184, 0.15);
+        }
+
+        .preset-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+
+        .preset-btn,
+        .action-btn {
+            appearance: none;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+            font-family: inherit;
+            font-weight: 800;
+        }
+
+        .preset-btn:active,
+        .action-btn:active {
+            transform: translateY(1px);
+        }
+
+        .preset-btn {
+            min-width: 92px;
+            height: 54px;
+            padding: 0 18px;
+            border-radius: 14px;
+            border: 1px solid var(--line);
+            background: #fff;
+            color: var(--text);
+            font-size: 18px;
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
+        }
+
+        .preset-btn:hover {
+            background: #f8fafc;
+        }
+
+        .preset-btn.active {
+            background: var(--text);
+            color: #fff;
+            border-color: var(--text);
+        }
+
+        .full-btn {
+            width: 100%;
+            height: 64px;
+            border-radius: 16px;
+            font-size: 22px;
+        }
+
+        .btn-start {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 10px 20px rgba(17, 24, 39, 0.14);
+        }
+
+        .btn-start:hover {
+            background: var(--primary-hover);
+        }
+
+        .run-area {
+            display: none;
+        }
+
+        .progress-wrap {
+            margin: 0 auto 10px;
+            width: 100%;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 14px;
+            border-radius: 999px;
+            background: var(--progress-bg);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            border-radius: 999px;
+            background: var(--progress-fill);
+            transition: width 0.25s linear, background-color 0.25s ease;
+        }
+
+        .progress-fill.warning {
+            background: var(--warning);
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 12px;
+            font-size: 16px;
+            color: var(--muted);
+            font-weight: 700;
+        }
+
+        .action-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-top: 26px;
+        }
+
+        .btn-pause {
+            background: #fff;
+            color: var(--text);
+            border: 1px solid var(--line);
+        }
+
+        .btn-pause:hover {
+            background: #f8fafc;
+        }
+
+        .btn-stop {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .btn-stop:hover {
+            background: var(--danger-hover);
+        }
+
+        .tips-card {
+            margin-top: 24px;
+            padding: 30px 34px;
+        }
+
+        .tips-title {
+            margin: 0 0 22px;
+            font-size: 28px;
+            font-weight: 800;
+        }
+
+        .tips-list {
+            margin: 0;
+            padding-left: 22px;
+            color: var(--muted);
+            font-size: 17px;
+            line-height: 2;
+        }
+
+        .done-message {
+            display: none;
+            margin-top: 18px;
+            text-align: center;
+            padding: 16px 18px;
+            border-radius: 16px;
+            background: #ecfdf5;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        @media (max-width: 900px) {
+            .page-title {
+                font-size: 34px;
+            }
+
+            .page-desc {
+                font-size: 16px;
+            }
+
+            .timer-card,
+            .tips-card {
+                padding: 22px 18px;
+            }
+
+            .field-label {
+                font-size: 16px;
+            }
+
+            .minutes-input {
+                font-size: 28px;
+            }
+
+            .preset-btn {
+                min-width: 80px;
+                font-size: 16px;
+            }
+
+            .full-btn {
+                font-size: 20px;
+            }
+
+            .tips-title {
+                font-size: 24px;
+            }
+
+            .tips-list {
+                font-size: 15px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .wrap {
+                padding: 20px 12px 40px;
+            }
+
+            .page-title {
+                font-size: 30px;
+            }
+
+            .timer-display {
+                margin-top: 6px;
+                margin-bottom: 22px;
+            }
+
+            .action-row {
+                grid-template-columns: 1fr;
+            }
+
+            .preset-list {
+                gap: 10px;
+            }
+
+            .preset-btn {
+                flex: 1 1 calc(33.333% - 10px);
+                min-width: 0;
+            }
+
+            .minutes-input {
+                height: 58px;
+                font-size: 24px;
+            }
+
+            .full-btn {
+                height: 58px;
+            }
+        }
+    </style>
+</head>
+<body>
+<main class="wrap">
+    <header class="page-header">
+        <h1 class="page-title">회의 타이머</h1>
+        <p class="page-desc">회의 시간을 관리합니다.</p>
+    </header>
+
+    <section class="card timer-card">
+        <div id="timerDisplay" class="timer-display">30:00</div>
+
+        <div id="setupArea" class="setup-area">
+            <div class="field-group">
+                <label for="minutesInput" class="field-label">회의 시간 (분)</label>
+                <input
+                        id="minutesInput"
+                        class="minutes-input"
+                        type="number"
+                        min="1"
+                        max="999"
+                        step="1"
+                        value="30"
+                        inputmode="numeric"
+                />
+            </div>
+
+            <div class="preset-list">
+                <button class="preset-btn" data-minutes="15" type="button">15분</button>
+                <button class="preset-btn active" data-minutes="30" type="button">30분</button>
+                <button class="preset-btn" data-minutes="45" type="button">45분</button>
+                <button class="preset-btn" data-minutes="60" type="button">60분</button>
+                <button class="preset-btn" data-minutes="90" type="button">90분</button>
+            </div>
+
+            <button id="startBtn" class="action-btn full-btn btn-start" type="button">시작</button>
+        </div>
+
+        <div id="runArea" class="run-area">
+            <div class="progress-wrap">
+                <div class="progress-bar">
+                    <div id="progressFill" class="progress-fill"></div>
+                </div>
+                <div id="progressText" class="progress-text">0% 진행</div>
+            </div>
+
+            <div class="action-row">
+                <button id="pauseBtn" class="action-btn full-btn btn-pause" type="button">일시정지</button>
+                <button id="stopBtn" class="action-btn full-btn btn-stop" type="button">종료</button>
+            </div>
+        </div>
+
+        <div id="doneMessage" class="done-message">회의 시간이 종료되었습니다.</div>
+    </section>
+
+    <section class="card tips-card">
+        <h2 class="tips-title">사용 팁</h2>
+        <ul class="tips-list">
+            <li>회의 시간을 미리 정해두면 효율적인 회의가 가능합니다.</li>
+            <li>남은 시간이 1분 이하가 되면 빨간색으로 표시됩니다.</li>
+            <li>일시정지 기능으로 필요시 잠시 멈출 수 있습니다.</li>
+        </ul>
+    </section>
+</main>
+
+<script>
+    const timerDisplay = document.getElementById("timerDisplay");
+    const minutesInput = document.getElementById("minutesInput");
+    const presetButtons = document.querySelectorAll(".preset-btn");
+    const startBtn = document.getElementById("startBtn");
+    const pauseBtn = document.getElementById("pauseBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const setupArea = document.getElementById("setupArea");
+    const runArea = document.getElementById("runArea");
+    const progressFill = document.getElementById("progressFill");
+    const progressText = document.getElementById("progressText");
+    const doneMessage = document.getElementById("doneMessage");
+
+    let totalSeconds = 30 * 60;
+    let remainingSeconds = 30 * 60;
+    let timerId = null;
+    let isRunning = false;
+    let isPaused = false;
+
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    }
+
+    function updateTimerDisplay() {
+        timerDisplay.textContent = formatTime(remainingSeconds);
+
+        const isWarning = remainingSeconds <= 60 && remainingSeconds > 0;
+        timerDisplay.classList.toggle("warning", isWarning);
+        progressFill.classList.toggle("warning", isWarning);
+    }
+
+    function updateProgress() {
+        const elapsed = totalSeconds - remainingSeconds;
+        const percent = totalSeconds > 0 ? Math.min((elapsed / totalSeconds) * 100, 100) : 0;
+        progressFill.style.width = `${percent}%`;
+        progressText.textContent = `${Math.floor(percent)}% 진행`;
+    }
+
+    function syncPresetActive() {
+        const currentValue = Number(minutesInput.value);
+        presetButtons.forEach((button) => {
+            button.classList.toggle("active", Number(button.dataset.minutes) === currentValue);
+        });
+    }
+
+    function resetToSetup() {
+        clearInterval(timerId);
+        timerId = null;
+        isRunning = false;
+        isPaused = false;
+
+        const minutes = Math.max(1, Number(minutesInput.value) || 30);
+        totalSeconds = minutes * 60;
+        remainingSeconds = totalSeconds;
+
+        updateTimerDisplay();
+        updateProgress();
+
+        setupArea.style.display = "block";
+        runArea.style.display = "none";
+        doneMessage.style.display = "none";
+        pauseBtn.textContent = "일시정지";
+    }
+
+    function finishTimer() {
+        clearInterval(timerId);
+        timerId = null;
+        isRunning = false;
+        isPaused = false;
+        remainingSeconds = 0;
+        updateTimerDisplay();
+        updateProgress();
+        pauseBtn.textContent = "일시정지";
+        doneMessage.style.display = "block";
+        runArea.style.display = "none";
+        setupArea.style.display = "block";
+
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.type = "sine";
+            oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+            gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.8);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.8);
+        } catch (e) {
+        }
+    }
+
+    function startTimer() {
+        const minutes = Math.max(1, Number(minutesInput.value) || 30);
+        totalSeconds = minutes * 60;
+        remainingSeconds = totalSeconds;
+        doneMessage.style.display = "none";
+
+        updateTimerDisplay();
+        updateProgress();
+
+        setupArea.style.display = "none";
+        runArea.style.display = "block";
+
+        isRunning = true;
+        isPaused = false;
+        pauseBtn.textContent = "일시정지";
+
+        clearInterval(timerId);
+        timerId = setInterval(() => {
+            if (!isRunning || isPaused) return;
+
+            remainingSeconds -= 1;
+            updateTimerDisplay();
+            updateProgress();
+
+            if (remainingSeconds <= 0) {
+                finishTimer();
+            }
+        }, 1000);
+    }
+
+    function pauseTimer() {
+        if (!isRunning) return;
+
+        isPaused = !isPaused;
+        pauseBtn.textContent = isPaused ? "다시시작" : "일시정지";
+    }
+
+    function stopTimer() {
+        resetToSetup();
+    }
+
+    presetButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+            const minutes = Number(button.dataset.minutes);
+            minutesInput.value = minutes;
+            syncPresetActive();
+            resetToSetup();
+        });
+    });
+
+    minutesInput.addEventListener("input", () => {
+        minutesInput.value = minutesInput.value.replace(/[^0-9]/g, "");
+
+        if (!minutesInput.value || Number(minutesInput.value) < 1) {
+            return;
+        }
+
+        syncPresetActive();
+        resetToSetup();
+    });
+
+    minutesInput.addEventListener("blur", () => {
+        if (!minutesInput.value || Number(minutesInput.value) < 1) {
+            minutesInput.value = 30;
+        }
+        syncPresetActive();
+        resetToSetup();
+    });
+
+    startBtn.addEventListener("click", startTimer);
+    pauseBtn.addEventListener("click", pauseTimer);
+    stopBtn.addEventListener("click", stopTimer);
+
+    minutesInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            startTimer();
+        }
+    });
+
+    totalSeconds = 30 * 60;
+    remainingSeconds = totalSeconds;
+    updateTimerDisplay();
+    updateProgress();
+    syncPresetActive();
+</script>
+</body>
+</html>
