@@ -1,0 +1,790 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>이미지 Base64 변환기</title>
+    <meta
+            name="description"
+            content="이미지를 Base64로 인코딩하거나 Base64 문자열을 이미지로 변환하는 도구입니다."
+    />
+    <style>
+        :root {
+            --bg: #f5f7fb;
+            --card: #ffffff;
+            --card-soft: #f8fafc;
+            --text: #111827;
+            --muted: #6b7280;
+            --line: #e5e7eb;
+            --primary: #111827;
+            --primary-hover: #1f2937;
+            --accent: #2563eb;
+            --accent-hover: #1d4ed8;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+            --radius: 24px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(180deg, #f9fbff 0%, #f3f6fb 100%);
+            color: var(--text);
+            font-family: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+        }
+
+        .wrap {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 28px 18px 56px;
+        }
+
+        .page-header {
+            margin-bottom: 22px;
+        }
+
+        .page-title {
+            margin: 0 0 8px;
+            font-size: 42px;
+            font-weight: 800;
+            line-height: 1.2;
+            letter-spacing: -0.03em;
+        }
+
+        .page-desc {
+            margin: 0;
+            color: var(--muted);
+            font-size: 18px;
+            line-height: 1.7;
+        }
+
+        .tab-wrap {
+            display: inline-flex;
+            background: #eef2f7;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            padding: 6px;
+            gap: 6px;
+            margin: 18px 0 16px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);
+        }
+
+        .tab-btn {
+            appearance: none;
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            padding: 14px 22px;
+            border-radius: 14px;
+            font-size: 18px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.18s ease;
+        }
+
+        .tab-btn.active {
+            background: #ffffff;
+            color: var(--text);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+            border: 1px solid #dbe2ea;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 34px;
+        }
+
+        .panel {
+            display: none;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        .section-title {
+            margin: 0 0 24px;
+            font-size: 28px;
+            font-weight: 800;
+        }
+
+        .drop-zone {
+            width: 100%;
+            min-height: 220px;
+            border: 2px dashed #cfd8e3;
+            border-radius: 22px;
+            background: #fbfcfe;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .drop-zone:hover,
+        .drop-zone.dragover {
+            border-color: #94a3b8;
+            background: #f3f7fc;
+        }
+
+        .drop-zone-content {
+            color: var(--muted);
+            line-height: 1.8;
+            font-size: 18px;
+        }
+
+        .drop-zone-content strong {
+            display: block;
+            font-size: 20px;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+
+        .drop-zone img {
+            max-width: 100%;
+            max-height: 360px;
+            object-fit: contain;
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .field {
+            margin-top: 24px;
+        }
+
+        .label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 18px;
+            font-weight: 800;
+        }
+
+        textarea,
+        input[type="text"] {
+            width: 100%;
+            border: 1px solid #d1d5db;
+            outline: none;
+            background: #fff;
+            color: var(--text);
+            border-radius: 18px;
+            padding: 18px;
+            font-size: 18px;
+            line-height: 1.7;
+            resize: vertical;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        textarea {
+            min-height: 260px;
+        }
+
+        textarea:focus,
+        input[type="text"]:focus {
+            border-color: #94a3b8;
+            box-shadow: 0 0 0 5px rgba(148, 163, 184, 0.15);
+        }
+
+        .btn-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .btn {
+            appearance: none;
+            border: none;
+            cursor: pointer;
+            border-radius: 16px;
+            padding: 15px 22px;
+            font-size: 17px;
+            font-weight: 800;
+            transition: all 0.18s ease;
+            font-family: inherit;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 10px 20px rgba(17, 24, 39, 0.14);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-accent {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .btn-accent:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-light {
+            background: #f3f4f6;
+            color: var(--text);
+            border: 1px solid var(--line);
+        }
+
+        .btn-light:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: #fff;
+        }
+
+        .btn-success:hover {
+            filter: brightness(0.95);
+        }
+
+        .preview-wrap {
+            margin-top: 24px;
+            display: none;
+        }
+
+        .preview-wrap.active {
+            display: block;
+        }
+
+        .preview-box {
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            background: #fbfcfe;
+            padding: 22px;
+            text-align: center;
+        }
+
+        .preview-box img {
+            max-width: 100%;
+            max-height: 520px;
+            object-fit: contain;
+            border-radius: 14px;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+        }
+
+        .file-meta {
+            margin-top: 14px;
+            color: var(--muted);
+            font-size: 15px;
+            line-height: 1.7;
+        }
+
+        .helper {
+            margin-top: 10px;
+            color: var(--muted);
+            font-size: 15px;
+            line-height: 1.7;
+        }
+
+        .message {
+            display: none;
+            margin-top: 18px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: 700;
+            line-height: 1.6;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message.success {
+            background: #ecfdf5;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+        }
+
+        .message.error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+        }
+
+        @media (max-width: 900px) {
+            .wrap {
+                padding: 22px 14px 42px;
+            }
+
+            .page-title {
+                font-size: 34px;
+            }
+
+            .page-desc {
+                font-size: 16px;
+            }
+
+            .card {
+                padding: 22px 16px;
+            }
+
+            .section-title {
+                font-size: 24px;
+            }
+
+            .tab-btn {
+                font-size: 16px;
+                padding: 12px 16px;
+            }
+
+            textarea,
+            input[type="text"] {
+                font-size: 16px;
+            }
+
+            .drop-zone-content {
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .page-title {
+                font-size: 30px;
+            }
+
+            .tab-wrap {
+                width: 100%;
+                display: flex;
+            }
+
+            .tab-btn {
+                flex: 1;
+                padding: 12px 10px;
+            }
+
+            .btn-row {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .drop-zone {
+                min-height: 180px;
+            }
+
+            textarea {
+                min-height: 220px;
+            }
+        }
+    </style>
+</head>
+<body>
+<main class="wrap">
+    <header class="page-header">
+        <h1 class="page-title">이미지 Base64</h1>
+        <p class="page-desc">이미지를 Base64로 인코딩하거나 Base64를 이미지로 변환하세요</p>
+    </header>
+
+    <div class="tab-wrap" role="tablist" aria-label="변환 방식 선택">
+        <button class="tab-btn active" id="tabEncode" type="button" role="tab" aria-selected="true">
+            이미지 → Base64
+        </button>
+        <button class="tab-btn" id="tabDecode" type="button" role="tab" aria-selected="false">
+            Base64 → 이미지
+        </button>
+    </div>
+
+    <section class="card panel active" id="panelEncode">
+        <h2 class="section-title">이미지 업로드</h2>
+
+        <div id="dropZone" class="drop-zone" tabindex="0">
+            <div class="drop-zone-content" id="dropZoneContent">
+                <strong>클릭하거나 이미지를 드래그하세요</strong>
+                PNG, JPG, GIF, WebP, SVG 지원 · Ctrl+V로 붙여넣기 가능
+            </div>
+        </div>
+        <input
+                type="file"
+                id="fileInput"
+                class="file-input"
+                accept="image/png,image/jpeg,image/jpg,image/gif,image/webp,image/svg+xml"
+        />
+
+        <div class="file-meta" id="fileMeta"></div>
+
+        <div class="field">
+            <label class="label" for="base64Output">Base64 결과</label>
+            <textarea id="base64Output" placeholder="이미지를 업로드하면 Base64 문자열이 여기에 표시됩니다."></textarea>
+            <div class="helper">Data URL 형식으로 생성됩니다.</div>
+        </div>
+
+        <div class="btn-row">
+            <button class="btn btn-primary" id="copyBase64Btn" type="button">복사</button>
+            <button class="btn btn-accent" id="downloadBase64TxtBtn" type="button">TXT 다운로드</button>
+            <button class="btn btn-light" id="clearEncodeBtn" type="button">초기화</button>
+        </div>
+
+        <div class="message" id="encodeMessage"></div>
+    </section>
+
+    <section class="card panel" id="panelDecode">
+        <h2 class="section-title">Base64 입력</h2>
+
+        <div class="field">
+            <label class="label" for="base64Input">Base64 문자열 또는 Data URL</label>
+            <textarea id="base64Input" placeholder="Base64 문자열 또는 Data URL을 입력하세요"></textarea>
+        </div>
+
+        <div class="btn-row">
+            <button class="btn btn-primary" id="convertToImageBtn" type="button">이미지 변환</button>
+            <button class="btn btn-success" id="downloadImageBtn" type="button">이미지 다운로드</button>
+            <button class="btn btn-light" id="clearDecodeBtn" type="button">초기화</button>
+        </div>
+
+        <div class="preview-wrap" id="previewWrap">
+            <div class="preview-box">
+                <img id="decodedImage" alt="변환된 이미지 미리보기" />
+                <div class="file-meta" id="decodedMeta"></div>
+            </div>
+        </div>
+
+        <div class="message" id="decodeMessage"></div>
+    </section>
+</main>
+
+<script>
+    const tabEncode = document.getElementById("tabEncode");
+    const tabDecode = document.getElementById("tabDecode");
+    const panelEncode = document.getElementById("panelEncode");
+    const panelDecode = document.getElementById("panelDecode");
+
+    const dropZone = document.getElementById("dropZone");
+    const dropZoneContent = document.getElementById("dropZoneContent");
+    const fileInput = document.getElementById("fileInput");
+    const fileMeta = document.getElementById("fileMeta");
+    const base64Output = document.getElementById("base64Output");
+    const copyBase64Btn = document.getElementById("copyBase64Btn");
+    const downloadBase64TxtBtn = document.getElementById("downloadBase64TxtBtn");
+    const clearEncodeBtn = document.getElementById("clearEncodeBtn");
+    const encodeMessage = document.getElementById("encodeMessage");
+
+    const base64Input = document.getElementById("base64Input");
+    const convertToImageBtn = document.getElementById("convertToImageBtn");
+    const downloadImageBtn = document.getElementById("downloadImageBtn");
+    const clearDecodeBtn = document.getElementById("clearDecodeBtn");
+    const previewWrap = document.getElementById("previewWrap");
+    const decodedImage = document.getElementById("decodedImage");
+    const decodedMeta = document.getElementById("decodedMeta");
+    const decodeMessage = document.getElementById("decodeMessage");
+
+    let currentImageDataUrl = "";
+    let currentImageName = "image";
+    let currentDecodedDataUrl = "";
+    let currentDecodedMime = "image/png";
+
+    function showPanel(type) {
+        const isEncode = type === "encode";
+
+        tabEncode.classList.toggle("active", isEncode);
+        tabDecode.classList.toggle("active", !isEncode);
+        tabEncode.setAttribute("aria-selected", isEncode ? "true" : "false");
+        tabDecode.setAttribute("aria-selected", isEncode ? "false" : "true");
+
+        panelEncode.classList.toggle("active", isEncode);
+        panelDecode.classList.toggle("active", !isEncode);
+    }
+
+    function showMessage(target, text, type) {
+        target.textContent = text;
+        target.className = `message show ${type}`;
+    }
+
+    function clearMessage(target) {
+        target.textContent = "";
+        target.className = "message";
+    }
+
+    function formatBytes(bytes) {
+        if (!bytes && bytes !== 0) return "";
+        const units = ["B", "KB", "MB", "GB"];
+        let size = bytes;
+        let index = 0;
+
+        while (size >= 1024 && index < units.length - 1) {
+            size /= 1024;
+            index++;
+        }
+
+        return `${size.toFixed(size >= 10 || index === 0 ? 0 : 1)} ${units[index]}`;
+    }
+
+    function getFileExtensionFromMime(mime) {
+        const map = {
+            "image/png": "png",
+            "image/jpeg": "jpg",
+            "image/jpg": "jpg",
+            "image/gif": "gif",
+            "image/webp": "webp",
+            "image/svg+xml": "svg",
+            "image/bmp": "bmp"
+        };
+        return map[mime] || "png";
+    }
+
+    function downloadTextFile(filename, content) {
+        const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    }
+
+    function downloadDataUrl(filename, dataUrl) {
+        const a = document.createElement("a");
+        a.href = dataUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    }
+
+    function setDropPreview(dataUrl) {
+        dropZoneContent.innerHTML = "";
+        const img = document.createElement("img");
+        img.src = dataUrl;
+        img.alt = "업로드된 이미지 미리보기";
+        dropZoneContent.appendChild(img);
+    }
+
+    function resetDropPreview() {
+        dropZoneContent.innerHTML = `
+        <strong>클릭하거나 이미지를 드래그하세요</strong>
+        PNG, JPG, GIF, WebP, SVG 지원 · Ctrl+V로 붙여넣기 가능
+      `;
+    }
+
+    function processImageFile(file) {
+        if (!file || !file.type.startsWith("image/")) {
+            showMessage(encodeMessage, "이미지 파일만 업로드할 수 있습니다.", "error");
+            return;
+        }
+
+        clearMessage(encodeMessage);
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const dataUrl = e.target.result;
+            currentImageDataUrl = dataUrl;
+            currentImageName = file.name.replace(/\.[^.]+$/, "") || "image";
+            base64Output.value = dataUrl;
+            setDropPreview(dataUrl);
+            fileMeta.textContent = `파일명: ${file.name} · 형식: ${file.type || "알 수 없음"} · 크기: ${formatBytes(file.size)}`;
+            showMessage(encodeMessage, "이미지가 Base64로 변환되었습니다.", "success");
+        };
+        reader.onerror = function () {
+            showMessage(encodeMessage, "이미지를 읽는 중 오류가 발생했습니다.", "error");
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function normalizeBase64ToDataUrl(input) {
+        const trimmed = input.trim();
+        if (!trimmed) return "";
+
+        if (trimmed.startsWith("data:image/")) {
+            return trimmed;
+        }
+
+        const pure = trimmed.replace(/\s+/g, "");
+        return `data:image/png;base64,${pure}`;
+    }
+
+    function parseMimeFromDataUrl(dataUrl) {
+        const match = dataUrl.match(/^data:(image\/[a-zA-Z0-9+.-]+);base64,/);
+        return match ? match[1] : "image/png";
+    }
+
+    function estimateBase64Size(dataUrl) {
+        const commaIndex = dataUrl.indexOf(",");
+        const base64 = commaIndex >= 0 ? dataUrl.slice(commaIndex + 1) : dataUrl;
+        const len = base64.length;
+        const padding = (base64.match(/=*$/) || [""])[0].length;
+        return Math.max(0, Math.floor((len * 3) / 4) - padding);
+    }
+
+    tabEncode.addEventListener("click", () => showPanel("encode"));
+    tabDecode.addEventListener("click", () => showPanel("decode"));
+
+    dropZone.addEventListener("click", () => fileInput.click());
+    dropZone.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            fileInput.click();
+        }
+    });
+
+    fileInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) processImageFile(file);
+    });
+
+    ["dragenter", "dragover"].forEach((eventName) => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.add("dragover");
+        });
+    });
+
+    ["dragleave", "dragend", "drop"].forEach((eventName) => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.remove("dragover");
+        });
+    });
+
+    dropZone.addEventListener("drop", (e) => {
+        const file = e.dataTransfer.files && e.dataTransfer.files[0];
+        if (file) processImageFile(file);
+    });
+
+    document.addEventListener("paste", (e) => {
+        if (!panelEncode.classList.contains("active")) return;
+
+        const items = e.clipboardData?.items || [];
+        for (const item of items) {
+            if (item.type && item.type.startsWith("image/")) {
+                const file = item.getAsFile();
+                if (file) {
+                    processImageFile(file);
+                    break;
+                }
+            }
+        }
+    });
+
+    copyBase64Btn.addEventListener("click", async () => {
+        const text = base64Output.value.trim();
+        if (!text) {
+            showMessage(encodeMessage, "복사할 Base64 내용이 없습니다.", "error");
+            return;
+        }
+
+        try {
+            await navigator.clipboard.writeText(text);
+            showMessage(encodeMessage, "Base64 문자열을 복사했습니다.", "success");
+        } catch (e) {
+            base64Output.select();
+            document.execCommand("copy");
+            showMessage(encodeMessage, "Base64 문자열을 복사했습니다.", "success");
+        }
+    });
+
+    downloadBase64TxtBtn.addEventListener("click", () => {
+        const text = base64Output.value.trim();
+        if (!text) {
+            showMessage(encodeMessage, "다운로드할 Base64 내용이 없습니다.", "error");
+            return;
+        }
+        downloadTextFile(`${currentImageName || "image-base64"}.txt`, text);
+        showMessage(encodeMessage, "Base64 텍스트 파일을 다운로드했습니다.", "success");
+    });
+
+    clearEncodeBtn.addEventListener("click", () => {
+        fileInput.value = "";
+        currentImageDataUrl = "";
+        currentImageName = "image";
+        base64Output.value = "";
+        fileMeta.textContent = "";
+        resetDropPreview();
+        clearMessage(encodeMessage);
+    });
+
+    convertToImageBtn.addEventListener("click", () => {
+        const input = base64Input.value.trim();
+
+        if (!input) {
+            showMessage(decodeMessage, "Base64 문자열을 입력해주세요.", "error");
+            return;
+        }
+
+        try {
+            const dataUrl = normalizeBase64ToDataUrl(input);
+            const mime = parseMimeFromDataUrl(dataUrl);
+
+            decodedImage.onload = function () {
+                currentDecodedDataUrl = dataUrl;
+                currentDecodedMime = mime;
+                previewWrap.classList.add("active");
+                const size = estimateBase64Size(dataUrl);
+                decodedMeta.textContent = `형식: ${mime} · 예상 크기: ${formatBytes(size)}`;
+                showMessage(decodeMessage, "이미지로 변환되었습니다.", "success");
+            };
+
+            decodedImage.onerror = function () {
+                previewWrap.classList.remove("active");
+                currentDecodedDataUrl = "";
+                showMessage(decodeMessage, "올바른 Base64 이미지 문자열이 아닙니다.", "error");
+            };
+
+            decodedImage.src = dataUrl;
+        } catch (e) {
+            previewWrap.classList.remove("active");
+            currentDecodedDataUrl = "";
+            showMessage(decodeMessage, "변환 중 오류가 발생했습니다.", "error");
+        }
+    });
+
+    downloadImageBtn.addEventListener("click", () => {
+        if (!currentDecodedDataUrl) {
+            showMessage(decodeMessage, "먼저 Base64를 이미지로 변환해주세요.", "error");
+            return;
+        }
+
+        const ext = getFileExtensionFromMime(currentDecodedMime);
+        downloadDataUrl(`decoded-image.${ext}`, currentDecodedDataUrl);
+        showMessage(decodeMessage, "이미지를 다운로드했습니다.", "success");
+    });
+
+    clearDecodeBtn.addEventListener("click", () => {
+        base64Input.value = "";
+        decodedImage.src = "";
+        currentDecodedDataUrl = "";
+        currentDecodedMime = "image/png";
+        decodedMeta.textContent = "";
+        previewWrap.classList.remove("active");
+        clearMessage(decodeMessage);
+    });
+</script>
+</body>
+</html>
