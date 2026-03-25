@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Boarding Simulation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <style>
+        :root {
+            --bg-main: #000000;
+            --bg-card: #181b26;
+            --bg-plane: #14161e;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+
+            --seat-empty: #2e344a;
+            --seat-seated: #10b981;
+            --aisle-bg: #1c1f2e;
+
+            --pax-moving: #0ea5e9;
+            --pax-stowing: #f59e0b;
+            --pax-waiting: #ef4444;
+
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+
+            --border-rad: 8px;
+            --tick-speed: 100ms;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            width: 100vw;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .sidebar {
+            width: 100%;
+            background-color: var(--bg-card);
+            padding: 16px 24px;
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 24px;
+            overflow-y: visible;
+            border-bottom: 1px solid #2e344a;
+            border-right: none;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+
+        .logo {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+
+        .logo p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .dashboard {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            gap: 12px;
+            margin: auto auto 24px auto;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            padding: 8px 12px;
+            border-radius: var(--border-rad);
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #2e344a;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .stat-sub {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #2e344a;
+            border-radius: 3px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background: var(--seat-seated);
+            transition: width 0.3s ease;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 16px;
+            margin-left: 0;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 140px;
+        }
+
+        .control-group label {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        select,
+        input[type="range"] {
+            width: 100%;
+            margin-top: 5px;
+            padding: 6px;
+            background: var(--bg-main);
+            border: 1px solid #2e344a;
+            border-radius: 4px;
+            color: #fff;
+            font-family: inherit;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 4px;
+            padding: 0;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        .range-value {
+            text-align: right;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 0;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            font-family: inherit;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #4b5563;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .legend {
+            margin-top: 0;
+            background: var(--bg-card);
+            padding: 16px 24px;
+            border: none;
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 16px;
+            width: 100%;
+            justify-content: center;
+            border-top: 1px solid #2e344a;
+        }
+
+        .legend h3 {
+            font-size: 14px;
+            margin-bottom: 0;
+            color: var(--text-muted);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 0;
+            font-size: 12px;
+            color: var(--text-main);
+        }
+
+        .blob {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+
+        .blob.empty-seat {
+            background: var(--seat-empty);
+        }
+
+        .blob.seated {
+            background: var(--seat-seated);
+            border-radius: 50%;
+        }
+
+        .blob.moving {
+            background: var(--pax-moving);
+            border-radius: 50%;
+        }
+
+        .blob.stowing {
+            background: var(--pax-stowing);
+            border-radius: 50%;
+        }
+
+        .blob.waiting {
+            background: var(--pax-waiting);
+            border-radius: 50%;
+        }
+
+        .simulation-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            background-color: var(--bg-main);
+            position: relative;
+            padding: 40px;
+            overflow-x: auto;
+            overflow-y: auto;
+        }
+
+        .plane-wrapper {
+            background: var(--bg-plane);
+            padding: 20px 40px;
+            border-radius: 40px 10px 10px 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 2px solid #2e344a;
+            margin: 0 auto auto auto;
+        }
+
+        .plane-body {
+            display: grid;
+            grid-template-columns: repeat(30, 24px);
+            grid-template-rows: repeat(3, 24px) 32px repeat(3, 24px);
+            grid-auto-flow: column;
+            gap: 4px;
+            position: relative;
+            min-width: max-content;
+            min-height: max-content;
+        }
+
+        .cell {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .seat {
+            background-color: var(--seat-empty);
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .seat.occupied {
+            background-color: var(--seat-seated);
+        }
+
+        .aisle {
+            background-color: transparent;
+        }
+
+        .passenger {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            z-index: 5;
+            transition: left var(--tick-speed, 100ms) linear, top var(--tick-speed, 100ms) linear;
+        }
+
+        .pax-moving {
+            background-color: var(--pax-moving);
+        }
+
+        .pax-stowing {
+            background-color: var(--pax-stowing);
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        .pax-stowing::after {
+            content: "🧳";
+            position: absolute;
+            top: 30%;
+            left: 65%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+        }
+
+        .pax-waiting {
+            background-color: var(--pax-waiting);
+        }
+
+        .pax-seated {
+            background-color: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            width: 14px;
+            height: 14px;
+        }
+
+        .row-label {
+            position: absolute;
+            top: -17px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        body.spooky-mode .passenger {
+            background-color: transparent !important;
+            border: none !important;
+            border-radius: 0 !important;
+            background-image: url("assets/img/spik-normal.png");
+            background-size: cover;
+            background-position: center;
+            box-shadow: none !important;
+            width: 30px;
+            height: 30px;
+        }
+
+        body.spooky-mode .passenger.pax-waiting {
+            background-image: url("assets/img/spik-blocked.png");
+        }
+
+        body.spooky-mode .passenger.pax-seated {
+            width: 20px;
+            height: 20px;
+            opacity: 0.6;
+        }
+
+        body.spooky-mode .pax-stowing::after {
+            content: "🎃";
+            top: 0%;
+            left: 60%;
+        }
+
+        @media (max-width: 1100px) {
+            .sidebar {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 24px;
+                gap: 20px;
+            }
+
+            .spacer {
+                display: none;
+            }
+
+            .logo {
+                align-items: center;
+                text-align: center;
+            }
+
+            .controls {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 16px 24px;
+                width: 100%;
+                margin-left: 0;
+            }
+
+            .control-group {
+                width: 100%;
+                min-width: 0;
+            }
+
+            .controls .control-group:nth-child(5) {
+                justify-content: flex-start;
+                margin-top: 0 !important;
+            }
+
+            .action-buttons {
+                grid-column: 1 / -1;
+                display: flex;
+                justify-content: center;
+                width: 100%;
+                gap: 12px;
+                margin-top: 8px;
+            }
+
+            .action-buttons .btn {
+                flex: 1;
+                max-width: 200px;
+                padding: 10px 0;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .sidebar {
+                padding: 16px;
+            }
+
+            .controls {
+                display: flex;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 16px;
+            }
+
+            .controls .control-group:nth-child(5) {
+                justify-content: center;
+            }
+
+            .action-buttons {
+                gap: 8px;
+                margin-top: 4px;
+            }
+
+            .action-buttons .btn {
+                max-width: none;
+                padding: 12px 0;
+            }
+
+            .simulation-area {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <aside class="sidebar">
+        <div class="logo">
+            <h1>Boarding Simulator</h1>
+            <p>Airplane boarding strategy simulation</p>
+        </div>
+
+        <div class="spacer" style="flex-grow: 1;"></div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="strategy-select">Boarding Strategy</label>
+                <select id="strategy-select">
+                    <option value="random">Random</option>
+                    <option value="b2f">Back-to-Front</option>
+                    <option value="block">Block (21-30 → 11-20 → 1-10)</option>
+                    <option value="wilma">Outside-In (Wilma)</option>
+                    <option value="no-assigned">No Assigned Seats</option>
+                    <option value="steffen">Steffen Method</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="baggage-prob">Baggage Probability</label>
+                <input type="range" id="baggage-prob" min="0" max="100" value="80" />
+                <span class="range-value" id="baggage-prob-val">80%</span>
+            </div>
+
+            <div class="control-group">
+                <label for="baggage-time">Baggage Time (Ticks)</label>
+                <input type="range" id="baggage-time" min="0" max="10" value="3" />
+                <span class="range-value" id="baggage-time-val">3</span>
+            </div>
+
+            <div class="control-group">
+                <label for="sim-speed">Simulation Speed</label>
+                <input type="range" id="sim-speed" min="1" max="60" value="10" />
+                <span class="range-value" id="sim-speed-val">10 TPS</span>
+            </div>
+
+            <div class="control-group" style="flex-direction: row; align-items: center; gap: 8px; margin-top: 8px;">
+                <input type="checkbox" id="spooky-mode" style="width: auto;" />
+                <label for="spooky-mode" style="cursor: pointer; font-weight: 600; color: #f59e0b;">스피키 모드</label>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-primary" id="btn-play">Start</button>
+                <button class="btn btn-secondary" id="btn-pause" disabled>Pause</button>
+                <button class="btn btn-danger" id="btn-reset">Reset</button>
+            </div>
+        </div>
+    </aside>
+
+    <main class="simulation-area">
+        <div class="dashboard">
+            <div class="stat-card">
+                <span class="stat-label">Total time (Ticks)</span>
+                <span class="stat-value" id="stat-ticks">0</span>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-label">Progress</span>
+                <span class="stat-value" id="stat-boarded">0 / 180</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-label">줄이 멈춘 시간 (Ticks)</span>
+                <span class="stat-value" id="stat-bottlenecks">0</span>
+            </div>
+        </div>
+
+        <div class="plane-wrapper">
+            <div class="plane-body" id="plane-grid">
+                <!-- Grid generated by JS -->
+            </div>
+        </div>
+    </main>
+
+    <div class="legend">
+        <div class="legend-item"><div class="blob empty-seat"></div> Empty Seat</div>
+        <div class="legend-item"><div class="blob seated"></div> Seated</div>
+        <div class="legend-item"><div class="blob stowing"></div> Stowing baggage</div>
+        <div class="legend-item"><div class="blob waiting"></div> Blocked by seats</div>
+    </div>
+</div>
+
+<script>
+    const ROWS = 30;
+    const COLS = 7; // 0,1,2 = Left, 3 = Aisle, 4,5,6 = Right
+    const TOTAL_PASSENGERS = ROWS * 6;
+
+    const sounds = {
+        seated: new Audio("assets/mp3/sound-seated2.mp3"),
+        baggage: new Audio("assets/mp3/sound-baggage.mp3"),
+        isleBlocked: new Audio("assets/mp3/sound-isle-blocked.mp3"),
+        seatBlocked: new Audio("assets/mp3/sound-seat-blocked.mp3")
+    };
+
+    function playSound(type) {
+        if (!isSpookyMode) return;
+        const sound = sounds[type].cloneNode();
+        sound.play().catch(() => {});
+    }
+
+    let isSpookyMode = false;
+
+    let passengers = [];
+    let queue = [];
+    let grid = Array(ROWS).fill(null).map(() => Array(COLS).fill(null));
+    let cells = [];
+
+    let tickCount = 0;
+    let boardedCount = 0;
+    let bottlenecks = 0;
+
+    let isRunning = false;
+    let simInterval = null;
+
+    let tickDelay = 1000 / 10;
+    let baggageProb = 0.8;
+    let expectedBaggageTime = 3;
+    let currentStrategy = "random";
+
+    document.documentElement.style.setProperty("--tick-speed", `${tickDelay}ms`);
+
+    const planeGrid = document.getElementById("plane-grid");
+    const statTicks = document.getElementById("stat-ticks");
+    const statBoarded = document.getElementById("stat-boarded");
+    const statBottlenecks = document.getElementById("stat-bottlenecks");
+    const progressFill = document.getElementById("progress-fill");
+
+    const selectStrategy = document.getElementById("strategy-select");
+    const inputBaggageProb = document.getElementById("baggage-prob");
+    const inputBaggageTime = document.getElementById("baggage-time");
+    const inputSpeed = document.getElementById("sim-speed");
+
+    const labelBaggageProb = document.getElementById("baggage-prob-val");
+    const labelBaggageTime = document.getElementById("baggage-time-val");
+    const labelSpeed = document.getElementById("sim-speed-val");
+
+    const btnPlay = document.getElementById("btn-play");
+    const btnPause = document.getElementById("btn-pause");
+    const btnReset = document.getElementById("btn-reset");
+    const cbSpookyMode = document.getElementById("spooky-mode");
+
+    inputBaggageProb.addEventListener("input", (e) => {
+        baggageProb = parseInt(e.target.value, 10) / 100;
+        labelBaggageProb.innerText = `${e.target.value}%`;
+    });
+
+    inputBaggageTime.addEventListener("input", (e) => {
+        expectedBaggageTime = parseInt(e.target.value, 10);
+        labelBaggageTime.innerText = expectedBaggageTime;
+    });
+
+    inputSpeed.addEventListener("input", (e) => {
+        const tps = parseInt(e.target.value, 10);
+        labelSpeed.innerText = `${tps} TPS`;
+        tickDelay = 1000 / tps;
+        document.documentElement.style.setProperty("--tick-speed", `${tickDelay}ms`);
+
+        if (isRunning) {
+            clearInterval(simInterval);
+            simInterval = setInterval(gameLoop, tickDelay);
+        }
+    });
+
+    selectStrategy.addEventListener("change", (e) => {
+        currentStrategy = e.target.value;
+        resetSimulation();
+    });
+
+    btnPlay.addEventListener("click", () => {
+        if (boardedCount >= TOTAL_PASSENGERS || isRunning) return;
+        isRunning = true;
+        btnPlay.disabled = true;
+        btnPause.disabled = false;
+        clearInterval(simInterval);
+        simInterval = setInterval(gameLoop, tickDelay);
+    });
+
+    btnPause.addEventListener("click", () => {
+        isRunning = false;
+        btnPlay.disabled = false;
+        btnPause.disabled = true;
+        clearInterval(simInterval);
+    });
+
+    btnReset.addEventListener("click", resetSimulation);
+
+    if (cbSpookyMode) {
+        cbSpookyMode.addEventListener("change", (e) => {
+            isSpookyMode = e.target.checked;
+            if (isSpookyMode) {
+                document.body.classList.add("spooky-mode");
+            } else {
+                document.body.classList.remove("spooky-mode");
+            }
+        });
+    }
+
+    class Passenger {
+        constructor(id, targetRow, targetCol) {
+            this.id = id;
+            this.targetRow = targetRow;
+            this.targetCol = targetCol;
+
+            this.row = -1;
+            this.col = 3;
+
+            this.state = "QUEUE"; // QUEUE, AISLE, STOWING, WAITING, MOVING_TO_SEAT, SEATED
+            this.baggageTime = 0;
+            this.interferenceDelay = 0;
+            this.wasBlocked = false;
+
+            this.element = document.createElement("div");
+            this.element.className = "passenger pax-waiting";
+            this.updatePos();
+        }
+
+        updatePos() {
+            const crossOffset = [12, 40, 68, 100, 132, 160, 188];
+            const longOffset = this.row < 0 ? -24 : (this.row * 28 + 12);
+            this.element.style.left = `${longOffset}px`;
+            this.element.style.top = `${crossOffset[this.col]}px`;
+        }
+
+        updateVisuals() {
+            this.element.className = "passenger";
+
+            if (this.state === "STOWING") this.element.classList.add("pax-stowing");
+            else if (this.state === "WAITING" || this.wasBlocked) this.element.classList.add("pax-waiting");
+            else if (this.state === "AISLE" || this.state === "QUEUE") this.element.classList.add("pax-moving");
+            else if (this.state === "MOVING_TO_SEAT") this.element.classList.add("pax-moving");
+            else if (this.state === "SEATED") this.element.classList.add("pax-seated");
+
+            this.updatePos();
+        }
+    }
+
+    function initGrid() {
+        planeGrid.innerHTML = "";
+        cells = [];
+        grid = Array(ROWS).fill(null).map(() => Array(COLS).fill(null));
+
+        for (let r = 0; r < ROWS; r++) {
+            const rowCells = [];
+
+            for (let c = 0; c < COLS; c++) {
+                const cell = document.createElement("div");
+                cell.className = "cell";
+
+                if (c === 3) {
+                    cell.classList.add("aisle");
+                } else {
+                    cell.classList.add("seat");
+                    cell.id = `seat-${r}-${c}`;
+                }
+
+                if (c === 0) {
+                    const label = document.createElement("div");
+                    label.className = "row-label";
+                    label.innerText = r + 1;
+                    cell.appendChild(label);
+                }
+
+                planeGrid.appendChild(cell);
+                rowCells.push(cell);
+            }
+
+            cells.push(rowCells);
+        }
+    }
+
+    function generatePassengers() {
+        passengers = [];
+        let id = 0;
+
+        const availableSeats = [];
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                if (c === 3) continue;
+                availableSeats.push({ row: r, col: c });
+            }
+        }
+
+        if (currentStrategy === "random") {
+            availableSeats.forEach((seat) => {
+                passengers.push(new Passenger(id++, seat.row, seat.col));
+            });
+            shuffle(passengers);
+        } else if (currentStrategy === "b2f") {
+            availableSeats.forEach((seat) => {
+                passengers.push(new Passenger(id++, seat.row, seat.col));
+            });
+            passengers.sort((a, b) => {
+                if (a.targetRow !== b.targetRow) return b.targetRow - a.targetRow;
+                return Math.random() - 0.5;
+            });
+        } else if (currentStrategy === "block") {
+            availableSeats.forEach((seat) => {
+                passengers.push(new Passenger(id++, seat.row, seat.col));
+            });
+
+            const getGroup = (row) => {
+                if (row >= 20) return 0;
+                if (row >= 10) return 1;
+                return 2;
+            };
+
+            passengers.sort((a, b) => {
+                const groupA = getGroup(a.targetRow);
+                const groupB = getGroup(b.targetRow);
+                if (groupA !== groupB) return groupA - groupB;
+                return Math.random() - 0.5;
+            });
+        } else if (currentStrategy === "wilma") {
+            availableSeats.forEach((seat) => {
+                passengers.push(new Passenger(id++, seat.row, seat.col));
+            });
+
+            const getGroup = (col) => {
+                if (col === 0 || col === 6) return 0;
+                if (col === 1 || col === 5) return 1;
+                return 2;
+            };
+
+            passengers.sort((a, b) => {
+                const groupA = getGroup(a.targetCol);
+                const groupB = getGroup(b.targetCol);
+                if (groupA !== groupB) return groupA - groupB;
+                return Math.random() - 0.5;
+            });
+        } else if (currentStrategy === "steffen") {
+            const steffenOrder = [];
+            const colsOrder = [[6], [0], [5], [1], [4], [2]];
+
+            for (const cols of colsOrder) {
+                for (const parity of [0, 1]) {
+                    for (let r = ROWS - 1; r >= 0; r--) {
+                        if (r % 2 === parity) {
+                            for (const c of cols) {
+                                steffenOrder.push({ row: r, col: c });
+                            }
+                        }
+                    }
+                }
+            }
+
+            steffenOrder.forEach((seat) => {
+                passengers.push(new Passenger(id++, seat.row, seat.col));
+            });
+        } else if (currentStrategy === "no-assigned") {
+            availableSeats.forEach((seat) => {
+                passengers.push(new Passenger(id++, seat.row, seat.col));
+            });
+            shuffle(passengers);
+        }
+
+        queue = [...passengers];
+        passengers.forEach((pax) => {
+            planeGrid.appendChild(pax.element);
+        });
+    }
+
+    function shuffle(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+    }
+
+    function resetSimulation() {
+        isRunning = false;
+        clearInterval(simInterval);
+        btnPlay.disabled = false;
+        btnPause.disabled = true;
+
+        tickCount = 0;
+        boardedCount = 0;
+        bottlenecks = 0;
+
+        updateDashboard();
+        initGrid();
+        generatePassengers();
+    }
+
+    function updateDashboard() {
+        statTicks.innerText = tickCount;
+        statBoarded.innerText = `${boardedCount} / ${TOTAL_PASSENGERS}`;
+        statBottlenecks.innerText = bottlenecks;
+
+        const pct = (boardedCount / TOTAL_PASSENGERS) * 100;
+        progressFill.style.width = `${pct}%`;
+    }
+
+    function startMovingToSeat(pax, r) {
+        grid[r][3] = null;
+        grid[r][pax.targetCol] = pax;
+        pax.state = "MOVING_TO_SEAT";
+
+        const step = pax.targetCol < pax.col ? -1 : 1;
+        pax.col += step;
+
+        if (pax.col === pax.targetCol) {
+            pax.state = "SEATED";
+            boardedCount++;
+            cells[pax.row][pax.targetCol].classList.add("occupied");
+            playSound("seated");
+        }
+    }
+
+    function checkInterferenceAndMove(pax, r) {
+        let interCount = 0;
+
+        if (pax.targetCol < 3) {
+            for (let c = pax.targetCol + 1; c < 3; c++) {
+                if (grid[r][c] !== null) interCount++;
+            }
+        } else if (pax.targetCol > 3) {
+            for (let c = 4; c < pax.targetCol; c++) {
+                if (grid[r][c] !== null) interCount++;
+            }
+        }
+
+        if (interCount > 0) {
+            pax.interferenceDelay = interCount * 3;
+            pax.state = "WAITING";
+            playSound("seatBlocked");
+        } else {
+            startMovingToSeat(pax, r);
+        }
+    }
+
+    function gameLoop() {
+        tickCount++;
+
+        passengers.forEach((pax) => {
+            if (pax.state === "MOVING_TO_SEAT") {
+                const step = pax.targetCol < pax.col ? -1 : 1;
+                pax.col += step;
+
+                if (pax.col === pax.targetCol) {
+                    pax.state = "SEATED";
+                    boardedCount++;
+                    const seatElement = cells[pax.row][pax.targetCol];
+                    seatElement.classList.add("occupied");
+                    playSound("seated");
+                }
+
+                pax.updateVisuals();
+            }
+        });
+
+        for (let r = ROWS - 1; r >= 0; r--) {
+            const pax = grid[r][3];
+            if (!pax) continue;
+
+            if (pax.state === "WAITING") {
+                if (pax.interferenceDelay > 0) {
+                    pax.interferenceDelay--;
+                }
+                if (pax.interferenceDelay <= 0) {
+                    startMovingToSeat(pax, r);
+                }
+            } else if (pax.state === "STOWING") {
+                if (pax.baggageTime > 0) {
+                    pax.baggageTime--;
+                }
+                if (pax.baggageTime <= 0) {
+                    checkInterferenceAndMove(pax, r);
+                }
+            } else if (pax.state === "AISLE") {
+                if (pax.targetRow === r) {
+                    if (Math.random() < baggageProb && expectedBaggageTime > 0) {
+                        pax.state = "STOWING";
+                        pax.baggageTime = expectedBaggageTime;
+                        playSound("baggage");
+                    } else {
+                        checkInterferenceAndMove(pax, r);
+                    }
+                    pax.wasBlocked = false;
+                } else if (r < ROWS - 1 && grid[r + 1][3] === null) {
+                    grid[r + 1][3] = pax;
+                    grid[r][3] = null;
+                    pax.row = r + 1;
+                    pax.wasBlocked = false;
+                } else {
+                    pax.wasBlocked = true;
+                }
+            }
+
+            pax.updateVisuals();
+        }
+
+        if (queue.length > 0) {
+            if (grid[0][3] === null) {
+                const newPax = queue.shift();
+                newPax.state = "AISLE";
+                newPax.row = 0;
+                newPax.wasBlocked = false;
+                grid[0][3] = newPax;
+                newPax.updateVisuals();
+            } else {
+                bottlenecks++;
+                playSound("isleBlocked");
+                queue[0].wasBlocked = true;
+                queue[0].updateVisuals();
+            }
+        }
+
+        updateDashboard();
+
+        if (boardedCount >= TOTAL_PASSENGERS) {
+            isRunning = false;
+            clearInterval(simInterval);
+            btnPlay.disabled = false;
+            btnPause.disabled = true;
+        }
+    }
+
+    initGrid();
+    resetSimulation();
+</script>
+</body>
+</html>
