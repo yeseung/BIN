@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TXT 2 TXT 30자 줄바꿈 변환기 | TXT to TXT 30-Character Converter</title>
+
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+
+  <meta name="description" content="텍스트를 30자마다 자동 줄바꿈하여 TXT 파일로 저장할 수 있는 바닐라 자바스크립트 변환기입니다. 클릭 또는 드래그 업로드, 복사, 저장, localStorage 기능을 지원합니다." />
+  <meta name="keywords" content="txt to txt, 텍스트 변환기, 30자 줄바꿈, enter 삽입, txt 저장, drag and drop upload, 바닐라 자바스크립트" />
+
+  <meta property="og:title" content="TXT 2 TXT 30자 줄바꿈 변환기 | TXT to TXT 30-Character Converter" />
+  <meta property="og:description" content="텍스트를 30자마다 자동으로 줄바꿈해 TXT로 저장하는 깔끔한 웹 도구" />
+  <meta property="og:type" content="website" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <style>
+    :root {
+      --primary: #0d6efd;
+      --primary-soft: #eef4ff;
+      --text: #111827;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --bg-soft: #f8fafc;
+      --card-bg: #ffffff;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      --radius: 24px;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+      color: var(--text);
+      font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      letter-spacing: -0.04em;
+    }
+
+    body {
+      min-height: 100vh;
+    }
+
+    .wrap {
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 28px 18px 60px;
+    }
+
+    .page-header {
+      margin-bottom: 22px;
+    }
+
+    .page-title {
+      margin: 0 0 10px;
+      font-size: 42px;
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -0.04em;
+    }
+
+    .page-desc {
+      margin: 0;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.7;
+      letter-spacing: -0.04em;
+    }
+
+    .en {
+      color: var(--muted);
+      font-weight: 700;
+      margin-left: 6px;
+    }
+
+    .tool-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .panel-card {
+      background: var(--card-bg);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+    }
+
+    .panel-card.soft {
+      background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 18px;
+      font-size: 20px;
+      font-weight: 800;
+      line-height: 1.4;
+    }
+
+    .section-title-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 14px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .form-label {
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .form-control {
+      border-radius: 18px;
+      border-color: var(--line);
+      padding: 14px 16px;
+      box-shadow: none;
+      font-size: 16px;
+    }
+
+    .form-control:focus {
+      border-color: rgba(13, 110, 253, 0.45);
+      box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.12);
+    }
+
+    textarea.form-control {
+      min-height: 320px;
+      resize: vertical;
+      line-height: 1.75;
+    }
+
+    .top-actions,
+    .bottom-actions {
+      display: grid;
+      gap: 12px;
+    }
+
+    .top-actions {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-bottom: 16px;
+    }
+
+    .bottom-actions {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-top: 16px;
+    }
+
+    .btn-app-primary,
+    .btn-app-secondary,
+    .btn-app-soft {
+      border-radius: 18px;
+      font-weight: 800;
+      padding: 14px 18px;
+      letter-spacing: -0.04em;
+    }
+
+    .btn-app-primary {
+      background: var(--primary);
+      color: #ffffff;
+      border: 1px solid var(--primary);
+    }
+
+    .btn-app-primary:hover {
+      background: #0b5ed7;
+      border-color: #0b5ed7;
+      color: #ffffff;
+    }
+
+    .btn-app-secondary {
+      background: #ffffff;
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+
+    .btn-app-secondary:hover {
+      background: #f8fafc;
+    }
+
+    .btn-app-soft {
+      background: var(--primary-soft);
+      color: var(--primary);
+      border: 1px solid #d7e6ff;
+    }
+
+    .btn-app-soft:hover {
+      background: #dceaff;
+      color: var(--primary);
+    }
+
+    .hidden-file {
+      display: none;
+    }
+
+    .option-card {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 18px;
+      background: #ffffff;
+      margin-bottom: 16px;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .stat-box {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 16px;
+      background: #ffffff;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .helper-text {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .upload-area {
+      border: 2px dashed #d1d5db;
+      border-radius: var(--radius);
+      background: #f9fbff;
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.25s ease;
+      margin-bottom: 16px;
+    }
+
+    .upload-area:hover {
+      border-color: #0d6efd;
+      background: #eef4ff;
+    }
+
+    .upload-area.dragover {
+      border-color: #0d6efd;
+      background: #e0edff;
+    }
+
+    .upload-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .upload-icon {
+      font-size: 40px;
+    }
+
+    .upload-title {
+      margin: 0;
+      font-weight: 800;
+      font-size: 18px;
+    }
+
+    .upload-desc {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .toast-wrap {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 1080;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toast-item {
+      background: rgba(17, 24, 39, 0.95);
+      color: #ffffff;
+      padding: 12px 16px;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    @media (max-width: 1199px) {
+      .tool-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 767px) {
+      .wrap {
+        padding: 22px 14px 44px;
+      }
+
+      .page-title {
+        font-size: 32px;
+      }
+
+      .page-desc {
+        font-size: 16px;
+      }
+
+      .panel-card {
+        padding: 18px;
+        border-radius: 20px;
+      }
+
+      textarea.form-control {
+        min-height: 260px;
+      }
+
+      .top-actions,
+      .bottom-actions,
+      .stat-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <header class="page-header">
+    <h1 class="page-title">📄 TXT 2 TXT 30자 줄바꿈 변환기 <span class="en">TXT to TXT 30-Character Converter</span></h1>
+    <p class="page-desc">
+      입력한 텍스트를 30자마다 자동으로 줄바꿈하여 새 TXT 형태로 변환합니다.
+      <span class="en">Insert ENTER every 30 characters and export as TXT.</span>
+    </p>
+  </header>
+
+  <section class="tool-grid">
+    <div class="panel-card soft">
+      <h2 class="section-title">
+        <span class="section-title-badge">📝</span>
+        원본 텍스트 <span class="en">Input Text</span>
+      </h2>
+
+      <div class="upload-area" id="uploadArea">
+        <input type="file" id="fileInput" class="hidden-file" accept=".txt" />
+        <div class="upload-content">
+          <div class="upload-icon">📂</div>
+          <p class="upload-title">
+            TXT 파일 업로드
+            <span class="en">TXT File Upload</span>
+          </p>
+          <p class="upload-desc">
+            클릭하거나 드래그하세요
+            <span class="en">(Click or drag)</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <button type="button" class="btn btn-app-secondary" id="uploadBtn">📂 파일 선택</button>
+        <button type="button" class="btn btn-app-soft" id="pasteExampleBtn">✨ 예시 넣기</button>
+        <button type="button" class="btn btn-app-secondary" id="clearInputBtn">🧹 입력 비우기</button>
+      </div>
+
+      <label for="inputText" class="form-label">텍스트 입력 <span class="en">Paste Text</span></label>
+      <textarea id="inputText" class="form-control" placeholder="여기에 TXT 내용을 붙여넣으세요.&#10;Paste your text here."></textarea>
+      <div class="helper-text">입력 텍스트와 결과는 자동으로 localStorage에 저장됩니다.</div>
+
+      <div class="stat-grid">
+        <div class="stat-box">
+          <div class="stat-label">입력 글자 수</div>
+          <div class="stat-value" id="inputChars">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">입력 줄 수</div>
+          <div class="stat-value" id="inputLines">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">기준 글자 수</div>
+          <div class="stat-value" id="chunkSizeView">30</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">저장 상태</div>
+          <div class="stat-value" id="saveState">대기</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-card">
+      <h2 class="section-title">
+        <span class="section-title-badge">⚙️</span>
+        변환 결과 <span class="en">Output Text</span>
+      </h2>
+
+      <div class="option-card">
+        <label for="chunkSizeInput" class="form-label">줄바꿈 기준 글자 수 <span class="en">Characters Per Line</span></label>
+        <input type="number" id="chunkSizeInput" class="form-control" min="1" step="1" value="30" />
+        <div class="helper-text">기본값은 30입니다. 입력한 글자 수마다 ENTER가 들어갑니다.</div>
+      </div>
+
+      <div class="top-actions">
+        <button type="button" class="btn btn-app-primary" id="convertBtn">🚀 변환하기</button>
+        <button type="button" class="btn btn-app-secondary" id="copyBtn">📋 결과 복사</button>
+        <button type="button" class="btn btn-app-soft" id="swapBtn">🔁 결과 → 입력</button>
+      </div>
+
+      <label for="outputText" class="form-label">변환 결과 <span class="en">Converted Result</span></label>
+      <textarea id="outputText" class="form-control" readonly placeholder="변환된 결과가 여기에 표시됩니다."></textarea>
+
+      <div class="bottom-actions">
+        <button type="button" class="btn btn-app-primary" id="downloadBtn">💾 TXT 저장</button>
+        <button type="button" class="btn btn-app-secondary" id="selectBtn">🔍 전체 선택</button>
+        <button type="button" class="btn btn-app-soft" id="clearOutputBtn">🗑️ 결과 비우기</button>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-box">
+          <div class="stat-label">출력 글자 수</div>
+          <div class="stat-value" id="outputChars">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">출력 줄 수</div>
+          <div class="stat-value" id="outputLines">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">추가된 ENTER 수</div>
+          <div class="stat-value" id="insertedBreaks">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">출력 용량</div>
+          <div class="stat-value" id="outputSize">0 KB</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="toast-wrap" id="toastWrap" aria-live="polite" aria-atomic="true"></div>
+
+<script>
+  (function () {
+    const STORAGE_KEYS = {
+      input: "txt2txt30_input",
+      output: "txt2txt30_output",
+      chunkSize: "txt2txt30_chunk"
+    };
+
+    const els = {
+      inputText: document.getElementById("inputText"),
+      outputText: document.getElementById("outputText"),
+      chunkSizeInput: document.getElementById("chunkSizeInput"),
+      uploadBtn: document.getElementById("uploadBtn"),
+      uploadArea: document.getElementById("uploadArea"),
+      fileInput: document.getElementById("fileInput"),
+      pasteExampleBtn: document.getElementById("pasteExampleBtn"),
+      clearInputBtn: document.getElementById("clearInputBtn"),
+      convertBtn: document.getElementById("convertBtn"),
+      copyBtn: document.getElementById("copyBtn"),
+      swapBtn: document.getElementById("swapBtn"),
+      downloadBtn: document.getElementById("downloadBtn"),
+      selectBtn: document.getElementById("selectBtn"),
+      clearOutputBtn: document.getElementById("clearOutputBtn"),
+      inputChars: document.getElementById("inputChars"),
+      inputLines: document.getElementById("inputLines"),
+      chunkSizeView: document.getElementById("chunkSizeView"),
+      saveState: document.getElementById("saveState"),
+      outputChars: document.getElementById("outputChars"),
+      outputLines: document.getElementById("outputLines"),
+      insertedBreaks: document.getElementById("insertedBreaks"),
+      outputSize: document.getElementById("outputSize"),
+      toastWrap: document.getElementById("toastWrap")
+    };
+
+    let saveTimer = null;
+
+    function showToast(message) {
+      const item = document.createElement("div");
+      item.className = "toast-item";
+      item.textContent = message;
+      els.toastWrap.appendChild(item);
+
+      setTimeout(function () {
+        item.remove();
+      }, 2400);
+    }
+
+    function normalizeChunkSize(value) {
+      const number = Number(value);
+      if (!Number.isFinite(number) || number < 1) {
+        return 30;
+      }
+      return Math.floor(number);
+    }
+
+    function getLineCount(text) {
+      if (!text) return 0;
+      return text.split(/\r\n|\n|\r/).length;
+    }
+
+    function toKB(text) {
+      return (new Blob([text]).size / 1024).toFixed(2);
+    }
+
+    function updateStats() {
+      const input = els.inputText.value || "";
+      const output = els.outputText.value || "";
+      const chunkSize = normalizeChunkSize(els.chunkSizeInput.value);
+
+      els.inputChars.textContent = String(input.length);
+      els.inputLines.textContent = String(getLineCount(input));
+      els.chunkSizeView.textContent = String(chunkSize);
+      els.outputChars.textContent = String(output.length);
+      els.outputLines.textContent = String(getLineCount(output));
+      els.outputSize.textContent = toKB(output) + " KB";
+
+      const breaks = output ? Math.max(getLineCount(output) - 1, 0) : 0;
+      els.insertedBreaks.textContent = String(breaks);
+    }
+
+    function saveAll() {
+      localStorage.setItem(STORAGE_KEYS.input, els.inputText.value || "");
+      localStorage.setItem(STORAGE_KEYS.output, els.outputText.value || "");
+      localStorage.setItem(STORAGE_KEYS.chunkSize, String(normalizeChunkSize(els.chunkSizeInput.value)));
+      els.saveState.textContent = "완료";
+    }
+
+    function scheduleSave() {
+      els.saveState.textContent = "저장 중";
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(saveAll, 250);
+    }
+
+    function loadSaved() {
+      const savedInput = localStorage.getItem(STORAGE_KEYS.input);
+      const savedOutput = localStorage.getItem(STORAGE_KEYS.output);
+      const savedChunkSize = localStorage.getItem(STORAGE_KEYS.chunkSize);
+
+      els.inputText.value = savedInput || "";
+      els.outputText.value = savedOutput || "";
+      els.chunkSizeInput.value = savedChunkSize || "30";
+
+      els.saveState.textContent = "불러옴";
+      updateStats();
+    }
+
+    function convertText() {
+      const input = els.inputText.value || "";
+      const chunkSize = normalizeChunkSize(els.chunkSizeInput.value);
+
+      if (!input.trim()) {
+        els.outputText.value = "";
+        updateStats();
+        scheduleSave();
+        showToast("먼저 텍스트를 입력해 주세요.");
+        return;
+      }
+
+      const normalized = input.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+      const plain = normalized.replace(/\n/g, "");
+      const chunks = [];
+
+      for (let i = 0; i < plain.length; i += chunkSize) {
+        chunks.push(plain.slice(i, i + chunkSize));
+      }
+
+      els.outputText.value = chunks.join("\n");
+      updateStats();
+      scheduleSave();
+      showToast("30자 줄바꿈 변환이 완료되었습니다.");
+    }
+
+    function readTextFile(file) {
+      if (!file) return;
+
+      const fileName = file.name || "";
+      const isTxt = /\.txt$/i.test(fileName) || file.type === "text/plain" || file.type === "";
+
+      if (!isTxt) {
+        showToast("TXT 파일만 업로드할 수 있습니다.");
+        return;
+      }
+
+      const reader = new FileReader();
+
+      reader.onload = function (event) {
+        els.inputText.value = String(event.target.result || "");
+        updateStats();
+        scheduleSave();
+        showToast("TXT 파일을 불러왔습니다.");
+      };
+
+      reader.onerror = function () {
+        showToast("파일을 읽지 못했습니다.");
+      };
+
+      reader.readAsText(file);
+    }
+
+    async function copyOutput() {
+      const text = els.outputText.value || "";
+      if (!text) {
+        showToast("복사할 결과가 없습니다.");
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast("결과를 복사했습니다.");
+      } catch (error) {
+        els.outputText.focus();
+        els.outputText.select();
+        document.execCommand("copy");
+        showToast("결과를 복사했습니다.");
+      }
+    }
+
+    function selectOutput() {
+      const text = els.outputText.value || "";
+      if (!text) {
+        showToast("선택할 결과가 없습니다.");
+        return;
+      }
+
+      els.outputText.focus();
+      els.outputText.select();
+    }
+
+    function downloadOutput() {
+      const text = els.outputText.value || "";
+      if (!text) {
+        showToast("저장할 결과가 없습니다.");
+        return;
+      }
+
+      const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+
+      a.href = url;
+      a.download = "txt-to-txt-30char-output.txt";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      showToast("TXT 파일로 저장했습니다.");
+    }
+
+    function swapOutputToInput() {
+      const text = els.outputText.value || "";
+      if (!text) {
+        showToast("결과가 비어 있습니다.");
+        return;
+      }
+
+      els.inputText.value = text;
+      updateStats();
+      scheduleSave();
+      showToast("결과를 입력창으로 옮겼습니다.");
+    }
+
+    function clearInput() {
+      els.inputText.value = "";
+      updateStats();
+      scheduleSave();
+      showToast("입력 텍스트를 비웠습니다.");
+    }
+
+    function clearOutput() {
+      els.outputText.value = "";
+      updateStats();
+      scheduleSave();
+      showToast("결과 텍스트를 비웠습니다.");
+    }
+
+    function insertExample() {
+      els.inputText.value = "이 도구는 긴 텍스트를 일정한 글자 수 단위로 자동 줄바꿈해 주는 간단한 TXT 변환기입니다. 웹페이지에서 텍스트를 붙여넣고 버튼만 누르면 30자마다 줄이 바뀐 결과를 바로 확인하고 저장할 수 있습니다. 업로드 영역에서는 클릭하거나 드래그해서 TXT 파일을 넣을 수 있으며, 결과는 복사하거나 새 TXT 파일로 저장할 수 있습니다.";
+      updateStats();
+      scheduleSave();
+      showToast("예시 텍스트를 넣었습니다.");
+    }
+
+    function bindUploadEvents() {
+      els.uploadBtn.addEventListener("click", function () {
+        els.fileInput.click();
+      });
+
+      els.uploadArea.addEventListener("click", function () {
+        els.fileInput.click();
+      });
+
+      els.fileInput.addEventListener("change", function (event) {
+        const file = event.target.files[0];
+        readTextFile(file);
+      });
+
+      els.uploadArea.addEventListener("dragover", function (event) {
+        event.preventDefault();
+        els.uploadArea.classList.add("dragover");
+      });
+
+      els.uploadArea.addEventListener("dragleave", function () {
+        els.uploadArea.classList.remove("dragover");
+      });
+
+      els.uploadArea.addEventListener("drop", function (event) {
+        event.preventDefault();
+        els.uploadArea.classList.remove("dragover");
+        const file = event.dataTransfer.files[0];
+        readTextFile(file);
+      });
+    }
+
+    function bindEvents() {
+      bindUploadEvents();
+
+      els.pasteExampleBtn.addEventListener("click", insertExample);
+      els.clearInputBtn.addEventListener("click", clearInput);
+      els.convertBtn.addEventListener("click", convertText);
+      els.copyBtn.addEventListener("click", copyOutput);
+      els.swapBtn.addEventListener("click", swapOutputToInput);
+      els.downloadBtn.addEventListener("click", downloadOutput);
+      els.selectBtn.addEventListener("click", selectOutput);
+      els.clearOutputBtn.addEventListener("click", clearOutput);
+
+      els.inputText.addEventListener("input", function () {
+        updateStats();
+        scheduleSave();
+      });
+
+      els.outputText.addEventListener("input", function () {
+        updateStats();
+        scheduleSave();
+      });
+
+      els.chunkSizeInput.addEventListener("input", function () {
+        updateStats();
+        scheduleSave();
+      });
+    }
+
+    function init() {
+      loadSaved();
+      bindEvents();
+      updateStats();
+    }
+
+    init();
+  })();
+</script>
+</body>
+</html>
