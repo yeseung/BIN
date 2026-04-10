@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>마방진 계산기 | Magic Square Generator</title>
+    <meta name="description" content="홀수 또는 4의 배수 크기의 마방진을 생성하고 각 행, 열, 대각선의 합을 확인할 수 있는 순수 HTML, CSS, JavaScript 기반 마방진 생성기입니다.">
+
+    <!-- https://42morrow.tistory.com/entry/%EB%A7%88%EB%B2%95%EA%B0%99%EC%9D%80-%EC%88%AB%EC%9E%90%EC%9D%98-%EC%A1%B0%ED%95%A9-%EB%A7%88%EB%B0%A9%EC%A7%84%E9%AD%94%E6%96%B9%E9%99%A3
+    -->
+    <style>
+        :root {
+            --bg: #f6f8fb;
+            --card: #ffffff;
+            --line: #d9e0ea;
+            --line-strong: #c8d2e1;
+            --text: #1f2937;
+            --sub: #6b7280;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --accent: #eff6ff;
+            --success-bg: #ecfdf5;
+            --success-text: #047857;
+            --danger-bg: #fef2f2;
+            --danger-text: #b91c1c;
+            --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+            --radius: 20px;
+            --radius-sm: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo",
+            "Noto Sans KR", "Malgun Gothic", sans-serif;
+            line-height: 1.6;
+        }
+
+        body {
+            padding: 24px;
+        }
+
+        .wrap {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .hero {
+            background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+            border: 1px solid var(--line);
+            border-radius: 28px;
+            padding: 32px 24px;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--accent);
+            color: var(--primary);
+            border: 1px solid #dbeafe;
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 14px;
+        }
+
+        .hero h1 {
+            margin: 0 0 10px;
+            font-size: 34px;
+            line-height: 1.25;
+            letter-spacing: -0.02em;
+        }
+
+        .hero p {
+            margin: 0;
+            color: var(--sub);
+            font-size: 16px;
+        }
+
+        .hero-note {
+            margin-top: 18px;
+            padding: 14px 16px;
+            border-radius: 14px;
+            background: #f8fafc;
+            border: 1px solid var(--line);
+            color: var(--sub);
+            font-size: 14px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 360px minmax(0, 1fr);
+            gap: 24px;
+        }
+
+        .panel,
+        .result-panel,
+        .info-panel {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .panel {
+            padding: 22px;
+            position: sticky;
+            top: 24px;
+            align-self: start;
+        }
+
+        .panel h2,
+        .result-panel h2,
+        .info-panel h2 {
+            margin: 0 0 16px;
+            font-size: 20px;
+            letter-spacing: -0.01em;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        input[type="number"],
+        select {
+            width: 100%;
+            height: 48px;
+            border: 1px solid var(--line-strong);
+            border-radius: 12px;
+            padding: 0 14px;
+            font-size: 15px;
+            background: #fff;
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        input[type="number"]:focus,
+        select:focus {
+            border-color: #93c5fd;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.10);
+        }
+
+        .help {
+            margin-top: 6px;
+            font-size: 13px;
+            color: var(--sub);
+        }
+
+        .button-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 6px;
+        }
+
+        button {
+            appearance: none;
+            border: 0;
+            border-radius: 12px;
+            height: 46px;
+            padding: 0 18px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.15s ease, background 0.2s ease, opacity 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background: #eef2f7;
+            color: var(--text);
+            border: 1px solid var(--line);
+        }
+
+        .btn-secondary:hover {
+            background: #e5ebf3;
+        }
+
+        .content-col {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .result-panel,
+        .info-panel {
+            padding: 24px;
+        }
+
+        .status {
+            display: none;
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin-bottom: 18px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .status.show {
+            display: block;
+        }
+
+        .status.success {
+            background: var(--success-bg);
+            color: var(--success-text);
+            border: 1px solid #bbf7d0;
+        }
+
+        .status.error {
+            background: var(--danger-bg);
+            color: var(--danger-text);
+            border: 1px solid #fecaca;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .summary-card {
+            background: #f8fafc;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 16px;
+        }
+
+        .summary-label {
+            font-size: 12px;
+            color: var(--sub);
+            margin-bottom: 6px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .summary-value {
+            font-size: 22px;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .table-wrap {
+            overflow: auto;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            background: #fff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 420px;
+        }
+
+        th, td {
+            border: 1px solid #e5eaf1;
+            text-align: center;
+            padding: 12px 10px;
+            font-size: 15px;
+        }
+
+        th {
+            background: #f8fafc;
+            font-weight: 800;
+        }
+
+        td.value-cell {
+            font-weight: 700;
+            background: #fff;
+        }
+
+        .sum-good {
+            background: #effcf6;
+            color: #047857;
+            font-weight: 800;
+        }
+
+        .sum-bad {
+            background: #fef2f2;
+            color: #b91c1c;
+            font-weight: 800;
+        }
+
+        .sum-list {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 20px;
+        }
+
+        .sum-box {
+            background: #f8fafc;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 16px;
+        }
+
+        .sum-box h3 {
+            margin: 0 0 10px;
+            font-size: 16px;
+        }
+
+        .sum-box ul {
+            margin: 0;
+            padding-left: 18px;
+            color: var(--text);
+        }
+
+        .sum-box li {
+            margin: 6px 0;
+        }
+
+        .formula {
+            margin-top: 18px;
+            padding: 16px;
+            background: #f9fbff;
+            border: 1px solid #dbeafe;
+            border-radius: 14px;
+            color: #1e3a8a;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .info-panel section + section {
+            margin-top: 22px;
+            padding-top: 22px;
+            border-top: 1px dashed var(--line);
+        }
+
+        .info-panel h3 {
+            margin: 0 0 10px;
+            font-size: 17px;
+        }
+
+        .info-panel p,
+        .info-panel li {
+            color: #374151;
+            font-size: 15px;
+        }
+
+        .info-panel ul,
+        .info-panel ol {
+            margin: 10px 0 0;
+            padding-left: 20px;
+        }
+
+        .footer-note {
+            margin-top: 24px;
+            text-align: center;
+            color: var(--sub);
+            font-size: 13px;
+        }
+
+        @media (max-width: 1024px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .panel {
+                position: static;
+            }
+
+            .summary-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 16px;
+            }
+
+            .hero {
+                padding: 24px 18px;
+                border-radius: 22px;
+            }
+
+            .hero h1 {
+                font-size: 28px;
+            }
+
+            .panel,
+            .result-panel,
+            .info-panel {
+                padding: 18px;
+                border-radius: 18px;
+            }
+
+            .summary-grid,
+            .sum-list {
+                grid-template-columns: 1fr;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            .button-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <header class="hero">
+        <div class="hero-badge">✨ Magic Square Generator</div>
+        <h1>마방진 계산기</h1>
+        <p>
+            홀수 크기 또는 4의 배수 크기의 마방진을 생성하고,
+            각 행·열·대각선의 합이 같은지 한눈에 확인해보세요.
+        </p>
+        <div class="hero-note">
+            마방진은 가로, 세로, 대각선의 합이 모두 같은 정사각형 숫자 배열입니다.
+            원문에서는 홀수 차수와 4의 배수 차수 마방진 생성법, 그리고 이를 코드로 구현하는 예시를 소개합니다. :contentReference[oaicite:1]{index=1}
+        </div>
+    </header>
+
+    <div class="grid">
+        <aside class="panel">
+            <h2>입력 설정</h2>
+
+            <div class="form-group">
+                <label for="size">마방진 크기</label>
+                <input type="number" id="size" min="1" step="1" value="5" />
+                <div class="help">홀수 또는 4의 배수만 생성할 수 있습니다. 예: 3, 5, 7, 4, 8, 12</div>
+            </div>
+
+            <div class="form-group">
+                <label for="startNumber">시작 숫자</label>
+                <input type="number" id="startNumber" step="1" value="1" />
+                <div class="help">마방진에 들어갈 가장 작은 숫자를 입력하세요.</div>
+            </div>
+
+            <div class="form-group">
+                <label for="preset">빠른 선택</label>
+                <select id="preset">
+                    <option value="">직접 입력</option>
+                    <option value="3|1">3 × 3 / 시작 1</option>
+                    <option value="5|1" selected>5 × 5 / 시작 1</option>
+                    <option value="4|1">4 × 4 / 시작 1</option>
+                    <option value="8|1">8 × 8 / 시작 1</option>
+                    <option value="5|10">5 × 5 / 시작 10</option>
+                </select>
+            </div>
+
+            <div class="button-row">
+                <button type="button" class="btn-primary" id="generateBtn">마방진 생성</button>
+                <button type="button" class="btn-secondary" id="resetBtn">초기화</button>
+            </div>
+        </aside>
+
+        <main class="content-col">
+            <section class="result-panel">
+                <h2>생성 결과</h2>
+
+                <div id="statusBox" class="status"></div>
+
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <div class="summary-label">차수</div>
+                        <div class="summary-value" id="summarySize">-</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-label">시작 숫자</div>
+                        <div class="summary-value" id="summaryStart">-</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-label">유형</div>
+                        <div class="summary-value" id="summaryType">-</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-label">마법합</div>
+                        <div class="summary-value" id="summaryMagicSum">-</div>
+                    </div>
+                </div>
+
+                <div class="table-wrap">
+                    <table id="magicTable">
+                        <thead>
+                        <tr>
+                            <th>생성 전</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>왼쪽 입력값을 설정한 뒤 “마방진 생성” 버튼을 눌러주세요.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="sum-list">
+                    <div class="sum-box">
+                        <h3>행의 합</h3>
+                        <ul id="rowSums">
+                            <li>생성 전</li>
+                        </ul>
+                    </div>
+                    <div class="sum-box">
+                        <h3>열의 합</h3>
+                        <ul id="colSums">
+                            <li>생성 전</li>
+                        </ul>
+                    </div>
+                    <div class="sum-box">
+                        <h3>대각선의 합</h3>
+                        <ul id="diagSums">
+                            <li>생성 전</li>
+                        </ul>
+                    </div>
+                    <div class="sum-box">
+                        <h3>검증 결과</h3>
+                        <ul id="verifyBox">
+                            <li>생성 전</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="formula" id="formulaBox">
+                    마법합 공식: n × (첫수 + 마지막수) ÷ 2
+                </div>
+            </section>
+
+            <section class="info-panel">
+                <h2>마방진 설명</h2>
+
+                <section>
+                    <h3>마방진이란?</h3>
+                    <p>
+                        마방진은 가로, 세로, 대각선의 합이 모두 같은 정사각형 숫자 배열입니다.
+                        원문에서는 가장 작은 예로 3×3을 언급하고, 홀수 크기와 4의 배수 크기 등 다양한 형태를 설명합니다. :contentReference[oaicite:2]{index=2}
+                    </p>
+                </section>
+
+                <section>
+                    <h3>홀수 크기 마방진 생성 원리</h3>
+                    <ol>
+                        <li>첫 번째 숫자를 첫 행의 가운데 칸에 둡니다.</li>
+                        <li>다음 숫자는 오른쪽 위 대각선 방향으로 이동하여 채웁니다.</li>
+                        <li>범위를 벗어나면 반대편으로 이어서 배치합니다.</li>
+                        <li>이미 숫자가 있으면 현재 위치의 바로 아래 칸에 배치합니다.</li>
+                    </ol>
+                    <p>
+                        이는 원문에서 소개된 홀수 차수 마방진 생성 규칙을 바탕으로 웹앱 형태로 구현한 것입니다. :contentReference[oaicite:3]{index=3}
+                    </p>
+                </section>
+
+                <section>
+                    <h3>4의 배수 크기 마방진 생성 원리</h3>
+                    <p>
+                        원문은 4×4 블록 기준 대각선 패턴을 활용해 특정 칸은 순서대로,
+                        나머지 칸은 역순 성격으로 채우는 방식을 설명합니다. 본 예제는 같은 원리를 코드 알고리즘으로 구현하여 4의 배수 차수 마방진을 생성합니다. :contentReference[oaicite:4]{index=4}
+                    </p>
+                </section>
+
+                <section>
+                    <h3>지원 범위</h3>
+                    <ul>
+                        <li>홀수 차수: 3, 5, 7, 9 ...</li>
+                        <li>4의 배수 차수: 4, 8, 12, 16 ...</li>
+                        <li>그 외의 차수(예: 6, 10)는 이 예제에서 지원하지 않습니다.</li>
+                    </ul>
+                </section>
+            </section>
+        </main>
+    </div>
+
+    <div class="footer-note">
+
+    </div>
+</div>
+
+<script>
+    (function () {
+        const sizeEl = document.getElementById('size');
+        const startNumberEl = document.getElementById('startNumber');
+        const presetEl = document.getElementById('preset');
+        const generateBtn = document.getElementById('generateBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        const statusBox = document.getElementById('statusBox');
+        const magicTable = document.getElementById('magicTable');
+
+        const summarySize = document.getElementById('summarySize');
+        const summaryStart = document.getElementById('summaryStart');
+        const summaryType = document.getElementById('summaryType');
+        const summaryMagicSum = document.getElementById('summaryMagicSum');
+
+        const rowSumsEl = document.getElementById('rowSums');
+        const colSumsEl = document.getElementById('colSums');
+        const diagSumsEl = document.getElementById('diagSums');
+        const verifyBoxEl = document.getElementById('verifyBox');
+        const formulaBox = document.getElementById('formulaBox');
+
+        presetEl.addEventListener('change', function () {
+            if (!this.value) return;
+            const parts = this.value.split('|');
+            sizeEl.value = parts[0];
+            startNumberEl.value = parts[1];
+        });
+
+        generateBtn.addEventListener('click', function () {
+            const n = parseInt(sizeEl.value, 10);
+            const start = parseInt(startNumberEl.value, 10);
+
+            if (!Number.isInteger(n) || n < 1) {
+                showStatus('마방진 크기는 1 이상의 정수여야 합니다.', 'error');
+                return;
+            }
+
+            if (!Number.isInteger(start)) {
+                showStatus('시작 숫자는 정수여야 합니다.', 'error');
+                return;
+            }
+
+            let square = null;
+            let typeText = '';
+
+            if (n % 2 !== 0) {
+                square = generateOddMagicSquare(n, start);
+                typeText = '홀수 마방진';
+            } else if (n % 4 === 0) {
+                square = generateDoublyEvenMagicSquare(n, start);
+                typeText = '4의 배수 마방진';
+            } else {
+                showStatus('마방진의 크기는 홀수 또는 4의 배수여야 합니다.', 'error');
+                return;
+            }
+
+            const analysis = analyzeSquare(square);
+            const expectedMagicSum = getExpectedMagicSum(n, start);
+
+            renderSummary(n, start, typeText, expectedMagicSum);
+            renderTable(square, analysis.rowSums, analysis.colSums, analysis.diagSums, expectedMagicSum);
+            renderLists(analysis, expectedMagicSum);
+
+            formulaBox.textContent =
+                '마법합 공식: n × (첫수 + 마지막수) ÷ 2 = ' +
+                n + ' × (' + start + ' + ' + (start + n * n - 1) + ') ÷ 2 = ' + expectedMagicSum;
+
+            if (analysis.isValid && analysis.diagSums[0] === expectedMagicSum && analysis.diagSums[1] === expectedMagicSum) {
+                showStatus('정상적으로 마방진이 생성되었습니다. 모든 행, 열, 대각선의 합이 같습니다.', 'success');
+            } else {
+                showStatus('생성은 되었지만 합 검증에 문제가 있습니다. 입력값과 알고리즘을 다시 확인해주세요.', 'error');
+            }
+        });
+
+        resetBtn.addEventListener('click', function () {
+            sizeEl.value = '5';
+            startNumberEl.value = '1';
+            presetEl.value = '5|1';
+
+            summarySize.textContent = '-';
+            summaryStart.textContent = '-';
+            summaryType.textContent = '-';
+            summaryMagicSum.textContent = '-';
+
+            rowSumsEl.innerHTML = '<li>생성 전</li>';
+            colSumsEl.innerHTML = '<li>생성 전</li>';
+            diagSumsEl.innerHTML = '<li>생성 전</li>';
+            verifyBoxEl.innerHTML = '<li>생성 전</li>';
+
+            formulaBox.textContent = '마법합 공식: n × (첫수 + 마지막수) ÷ 2';
+
+            magicTable.innerHTML = `
+          <thead>
+            <tr>
+              <th>생성 전</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>왼쪽 입력값을 설정한 뒤 “마방진 생성” 버튼을 눌러주세요.</td>
+            </tr>
+          </tbody>
+        `;
+
+            hideStatus();
+        });
+
+        function generateOddMagicSquare(n, startNum) {
+            const magicSquare = Array.from({ length: n }, () => Array(n).fill(0));
+            let num = startNum;
+            let i = 0;
+            let j = Math.floor(n / 2);
+            const max = startNum + n * n;
+
+            while (num < max) {
+                magicSquare[i][j] = num;
+                num++;
+
+                const newI = (i - 1 + n) % n;
+                const newJ = (j + 1) % n;
+
+                if (magicSquare[newI][newJ] !== 0) {
+                    i = (i + 1) % n;
+                } else {
+                    i = newI;
+                    j = newJ;
+                }
+            }
+
+            return magicSquare;
+        }
+
+        function generateDoublyEvenMagicSquare(n, startNum) {
+            const magicSquare = Array.from({ length: n }, () => Array(n).fill(0));
+
+            let current = startNum;
+            for (let i = 0; i < n; i++) {
+                for (let j = 0; j < n; j++) {
+                    magicSquare[i][j] = current++;
+                }
+            }
+
+            for (let i = 0; i < n; i++) {
+                for (let j = 0; j < n; j++) {
+                    if ((i % 4 === j % 4) || ((i + j) % 4 === 3)) {
+                        magicSquare[i][j] = startNum + n * n - (magicSquare[i][j] - startNum) - 1;
+                    }
+                }
+            }
+
+            return magicSquare;
+        }
+
+        function analyzeSquare(square) {
+            const n = square.length;
+            const rowSums = square.map(row => row.reduce((acc, cur) => acc + cur, 0));
+            const colSums = [];
+
+            for (let col = 0; col < n; col++) {
+                let sum = 0;
+                for (let row = 0; row < n; row++) {
+                    sum += square[row][col];
+                }
+                colSums.push(sum);
+            }
+
+            let diag1 = 0;
+            let diag2 = 0;
+
+            for (let i = 0; i < n; i++) {
+                diag1 += square[i][i];
+                diag2 += square[i][n - 1 - i];
+            }
+
+            const first = rowSums[0];
+            const allEqualRows = rowSums.every(v => v === first);
+            const allEqualCols = colSums.every(v => v === first);
+            const allEqualDiags = (diag1 === first && diag2 === first);
+
+            return {
+                rowSums: rowSums,
+                colSums: colSums,
+                diagSums: [diag1, diag2],
+                isValid: allEqualRows && allEqualCols && allEqualDiags
+            };
+        }
+
+        function getExpectedMagicSum(n, startNum) {
+            const lastNum = startNum + n * n - 1;
+            return n * (startNum + lastNum) / 2;
+        }
+
+        function renderSummary(n, start, typeText, magicSum) {
+            summarySize.textContent = n + ' × ' + n;
+            summaryStart.textContent = String(start);
+            summaryType.textContent = typeText;
+            summaryMagicSum.textContent = String(magicSum);
+        }
+
+        function renderTable(square, rowSums, colSums, diagSums, expectedMagicSum) {
+            const n = square.length;
+
+            let thead = '<thead><tr><th>행 \\ 열</th>';
+            for (let c = 0; c < n; c++) {
+                thead += '<th>' + (c + 1) + '열</th>';
+            }
+            thead += '<th>행 합</th></tr></thead>';
+
+            let tbody = '<tbody>';
+            for (let i = 0; i < n; i++) {
+                tbody += '<tr>';
+                tbody += '<th>' + (i + 1) + '행</th>';
+                for (let j = 0; j < n; j++) {
+                    tbody += '<td class="value-cell">' + square[i][j] + '</td>';
+                }
+                tbody += '<td class="' + (rowSums[i] === expectedMagicSum ? 'sum-good' : 'sum-bad') + '">' + rowSums[i] + '</td>';
+                tbody += '</tr>';
+            }
+
+            tbody += '<tr>';
+            tbody += '<th>열 합</th>';
+            for (let j = 0; j < n; j++) {
+                tbody += '<td class="' + (colSums[j] === expectedMagicSum ? 'sum-good' : 'sum-bad') + '">' + colSums[j] + '</td>';
+            }
+            tbody += '<td class="sum-good">' + expectedMagicSum + '</td>';
+            tbody += '</tr>';
+
+            tbody += '<tr>';
+            tbody += '<th>대각선 합</th>';
+            tbody += '<td colspan="' + n + '" style="text-align:left; padding-left:16px;">';
+            tbody += '↘ 주대각선: <strong>' + diagSums[0] + '</strong> / ';
+            tbody += '↙ 부대각선: <strong>' + diagSums[1] + '</strong>';
+            tbody += '</td>';
+            tbody += '<td class="' + ((diagSums[0] === expectedMagicSum && diagSums[1] === expectedMagicSum) ? 'sum-good' : 'sum-bad') + '">';
+            tbody += (diagSums[0] === expectedMagicSum && diagSums[1] === expectedMagicSum) ? '일치' : '불일치';
+            tbody += '</td>';
+            tbody += '</tr>';
+
+            tbody += '</tbody>';
+
+            magicTable.innerHTML = thead + tbody;
+        }
+
+        function renderLists(analysis, expectedMagicSum) {
+            rowSumsEl.innerHTML = analysis.rowSums.map(function (sum, idx) {
+                return '<li>' + (idx + 1) + '행: <strong>' + sum + '</strong>' +
+                    (sum === expectedMagicSum ? ' ✅' : ' ❌') + '</li>';
+            }).join('');
+
+            colSumsEl.innerHTML = analysis.colSums.map(function (sum, idx) {
+                return '<li>' + (idx + 1) + '열: <strong>' + sum + '</strong>' +
+                    (sum === expectedMagicSum ? ' ✅' : ' ❌') + '</li>';
+            }).join('');
+
+            diagSumsEl.innerHTML = [
+                '<li>주대각선(↘): <strong>' + analysis.diagSums[0] + '</strong>' +
+                (analysis.diagSums[0] === expectedMagicSum ? ' ✅' : ' ❌') + '</li>',
+                '<li>부대각선(↙): <strong>' + analysis.diagSums[1] + '</strong>' +
+                (analysis.diagSums[1] === expectedMagicSum ? ' ✅' : ' ❌') + '</li>'
+            ].join('');
+
+            verifyBoxEl.innerHTML = [
+                '<li>기준 마법합: <strong>' + expectedMagicSum + '</strong></li>',
+                '<li>검증 결과: <strong>' + (analysis.isValid ? '유효한 마방진' : '유효하지 않음') + '</strong></li>',
+                '<li>지원 유형: 홀수 차수 / 4의 배수 차수</li>'
+            ].join('');
+        }
+
+        function showStatus(message, type) {
+            statusBox.className = 'status show ' + type;
+            statusBox.textContent = message;
+        }
+
+        function hideStatus() {
+            statusBox.className = 'status';
+            statusBox.textContent = '';
+        }
+
+        generateBtn.click();
+    })();
+</script>
+</body>
+</html>
