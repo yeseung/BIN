@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>힐링 샌드 - 마음을 치유하는 모래 흐름</title>
+
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            background-color: #0f1115;
+            color: #eee;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            font-family: monospace;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        body::-webkit-scrollbar {
+            display: none;
+        }
+
+        body {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        #stage {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            background:
+                    radial-gradient(ellipse 140% 100% at 50% 0%, rgba(120, 160, 220, 0.12), transparent 55%),
+                    radial-gradient(ellipse 100% 80% at 50% 100%, rgba(40, 35, 55, 0.5), transparent 50%),
+                    linear-gradient(165deg, #12141c 0%, #0a0b10 45%, #0f1118 100%);
+        }
+
+        #stage canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+            image-rendering: auto;
+            will-change: transform;
+            transform: translateZ(0);
+        }
+
+        .control-btn {
+            position: fixed;
+            top: 12px;
+            z-index: 1000;
+            width: 56px;
+            height: 56px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 28px;
+            font-weight: 700;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .control-btn:active {
+            cursor: grabbing;
+        }
+
+        #rotate-btn {
+            right: 12px;
+            border-radius: 14px;
+            backdrop-filter: none;
+            box-shadow: none;
+        }
+    </style>
+
+    <script>
+        addEventListener('load', () => setTimeout(() => scrollTo(0, 1), 0));
+    </script>
+</head>
+
+<body>
+<div id="stage" aria-label="모래 시뮬레이션"></div>
+
+<button id="rotate-btn" class="control-btn" type="button" title="180도 회전">
+    ↻
+</button>
+
+<script src="assets/js/sand.js"></script>
+</body>
+</html>
