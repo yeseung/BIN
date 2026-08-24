@@ -1,0 +1,1390 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#ffffff">
+    <title>뱀주사위놀이</title>
+
+    <!-- https://github.com/civilian7/snake-dice-game -->
+
+    <style>
+        /* ==========================================================================
+           Snake Dice Game - Vanilla JavaScript / Pure CSS
+           - Bootstrap 없음
+           - Adsense 없음
+           - 외부 CSS / JS / 이미지 없음
+           - 단일 HTML 파일
+           ========================================================================== */
+
+        :root {
+            --bg: #f6f7f9;
+            --surface: #ffffff;
+            --surface-soft: #fafafa;
+            --line: #e5e7eb;
+            --line-strong: #d1d5db;
+            --text: #111827;
+            --muted: #6b7280;
+            --primary: #2563eb;
+            --primary-soft: #eff6ff;
+            --danger: #dc2626;
+            --danger-soft: #fef2f2;
+            --success: #16a34a;
+            --success-soft: #f0fdf4;
+            --warning: #d97706;
+            --warning-soft: #fffbeb;
+            --human: #2563eb;
+            --cpu: #ef4444;
+            --radius: 16px;
+            --shadow: 0 10px 30px rgba(15, 23, 42, .06);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            background: var(--bg);
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--text);
+            background: var(--bg);
+            font-family:
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Pretendard",
+                    "Noto Sans KR",
+                    "Malgun Gothic",
+                    "맑은 고딕",
+                    Arial,
+                    sans-serif;
+            line-height: 1.5;
+        }
+
+        button,
+        input,
+        select {
+            font: inherit;
+        }
+
+        button {
+            border: 0;
+        }
+
+        button:focus-visible {
+            outline: 3px solid rgba(37, 99, 235, .25);
+            outline-offset: 2px;
+        }
+
+        .app {
+            width: min(1180px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 28px 0 50px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .brand {
+            min-width: 0;
+        }
+
+        .brand h1 {
+            margin: 0;
+            font-size: clamp(24px, 4vw, 34px);
+            letter-spacing: -.04em;
+        }
+
+        .brand p {
+            margin: 5px 0 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .header-actions {
+            margin-left: auto;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            min-height: 42px;
+            padding: 0 15px;
+            border: 1px solid var(--line-strong);
+            border-radius: 10px;
+            color: var(--text);
+            background: #fff;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background .15s ease, border-color .15s ease, transform .15s ease;
+        }
+
+        .btn:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-primary {
+            color: #fff;
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+            border-color: #1d4ed8;
+        }
+
+        .btn-danger {
+            color: var(--danger);
+            background: #fff;
+            border-color: #fecaca;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 310px;
+            gap: 18px;
+            align-items: start;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .board-card {
+            padding: 18px;
+        }
+
+        .board-head {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .turn-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 34px;
+            padding: 0 12px;
+            border-radius: 999px;
+            color: #1e40af;
+            background: var(--primary-soft);
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .turn-badge.cpu {
+            color: #991b1b;
+            background: var(--danger-soft);
+        }
+
+        .turn-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .status-text {
+            margin-left: auto;
+            color: var(--muted);
+            font-size: 13px;
+            text-align: right;
+        }
+
+        .board-wrap {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            border: 1px solid var(--line-strong);
+            border-radius: 14px;
+            background: #fff;
+        }
+
+        .board {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(10, 1fr);
+        }
+
+        .cell {
+            position: relative;
+            min-width: 0;
+            min-height: 0;
+            border-right: 1px solid #eceff3;
+            border-bottom: 1px solid #eceff3;
+            background: #fff;
+        }
+
+        .cell:nth-child(2n) {
+            background: #fbfcfd;
+        }
+
+        .cell.is-highway {
+            background: var(--success-soft);
+        }
+
+        .cell.is-snake {
+            background: var(--danger-soft);
+        }
+
+        .cell.is-finish {
+            background: var(--warning-soft);
+        }
+
+        .cell-number {
+            position: absolute;
+            top: 5px;
+            left: 6px;
+            color: #6b7280;
+            font-size: clamp(8px, 1.4vw, 11px);
+            font-weight: 800;
+        }
+
+        .cell-event {
+            position: absolute;
+            right: 5px;
+            bottom: 4px;
+            font-size: clamp(10px, 1.8vw, 16px);
+            line-height: 1;
+        }
+
+        .paths {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .paths line {
+            vector-effect: non-scaling-stroke;
+            stroke-width: 5;
+            stroke-linecap: round;
+            opacity: .6;
+        }
+
+        .paths .highway {
+            stroke: #22c55e;
+            stroke-dasharray: 9 7;
+        }
+
+        .paths .snake {
+            stroke: #ef4444;
+            stroke-dasharray: 4 7;
+        }
+
+        .tokens {
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        .token {
+            position: absolute;
+            display: grid;
+            place-items: center;
+            width: clamp(20px, 4.8vw, 34px);
+            height: clamp(20px, 4.8vw, 34px);
+            border: 3px solid #fff;
+            border-radius: 50%;
+            color: #fff;
+            font-size: clamp(9px, 1.6vw, 12px);
+            font-weight: 900;
+            box-shadow: 0 4px 10px rgba(15, 23, 42, .22);
+            transform: translate(-50%, -50%);
+            transition: left .18s ease, top .18s ease;
+        }
+
+        .token.human {
+            background: var(--human);
+        }
+
+        .token.cpu {
+            background: var(--cpu);
+        }
+
+        .token.off-board {
+            opacity: 0;
+        }
+
+        .side {
+            display: grid;
+            gap: 14px;
+        }
+
+        .panel {
+            padding: 18px;
+        }
+
+        .panel-title {
+            margin: 0 0 12px;
+            font-size: 15px;
+        }
+
+        .players {
+            display: grid;
+            gap: 10px;
+        }
+
+        .player-row {
+            display: grid;
+            grid-template-columns: 14px 1fr auto;
+            gap: 9px;
+            align-items: center;
+            min-height: 42px;
+            padding: 0 12px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: var(--surface-soft);
+        }
+
+        .player-color {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .player-color.human {
+            background: var(--human);
+        }
+
+        .player-color.cpu {
+            background: var(--cpu);
+        }
+
+        .player-name {
+            font-weight: 800;
+            font-size: 14px;
+        }
+
+        .player-pos {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .dice-area {
+            display: grid;
+            place-items: center;
+            gap: 14px;
+            padding: 4px 0 2px;
+        }
+
+        .dice {
+            display: grid;
+            place-items: center;
+            width: 86px;
+            height: 86px;
+            border: 1px solid var(--line-strong);
+            border-radius: 20px;
+            background: #fff;
+            box-shadow: 0 10px 25px rgba(15, 23, 42, .09);
+            font-size: 52px;
+            line-height: 1;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .dice.rolling {
+            animation: diceRoll .12s linear infinite;
+        }
+
+        @keyframes diceRoll {
+            0%   { transform: rotate(-4deg) scale(.98); }
+            50%  { transform: rotate(4deg) scale(1.03); }
+            100% { transform: rotate(-4deg) scale(.98); }
+        }
+
+        .roll-btn {
+            width: 100%;
+            min-height: 48px;
+            border-radius: 12px;
+        }
+
+        .roll-btn:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+        }
+
+        .message {
+            min-height: 54px;
+            margin-top: 12px;
+            padding: 12px 13px;
+            border-radius: 10px;
+            color: #374151;
+            background: #f9fafb;
+            border: 1px solid var(--line);
+            font-size: 13px;
+        }
+
+        .legend {
+            display: grid;
+            gap: 9px;
+            color: #4b5563;
+            font-size: 13px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-mark {
+            display: inline-grid;
+            place-items: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            flex: 0 0 auto;
+        }
+
+        .legend-mark.highway {
+            background: var(--success-soft);
+        }
+
+        .legend-mark.snake {
+            background: var(--danger-soft);
+        }
+
+        .options {
+            display: grid;
+            gap: 10px;
+        }
+
+        .option {
+            display: flex;
+            align-items: flex-start;
+            gap: 9px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .option input {
+            margin-top: 3px;
+        }
+
+        .small-note {
+            margin: 10px 0 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .footer {
+            margin-top: 20px;
+            color: #9ca3af;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        /* ---------- Modal ---------- */
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: none;
+            place-items: center;
+            padding: 20px;
+            background: rgba(17, 24, 39, .42);
+        }
+
+        .modal.show {
+            display: grid;
+        }
+
+        .modal-box {
+            width: min(620px, 100%);
+            max-height: 88vh;
+            overflow: auto;
+            padding: 22px;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, .18);
+        }
+
+        .modal-head {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .modal-title {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .modal-close {
+            margin-left: auto;
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: #f3f4f6;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .rules {
+            color: #374151;
+            font-size: 14px;
+        }
+
+        .rules h3 {
+            margin: 22px 0 8px;
+            color: var(--text);
+            font-size: 15px;
+        }
+
+        .rules ul {
+            padding-left: 20px;
+        }
+
+        .rules li {
+            margin: 6px 0;
+        }
+
+        .result {
+            text-align: center;
+        }
+
+        .result-icon {
+            font-size: 54px;
+        }
+
+        .result h2 {
+            margin: 8px 0 6px;
+        }
+
+        .result p {
+            margin: 0 0 18px;
+            color: var(--muted);
+        }
+
+        /* ---------- Responsive ---------- */
+
+        @media (max-width: 860px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .side {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .side .panel:first-child {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .app {
+                width: min(100% - 20px, 1180px);
+                padding-top: 16px;
+            }
+
+            .header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .header-actions {
+                width: 100%;
+                margin-left: 0;
+            }
+
+            .header-actions .btn {
+                flex: 1;
+            }
+
+            .board-card {
+                padding: 10px;
+            }
+
+            .board-head {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .status-text {
+                margin-left: 0;
+                text-align: left;
+            }
+
+            .side {
+                grid-template-columns: 1fr;
+            }
+
+            .side .panel:first-child {
+                grid-column: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="app">
+
+    <header class="header">
+        <div class="brand">
+            <h1>뱀주사위놀이</h1>
+            <p>주사위를 굴려 100번 칸에 먼저 도착하세요.</p>
+        </div>
+
+        <div class="header-actions">
+            <button type="button" class="btn" id="helpButton">게임 안내</button>
+            <button type="button" class="btn" id="newGameButton">새 게임</button>
+        </div>
+    </header>
+
+    <main class="layout">
+
+        <section class="card board-card" aria-label="게임 보드">
+            <div class="board-head">
+                <div class="turn-badge" id="turnBadge">
+                    <span class="turn-dot"></span>
+                    <span id="turnText">내 차례</span>
+                </div>
+                <div class="status-text" id="statusText">주사위를 굴려 게임을 시작하세요.</div>
+            </div>
+
+            <div class="board-wrap" id="boardWrap">
+                <div class="board" id="board"></div>
+
+                <svg class="paths" id="paths" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"></svg>
+
+                <div class="tokens">
+                    <div class="token human off-board" id="humanToken">나</div>
+                    <div class="token cpu off-board" id="cpuToken">PC</div>
+                </div>
+            </div>
+        </section>
+
+        <aside class="side">
+
+            <section class="card panel">
+                <h2 class="panel-title">게임 진행</h2>
+
+                <div class="players">
+                    <div class="player-row">
+                        <span class="player-color human"></span>
+                        <span class="player-name">나</span>
+                        <span class="player-pos" id="humanPosition">대기</span>
+                    </div>
+
+                    <div class="player-row">
+                        <span class="player-color cpu"></span>
+                        <span class="player-name">컴퓨터</span>
+                        <span class="player-pos" id="cpuPosition">대기</span>
+                    </div>
+                </div>
+
+                <div class="dice-area">
+                    <button type="button" class="dice" id="dice" aria-label="주사위 굴리기">⚀</button>
+                    <button type="button" class="btn btn-primary roll-btn" id="rollButton">주사위 굴리기</button>
+                </div>
+
+                <div class="message" id="message" aria-live="polite">
+                    내가 먼저 시작합니다.
+                </div>
+            </section>
+
+            <section class="card panel">
+                <h2 class="panel-title">게임 옵션</h2>
+
+                <div class="options">
+                    <label class="option">
+                        <input type="checkbox" id="extraSix">
+                        <span><b>6이 나오면 한 번 더</b><br>최대 3회까지 연속으로 진행합니다.</span>
+                    </label>
+
+                    <label class="option">
+                        <input type="checkbox" id="capture">
+                        <span><b>앞말 잡기</b><br>같은 칸에 도착하면 상대 말을 1번으로 보냅니다.</span>
+                    </label>
+                </div>
+
+                <p class="small-note">옵션 변경은 다음 새 게임부터 적용됩니다.</p>
+            </section>
+
+            <section class="card panel">
+                <h2 class="panel-title">칸 표시</h2>
+
+                <div class="legend">
+                    <div class="legend-item">
+                        <span class="legend-mark highway">⬆</span>
+                        <span>고속도로: 더 높은 칸으로 이동</span>
+                    </div>
+
+                    <div class="legend-item">
+                        <span class="legend-mark snake">⬇</span>
+                        <span>뱀: 더 낮은 칸으로 이동</span>
+                    </div>
+                </div>
+            </section>
+
+        </aside>
+    </main>
+
+    <footer class="footer">
+        Vanilla JavaScript · Pure CSS · No Bootstrap · No Adsense
+    </footer>
+</div>
+
+<!-- 게임 안내 -->
+<div class="modal" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h2 class="modal-title" id="helpTitle">게임 안내</h2>
+            <button type="button" class="modal-close" data-close-modal aria-label="닫기">×</button>
+        </div>
+
+        <div class="rules">
+            <p>
+                사람과 컴퓨터가 번갈아 주사위를 굴립니다.
+                100번 칸에 먼저 도착하면 승리합니다.
+            </p>
+
+            <h3>기본 규칙</h3>
+            <ul>
+                <li>처음에는 두 말 모두 보드 밖에서 시작합니다.</li>
+                <li>첫 주사위 숫자만큼 이동해 해당 칸에 올라갑니다.</li>
+                <li>100을 넘는 숫자가 나오더라도 바로 승리합니다.</li>
+                <li>고속도로 칸에 도착하면 높은 칸으로 이동합니다.</li>
+                <li>뱀 칸에 도착하면 낮은 칸으로 내려갑니다.</li>
+                <li>고속도로나 뱀으로 이동한 뒤에는 연쇄 이동하지 않습니다.</li>
+            </ul>
+
+            <h3>고속도로</h3>
+            <p>4→16, 8→12, 18→38, 20→74, 24→36, 32→56, 34→46, 40→60, 48→54, 70→88, 76→86, 80→100, 90→92</p>
+
+            <h3>뱀</h3>
+            <p>22→2, 28→6, 30→10, 44→26, 58→42, 66→14, 68→52, 72→50, 84→62, 94→64, 96→82, 98→78</p>
+
+            <h3>조작</h3>
+            <ul>
+                <li><b>주사위 굴리기</b> 버튼을 누릅니다.</li>
+                <li>주사위 자체를 클릭해도 됩니다.</li>
+                <li>키보드 <b>Space</b> 키로도 굴릴 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 게임 결과 -->
+<div class="modal" id="resultModal" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+    <div class="modal-box result">
+        <div class="result-icon" id="resultIcon">🎉</div>
+        <h2 id="resultTitle">승리!</h2>
+        <p id="resultMessage">100번 칸에 먼저 도착했습니다.</p>
+        <button type="button" class="btn btn-primary" id="playAgainButton">다시 하기</button>
+    </div>
+</div>
+
+<script>
+    "use strict";
+
+    /* ==========================================================================
+       뱀주사위놀이
+       Vanilla JavaScript only
+       ========================================================================== */
+
+    const HIGHWAYS = {
+        4: 16,
+        8: 12,
+        18: 38,
+        20: 74,
+        24: 36,
+        32: 56,
+        34: 46,
+        40: 60,
+        48: 54,
+        70: 88,
+        76: 86,
+        80: 100,
+        90: 92
+    };
+
+    const SNAKES = {
+        22: 2,
+        28: 6,
+        30: 10,
+        44: 26,
+        58: 42,
+        66: 14,
+        68: 52,
+        72: 50,
+        84: 62,
+        94: 64,
+        96: 82,
+        98: 78
+    };
+
+    const DICE_FACES = ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
+
+    const state = {
+        human: 0,
+        cpu: 0,
+        turn: "human",
+        busy: false,
+        finished: false,
+        consecutiveSix: 0,
+        options: {
+            extraSix: false,
+            capture: false
+        }
+    };
+
+    const board = document.getElementById("board");
+    const boardWrap = document.getElementById("boardWrap");
+    const paths = document.getElementById("paths");
+
+    const humanToken = document.getElementById("humanToken");
+    const cpuToken = document.getElementById("cpuToken");
+
+    const humanPosition = document.getElementById("humanPosition");
+    const cpuPosition = document.getElementById("cpuPosition");
+
+    const turnBadge = document.getElementById("turnBadge");
+    const turnText = document.getElementById("turnText");
+    const statusText = document.getElementById("statusText");
+    const message = document.getElementById("message");
+
+    const dice = document.getElementById("dice");
+    const rollButton = document.getElementById("rollButton");
+
+    const extraSix = document.getElementById("extraSix");
+    const capture = document.getElementById("capture");
+
+    const helpModal = document.getElementById("helpModal");
+    const resultModal = document.getElementById("resultModal");
+
+    let cells = new Map();
+
+    /* ---------- 보드 좌표 ---------- */
+
+    function getBoardRowCol(number) {
+        const index = number - 1;
+        const logicalRow = Math.floor(index / 10);
+        const rowFromTop = 9 - logicalRow;
+
+        let col;
+
+        if (logicalRow % 2 === 0) {
+            col = index % 10;
+        } else {
+            col = 9 - (index % 10);
+        }
+
+        return {
+            row: rowFromTop,
+            col: col
+        };
+    }
+
+    function getCellCenter(number) {
+        const pos = getBoardRowCol(number);
+
+        return {
+            x: ((pos.col + 0.5) / 10) * 1000,
+            y: ((pos.row + 0.5) / 10) * 1000
+        };
+    }
+
+    /* ---------- 보드 생성 ---------- */
+
+    function createBoard() {
+        board.innerHTML = "";
+        paths.innerHTML = "";
+        cells = new Map();
+
+        for (let visualRow = 0; visualRow < 10; visualRow++) {
+            const logicalRow = 9 - visualRow;
+            let numbers = [];
+
+            const rowStart = logicalRow * 10 + 1;
+
+            for (let i = 0; i < 10; i++) {
+                numbers.push(rowStart + i);
+            }
+
+            if (logicalRow % 2 === 1) {
+                numbers.reverse();
+            }
+
+            numbers.forEach((number) => {
+                const cell = document.createElement("div");
+                cell.className = "cell";
+                cell.dataset.number = String(number);
+
+                if (HIGHWAYS[number]) {
+                    cell.classList.add("is-highway");
+                }
+
+                if (SNAKES[number]) {
+                    cell.classList.add("is-snake");
+                }
+
+                if (number === 100) {
+                    cell.classList.add("is-finish");
+                }
+
+                const cellNumber = document.createElement("span");
+                cellNumber.className = "cell-number";
+                cellNumber.textContent = number;
+
+                cell.appendChild(cellNumber);
+
+                if (HIGHWAYS[number]) {
+                    const icon = document.createElement("span");
+                    icon.className = "cell-event";
+                    icon.textContent = "⬆";
+                    icon.title = `${number} → ${HIGHWAYS[number]}`;
+                    cell.appendChild(icon);
+                }
+
+                if (SNAKES[number]) {
+                    const icon = document.createElement("span");
+                    icon.className = "cell-event";
+                    icon.textContent = "⬇";
+                    icon.title = `${number} → ${SNAKES[number]}`;
+                    cell.appendChild(icon);
+                }
+
+                if (number === 100) {
+                    const icon = document.createElement("span");
+                    icon.className = "cell-event";
+                    icon.textContent = "🏁";
+                    cell.appendChild(icon);
+                }
+
+                board.appendChild(cell);
+                cells.set(number, cell);
+            });
+        }
+
+        drawPaths();
+    }
+
+    function drawPaths() {
+        Object.entries(HIGHWAYS).forEach(([from, to]) => {
+            drawPath(Number(from), Number(to), "highway");
+        });
+
+        Object.entries(SNAKES).forEach(([from, to]) => {
+            drawPath(Number(from), Number(to), "snake");
+        });
+    }
+
+    function drawPath(from, to, className) {
+        const start = getCellCenter(from);
+        const end = getCellCenter(to);
+
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", start.x);
+        line.setAttribute("y1", start.y);
+        line.setAttribute("x2", end.x);
+        line.setAttribute("y2", end.y);
+        line.setAttribute("class", className);
+
+        paths.appendChild(line);
+    }
+
+    /* ---------- 말 표시 ---------- */
+
+    function updateToken(player) {
+        const position = state[player];
+        const token = player === "human" ? humanToken : cpuToken;
+        const positionText = player === "human" ? humanPosition : cpuPosition;
+
+        if (position <= 0) {
+            token.classList.add("off-board");
+            positionText.textContent = "대기";
+            return;
+        }
+
+        token.classList.remove("off-board");
+
+        const pos = getBoardRowCol(Math.min(position, 100));
+
+        let x = ((pos.col + 0.5) / 10) * 100;
+        let y = ((pos.row + 0.5) / 10) * 100;
+
+        if (state.human === state.cpu && state.human > 0) {
+            if (player === "human") {
+                x -= 1.6;
+                y -= 1.6;
+            } else {
+                x += 1.6;
+                y += 1.6;
+            }
+        }
+
+        token.style.left = `${x}%`;
+        token.style.top = `${y}%`;
+
+        positionText.textContent = `${Math.min(position, 100)}번`;
+    }
+
+    function updateAllTokens() {
+        updateToken("human");
+        updateToken("cpu");
+    }
+
+    /* ---------- UI 상태 ---------- */
+
+    function updateTurnUI() {
+        const isHuman = state.turn === "human";
+
+        turnBadge.classList.toggle("cpu", !isHuman);
+        turnText.textContent = isHuman ? "내 차례" : "컴퓨터 차례";
+
+        rollButton.disabled = !isHuman || state.busy || state.finished;
+        dice.disabled = !isHuman || state.busy || state.finished;
+
+        statusText.textContent = state.finished
+            ? "게임이 종료되었습니다."
+            : isHuman
+                ? "주사위를 굴려 이동하세요."
+                : "컴퓨터가 주사위를 굴립니다.";
+    }
+
+    function setMessage(text) {
+        message.textContent = text;
+    }
+
+    /* ---------- 게임 로직 ---------- */
+
+    function randomDice() {
+        return Math.floor(Math.random() * 6) + 1;
+    }
+
+    function sleep(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    async function animateDice(finalValue) {
+        dice.classList.add("rolling");
+
+        const duration = 520;
+        const interval = 70;
+        const count = Math.floor(duration / interval);
+
+        for (let i = 0; i < count; i++) {
+            const fake = randomDice();
+            dice.textContent = DICE_FACES[fake - 1];
+            await sleep(interval);
+        }
+
+        dice.classList.remove("rolling");
+        dice.textContent = DICE_FACES[finalValue - 1];
+    }
+
+    function resolveMove(position, diceValue) {
+        const raw = position + diceValue;
+
+        if (raw >= 100) {
+            return {
+                raw: raw,
+                final: 100,
+                event: "finish"
+            };
+        }
+
+        if (HIGHWAYS[raw]) {
+            return {
+                raw: raw,
+                final: HIGHWAYS[raw],
+                event: "highway"
+            };
+        }
+
+        if (SNAKES[raw]) {
+            return {
+                raw: raw,
+                final: SNAKES[raw],
+                event: "snake"
+            };
+        }
+
+        return {
+            raw: raw,
+            final: raw,
+            event: null
+        };
+    }
+
+    async function moveStepByStep(player, from, to) {
+        const start = Math.max(0, from);
+
+        for (let pos = start + 1; pos <= to; pos++) {
+            state[player] = pos;
+            updateAllTokens();
+            await sleep(110);
+        }
+    }
+
+    async function moveDirect(player, to) {
+        state[player] = to;
+        updateAllTokens();
+        await sleep(420);
+    }
+
+    function playerLabel(player) {
+        return player === "human" ? "나" : "컴퓨터";
+    }
+
+    function otherPlayer(player) {
+        return player === "human" ? "cpu" : "human";
+    }
+
+    async function handleCapture(player) {
+        if (!state.options.capture) {
+            return;
+        }
+
+        const opponent = otherPlayer(player);
+
+        if (
+            state[player] > 0 &&
+            state[player] < 100 &&
+            state[player] === state[opponent]
+        ) {
+            state[opponent] = 1;
+            updateAllTokens();
+
+            setMessage(`${playerLabel(player)}의 말이 상대 말을 잡았습니다. 상대 말은 1번 칸으로 이동합니다.`);
+            await sleep(650);
+        }
+    }
+
+    async function takeTurn(player) {
+        if (state.busy || state.finished) {
+            return;
+        }
+
+        if (player !== state.turn) {
+            return;
+        }
+
+        state.busy = true;
+        updateTurnUI();
+
+        const value = randomDice();
+
+        setMessage(`${playerLabel(player)} 주사위를 굴립니다.`);
+        await animateDice(value);
+
+        setMessage(`${playerLabel(player)}: ${value}이(가) 나왔습니다.`);
+        await sleep(350);
+
+        const oldPosition = state[player];
+        const result = resolveMove(oldPosition, value);
+
+        if (result.raw >= 100) {
+            await moveStepByStep(player, oldPosition, 100);
+            finishGame(player);
+            return;
+        }
+
+        await moveStepByStep(player, oldPosition, result.raw);
+
+        if (result.event === "highway") {
+            setMessage(`고속도로! ${result.raw}번에서 ${result.final}번으로 이동합니다.`);
+            await sleep(450);
+            await moveDirect(player, result.final);
+        }
+
+        if (result.event === "snake") {
+            setMessage(`뱀을 만났습니다. ${result.raw}번에서 ${result.final}번으로 내려갑니다.`);
+            await sleep(450);
+            await moveDirect(player, result.final);
+        }
+
+        await handleCapture(player);
+
+        if (state[player] >= 100) {
+            finishGame(player);
+            return;
+        }
+
+        const rolledSix = value === 6;
+
+        if (state.options.extraSix && rolledSix && state.consecutiveSix < 2) {
+            state.consecutiveSix++;
+
+            state.busy = false;
+            setMessage(`${playerLabel(player)}이(가) 6을 굴려 한 번 더 진행합니다.`);
+            updateTurnUI();
+
+            if (player === "cpu") {
+                await sleep(750);
+                takeTurn("cpu");
+            }
+
+            return;
+        }
+
+        state.consecutiveSix = 0;
+        state.turn = otherPlayer(player);
+        state.busy = false;
+
+        updateTurnUI();
+
+        if (state.turn === "cpu") {
+            setMessage("컴퓨터 차례입니다.");
+            await sleep(700);
+            takeTurn("cpu");
+        } else {
+            setMessage("내 차례입니다. 주사위를 굴려 주세요.");
+        }
+    }
+
+    function finishGame(winner) {
+        state.finished = true;
+        state.busy = false;
+        state[winner] = 100;
+
+        updateAllTokens();
+        updateTurnUI();
+
+        const humanWon = winner === "human";
+
+        document.getElementById("resultIcon").textContent = humanWon ? "🎉" : "🤖";
+        document.getElementById("resultTitle").textContent = humanWon ? "승리!" : "컴퓨터 승리";
+        document.getElementById("resultMessage").textContent = humanWon
+            ? "축하합니다. 100번 칸에 먼저 도착했습니다."
+            : "컴퓨터가 100번 칸에 먼저 도착했습니다.";
+
+        setMessage(
+            humanWon
+                ? "축하합니다! 내가 승리했습니다."
+                : "컴퓨터가 승리했습니다."
+        );
+
+        showModal(resultModal);
+    }
+
+    function newGame() {
+        state.human = 0;
+        state.cpu = 0;
+        state.turn = Math.random() < 0.5 ? "human" : "cpu";
+        state.busy = false;
+        state.finished = false;
+        state.consecutiveSix = 0;
+
+        state.options.extraSix = extraSix.checked;
+        state.options.capture = capture.checked;
+
+        dice.textContent = DICE_FACES[0];
+
+        updateAllTokens();
+        updateTurnUI();
+
+        if (state.turn === "human") {
+            setMessage("내가 먼저 시작합니다.");
+        } else {
+            setMessage("컴퓨터가 먼저 시작합니다.");
+
+            setTimeout(() => {
+                takeTurn("cpu");
+            }, 850);
+        }
+    }
+
+    /* ---------- Modal ---------- */
+
+    function showModal(modal) {
+        modal.classList.add("show");
+    }
+
+    function hideModal(modal) {
+        modal.classList.remove("show");
+    }
+
+    document.getElementById("helpButton").addEventListener("click", () => {
+        showModal(helpModal);
+    });
+
+    document.getElementById("newGameButton").addEventListener("click", () => {
+        hideModal(resultModal);
+        newGame();
+    });
+
+    document.getElementById("playAgainButton").addEventListener("click", () => {
+        hideModal(resultModal);
+        newGame();
+    });
+
+    document.querySelectorAll("[data-close-modal]").forEach((button) => {
+        button.addEventListener("click", () => {
+            const modal = button.closest(".modal");
+            hideModal(modal);
+        });
+    });
+
+    [helpModal, resultModal].forEach((modal) => {
+        modal.addEventListener("click", (event) => {
+            if (event.target === modal) {
+                hideModal(modal);
+            }
+        });
+    });
+
+    /* ---------- 조작 ---------- */
+
+    rollButton.addEventListener("click", () => {
+        takeTurn("human");
+    });
+
+    dice.addEventListener("click", () => {
+        takeTurn("human");
+    });
+
+    document.addEventListener("keydown", (event) => {
+        if (event.code === "Space") {
+            if (
+                !helpModal.classList.contains("show") &&
+                !resultModal.classList.contains("show")
+            ) {
+                event.preventDefault();
+                takeTurn("human");
+            }
+        }
+
+        if (event.key === "Escape") {
+            hideModal(helpModal);
+            hideModal(resultModal);
+        }
+    });
+
+    /* ---------- 시작 ---------- */
+
+    createBoard();
+    newGame();
+</script>
+</body>
+</html>
