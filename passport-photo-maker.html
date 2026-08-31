@@ -973,7 +973,7 @@
                 const fd = new FormData();
                 fd.append("file", await shrinkImage(origFile));
 
-                const r = await fetch("/api/bgremove", {
+                const r = await fetch("/api/bgremove.php", {
                     method: "POST",
                     body: fd
                 });
