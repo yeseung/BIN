@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>영상 오디오 추출기</title>
+    <meta name="description" content="영상 파일에서 오디오를 브라우저 안에서 WAV 파일로 추출하고 저장합니다. 파일은 서버로 업로드되지 않습니다.">
+
+    <style>
+        :root {
+            --bg: #f7f8fa;
+            --surface: #ffffff;
+            --surface-soft: #fafbfc;
+            --text: #17191c;
+            --muted: #6b7280;
+            --line: #e5e7eb;
+            --line-strong: #d1d5db;
+            --primary: #111827;
+            --primary-hover: #000000;
+            --success: #08783e;
+            --danger: #c92a2a;
+            --radius: 16px;
+            --shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family:
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    "Noto Sans KR",
+                    Arial,
+                    sans-serif;
+            line-height: 1.6;
+        }
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        .page {
+            width: min(920px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 56px 0 72px;
+        }
+
+        .header {
+            margin-bottom: 24px;
+        }
+
+        .header__eyebrow {
+            margin: 0 0 8px;
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: clamp(30px, 6vw, 46px);
+            line-height: 1.15;
+            letter-spacing: -0.04em;
+        }
+
+        .header__description {
+            max-width: 720px;
+            margin: 14px 0 0;
+            color: var(--muted);
+            font-size: 16px;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .converter {
+            padding: 24px;
+        }
+
+        .format-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .format-label {
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .format-value {
+            display: inline-flex;
+            align-items: center;
+            min-height: 36px;
+            padding: 0 12px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: var(--surface-soft);
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .dropzone {
+            display: grid;
+            place-items: center;
+            min-height: 280px;
+            padding: 32px 20px;
+            border: 2px dashed var(--line-strong);
+            border-radius: 14px;
+            background: var(--surface-soft);
+            text-align: center;
+            transition:
+                    border-color 0.18s ease,
+                    background 0.18s ease,
+                    transform 0.18s ease;
+        }
+
+        .dropzone.is-dragover {
+            border-color: var(--primary);
+            background: #f3f4f6;
+            transform: translateY(-1px);
+        }
+
+        .dropzone__icon {
+            display: grid;
+            place-items: center;
+            width: 58px;
+            height: 58px;
+            margin: 0 auto 16px;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: #fff;
+            font-size: 27px;
+        }
+
+        .dropzone h2 {
+            margin: 0;
+            font-size: 22px;
+            letter-spacing: -0.025em;
+        }
+
+        .dropzone p {
+            max-width: 600px;
+            margin: 9px auto 18px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .file-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            padding: 0 18px;
+            border: 0;
+            border-radius: 10px;
+            background: var(--primary);
+            color: #fff;
+            font-weight: 800;
+            text-decoration: none;
+            transition: background 0.18s ease;
+        }
+
+        .file-button:hover {
+            background: var(--primary-hover);
+        }
+
+        .file-button:focus-visible,
+        .action-button:focus-visible {
+            outline: 3px solid rgba(17, 24, 39, 0.2);
+            outline-offset: 2px;
+        }
+
+        .dropzone__hint {
+            margin-top: 15px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .summary__item {
+            padding: 16px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: var(--surface-soft);
+        }
+
+        .summary__label {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .summary__value {
+            margin-top: 3px;
+            font-size: 22px;
+            font-weight: 900;
+        }
+
+        .queue-card {
+            margin-top: 18px;
+            padding: 24px;
+        }
+
+        .queue-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 14px;
+        }
+
+        .queue-head h2 {
+            margin: 0;
+            font-size: 19px;
+        }
+
+        .clear-button {
+            border: 1px solid var(--line);
+            border-radius: 9px;
+            background: #fff;
+            color: var(--muted);
+            padding: 8px 11px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .clear-button:hover {
+            background: var(--surface-soft);
+            color: var(--text);
+        }
+
+        .queue-empty {
+            padding: 24px 12px;
+            border: 1px dashed var(--line);
+            border-radius: 12px;
+            color: var(--muted);
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .queue-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .queue-item {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 14px;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: #fff;
+        }
+
+        .file-info {
+            min-width: 0;
+        }
+
+        .file-name {
+            overflow: hidden;
+            margin: 0;
+            font-size: 14px;
+            font-weight: 800;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 10px;
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .status {
+            font-weight: 700;
+        }
+
+        .status--working {
+            color: #8a5a00;
+        }
+
+        .status--done {
+            color: var(--success);
+        }
+
+        .status--error {
+            color: var(--danger);
+        }
+
+        .action-button {
+            min-width: 92px;
+            min-height: 40px;
+            padding: 0 13px;
+            border: 1px solid var(--line-strong);
+            border-radius: 9px;
+            background: #fff;
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .action-button:hover:not(:disabled) {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .action-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.45;
+        }
+
+        .notice {
+            margin-top: 18px;
+            padding: 16px 18px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: #fff;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .notice strong {
+            color: var(--text);
+        }
+
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 24px;
+            z-index: 100;
+            max-width: calc(100% - 32px);
+            padding: 11px 15px;
+            border-radius: 10px;
+            background: #111827;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+            transform: translateX(-50%);
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        @media (max-width: 680px) {
+            .page {
+                width: min(100% - 20px, 920px);
+                padding: 28px 0 48px;
+            }
+
+            .converter,
+            .queue-card {
+                padding: 16px;
+            }
+
+            .dropzone {
+                min-height: 240px;
+            }
+
+            .summary {
+                grid-template-columns: 1fr;
+            }
+
+            .queue-item {
+                grid-template-columns: 1fr;
+            }
+
+            .action-button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<main class="page">
+    <header class="header">
+        <p class="header__eyebrow">VIDEO → AUDIO</p>
+        <h1>영상 오디오 추출기</h1>
+        <p class="header__description">
+            영상 파일을 선택하거나 끌어다 놓으면 브라우저 안에서 오디오를 WAV로 변환합니다.
+            변환이 끝난 뒤 <strong>저장하기</strong> 버튼을 눌러 파일을 저장할 수 있습니다.
+            파일은 서버로 업로드하지 않습니다.
+        </p>
+    </header>
+
+    <section class="card converter" aria-label="영상 오디오 변환">
+        <div class="format-row">
+            <span class="format-label">저장 형식</span>
+            <span class="format-value">WAV</span>
+        </div>
+
+        <div
+                id="dropzone"
+                class="dropzone"
+                tabindex="0"
+                role="button"
+                aria-label="영상 파일을 여기에 놓거나 눌러서 선택하세요."
+        >
+            <div>
+                <div class="dropzone__icon" aria-hidden="true">♪</div>
+                <h2>영상 파일을 여기에 놓으세요</h2>
+                <p>
+                    여러 파일을 한 번에 선택할 수 있습니다.
+                    파일은 순서대로 변환되며 완료 후 직접 저장할 수 있습니다.
+                </p>
+
+                <label class="file-button" for="fileInput">
+                    영상 파일 선택
+                </label>
+                <input
+                        id="fileInput"
+                        type="file"
+                        accept="video/*,audio/*"
+                        multiple
+                        hidden
+                >
+
+                <div class="dropzone__hint">
+                    브라우저에서 재생 가능한 MP4, WebM 등의 파일을 권장합니다.
+                </div>
+            </div>
+        </div>
+
+        <div class="summary" aria-live="polite">
+            <div class="summary__item">
+                <div class="summary__label">저장 형식</div>
+                <div class="summary__value">WAV</div>
+            </div>
+
+            <div class="summary__item">
+                <div class="summary__label">전체 파일</div>
+                <div id="totalCount" class="summary__value">0</div>
+            </div>
+
+            <div class="summary__item">
+                <div class="summary__label">변환 완료</div>
+                <div id="processedCount" class="summary__value">0</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="card queue-card" aria-label="변환 목록">
+        <div class="queue-head">
+            <h2>변환 목록</h2>
+            <button id="clearButton" class="clear-button" type="button">
+                목록 비우기
+            </button>
+        </div>
+
+        <div id="queueEmpty" class="queue-empty">
+            아직 선택한 파일이 없습니다.
+        </div>
+
+        <div id="queueList" class="queue-list" aria-live="polite"></div>
+    </section>
+
+    <div class="notice">
+        <strong>안내:</strong>
+        이 페이지는 외부 변환 라이브러리 없이 브라우저 기본 Web Audio API만 사용합니다.
+        따라서 저장 형식은 WAV입니다. 브라우저가 해당 영상의 오디오 코덱을 해석할 수 없는 경우
+        변환되지 않을 수 있습니다.
+    </div>
+</main>
+
+<div id="toast" class="toast" hidden aria-live="polite"></div>
+
+<script>
+    (function () {
+        "use strict";
+
+        var fileInput = document.getElementById("fileInput");
+        var dropzone = document.getElementById("dropzone");
+        var queueList = document.getElementById("queueList");
+        var queueEmpty = document.getElementById("queueEmpty");
+        var totalCount = document.getElementById("totalCount");
+        var processedCount = document.getElementById("processedCount");
+        var clearButton = document.getElementById("clearButton");
+        var toast = document.getElementById("toast");
+
+        var jobs = [];
+        var converting = false;
+        var completed = 0;
+        var toastTimer = null;
+
+        function showToast(message) {
+            clearTimeout(toastTimer);
+            toast.textContent = message;
+            toast.hidden = false;
+
+            toastTimer = setTimeout(function () {
+                toast.hidden = true;
+            }, 2200);
+        }
+
+        function formatBytes(bytes) {
+            if (!bytes) {
+                return "0 B";
+            }
+
+            var units = ["B", "KB", "MB", "GB"];
+            var index = Math.floor(Math.log(bytes) / Math.log(1024));
+            index = Math.min(index, units.length - 1);
+
+            return (
+                (bytes / Math.pow(1024, index)).toFixed(index === 0 ? 0 : 1) +
+                " " +
+                units[index]
+            );
+        }
+
+        function safeBaseName(name) {
+            var base = name.replace(/\.[^.]+$/, "");
+            return (base || "audio")
+            .replace(/[\\/:*?"<>|]+/g, "_")
+            .replace(/\s+/g, " ")
+            .trim();
+        }
+
+        function updateSummary() {
+            totalCount.textContent = String(jobs.length);
+            processedCount.textContent = String(completed);
+            queueEmpty.hidden = jobs.length > 0;
+        }
+
+        function setJobStatus(job, text, className) {
+            job.statusEl.textContent = text;
+            job.statusEl.className = "status " + className;
+        }
+
+        function createJob(file) {
+            var job = {
+                id: Date.now() + "-" + Math.random().toString(36).slice(2),
+                file: file,
+                blob: null,
+                url: null,
+                state: "waiting"
+            };
+
+            var item = document.createElement("article");
+            item.className = "queue-item";
+
+            var info = document.createElement("div");
+            info.className = "file-info";
+
+            var name = document.createElement("p");
+            name.className = "file-name";
+            name.textContent = file.name;
+
+            var meta = document.createElement("div");
+            meta.className = "file-meta";
+
+            var size = document.createElement("span");
+            size.textContent = formatBytes(file.size);
+
+            var status = document.createElement("span");
+            status.className = "status";
+            status.textContent = "대기 중";
+
+            meta.appendChild(size);
+            meta.appendChild(status);
+
+            info.appendChild(name);
+            info.appendChild(meta);
+
+            var saveButton = document.createElement("button");
+            saveButton.type = "button";
+            saveButton.className = "action-button";
+            saveButton.textContent = "저장하기";
+            saveButton.disabled = true;
+
+            saveButton.addEventListener("click", function () {
+                saveJob(job);
+            });
+
+            item.appendChild(info);
+            item.appendChild(saveButton);
+            queueList.appendChild(item);
+
+            job.itemEl = item;
+            job.statusEl = status;
+            job.saveButton = saveButton;
+
+            return job;
+        }
+
+        function addFiles(fileList) {
+            var files = Array.prototype.slice.call(fileList || []);
+
+            files = files.filter(function (file) {
+                return (
+                    file.type.indexOf("video/") === 0 ||
+                    file.type.indexOf("audio/") === 0
+                );
+            });
+
+            if (!files.length) {
+                showToast("지원 가능한 영상 또는 오디오 파일을 선택해 주세요.");
+                return;
+            }
+
+            files.forEach(function (file) {
+                var job = createJob(file);
+                jobs.push(job);
+            });
+
+            updateSummary();
+            processQueue();
+
+            fileInput.value = "";
+        }
+
+        async function processQueue() {
+            if (converting) {
+                return;
+            }
+
+            converting = true;
+
+            try {
+                while (true) {
+                    var job = jobs.find(function (item) {
+                        return item.state === "waiting";
+                    });
+
+                    if (!job) {
+                        break;
+                    }
+
+                    await convertJob(job);
+                }
+            } finally {
+                converting = false;
+            }
+        }
+
+        async function convertJob(job) {
+            job.state = "working";
+            setJobStatus(job, "변환 중", "status--working");
+
+            var AudioContextClass =
+                    window.AudioContext || window.webkitAudioContext;
+
+            if (!AudioContextClass) {
+                job.state = "error";
+                setJobStatus(job, "이 브라우저에서는 변환할 수 없습니다.", "status--error");
+                return;
+            }
+
+            var audioContext = new AudioContextClass();
+
+            try {
+                var arrayBuffer = await job.file.arrayBuffer();
+
+                var audioBuffer = await new Promise(function (resolve, reject) {
+                    var copy = arrayBuffer.slice(0);
+
+                    var result = audioContext.decodeAudioData(
+                        copy,
+                        resolve,
+                        reject
+                    );
+
+                    if (result && typeof result.then === "function") {
+                        result.then(resolve).catch(reject);
+                    }
+                });
+
+                var wavArrayBuffer = audioBufferToWav(audioBuffer);
+                var blob = new Blob(
+                    [wavArrayBuffer],
+                    { type: "audio/wav" }
+                );
+
+                job.blob = blob;
+                job.url = URL.createObjectURL(blob);
+                job.state = "done";
+
+                setJobStatus(job, "변환 완료", "status--done");
+                job.saveButton.disabled = false;
+
+                completed += 1;
+                updateSummary();
+            } catch (error) {
+                console.error(error);
+
+                job.state = "error";
+                setJobStatus(
+                    job,
+                    "오디오 코덱을 읽을 수 없습니다.",
+                    "status--error"
+                );
+            } finally {
+                if (audioContext && audioContext.state !== "closed") {
+                    try {
+                        await audioContext.close();
+                    } catch (ignore) {}
+                }
+            }
+        }
+
+        function audioBufferToWav(audioBuffer) {
+            var channelCount = Math.min(audioBuffer.numberOfChannels, 2);
+            var sampleRate = audioBuffer.sampleRate;
+            var frameCount = audioBuffer.length;
+            var bytesPerSample = 2;
+            var blockAlign = channelCount * bytesPerSample;
+            var byteRate = sampleRate * blockAlign;
+            var dataSize = frameCount * blockAlign;
+
+            var buffer = new ArrayBuffer(44 + dataSize);
+            var view = new DataView(buffer);
+            var offset = 0;
+
+            function writeString(value) {
+                for (var i = 0; i < value.length; i++) {
+                    view.setUint8(offset++, value.charCodeAt(i));
+                }
+            }
+
+            function writeUint16(value) {
+                view.setUint16(offset, value, true);
+                offset += 2;
+            }
+
+            function writeUint32(value) {
+                view.setUint32(offset, value, true);
+                offset += 4;
+            }
+
+            writeString("RIFF");
+            writeUint32(36 + dataSize);
+            writeString("WAVE");
+            writeString("fmt ");
+            writeUint32(16);
+            writeUint16(1);
+            writeUint16(channelCount);
+            writeUint32(sampleRate);
+            writeUint32(byteRate);
+            writeUint16(blockAlign);
+            writeUint16(16);
+            writeString("data");
+            writeUint32(dataSize);
+
+            var channels = [];
+            var ch;
+
+            for (ch = 0; ch < channelCount; ch++) {
+                channels.push(audioBuffer.getChannelData(ch));
+            }
+
+            for (var frame = 0; frame < frameCount; frame++) {
+                for (ch = 0; ch < channelCount; ch++) {
+                    var sample = channels[ch][frame];
+                    sample = Math.max(-1, Math.min(1, sample));
+
+                    var int16 = sample < 0
+                        ? sample * 0x8000
+                        : sample * 0x7fff;
+
+                    view.setInt16(offset, int16, true);
+                    offset += 2;
+                }
+            }
+
+            return buffer;
+        }
+
+        function saveJob(job) {
+            if (!job.url || !job.blob) {
+                return;
+            }
+
+            var anchor = document.createElement("a");
+            anchor.href = job.url;
+            anchor.download = safeBaseName(job.file.name) + ".wav";
+
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+
+            showToast("WAV 파일 저장을 시작했습니다.");
+        }
+
+        function clearJobs() {
+            if (converting) {
+                showToast("변환 중에는 목록을 비울 수 없습니다.");
+                return;
+            }
+
+            jobs.forEach(function (job) {
+                if (job.url) {
+                    URL.revokeObjectURL(job.url);
+                }
+            });
+
+            jobs = [];
+            completed = 0;
+            queueList.innerHTML = "";
+            updateSummary();
+        }
+
+        fileInput.addEventListener("change", function () {
+            addFiles(fileInput.files);
+        });
+
+        dropzone.addEventListener("click", function (event) {
+            if (event.target.closest("label")) {
+                return;
+            }
+
+            fileInput.click();
+        });
+
+        dropzone.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                fileInput.click();
+            }
+        });
+
+        ["dragenter", "dragover"].forEach(function (eventName) {
+            dropzone.addEventListener(eventName, function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                dropzone.classList.add("is-dragover");
+            });
+        });
+
+        ["dragleave", "drop"].forEach(function (eventName) {
+            dropzone.addEventListener(eventName, function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                dropzone.classList.remove("is-dragover");
+            });
+        });
+
+        dropzone.addEventListener("drop", function (event) {
+            addFiles(event.dataTransfer.files);
+        });
+
+        clearButton.addEventListener("click", clearJobs);
+
+        window.addEventListener("beforeunload", function () {
+            jobs.forEach(function (job) {
+                if (job.url) {
+                    URL.revokeObjectURL(job.url);
+                }
+            });
+        });
+
+        updateSummary();
+    })();
+</script>
+</body>
+</html>
