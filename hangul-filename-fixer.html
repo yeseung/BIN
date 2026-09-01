@@ -1,0 +1,2390 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, viewport-fit=cover"
+    >
+
+    <meta
+            name="description"
+            content="자소가 분리된 한글 파일명과 텍스트를 NFC 방식으로 변환합니다."
+    >
+
+    <title>자모야 모여라 - 한글 파일명 자소 분리 수정</title>
+
+    <style>
+        /* =========================================================
+           Reset
+        ========================================================= */
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            margin: 0;
+            min-width: 320px;
+            background: #f7f8fa;
+            color: #17191c;
+
+            font-family:
+                    Pretendard,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    "Noto Sans KR",
+                    "Apple SD Gothic Neo",
+                    Arial,
+                    sans-serif;
+
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        button,
+        input,
+        textarea {
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+        }
+
+        img,
+        svg {
+            display: block;
+        }
+
+        a {
+            color: inherit;
+        }
+
+
+        /* =========================================================
+           Layout
+        ========================================================= */
+
+        .page {
+            min-height: 100vh;
+        }
+
+        .container {
+            width: min(100% - 32px, 920px);
+            margin: 0 auto;
+        }
+
+
+        /* =========================================================
+           Header
+        ========================================================= */
+
+        .site-header {
+            background: #ffffff;
+            border-bottom: 1px solid #e8eaed;
+        }
+
+        .site-header-inner {
+            min-height: 68px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 16px;
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+
+            color: #111827;
+            text-decoration: none;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+        }
+
+        .brand-icon {
+            width: 34px;
+            height: 34px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 10px;
+            background: #111827;
+            color: #ffffff;
+
+            font-size: 15px;
+            font-weight: 900;
+        }
+
+        .brand-text {
+            font-size: 18px;
+        }
+
+        .header-badge {
+            padding: 6px 10px;
+
+            border: 1px solid #e5e7eb;
+            border-radius: 999px;
+
+            background: #ffffff;
+            color: #6b7280;
+
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+
+        /* =========================================================
+           Hero
+        ========================================================= */
+
+        .hero {
+            padding: 72px 0 38px;
+            text-align: center;
+        }
+
+        .hero-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+
+            margin-bottom: 14px;
+            padding: 7px 12px;
+
+            border: 1px solid #dfe3e8;
+            border-radius: 999px;
+
+            background: #ffffff;
+            color: #4b5563;
+
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .hero h1 {
+            margin: 0;
+
+            color: #111827;
+
+            font-size: clamp(32px, 6vw, 50px);
+            line-height: 1.15;
+            letter-spacing: -0.055em;
+        }
+
+        .hero-description {
+            max-width: 640px;
+            margin: 20px auto 0;
+
+            color: #6b7280;
+
+            font-size: 17px;
+            line-height: 1.75;
+            letter-spacing: -0.015em;
+        }
+
+        .hero-example {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+
+            gap: 10px;
+
+            margin-top: 24px;
+        }
+
+        .example-code {
+            padding: 7px 11px;
+
+            border: 1px solid #e1e4e8;
+            border-radius: 8px;
+
+            background: #ffffff;
+            color: #374151;
+
+            font-family:
+                    "SFMono-Regular",
+                    Consolas,
+                    "Liberation Mono",
+                    monospace;
+
+            font-size: 14px;
+        }
+
+        .example-arrow {
+            color: #9ca3af;
+            font-weight: 700;
+        }
+
+
+        /* =========================================================
+           Main card
+        ========================================================= */
+
+        .tool-card {
+            margin-bottom: 28px;
+
+            border: 1px solid #e1e4e8;
+            border-radius: 18px;
+
+            background: #ffffff;
+
+            box-shadow:
+                    0 1px 2px rgba(0, 0, 0, 0.02),
+                    0 8px 30px rgba(0, 0, 0, 0.035);
+
+            overflow: hidden;
+        }
+
+
+        /* =========================================================
+           Tabs
+        ========================================================= */
+
+        .tabs {
+            display: flex;
+
+            padding: 8px;
+
+            border-bottom: 1px solid #eceef1;
+
+            background: #fafafa;
+        }
+
+        .tab-button {
+            flex: 1;
+
+            min-height: 46px;
+            padding: 8px 16px;
+
+            border: 0;
+            border-radius: 10px;
+
+            background: transparent;
+            color: #6b7280;
+
+            font-weight: 700;
+        }
+
+        .tab-button:hover {
+            color: #111827;
+        }
+
+        .tab-button.active {
+            background: #ffffff;
+            color: #111827;
+
+            box-shadow:
+                    0 1px 3px rgba(0, 0, 0, 0.08),
+                    inset 0 0 0 1px #e5e7eb;
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+
+        /* =========================================================
+           File panel
+        ========================================================= */
+
+        .panel-body {
+            padding: 28px;
+        }
+
+        .drop-zone {
+            min-height: 260px;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+
+            padding: 36px 24px;
+
+            border: 2px dashed #d1d5db;
+            border-radius: 14px;
+
+            background: #fcfcfd;
+
+            text-align: center;
+
+            transition:
+                    border-color 0.16s ease,
+                    background-color 0.16s ease,
+                    transform 0.16s ease;
+        }
+
+        .drop-zone:hover {
+            border-color: #9ca3af;
+            background: #fafafa;
+        }
+
+        .drop-zone.drag-over {
+            border-color: #111827;
+            background: #f5f6f7;
+            transform: scale(1.005);
+        }
+
+        .drop-icon {
+            width: 58px;
+            height: 58px;
+
+            display: grid;
+            place-items: center;
+
+            margin-bottom: 18px;
+
+            border: 1px solid #e1e4e8;
+            border-radius: 16px;
+
+            background: #ffffff;
+            color: #374151;
+        }
+
+        .drop-icon svg {
+            width: 27px;
+            height: 27px;
+        }
+
+        .drop-title {
+            margin: 0;
+
+            color: #111827;
+
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+        }
+
+        .drop-description {
+            margin: 8px 0 0;
+
+            color: #8a9099;
+
+            font-size: 14px;
+        }
+
+        .select-button {
+            margin-top: 22px;
+        }
+
+        .file-input {
+            position: absolute;
+
+            width: 1px;
+            height: 1px;
+
+            padding: 0;
+            margin: -1px;
+
+            overflow: hidden;
+
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+
+            border: 0;
+        }
+
+
+        /* =========================================================
+           Buttons
+        ========================================================= */
+
+        .button {
+            min-height: 42px;
+            padding: 9px 16px;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            gap: 7px;
+
+            border: 1px solid transparent;
+            border-radius: 9px;
+
+            text-decoration: none;
+            font-weight: 750;
+
+            transition:
+                    background-color 0.15s ease,
+                    border-color 0.15s ease,
+                    color 0.15s ease,
+                    opacity 0.15s ease;
+        }
+
+        .button-primary {
+            border-color: #111827;
+            background: #111827;
+            color: #ffffff;
+        }
+
+        .button-primary:hover:not(:disabled) {
+            background: #292f3a;
+        }
+
+        .button-secondary {
+            border-color: #dfe3e8;
+            background: #ffffff;
+            color: #374151;
+        }
+
+        .button-secondary:hover:not(:disabled) {
+            background: #f8f9fa;
+            border-color: #cfd4da;
+        }
+
+        .button-danger {
+            border-color: #eadcdc;
+            background: #ffffff;
+            color: #a64242;
+        }
+
+        .button-danger:hover:not(:disabled) {
+            background: #fff8f8;
+        }
+
+        .button:disabled {
+            opacity: 0.42;
+        }
+
+
+        /* =========================================================
+           File result
+        ========================================================= */
+
+        .file-result {
+            display: none;
+            margin-top: 24px;
+        }
+
+        .file-result.visible {
+            display: block;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 16px;
+
+            margin-bottom: 12px;
+        }
+
+        .result-title {
+            margin: 0;
+
+            color: #111827;
+
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .result-count {
+            color: #7a818c;
+            font-size: 13px;
+        }
+
+        .file-list {
+            margin: 0;
+            padding: 0;
+
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+
+            list-style: none;
+            overflow: hidden;
+        }
+
+        .file-item {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: center;
+
+            gap: 14px;
+
+            padding: 15px 16px;
+
+            border-bottom: 1px solid #eceef1;
+        }
+
+        .file-item:last-child {
+            border-bottom: 0;
+        }
+
+        .file-info {
+            min-width: 0;
+        }
+
+        .file-name-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+
+            gap: 6px;
+
+            min-width: 0;
+        }
+
+        .original-name,
+        .converted-name {
+            max-width: 100%;
+
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+
+            font-size: 14px;
+        }
+
+        .original-name {
+            color: #8a9099;
+        }
+
+        .converted-name {
+            color: #111827;
+            font-weight: 700;
+        }
+
+        .filename-arrow {
+            color: #b1b5bc;
+        }
+
+        .file-meta {
+            margin-top: 4px;
+
+            color: #9ca3af;
+            font-size: 12px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+
+            padding: 3px 7px;
+
+            border-radius: 999px;
+
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .status-changed {
+            background: #edf7ef;
+            color: #28743a;
+        }
+
+        .status-same {
+            background: #f3f4f6;
+            color: #747b85;
+        }
+
+        .item-download {
+            min-height: 35px;
+            padding: 6px 11px;
+
+            border: 1px solid #dfe3e8;
+            border-radius: 8px;
+
+            background: #ffffff;
+            color: #374151;
+
+            font-size: 12px;
+            font-weight: 750;
+        }
+
+        .item-download:hover {
+            background: #f8f9fa;
+        }
+
+        .result-actions {
+            display: flex;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+
+            gap: 9px;
+
+            margin-top: 14px;
+        }
+
+
+        /* =========================================================
+           Text panel
+        ========================================================= */
+
+        .text-section + .text-section {
+            margin-top: 22px;
+        }
+
+        .field-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 12px;
+
+            margin-bottom: 9px;
+        }
+
+        .field-label {
+            color: #353a40;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .field-count {
+            color: #9ca3af;
+            font-size: 12px;
+        }
+
+        .textarea {
+            display: block;
+
+            width: 100%;
+            min-height: 170px;
+            padding: 15px 16px;
+
+            resize: vertical;
+
+            border: 1px solid #dfe3e8;
+            border-radius: 10px;
+
+            outline: none;
+
+            background: #ffffff;
+            color: #20242a;
+
+            line-height: 1.7;
+
+            transition:
+                    border-color 0.15s ease,
+                    box-shadow 0.15s ease;
+        }
+
+        .textarea:focus {
+            border-color: #9da3ab;
+
+            box-shadow:
+                    0 0 0 3px rgba(17, 24, 39, 0.06);
+        }
+
+        .textarea::placeholder {
+            color: #adb2b9;
+        }
+
+        .textarea-result {
+            background: #fafafa;
+        }
+
+        .text-actions {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+
+            gap: 10px;
+
+            margin-top: 12px;
+        }
+
+        .text-actions-group {
+            display: flex;
+            flex-wrap: wrap;
+
+            gap: 8px;
+        }
+
+
+        /* =========================================================
+           Information
+        ========================================================= */
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+
+            gap: 14px;
+
+            margin-bottom: 28px;
+        }
+
+        .info-card {
+            padding: 22px;
+
+            border: 1px solid #e3e6ea;
+            border-radius: 14px;
+
+            background: #ffffff;
+        }
+
+        .info-icon {
+            width: 38px;
+            height: 38px;
+
+            display: grid;
+            place-items: center;
+
+            margin-bottom: 14px;
+
+            border-radius: 10px;
+
+            background: #f4f5f7;
+            color: #30353b;
+
+            font-size: 18px;
+        }
+
+        .info-card h2 {
+            margin: 0;
+
+            color: #23272d;
+
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .info-card p {
+            margin: 7px 0 0;
+
+            color: #7a818b;
+
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+
+        /* =========================================================
+           Details
+        ========================================================= */
+
+        .details-card {
+            margin-bottom: 56px;
+            padding: 26px 28px;
+
+            border: 1px solid #e3e6ea;
+            border-radius: 14px;
+
+            background: #ffffff;
+        }
+
+        .details-card h2 {
+            margin: 0 0 14px;
+
+            color: #20242a;
+
+            font-size: 18px;
+            letter-spacing: -0.025em;
+        }
+
+        .details-card p {
+            margin: 0;
+
+            color: #69717c;
+
+            font-size: 14px;
+            line-height: 1.85;
+        }
+
+        .details-card p + p {
+            margin-top: 12px;
+        }
+
+        .inline-code {
+            padding: 2px 6px;
+
+            border: 1px solid #e5e7eb;
+            border-radius: 5px;
+
+            background: #f6f7f8;
+            color: #343941;
+
+            font-family:
+                    "SFMono-Regular",
+                    Consolas,
+                    monospace;
+
+            font-size: 0.9em;
+        }
+
+
+        /* =========================================================
+           Toast
+        ========================================================= */
+
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 24px;
+            z-index: 1000;
+
+            max-width: calc(100% - 32px);
+            padding: 11px 16px;
+
+            border-radius: 9px;
+
+            background: #1f2328;
+            color: #ffffff;
+
+            font-size: 13px;
+            font-weight: 700;
+
+            opacity: 0;
+            pointer-events: none;
+
+            transform: translate(-50%, 12px);
+
+            transition:
+                    opacity 0.18s ease,
+                    transform 0.18s ease;
+        }
+
+        .toast.visible {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+
+
+        /* =========================================================
+           Footer
+        ========================================================= */
+
+        .footer {
+            padding: 28px 0;
+
+            border-top: 1px solid #e5e7eb;
+
+            background: #ffffff;
+        }
+
+        .footer-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 18px;
+
+            color: #8a9099;
+
+            font-size: 12px;
+        }
+
+        .footer-note {
+            margin: 0;
+        }
+
+
+        /* =========================================================
+           Responsive
+        ========================================================= */
+
+        @media (max-width: 720px) {
+            .container {
+                width: min(100% - 24px, 920px);
+            }
+
+            .site-header-inner {
+                min-height: 60px;
+            }
+
+            .header-badge {
+                display: none;
+            }
+
+            .hero {
+                padding-top: 52px;
+            }
+
+            .hero-description {
+                font-size: 15px;
+            }
+
+            .panel-body {
+                padding: 18px;
+            }
+
+            .drop-zone {
+                min-height: 230px;
+                padding: 28px 16px;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .file-item {
+                grid-template-columns: 1fr;
+            }
+
+            .item-download {
+                width: 100%;
+            }
+
+            .result-actions {
+                display: grid;
+                grid-template-columns: 1fr;
+            }
+
+            .result-actions .button {
+                width: 100%;
+            }
+
+            .details-card {
+                padding: 22px;
+            }
+
+            .footer-inner {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        @media (max-width: 440px) {
+            .hero h1 {
+                font-size: 34px;
+            }
+
+            .hero-example {
+                flex-direction: column;
+            }
+
+            .example-arrow {
+                transform: rotate(90deg);
+            }
+
+            .text-actions {
+                display: grid;
+                grid-template-columns: 1fr;
+            }
+
+            .text-actions-group {
+                display: grid;
+                grid-template-columns: 1fr;
+            }
+
+            .text-actions .button {
+                width: 100%;
+            }
+        }
+
+
+        /* =========================================================
+           Accessibility
+        ========================================================= */
+
+        .button:focus-visible,
+        .tab-button:focus-visible,
+        .item-download:focus-visible,
+        .drop-zone:focus-visible {
+            outline: 3px solid rgba(17, 24, 39, 0.18);
+            outline-offset: 2px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                transition-duration: 0.01ms !important;
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="page">
+
+    <!-- =========================================================
+         Header
+    ========================================================== -->
+
+    <header class="site-header">
+        <div class="container site-header-inner">
+
+            <a href="" class="brand" aria-label="자모야 모여라 홈">
+                <span class="brand-icon">가</span>
+                <span class="brand-text">자모야 모여라</span>
+            </a>
+
+            <span class="header-badge">
+                브라우저에서 안전하게 처리
+            </span>
+
+        </div>
+    </header>
+
+
+    <main>
+
+        <!-- =====================================================
+             Hero
+        ====================================================== -->
+
+        <section class="hero">
+
+            <div class="container">
+
+                <div class="hero-eyebrow">
+                    한글 자소 분리 해결
+                </div>
+
+                <h1>
+                    자모야 모여라
+                </h1>
+
+                <p class="hero-description">
+                    macOS 등에서 자소가 분리된 한글 파일명과 문자열을
+                    완성형 한글로 간단하게 변환합니다.
+                    모든 작업은 브라우저 안에서 이루어집니다.
+                </p>
+
+                <div
+                        class="hero-example"
+                        aria-label="변환 예시"
+                >
+                    <code
+                            class="example-code"
+                            id="exampleBefore"
+                    ></code>
+
+                    <span
+                            class="example-arrow"
+                            aria-hidden="true"
+                    >
+                        →
+                    </span>
+
+                    <code
+                            class="example-code"
+                            id="exampleAfter"
+                    ></code>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             Tool
+        ====================================================== -->
+
+        <section class="container">
+
+            <div class="tool-card">
+
+                <!-- Tabs -->
+
+                <div
+                        class="tabs"
+                        role="tablist"
+                        aria-label="변환 방법"
+                >
+
+                    <button
+                            type="button"
+                            class="tab-button active"
+                            id="fileTab"
+                            role="tab"
+                            aria-selected="true"
+                            aria-controls="filePanel"
+                            data-tab="file"
+                    >
+                        파일명 변환
+                    </button>
+
+                    <button
+                            type="button"
+                            class="tab-button"
+                            id="textTab"
+                            role="tab"
+                            aria-selected="false"
+                            aria-controls="textPanel"
+                            data-tab="text"
+                    >
+                        텍스트 변환
+                    </button>
+
+                </div>
+
+
+                <!-- =================================================
+                     File panel
+                ================================================== -->
+
+                <div
+                        class="tab-panel active"
+                        id="filePanel"
+                        role="tabpanel"
+                        aria-labelledby="fileTab"
+                >
+
+                    <div class="panel-body">
+
+                        <div
+                                class="drop-zone"
+                                id="dropZone"
+                                tabindex="0"
+                                role="button"
+                                aria-label="파일을 선택하거나 이곳에 파일을 놓으세요"
+                        >
+
+                            <div
+                                    class="drop-icon"
+                                    aria-hidden="true"
+                            >
+                                <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.8"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                >
+                                    <path d="M12 16V4"></path>
+                                    <path d="m7 9 5-5 5 5"></path>
+                                    <path d="M5 20h14"></path>
+                                </svg>
+                            </div>
+
+                            <p class="drop-title">
+                                파일을 여기에 끌어다 놓으세요
+                            </p>
+
+                            <p class="drop-description">
+                                여러 파일을 한 번에 선택할 수 있습니다.
+                            </p>
+
+                            <button
+                                    type="button"
+                                    class="button button-primary select-button"
+                                    id="selectFileButton"
+                            >
+                                파일 선택
+                            </button>
+
+                            <input
+                                    type="file"
+                                    class="file-input"
+                                    id="fileInput"
+                                    multiple
+                            >
+
+                        </div>
+
+
+                        <!-- File results -->
+
+                        <section
+                                class="file-result"
+                                id="fileResult"
+                                aria-live="polite"
+                        >
+
+                            <div class="result-header">
+
+                                <h2 class="result-title">
+                                    변환 결과
+                                </h2>
+
+                                <span
+                                        class="result-count"
+                                        id="resultCount"
+                                >
+                                    0개
+                                </span>
+
+                            </div>
+
+
+                            <ul
+                                    class="file-list"
+                                    id="fileList"
+                            ></ul>
+
+
+                            <div class="result-actions">
+
+                                <button
+                                        type="button"
+                                        class="button button-secondary"
+                                        id="addFileButton"
+                                >
+                                    파일 추가
+                                </button>
+
+                                <button
+                                        type="button"
+                                        class="button button-danger"
+                                        id="clearFileButton"
+                                >
+                                    모두 지우기
+                                </button>
+
+                                <button
+                                        type="button"
+                                        class="button button-primary"
+                                        id="downloadAllButton"
+                                >
+                                    모두 다운로드
+                                </button>
+
+                            </div>
+
+                        </section>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     Text panel
+                ================================================== -->
+
+                <div
+                        class="tab-panel"
+                        id="textPanel"
+                        role="tabpanel"
+                        aria-labelledby="textTab"
+                >
+
+                    <div class="panel-body">
+
+                        <div class="text-section">
+
+                            <div class="field-header">
+
+                                <label
+                                        for="textInput"
+                                        class="field-label"
+                                >
+                                    변환할 텍스트
+                                </label>
+
+                                <span
+                                        class="field-count"
+                                        id="inputCount"
+                                >
+                                    0자
+                                </span>
+
+                            </div>
+
+                            <textarea
+                                    class="textarea"
+                                    id="textInput"
+                                    spellcheck="false"
+                                    placeholder="자소가 분리된 한글을 붙여 넣으세요."
+                            ></textarea>
+
+                        </div>
+
+
+                        <div class="text-section">
+
+                            <div class="field-header">
+
+                                <label
+                                        for="textOutput"
+                                        class="field-label"
+                                >
+                                    변환 결과
+                                </label>
+
+                                <span
+                                        class="field-count"
+                                        id="outputCount"
+                                >
+                                    0자
+                                </span>
+
+                            </div>
+
+                            <textarea
+                                    class="textarea textarea-result"
+                                    id="textOutput"
+                                    readonly
+                                    spellcheck="false"
+                                    placeholder="변환 결과가 이곳에 표시됩니다."
+                            ></textarea>
+
+
+                            <div class="text-actions">
+
+                                <div class="text-actions-group">
+
+                                    <button
+                                            type="button"
+                                            class="button button-secondary"
+                                            id="sampleButton"
+                                    >
+                                        예제 입력
+                                    </button>
+
+                                    <button
+                                            type="button"
+                                            class="button button-secondary"
+                                            id="clearTextButton"
+                                    >
+                                        지우기
+                                    </button>
+
+                                </div>
+
+
+                                <button
+                                        type="button"
+                                        class="button button-primary"
+                                        id="copyButton"
+                                        disabled
+                                >
+                                    결과 복사
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             Feature cards
+        ====================================================== -->
+
+        <section class="container">
+
+            <div class="info-grid">
+
+                <article class="info-card">
+
+                    <div
+                            class="info-icon"
+                            aria-hidden="true"
+                    >
+                        🔒
+                    </div>
+
+                    <h2>
+                        서버 전송 없음
+                    </h2>
+
+                    <p>
+                        파일 내용이나 파일명이 서버에 업로드되지 않습니다.
+                        브라우저에서 직접 변환합니다.
+                    </p>
+
+                </article>
+
+
+                <article class="info-card">
+
+                    <div
+                            class="info-icon"
+                            aria-hidden="true"
+                    >
+                        ⚡
+                    </div>
+
+                    <h2>
+                        빠른 일괄 변환
+                    </h2>
+
+                    <p>
+                        여러 파일을 동시에 불러와 파일명을 한꺼번에
+                        NFC 형식으로 정규화할 수 있습니다.
+                    </p>
+
+                </article>
+
+
+                <article class="info-card">
+
+                    <div
+                            class="info-icon"
+                            aria-hidden="true"
+                    >
+                        가
+                    </div>
+
+                    <h2>
+                        텍스트도 지원
+                    </h2>
+
+                    <p>
+                        파일뿐 아니라 복사한 문자열도 바로 변환하고
+                        클립보드에 복사할 수 있습니다.
+                    </p>
+
+                </article>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             Description
+        ====================================================== -->
+
+        <section class="container">
+
+            <div class="details-card">
+
+                <h2>
+                    한글 파일명이 왜 분리되나요?
+                </h2>
+
+                <p>
+                    운영체제와 프로그램에 따라 한글을 저장하는
+                    유니코드 정규화 방식이 다를 수 있습니다.
+                    그 결과 다른 환경에서 파일을 열었을 때
+                    한글 자음과 모음이 분리된 것처럼 보일 수 있습니다.
+                </p>
+
+                <p>
+                    이 페이지는 JavaScript의
+                    <code class="inline-code">normalize("NFC")</code>
+                    기능을 이용해 문자열을 NFC 방식으로 정규화합니다.
+                    파일을 선택한 경우 파일 내용 자체는 수정하지 않고,
+                    다운로드할 때 정규화된 파일명을 사용합니다.
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- =========================================================
+         Footer
+    ========================================================== -->
+
+    <footer class="footer">
+
+        <div class="container footer-inner">
+
+            <p class="footer-note">
+                자모야 모여라 · 한글 Unicode NFC 변환 도구
+            </p>
+
+            <p class="footer-note">
+                파일은 서버로 전송되지 않습니다.
+            </p>
+
+        </div>
+
+    </footer>
+
+</div>
+
+
+<!-- Toast -->
+
+<div
+        class="toast"
+        id="toast"
+        role="status"
+        aria-live="polite"
+></div>
+
+
+<script>
+    (function () {
+        "use strict";
+
+
+        /* =========================================================
+           Elements
+        ========================================================= */
+
+        var tabButtons = document.querySelectorAll(".tab-button");
+        var tabPanels = document.querySelectorAll(".tab-panel");
+
+        var fileInput = document.getElementById("fileInput");
+        var selectFileButton = document.getElementById("selectFileButton");
+        var addFileButton = document.getElementById("addFileButton");
+
+        var dropZone = document.getElementById("dropZone");
+
+        var fileResult = document.getElementById("fileResult");
+        var fileList = document.getElementById("fileList");
+        var resultCount = document.getElementById("resultCount");
+
+        var downloadAllButton = document.getElementById("downloadAllButton");
+        var clearFileButton = document.getElementById("clearFileButton");
+
+        var textInput = document.getElementById("textInput");
+        var textOutput = document.getElementById("textOutput");
+
+        var inputCount = document.getElementById("inputCount");
+        var outputCount = document.getElementById("outputCount");
+
+        var sampleButton = document.getElementById("sampleButton");
+        var clearTextButton = document.getElementById("clearTextButton");
+        var copyButton = document.getElementById("copyButton");
+
+        var toast = document.getElementById("toast");
+
+        var exampleBefore = document.getElementById("exampleBefore");
+        var exampleAfter = document.getElementById("exampleAfter");
+
+
+        /* =========================================================
+           State
+        ========================================================= */
+
+        var selectedFiles = [];
+        var toastTimer = null;
+
+
+        /* =========================================================
+           NFC normalization
+        ========================================================= */
+
+        function normalizeNFC(value) {
+            if (typeof value !== "string") {
+                return "";
+            }
+
+            if (typeof value.normalize !== "function") {
+                return value;
+            }
+
+            return value.normalize("NFC");
+        }
+
+
+        /*
+         * 예제 문자열을 코드포인트로 직접 만듭니다.
+         *
+         * ᄇ + ᅩ = 보
+         * ᄀ + ᅩ = 고
+         * ᄉ + ᅥ = 서
+         */
+
+        var sampleNFD =
+                "\u1107\u1169" +
+                "\u1100\u1169" +
+                "\u1109\u1165" +
+                ".pdf";
+
+
+        exampleBefore.textContent = sampleNFD;
+        exampleAfter.textContent = normalizeNFC(sampleNFD);
+
+
+        /* =========================================================
+           Tabs
+        ========================================================= */
+
+        function activateTab(name) {
+            var i;
+
+            for (i = 0; i < tabButtons.length; i++) {
+                var button = tabButtons[i];
+
+                var active =
+                        button.getAttribute("data-tab") === name;
+
+                button.classList.toggle("active", active);
+
+                button.setAttribute(
+                    "aria-selected",
+                    active ? "true" : "false"
+                );
+            }
+
+            for (i = 0; i < tabPanels.length; i++) {
+                var panel = tabPanels[i];
+
+                var shouldShow =
+                        panel.id === name + "Panel";
+
+                panel.classList.toggle(
+                    "active",
+                    shouldShow
+                );
+            }
+        }
+
+
+        for (var i = 0; i < tabButtons.length; i++) {
+            tabButtons[i].addEventListener(
+                "click",
+                function () {
+                    activateTab(
+                        this.getAttribute("data-tab")
+                    );
+                }
+            );
+        }
+
+
+        /* =========================================================
+           File selection
+        ========================================================= */
+
+        function openFileDialog() {
+            fileInput.click();
+        }
+
+
+        selectFileButton.addEventListener(
+            "click",
+            function (event) {
+                event.stopPropagation();
+                openFileDialog();
+            }
+        );
+
+
+        addFileButton.addEventListener(
+            "click",
+            openFileDialog
+        );
+
+
+        dropZone.addEventListener(
+            "click",
+            function (event) {
+                if (
+                    event.target === selectFileButton ||
+                    selectFileButton.contains(event.target)
+                ) {
+                    return;
+                }
+
+                openFileDialog();
+            }
+        );
+
+
+        dropZone.addEventListener(
+            "keydown",
+            function (event) {
+                if (
+                    event.key === "Enter" ||
+                    event.key === " "
+                ) {
+                    event.preventDefault();
+                    openFileDialog();
+                }
+            }
+        );
+
+
+        fileInput.addEventListener(
+            "change",
+            function () {
+                addFiles(fileInput.files);
+
+                /*
+                 * 같은 파일을 다시 선택할 수 있도록 초기화
+                 */
+                fileInput.value = "";
+            }
+        );
+
+
+        /* =========================================================
+           Drag and drop
+        ========================================================= */
+
+        function preventDefaults(event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+
+        [
+            "dragenter",
+            "dragover",
+            "dragleave",
+            "drop"
+        ].forEach(function (eventName) {
+
+            dropZone.addEventListener(
+                eventName,
+                preventDefaults,
+                false
+            );
+
+        });
+
+
+        [
+            "dragenter",
+            "dragover"
+        ].forEach(function (eventName) {
+
+            dropZone.addEventListener(
+                eventName,
+                function () {
+                    dropZone.classList.add("drag-over");
+                },
+                false
+            );
+
+        });
+
+
+        [
+            "dragleave",
+            "drop"
+        ].forEach(function (eventName) {
+
+            dropZone.addEventListener(
+                eventName,
+                function () {
+                    dropZone.classList.remove("drag-over");
+                },
+                false
+            );
+
+        });
+
+
+        dropZone.addEventListener(
+            "drop",
+            function (event) {
+                var files = event.dataTransfer.files;
+
+                if (files && files.length) {
+                    addFiles(files);
+                }
+            }
+        );
+
+
+        /* =========================================================
+           Add files
+        ========================================================= */
+
+        function addFiles(fileListObject) {
+            if (!fileListObject || !fileListObject.length) {
+                return;
+            }
+
+            for (
+                var i = 0;
+                i < fileListObject.length;
+                i++
+            ) {
+                selectedFiles.push(fileListObject[i]);
+            }
+
+            renderFiles();
+
+            showToast(
+                fileListObject.length + "개 파일을 추가했습니다."
+            );
+        }
+
+
+        /* =========================================================
+           File utilities
+        ========================================================= */
+
+        function formatBytes(bytes) {
+            if (bytes === 0) {
+                return "0 B";
+            }
+
+            if (!bytes) {
+                return "";
+            }
+
+            var units = [
+                "B",
+                "KB",
+                "MB",
+                "GB",
+                "TB"
+            ];
+
+            var index = Math.floor(
+                Math.log(bytes) / Math.log(1024)
+            );
+
+            if (index < 0) {
+                index = 0;
+            }
+
+            if (index >= units.length) {
+                index = units.length - 1;
+            }
+
+            var size =
+                    bytes / Math.pow(1024, index);
+
+            return (
+                size.toFixed(index === 0 ? 0 : 1) +
+                " " +
+                units[index]
+            );
+        }
+
+
+        function getConvertedFilename(filename) {
+            return normalizeNFC(filename);
+        }
+
+
+        function createTextElement(
+            tagName,
+            className,
+            text
+        ) {
+            var element =
+                    document.createElement(tagName);
+
+            if (className) {
+                element.className = className;
+            }
+
+            element.textContent = text;
+
+            return element;
+        }
+
+
+        /* =========================================================
+           Render file list
+        ========================================================= */
+
+        function renderFiles() {
+            fileList.innerHTML = "";
+
+            var changedCount = 0;
+
+
+            for (
+                var i = 0;
+                i < selectedFiles.length;
+                i++
+            ) {
+                (function (index) {
+
+                    var file = selectedFiles[index];
+
+                    var convertedName =
+                            getConvertedFilename(file.name);
+
+                    var changed =
+                            file.name !== convertedName;
+
+
+                    if (changed) {
+                        changedCount++;
+                    }
+
+
+                    var item =
+                            document.createElement("li");
+
+                    item.className = "file-item";
+
+
+                    /* -----------------------------------------
+                       File info
+                    ----------------------------------------- */
+
+                    var info =
+                            document.createElement("div");
+
+                    info.className = "file-info";
+
+
+                    var nameRow =
+                            document.createElement("div");
+
+                    nameRow.className = "file-name-row";
+
+
+                    if (changed) {
+
+                        nameRow.appendChild(
+                            createTextElement(
+                                "span",
+                                "original-name",
+                                file.name
+                            )
+                        );
+
+
+                        nameRow.appendChild(
+                            createTextElement(
+                                "span",
+                                "filename-arrow",
+                                "→"
+                            )
+                        );
+
+
+                        nameRow.appendChild(
+                            createTextElement(
+                                "span",
+                                "converted-name",
+                                convertedName
+                            )
+                        );
+
+                    } else {
+
+                        nameRow.appendChild(
+                            createTextElement(
+                                "span",
+                                "converted-name",
+                                file.name
+                            )
+                        );
+
+                    }
+
+
+                    var badge =
+                            createTextElement(
+                                "span",
+                                "status-badge " +
+                                (
+                                    changed
+                                        ? "status-changed"
+                                        : "status-same"
+                                ),
+                                changed
+                                    ? "변환됨"
+                                    : "변경 없음"
+                            );
+
+
+                    nameRow.appendChild(badge);
+
+
+                    var meta =
+                            createTextElement(
+                                "div",
+                                "file-meta",
+                                formatBytes(file.size)
+                            );
+
+
+                    info.appendChild(nameRow);
+                    info.appendChild(meta);
+
+
+                    /* -----------------------------------------
+                       Download
+                    ----------------------------------------- */
+
+                    var downloadButton =
+                            document.createElement("button");
+
+                    downloadButton.type = "button";
+
+                    downloadButton.className =
+                        "item-download";
+
+                    downloadButton.textContent =
+                        changed
+                            ? "변환 파일 다운로드"
+                            : "다운로드";
+
+
+                    downloadButton.addEventListener(
+                        "click",
+                        function () {
+                            downloadFile(file);
+                        }
+                    );
+
+
+                    item.appendChild(info);
+                    item.appendChild(downloadButton);
+
+                    fileList.appendChild(item);
+
+                })(i);
+            }
+
+
+            if (selectedFiles.length > 0) {
+                fileResult.classList.add("visible");
+            } else {
+                fileResult.classList.remove("visible");
+            }
+
+
+            resultCount.textContent =
+                selectedFiles.length +
+                "개 파일 · " +
+                changedCount +
+                "개 변환";
+
+            downloadAllButton.disabled =
+                selectedFiles.length === 0;
+        }
+
+
+        /* =========================================================
+           Download file
+        ========================================================= */
+
+        function downloadFile(file) {
+            var filename =
+                    getConvertedFilename(file.name);
+
+            var url =
+                    URL.createObjectURL(file);
+
+            var anchor =
+                    document.createElement("a");
+
+            anchor.href = url;
+            anchor.download = filename;
+
+            anchor.style.display = "none";
+
+            document.body.appendChild(anchor);
+
+            anchor.click();
+
+            document.body.removeChild(anchor);
+
+
+            /*
+             * 즉시 revoke하면 일부 브라우저에서 다운로드가
+             * 시작되기 전에 URL이 사라질 수 있으므로 약간 지연합니다.
+             */
+
+            window.setTimeout(
+                function () {
+                    URL.revokeObjectURL(url);
+                },
+                1000
+            );
+        }
+
+
+        /* =========================================================
+           Download all
+        ========================================================= */
+
+        function downloadAllFiles() {
+            if (!selectedFiles.length) {
+                return;
+            }
+
+
+            /*
+             * 별도 ZIP 라이브러리를 사용하지 않는 순수 JS 버전이므로
+             * 각 파일을 순서대로 다운로드합니다.
+             *
+             * 브라우저가 "여러 파일 다운로드" 권한을 물어볼 수 있습니다.
+             */
+
+            selectedFiles.forEach(
+                function (file, index) {
+
+                    window.setTimeout(
+                        function () {
+                            downloadFile(file);
+                        },
+                        index * 180
+                    );
+
+                }
+            );
+
+
+            showToast(
+                selectedFiles.length +
+                "개 파일 다운로드를 시작합니다."
+            );
+        }
+
+
+        downloadAllButton.addEventListener(
+            "click",
+            downloadAllFiles
+        );
+
+
+        /* =========================================================
+           Clear files
+        ========================================================= */
+
+        clearFileButton.addEventListener(
+            "click",
+            function () {
+                selectedFiles = [];
+
+                renderFiles();
+
+                showToast(
+                    "파일 목록을 지웠습니다."
+                );
+            }
+        );
+
+
+        /* =========================================================
+           Text converter
+        ========================================================= */
+
+        function updateTextConversion() {
+            var original =
+                    textInput.value;
+
+            var converted =
+                    normalizeNFC(original);
+
+            textOutput.value =
+                converted;
+
+            inputCount.textContent =
+                original.length + "자";
+
+            outputCount.textContent =
+                converted.length + "자";
+
+            copyButton.disabled =
+                converted.length === 0;
+        }
+
+
+        textInput.addEventListener(
+            "input",
+            updateTextConversion
+        );
+
+
+        /* =========================================================
+           Text sample
+        ========================================================= */
+
+        sampleButton.addEventListener(
+            "click",
+            function () {
+
+                /*
+                 * NFD Hangul Jamo
+                 *
+                 * 한글
+                 */
+
+                textInput.value =
+                    "\u1112\u1161\u11AB" +
+                    "\u1100\u1173\u11AF" +
+                    " " +
+                    "\u110C\u1161\u1106\u1169" +
+                    " " +
+                    "\u1107\u116E\u11AB\u1105\u1175";
+
+
+                updateTextConversion();
+
+                textInput.focus();
+            }
+        );
+
+
+        /* =========================================================
+           Clear text
+        ========================================================= */
+
+        clearTextButton.addEventListener(
+            "click",
+            function () {
+                textInput.value = "";
+                textOutput.value = "";
+
+                updateTextConversion();
+
+                textInput.focus();
+            }
+        );
+
+
+        /* =========================================================
+           Clipboard
+        ========================================================= */
+
+        function fallbackCopy(text) {
+            var textarea =
+                    document.createElement("textarea");
+
+            textarea.value = text;
+
+            textarea.setAttribute(
+                "readonly",
+                ""
+            );
+
+            textarea.style.position = "fixed";
+            textarea.style.opacity = "0";
+            textarea.style.pointerEvents = "none";
+
+            document.body.appendChild(textarea);
+
+            textarea.select();
+            textarea.setSelectionRange(
+                0,
+                textarea.value.length
+            );
+
+            var success = false;
+
+            try {
+                success =
+                    document.execCommand("copy");
+            } catch (error) {
+                success = false;
+            }
+
+            document.body.removeChild(textarea);
+
+            return success;
+        }
+
+
+        copyButton.addEventListener(
+            "click",
+            function () {
+                var text =
+                        textOutput.value;
+
+                if (!text) {
+                    return;
+                }
+
+
+                if (
+                    navigator.clipboard &&
+                    window.isSecureContext
+                ) {
+
+                    navigator.clipboard
+                    .writeText(text)
+                    .then(function () {
+                        showToast(
+                            "변환 결과를 복사했습니다."
+                        );
+                    })
+                    .catch(function () {
+
+                        if (fallbackCopy(text)) {
+                            showToast(
+                                "변환 결과를 복사했습니다."
+                            );
+                        } else {
+                            showToast(
+                                "복사하지 못했습니다."
+                            );
+                        }
+
+                    });
+
+                    return;
+                }
+
+
+                if (fallbackCopy(text)) {
+                    showToast(
+                        "변환 결과를 복사했습니다."
+                    );
+                } else {
+                    showToast(
+                        "복사하지 못했습니다."
+                    );
+                }
+            }
+        );
+
+
+        /* =========================================================
+           Toast
+        ========================================================= */
+
+        function showToast(message) {
+            toast.textContent = message;
+
+            toast.classList.add("visible");
+
+            if (toastTimer) {
+                window.clearTimeout(toastTimer);
+            }
+
+            toastTimer =
+                window.setTimeout(
+                    function () {
+                        toast.classList.remove(
+                            "visible"
+                        );
+                    },
+                    2200
+                );
+        }
+
+
+        /* =========================================================
+           Feature check
+        ========================================================= */
+
+        function checkNormalizeSupport() {
+            if (
+                typeof String.prototype.normalize !==
+                "function"
+            ) {
+                showToast(
+                    "이 브라우저는 Unicode 정규화를 지원하지 않습니다."
+                );
+            }
+        }
+
+
+        /* =========================================================
+           Initialization
+        ========================================================= */
+
+        updateTextConversion();
+        renderFiles();
+        checkNormalizeSupport();
+
+    })();
+</script>
+
+</body>
+</html>

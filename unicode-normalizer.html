@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>유니코드 파일명 정규화</title>
+
+    <meta
+            name="description"
+            content="NFC, NFD, NFKC, NFKD 방식으로 텍스트와 파일명을 변환하는 무료 유니코드 정규화 도구입니다."
+    >
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            margin: 0;
+            background: #f7f8fa;
+            color: #1f2937;
+            font-family:
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Apple SD Gothic Neo",
+                    "Pretendard",
+                    "Noto Sans KR",
+                    "Segoe UI",
+                    sans-serif;
+            line-height: 1.6;
+        }
+
+        button,
+        input,
+        textarea,
+        select {
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        .container {
+            width: min(100% - 32px, 980px);
+            margin: 0 auto;
+        }
+
+        /* Header */
+
+        .header {
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .header-inner {
+            padding: 32px 0 28px;
+        }
+
+        .title {
+            margin: 0;
+            color: #111827;
+            font-size: 30px;
+            font-weight: 750;
+            letter-spacing: -0.04em;
+        }
+
+        .description {
+            max-width: 700px;
+            margin: 8px 0 0;
+            color: #6b7280;
+            font-size: 15px;
+        }
+
+        /* Main */
+
+        .main {
+            padding: 28px 0 60px;
+        }
+
+        .card {
+            margin-bottom: 20px;
+            padding: 24px;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            box-shadow: 0 4px 18px rgba(15, 23, 42, 0.035);
+        }
+
+        .card-title {
+            margin: 0 0 5px;
+            color: #111827;
+            font-size: 19px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .card-description {
+            margin: 0 0 20px;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        /* Form */
+
+        .field {
+            margin-bottom: 18px;
+        }
+
+        .field:last-child {
+            margin-bottom: 0;
+        }
+
+        .label {
+            display: block;
+            margin-bottom: 7px;
+            color: #374151;
+            font-size: 14px;
+            font-weight: 650;
+        }
+
+        select,
+        textarea {
+            width: 100%;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            outline: none;
+            background: #ffffff;
+            color: #111827;
+            transition:
+                    border-color 0.15s ease,
+                    box-shadow 0.15s ease;
+        }
+
+        select {
+            height: 44px;
+            padding: 0 12px;
+        }
+
+        textarea {
+            min-height: 145px;
+            padding: 14px;
+            resize: vertical;
+            line-height: 1.65;
+        }
+
+        select:focus,
+        textarea:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.09);
+        }
+
+        textarea::placeholder {
+            color: #9ca3af;
+        }
+
+        .mode-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .mode-button {
+            height: 46px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            background: #ffffff;
+            color: #374151;
+            font-weight: 650;
+            transition: all 0.15s ease;
+        }
+
+        .mode-button:hover {
+            border-color: #9ca3af;
+            background: #f9fafb;
+        }
+
+        .mode-button.active {
+            border-color: #2563eb;
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        /* Buttons */
+
+        .button-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .button {
+            min-height: 42px;
+            padding: 0 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 9px;
+            background: #ffffff;
+            color: #374151;
+            font-weight: 650;
+            transition: all 0.15s ease;
+        }
+
+        .button:hover {
+            background: #f9fafb;
+        }
+
+        .button.primary {
+            border-color: #2563eb;
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        .button.primary:hover {
+            background: #1d4ed8;
+        }
+
+        .button.danger {
+            color: #dc2626;
+        }
+
+        .button:disabled {
+            cursor: default;
+            opacity: 0.45;
+        }
+
+        /* Compare */
+
+        .compare-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .compare-box {
+            min-width: 0;
+        }
+
+        .compare-label {
+            margin-bottom: 6px;
+            color: #6b7280;
+            font-size: 12px;
+            font-weight: 650;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .compare-value {
+            min-height: 105px;
+            padding: 13px;
+            overflow-wrap: anywhere;
+            white-space: pre-wrap;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            background: #f9fafb;
+            color: #111827;
+            font-family:
+                    "SFMono-Regular",
+                    Consolas,
+                    "Liberation Mono",
+                    monospace;
+            font-size: 14px;
+        }
+
+        /* File drop */
+
+        .drop-zone {
+            padding: 38px 20px;
+            text-align: center;
+            border: 2px dashed #d1d5db;
+            border-radius: 14px;
+            background: #fafafa;
+            transition: all 0.15s ease;
+        }
+
+        .drop-zone.dragover {
+            border-color: #2563eb;
+            background: #eff6ff;
+        }
+
+        .drop-icon {
+            margin-bottom: 8px;
+            color: #6b7280;
+            font-size: 34px;
+            line-height: 1;
+        }
+
+        .drop-title {
+            margin: 0;
+            color: #374151;
+            font-size: 15px;
+            font-weight: 650;
+        }
+
+        .drop-subtitle {
+            margin: 4px 0 15px;
+            color: #9ca3af;
+            font-size: 13px;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* File table */
+
+        .file-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            margin: 24px 0 10px;
+        }
+
+        .file-count {
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .file-list {
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+        }
+
+        .file-item {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 34px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 12px;
+            padding: 13px 14px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .file-item:last-child {
+            border-bottom: 0;
+        }
+
+        .file-name {
+            min-width: 0;
+            overflow-wrap: anywhere;
+            color: #374151;
+            font-size: 13px;
+        }
+
+        .file-new-name {
+            color: #1d4ed8;
+            font-weight: 600;
+        }
+
+        .file-arrow {
+            text-align: center;
+            color: #9ca3af;
+        }
+
+        .file-actions {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .small-button {
+            padding: 6px 9px;
+            border: 1px solid #d1d5db;
+            border-radius: 7px;
+            background: #ffffff;
+            color: #374151;
+            font-size: 12px;
+        }
+
+        .small-button:hover {
+            background: #f9fafb;
+        }
+
+        .empty {
+            padding: 28px 15px;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 13px;
+        }
+
+        /* Info */
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .info-item {
+            padding: 14px;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            background: #fafafa;
+        }
+
+        .info-name {
+            margin-bottom: 3px;
+            color: #111827;
+            font-weight: 700;
+        }
+
+        .info-description {
+            margin: 0;
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        /* Status */
+
+        .status {
+            display: none;
+            margin-top: 14px;
+            padding: 10px 13px;
+            border-radius: 8px;
+            background: #f0fdf4;
+            color: #166534;
+            font-size: 13px;
+        }
+
+        .status.show {
+            display: block;
+        }
+
+        /* Footer */
+
+        .footer {
+            padding: 24px 0 35px;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 12px;
+        }
+
+        /* Responsive */
+
+        @media (max-width: 720px) {
+            .container {
+                width: min(100% - 20px, 980px);
+            }
+
+            .header-inner {
+                padding: 24px 0;
+            }
+
+            .title {
+                font-size: 25px;
+            }
+
+            .main {
+                padding-top: 18px;
+            }
+
+            .card {
+                padding: 18px;
+                border-radius: 13px;
+            }
+
+            .mode-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .compare-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .file-item {
+                grid-template-columns: 1fr;
+            }
+
+            .file-arrow {
+                display: none;
+            }
+
+            .file-actions {
+                justify-content: flex-end;
+            }
+
+            .file-new-name {
+                padding-top: 8px;
+                border-top: 1px dashed #e5e7eb;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="header">
+    <div class="container header-inner">
+        <h1 class="title">유니코드 정규화</h1>
+
+        <p class="description">
+            한글 자모가 분리되거나 운영체제에 따라 다르게 표시되는
+            텍스트와 파일명을 NFC, NFD, NFKC, NFKD 형식으로 변환합니다.
+        </p>
+    </div>
+</header>
+
+<main class="main">
+    <div class="container">
+
+        <!-- 정규화 방식 -->
+        <section class="card">
+            <h2 class="card-title">정규화 방식</h2>
+
+            <p class="card-description">
+                변환할 Unicode Normalization Form을 선택하세요.
+            </p>
+
+            <div class="mode-grid">
+                <button
+                        type="button"
+                        class="mode-button active"
+                        data-mode="NFC"
+                >
+                    NFC
+                </button>
+
+                <button
+                        type="button"
+                        class="mode-button"
+                        data-mode="NFD"
+                >
+                    NFD
+                </button>
+
+                <button
+                        type="button"
+                        class="mode-button"
+                        data-mode="NFKC"
+                >
+                    NFKC
+                </button>
+
+                <button
+                        type="button"
+                        class="mode-button"
+                        data-mode="NFKD"
+                >
+                    NFKD
+                </button>
+            </div>
+        </section>
+
+        <!-- 텍스트 정규화 -->
+        <section class="card">
+            <h2 class="card-title">텍스트 변환</h2>
+
+            <p class="card-description">
+                텍스트를 입력하면 선택한 방식으로 즉시 정규화합니다.
+            </p>
+
+            <div class="field">
+                <label class="label" for="inputText">
+                    원본 텍스트
+                </label>
+
+                <textarea
+                        id="inputText"
+                        placeholder="예: 기획서.pdf"
+                        spellcheck="false"
+                ></textarea>
+            </div>
+
+            <div class="button-row">
+                <button
+                        type="button"
+                        class="button primary"
+                        id="convertButton"
+                >
+                    변환
+                </button>
+
+                <button
+                        type="button"
+                        class="button"
+                        id="copyButton"
+                >
+                    결과 복사
+                </button>
+
+                <button
+                        type="button"
+                        class="button"
+                        id="swapButton"
+                >
+                    결과를 입력으로
+                </button>
+
+                <button
+                        type="button"
+                        class="button danger"
+                        id="clearButton"
+                >
+                    지우기
+                </button>
+            </div>
+
+            <div class="compare-grid" style="margin-top:20px;">
+                <div class="compare-box">
+                    <div class="compare-label">Original</div>
+
+                    <div
+                            class="compare-value"
+                            id="originalResult"
+                    ></div>
+                </div>
+
+                <div class="compare-box">
+                    <div class="compare-label">
+                        Normalized
+                        <span id="resultMode">NFC</span>
+                    </div>
+
+                    <div
+                            class="compare-value"
+                            id="normalizedResult"
+                    ></div>
+                </div>
+            </div>
+
+            <div
+                    class="status"
+                    id="copyStatus"
+                    role="status"
+                    aria-live="polite"
+            ></div>
+        </section>
+
+        <!-- 파일명 변환 -->
+        <section class="card">
+            <h2 class="card-title">파일명 변환</h2>
+
+            <p class="card-description">
+                파일을 선택하면 파일 내용은 변경하지 않고
+                파일명만 정규화하여 새 파일로 다운로드할 수 있습니다.
+            </p>
+
+            <div
+                    class="drop-zone"
+                    id="dropZone"
+                    tabindex="0"
+                    role="button"
+                    aria-label="파일 선택"
+            >
+                <div class="drop-icon">⇩</div>
+
+                <p class="drop-title">
+                    여기에 파일을 끌어다 놓으세요
+                </p>
+
+                <p class="drop-subtitle">
+                    또는 버튼을 눌러 여러 파일을 선택할 수 있습니다.
+                </p>
+
+                <button
+                        type="button"
+                        class="button primary"
+                        id="selectFileButton"
+                >
+                    파일 선택
+                </button>
+
+                <input
+                        type="file"
+                        id="fileInput"
+                        multiple
+                >
+            </div>
+
+            <div class="file-header">
+                <span
+                        class="file-count"
+                        id="fileCount"
+                >
+                    선택된 파일 0개
+                </span>
+
+                <div class="button-row">
+                    <button
+                            type="button"
+                            class="button"
+                            id="downloadAllButton"
+                            disabled
+                    >
+                        전체 다운로드
+                    </button>
+
+                    <button
+                            type="button"
+                            class="button danger"
+                            id="clearFilesButton"
+                            disabled
+                    >
+                        목록 삭제
+                    </button>
+                </div>
+            </div>
+
+            <div
+                    class="file-list"
+                    id="fileList"
+            >
+                <div class="empty">
+                    선택된 파일이 없습니다.
+                </div>
+            </div>
+        </section>
+
+        <!-- 설명 -->
+        <section class="card">
+            <h2 class="card-title">정규화 방식 안내</h2>
+
+            <p class="card-description">
+                같은 글자처럼 보여도 내부 Unicode 구성은 서로 다를 수 있습니다.
+            </p>
+
+            <div class="info-grid">
+
+                <div class="info-item">
+                    <div class="info-name">
+                        NFC
+                    </div>
+
+                    <p class="info-description">
+                        Canonical Composition.
+                        분리된 문자를 가능한 경우 하나의 조합 문자로 합칩니다.
+                        일반적인 Windows/Linux 파일명 호환에 권장됩니다.
+                    </p>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-name">
+                        NFD
+                    </div>
+
+                    <p class="info-description">
+                        Canonical Decomposition.
+                        조합된 문자를 기본 문자와 결합 문자 형태로 분해합니다.
+                    </p>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-name">
+                        NFKC
+                    </div>
+
+                    <p class="info-description">
+                        Compatibility Composition.
+                        호환 문자까지 변환한 뒤 조합합니다.
+                    </p>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-name">
+                        NFKD
+                    </div>
+
+                    <p class="info-description">
+                        Compatibility Decomposition.
+                        호환 문자까지 변환하고 분해된 형태로 만듭니다.
+                    </p>
+                </div>
+
+            </div>
+        </section>
+
+    </div>
+</main>
+
+<footer class="footer">
+    <div class="container">
+        모든 변환은 브라우저에서 처리되며 파일은 서버로 전송되지 않습니다.
+    </div>
+</footer>
+
+<script>
+    (function () {
+        'use strict';
+
+        var currentMode = 'NFC';
+        var selectedFiles = [];
+
+        var modeButtons = document.querySelectorAll('.mode-button');
+
+        var inputText = document.getElementById('inputText');
+        var originalResult = document.getElementById('originalResult');
+        var normalizedResult = document.getElementById('normalizedResult');
+        var resultMode = document.getElementById('resultMode');
+
+        var convertButton = document.getElementById('convertButton');
+        var copyButton = document.getElementById('copyButton');
+        var swapButton = document.getElementById('swapButton');
+        var clearButton = document.getElementById('clearButton');
+
+        var copyStatus = document.getElementById('copyStatus');
+
+        var dropZone = document.getElementById('dropZone');
+        var selectFileButton = document.getElementById('selectFileButton');
+        var fileInput = document.getElementById('fileInput');
+
+        var fileCount = document.getElementById('fileCount');
+        var fileList = document.getElementById('fileList');
+
+        var downloadAllButton =
+                document.getElementById('downloadAllButton');
+
+        var clearFilesButton =
+                document.getElementById('clearFilesButton');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Unicode normalize
+        |--------------------------------------------------------------------------
+        */
+
+        function normalizeText(text) {
+            if (typeof text.normalize !== 'function') {
+                return text;
+            }
+
+            try {
+                return text.normalize(currentMode);
+            } catch (error) {
+                return text;
+            }
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Mode
+        |--------------------------------------------------------------------------
+        */
+
+        function setMode(mode) {
+            currentMode = mode;
+
+            for (var i = 0; i < modeButtons.length; i++) {
+                var button = modeButtons[i];
+
+                if (button.getAttribute('data-mode') === mode) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            }
+
+            resultMode.textContent = mode;
+
+            convertText();
+            renderFileList();
+        }
+
+        for (var i = 0; i < modeButtons.length; i++) {
+            modeButtons[i].addEventListener(
+                'click',
+                function () {
+                    setMode(this.getAttribute('data-mode'));
+                }
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Text conversion
+        |--------------------------------------------------------------------------
+        */
+
+        function convertText() {
+            var original = inputText.value;
+            var normalized = normalizeText(original);
+
+            originalResult.textContent = original;
+            normalizedResult.textContent = normalized;
+        }
+
+        inputText.addEventListener('input', convertText);
+
+        convertButton.addEventListener('click', convertText);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Copy
+        |--------------------------------------------------------------------------
+        */
+
+        copyButton.addEventListener('click', function () {
+            var text = normalizedResult.textContent;
+
+            if (!text) {
+                showStatus('복사할 내용이 없습니다.');
+                return;
+            }
+
+            copyText(text);
+        });
+
+        function copyText(text) {
+            if (
+                navigator.clipboard &&
+                typeof navigator.clipboard.writeText === 'function'
+            ) {
+                navigator.clipboard.writeText(text)
+                .then(function () {
+                    showStatus('변환 결과를 복사했습니다.');
+                })
+                .catch(function () {
+                    fallbackCopy(text);
+                });
+
+                return;
+            }
+
+            fallbackCopy(text);
+        }
+
+        function fallbackCopy(text) {
+            var textarea = document.createElement('textarea');
+
+            textarea.value = text;
+
+            textarea.style.position = 'fixed';
+            textarea.style.left = '-9999px';
+            textarea.style.top = '0';
+
+            document.body.appendChild(textarea);
+
+            textarea.focus();
+            textarea.select();
+
+            try {
+                document.execCommand('copy');
+
+                showStatus('변환 결과를 복사했습니다.');
+            } catch (error) {
+                showStatus('복사하지 못했습니다.');
+            }
+
+            document.body.removeChild(textarea);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Swap
+        |--------------------------------------------------------------------------
+        */
+
+        swapButton.addEventListener('click', function () {
+            var result = normalizedResult.textContent;
+
+            if (!result) {
+                return;
+            }
+
+            inputText.value = result;
+
+            convertText();
+
+            inputText.focus();
+        });
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Clear
+        |--------------------------------------------------------------------------
+        */
+
+        clearButton.addEventListener('click', function () {
+            inputText.value = '';
+
+            originalResult.textContent = '';
+            normalizedResult.textContent = '';
+
+            inputText.focus();
+        });
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Status
+        |--------------------------------------------------------------------------
+        */
+
+        var statusTimer = null;
+
+        function showStatus(message) {
+            copyStatus.textContent = message;
+            copyStatus.classList.add('show');
+
+            if (statusTimer) {
+                clearTimeout(statusTimer);
+            }
+
+            statusTimer = setTimeout(function () {
+                copyStatus.classList.remove('show');
+            }, 2200);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | File select
+        |--------------------------------------------------------------------------
+        */
+
+        selectFileButton.addEventListener('click', function (event) {
+            event.stopPropagation();
+
+            fileInput.click();
+        });
+
+        dropZone.addEventListener('click', function (event) {
+            if (event.target === selectFileButton) {
+                return;
+            }
+
+            fileInput.click();
+        });
+
+        dropZone.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+
+                fileInput.click();
+            }
+        });
+
+        fileInput.addEventListener('change', function () {
+            addFiles(this.files);
+
+            this.value = '';
+        });
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Drag & Drop
+        |--------------------------------------------------------------------------
+        */
+
+        dropZone.addEventListener('dragenter', function (event) {
+            event.preventDefault();
+
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragover', function (event) {
+            event.preventDefault();
+
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', function (event) {
+            if (!dropZone.contains(event.relatedTarget)) {
+                dropZone.classList.remove('dragover');
+            }
+        });
+
+        dropZone.addEventListener('drop', function (event) {
+            event.preventDefault();
+
+            dropZone.classList.remove('dragover');
+
+            if (!event.dataTransfer) {
+                return;
+            }
+
+            addFiles(event.dataTransfer.files);
+        });
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Add files
+        |--------------------------------------------------------------------------
+        */
+
+        function addFiles(fileCollection) {
+            if (!fileCollection) {
+                return;
+            }
+
+            for (var i = 0; i < fileCollection.length; i++) {
+                selectedFiles.push(fileCollection[i]);
+            }
+
+            renderFileList();
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Render files
+        |--------------------------------------------------------------------------
+        */
+
+        function renderFileList() {
+            fileCount.textContent =
+                '선택된 파일 ' + selectedFiles.length + '개';
+
+            downloadAllButton.disabled =
+                selectedFiles.length === 0;
+
+            clearFilesButton.disabled =
+                selectedFiles.length === 0;
+
+            fileList.innerHTML = '';
+
+            if (selectedFiles.length === 0) {
+                var empty = document.createElement('div');
+
+                empty.className = 'empty';
+                empty.textContent = '선택된 파일이 없습니다.';
+
+                fileList.appendChild(empty);
+
+                return;
+            }
+
+            for (var i = 0; i < selectedFiles.length; i++) {
+                createFileItem(selectedFiles[i], i);
+            }
+        }
+
+
+        function createFileItem(file, index) {
+            var normalizedName = normalizeText(file.name);
+
+            var item = document.createElement('div');
+            item.className = 'file-item';
+
+            var original = document.createElement('div');
+            original.className = 'file-name';
+            original.textContent = file.name;
+
+            var arrow = document.createElement('div');
+            arrow.className = 'file-arrow';
+            arrow.textContent = '→';
+
+            var normalized = document.createElement('div');
+            normalized.className = 'file-name file-new-name';
+            normalized.textContent = normalizedName;
+
+            var actions = document.createElement('div');
+            actions.className = 'file-actions';
+
+            var downloadButton = document.createElement('button');
+
+            downloadButton.type = 'button';
+            downloadButton.className = 'small-button';
+            downloadButton.textContent = '다운로드';
+
+            downloadButton.addEventListener(
+                'click',
+                function () {
+                    downloadFile(file);
+                }
+            );
+
+            var removeButton = document.createElement('button');
+
+            removeButton.type = 'button';
+            removeButton.className = 'small-button';
+            removeButton.textContent = '삭제';
+
+            removeButton.addEventListener(
+                'click',
+                function () {
+                    removeFile(index);
+                }
+            );
+
+            actions.appendChild(downloadButton);
+            actions.appendChild(removeButton);
+
+            item.appendChild(original);
+            item.appendChild(arrow);
+            item.appendChild(normalized);
+            item.appendChild(actions);
+
+            fileList.appendChild(item);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Remove
+        |--------------------------------------------------------------------------
+        */
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+
+            renderFileList();
+        }
+
+
+        clearFilesButton.addEventListener('click', function () {
+            selectedFiles = [];
+
+            fileInput.value = '';
+
+            renderFileList();
+        });
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Download
+        |--------------------------------------------------------------------------
+        */
+
+        function downloadFile(file) {
+            var newName = normalizeText(file.name);
+
+            var url = URL.createObjectURL(file);
+
+            var anchor = document.createElement('a');
+
+            anchor.href = url;
+            anchor.download = newName;
+
+            document.body.appendChild(anchor);
+
+            anchor.click();
+
+            document.body.removeChild(anchor);
+
+            setTimeout(function () {
+                URL.revokeObjectURL(url);
+            }, 1000);
+        }
+
+
+        downloadAllButton.addEventListener('click', function () {
+            if (selectedFiles.length === 0) {
+                return;
+            }
+
+            downloadFilesSequentially(0);
+        });
+
+
+        function downloadFilesSequentially(index) {
+            if (index >= selectedFiles.length) {
+                return;
+            }
+
+            downloadFile(selectedFiles[index]);
+
+            /*
+             * 브라우저에서 동시에 너무 많은 다운로드 요청이
+             * 발생하지 않도록 약간의 간격을 둔다.
+             */
+            setTimeout(function () {
+                downloadFilesSequentially(index + 1);
+            }, 180);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Browser support
+        |--------------------------------------------------------------------------
+        */
+
+        function checkNormalizeSupport() {
+            if (typeof ''.normalize === 'function') {
+                return;
+            }
+
+            alert(
+                '현재 브라우저는 Unicode normalize() 기능을 지원하지 않습니다.'
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Init
+        |--------------------------------------------------------------------------
+        */
+
+        checkNormalizeSupport();
+
+        convertText();
+        renderFileList();
+
+    })();
+</script>
+
+</body>
+</html>
