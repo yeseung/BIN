@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="목표 층에 맞춰 브레이크를 눌러 정차하는 무료 엘리베이터 타이밍 게임입니다.">
+    <meta name="keywords" content="엘리베이터 게임, 타이밍 게임, 브레이크 게임, 웹게임, 무료게임">
+    <meta property="og:title" content="Hyper Elevator - 하이퍼 엘리베이터">
+    <meta property="og:description" content="목표 층에 맞춰 정확하게 정차해 최고 점수에 도전하세요.">
+    <meta property="og:type" content="website">
+    <title>Hyper Elevator - 하이퍼 엘리베이터</title>
+
+    <!-- https://hyperelevator.netlify.app -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #f5f7fa;
+            --surface: #ffffff;
+            --surface-soft: #f8fafc;
+            --text: #111827;
+            --text-soft: #6b7280;
+            --line: #e5e7eb;
+            --primary: #8a2442;
+            --primary-dark: #6f1c35;
+            --primary-soft: #f8edf1;
+            --success: #16803c;
+            --success-soft: #edf9f0;
+            --warning: #b7791f;
+            --danger: #dc2626;
+            --danger-soft: #fef2f2;
+            --shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+            --radius: 24px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            min-height: 100%;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Noto Sans KR', sans-serif;
+            letter-spacing: -0.04em;
+        }
+
+        body {
+            min-height: 100dvh;
+            padding: 20px;
+        }
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        button {
+            border: 0;
+        }
+
+        button:focus-visible {
+            outline: 3px solid rgba(138, 36, 66, 0.25);
+            outline-offset: 3px;
+        }
+
+        .app {
+            width: min(100%, 980px);
+            min-height: calc(100dvh - 40px);
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 18px 22px;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .brand {
+            min-width: 0;
+        }
+
+        .brand-title {
+            margin: 0;
+            font-size: clamp(1.2rem, 3vw, 1.7rem);
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .brand-subtitle {
+            margin: 5px 0 0;
+            color: var(--text-soft);
+            font-size: 0.9rem;
+        }
+
+        .ghost-button,
+        .primary-button,
+        .brake-button {
+            cursor: pointer;
+            transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+        }
+
+        .ghost-button:active,
+        .primary-button:active,
+        .brake-button:active {
+            transform: scale(0.98);
+        }
+
+        .ghost-button {
+            flex: 0 0 auto;
+            padding: 10px 14px;
+            color: var(--text);
+            background: var(--surface-soft);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            font-weight: 700;
+        }
+
+        .main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+            gap: 18px;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .game-card {
+            min-height: 690px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .game-stage {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            min-height: 690px;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        }
+
+        #gameCanvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .scene {
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .lobby,
+        .countdown,
+        .result {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 28px;
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(8px);
+        }
+
+        .panel {
+            width: min(100%, 460px);
+            text-align: center;
+            padding: 32px;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .eyebrow {
+            margin: 0 0 8px;
+            color: var(--primary);
+            font-size: 0.8rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .hero-title {
+            margin: 0;
+            font-size: clamp(2rem, 7vw, 3.1rem);
+            line-height: 1.05;
+            letter-spacing: -0.06em;
+        }
+
+        .hero-copy {
+            margin: 18px auto 0;
+            max-width: 34rem;
+            color: var(--text-soft);
+            line-height: 1.75;
+            word-break: keep-all;
+        }
+
+        .howto {
+            margin: 24px 0;
+            display: grid;
+            gap: 10px;
+            text-align: left;
+        }
+
+        .howto-row {
+            display: grid;
+            grid-template-columns: 34px 1fr;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            background: var(--surface-soft);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+        }
+
+        .howto-icon {
+            display: grid;
+            place-items: center;
+            width: 34px;
+            height: 34px;
+            background: var(--primary-soft);
+            border-radius: 11px;
+        }
+
+        .howto-text {
+            font-size: 0.92rem;
+            line-height: 1.5;
+        }
+
+        .primary-button {
+            width: 100%;
+            min-height: 54px;
+            padding: 14px 18px;
+            background: var(--primary);
+            color: #fff;
+            border-radius: 16px;
+            font-weight: 800;
+        }
+
+        .primary-button:hover {
+            background: var(--primary-dark);
+        }
+
+        .countdown-box {
+            text-align: center;
+        }
+
+        .countdown-target {
+            margin-bottom: 12px;
+            color: var(--text-soft);
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .countdown-text {
+            margin: 0;
+            color: var(--primary);
+            font-size: clamp(4rem, 15vw, 8rem);
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .countdown-hint {
+            margin-top: 18px;
+            color: var(--text-soft);
+            font-size: 0.92rem;
+        }
+
+        .hud {
+            position: absolute;
+            inset: 0;
+            z-index: 11;
+            pointer-events: none;
+        }
+
+        .hud-top {
+            position: absolute;
+            top: 18px;
+            left: 18px;
+            right: 18px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .stat {
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+            text-align: center;
+        }
+
+        .stat-label {
+            display: block;
+            color: var(--text-soft);
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+
+        .stat-value {
+            display: block;
+            margin-top: 4px;
+            font-size: 1.08rem;
+            font-weight: 800;
+        }
+
+        .floor-box {
+            position: absolute;
+            top: 112px;
+            left: 50%;
+            transform: translateX(-50%);
+            min-width: 220px;
+            padding: 12px 18px;
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            text-align: center;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+        }
+
+        .floor-label {
+            color: var(--text-soft);
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+
+        .floor-route {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 3px;
+            font-size: 1.1rem;
+            font-weight: 800;
+        }
+
+        .direction {
+            color: var(--primary);
+        }
+
+        .speed-wrap {
+            position: absolute;
+            left: 18px;
+            right: 18px;
+            bottom: 132px;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+        }
+
+        .speed-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 8px;
+            color: var(--text-soft);
+            font-size: 0.76rem;
+            font-weight: 700;
+        }
+
+        .speed-bar {
+            height: 9px;
+            overflow: hidden;
+            background: #edf0f3;
+            border-radius: 999px;
+        }
+
+        .speed-fill {
+            width: 0%;
+            height: 100%;
+            background: var(--primary);
+            border-radius: inherit;
+            transition: width 0.08s linear;
+        }
+
+        .brake-area {
+            position: absolute;
+            left: 18px;
+            right: 18px;
+            bottom: 18px;
+            z-index: 20;
+        }
+
+        .brake-button {
+            width: 100%;
+            min-height: 88px;
+            background: var(--primary);
+            color: #fff;
+            border-radius: 22px;
+            font-size: 1.55rem;
+            font-weight: 800;
+            box-shadow: 0 12px 28px rgba(138, 36, 66, 0.22);
+        }
+
+        .brake-button:hover {
+            background: var(--primary-dark);
+        }
+
+        .brake-button:disabled {
+            cursor: not-allowed;
+            background: #cbd5e1;
+            box-shadow: none;
+        }
+
+        .judgment {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            z-index: 30;
+            width: 90%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .judgment-main {
+            opacity: 0;
+            transform: scale(0.8);
+            font-size: clamp(2.3rem, 8vw, 4.4rem);
+            font-weight: 800;
+            transition: opacity 0.18s ease, transform 0.18s ease;
+        }
+
+        .judgment-main.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .judgment-sub {
+            margin-top: 7px;
+            opacity: 0;
+            color: var(--text-soft);
+            font-size: 1rem;
+            font-weight: 700;
+            transition: opacity 0.18s ease;
+        }
+
+        .judgment-sub.show {
+            opacity: 1;
+        }
+
+        .result-score-label {
+            margin-top: 24px;
+            color: var(--text-soft);
+            font-size: 0.86rem;
+            font-weight: 700;
+        }
+
+        .result-score {
+            margin: 4px 0 0;
+            color: var(--primary);
+            font-size: clamp(2.6rem, 10vw, 4.6rem);
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        .result-stars {
+            margin: 14px 0 24px;
+            color: #d4a017;
+            font-size: 1.8rem;
+            letter-spacing: 0.08em;
+        }
+
+        .result-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .side-card {
+            padding: 24px;
+            align-self: start;
+            position: sticky;
+            top: 20px;
+        }
+
+        .side-title {
+            margin: 0;
+            font-size: 1.15rem;
+            font-weight: 800;
+        }
+
+        .side-copy {
+            margin: 8px 0 0;
+            color: var(--text-soft);
+            font-size: 0.9rem;
+            line-height: 1.7;
+        }
+
+        .info-list {
+            display: grid;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .info-item {
+            padding: 14px;
+            background: var(--surface-soft);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+        }
+
+        .info-item strong {
+            display: block;
+            margin-bottom: 3px;
+            font-size: 0.88rem;
+        }
+
+        .info-item span {
+            color: var(--text-soft);
+            font-size: 0.82rem;
+            line-height: 1.55;
+        }
+
+        .key {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            min-height: 28px;
+            padding: 3px 8px;
+            margin-right: 4px;
+            background: #fff;
+            border: 1px solid #d8dee6;
+            border-bottom-width: 3px;
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 0.76rem;
+            font-weight: 800;
+        }
+
+        .footer {
+            padding: 4px 8px;
+            color: var(--text-soft);
+            font-size: 0.78rem;
+            text-align: center;
+        }
+
+        @media (max-width: 820px) {
+            body {
+                padding: 12px;
+            }
+
+            .app {
+                min-height: calc(100dvh - 24px);
+            }
+
+            .main {
+                grid-template-columns: 1fr;
+            }
+
+            .side-card {
+                position: static;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .topbar {
+                padding: 15px 16px;
+                border-radius: 20px;
+            }
+
+            .brand-subtitle {
+                display: none;
+            }
+
+            .game-card,
+            .game-stage {
+                min-height: 650px;
+            }
+
+            .lobby,
+            .countdown,
+            .result {
+                padding: 16px;
+            }
+
+            .panel {
+                padding: 24px 18px;
+                border-radius: 20px;
+            }
+
+            .hud-top {
+                top: 12px;
+                left: 12px;
+                right: 12px;
+                gap: 6px;
+            }
+
+            .stat {
+                padding: 9px 6px;
+                border-radius: 13px;
+            }
+
+            .floor-box {
+                top: 92px;
+                min-width: 190px;
+            }
+
+            .speed-wrap {
+                left: 12px;
+                right: 12px;
+                bottom: 124px;
+            }
+
+            .brake-area {
+                left: 12px;
+                right: 12px;
+                bottom: 12px;
+            }
+
+            .brake-button {
+                min-height: 82px;
+            }
+
+            .result-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <header class="topbar">
+        <div class="brand">
+            <h1 class="brand-title">🛗 Hyper Elevator</h1>
+            <p class="brand-subtitle">하이퍼 엘리베이터 · 브레이크 타이밍 게임</p>
+        </div>
+        <button type="button" class="ghost-button" id="soundButton" aria-pressed="true">🔊 소리 켬</button>
+    </header>
+
+    <main class="main">
+        <section class="card game-card" aria-label="하이퍼 엘리베이터 게임">
+            <div class="game-stage" id="gameStage">
+                <canvas id="gameCanvas" aria-hidden="true"></canvas>
+
+                <section class="scene lobby" id="lobbyScene">
+                    <div class="panel">
+                        <p class="eyebrow">Elevator Timing Game</p>
+                        <h2 class="hero-title">목표 층에<br>정확히 멈추세요</h2>
+                        <p class="hero-copy">엘리베이터가 움직이기 시작하면 목표 층을 확인하고, 적절한 순간에 브레이크를 눌러 정차하세요.</p>
+
+                        <div class="howto">
+                            <div class="howto-row">
+                                <div class="howto-icon">🎯</div>
+                                <div class="howto-text"><strong>목표 층 확인</strong><br>매 라운드 새로운 목적지가 지정됩니다.</div>
+                            </div>
+                            <div class="howto-row">
+                                <div class="howto-icon">🛑</div>
+                                <div class="howto-text"><strong>브레이크</strong><br>버튼 또는 Space 키로 감속을 시작합니다.</div>
+                            </div>
+                            <div class="howto-row">
+                                <div class="howto-icon">🔥</div>
+                                <div class="howto-text"><strong>콤보</strong><br>정확하게 멈출수록 더 높은 점수를 획득합니다.</div>
+                            </div>
+                        </div>
+
+                        <button type="button" class="primary-button" id="startButton">운행 시작</button>
+                    </div>
+                </section>
+
+                <section class="scene countdown hidden" id="countdownScene" aria-live="polite">
+                    <div class="countdown-box">
+                        <div class="countdown-target" id="countdownTarget">목표 층</div>
+                        <p class="countdown-text" id="countdownText">3</p>
+                        <div class="countdown-hint">목표 지점 직전에 브레이크를 눌러주세요.</div>
+                    </div>
+                </section>
+
+                <section class="scene hidden" id="gameScene">
+                    <div class="hud">
+                        <div class="hud-top">
+                            <div class="stat">
+                                <span class="stat-label">점수</span>
+                                <strong class="stat-value" id="scoreValue">0</strong>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-label">콤보</span>
+                                <strong class="stat-value" id="comboValue">0</strong>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-label">생명</span>
+                                <strong class="stat-value" id="lifeValue">❤️❤️❤️</strong>
+                            </div>
+                        </div>
+
+                        <div class="floor-box">
+                            <div class="floor-label">현재 층 → 목표 층</div>
+                            <div class="floor-route">
+                                <span id="currentFloor">1F</span>
+                                <span class="direction" id="directionArrow">▲</span>
+                                <span id="targetFloor">10F</span>
+                            </div>
+                        </div>
+
+                        <div class="speed-wrap">
+                            <div class="speed-head">
+                                <span>운행 속도</span>
+                                <span id="speedText">0%</span>
+                            </div>
+                            <div class="speed-bar">
+                                <div class="speed-fill" id="speedFill"></div>
+                            </div>
+                        </div>
+
+                        <div class="judgment" aria-live="assertive">
+                            <div class="judgment-main" id="judgmentMain"></div>
+                            <div class="judgment-sub" id="judgmentSub"></div>
+                        </div>
+                    </div>
+
+                    <div class="brake-area">
+                        <button type="button" class="brake-button" id="brakeButton" disabled>🛑 BRAKE</button>
+                    </div>
+                </section>
+
+                <section class="scene result hidden" id="resultScene">
+                    <div class="panel">
+                        <p class="eyebrow">Game Over</p>
+                        <h2 class="hero-title">운행 종료</h2>
+                        <div class="result-score-label">최종 점수</div>
+                        <div class="result-score" id="resultScore">0</div>
+                        <div class="result-stars" id="resultStars">★☆☆☆☆</div>
+                        <p class="hero-copy" id="resultMessage">다시 도전해 더 정확한 정차 기록을 만들어보세요.</p>
+
+                        <div class="result-actions">
+                            <button type="button" class="primary-button" id="restartButton">다시 도전</button>
+                            <button type="button" class="ghost-button" id="homeButton">처음으로</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </section>
+
+        <aside class="card side-card">
+            <h2 class="side-title">게임 안내</h2>
+            <p class="side-copy">설치 없이 브라우저에서 바로 플레이할 수 있는 순수 HTML/CSS/JavaScript 게임입니다.</p>
+
+            <div class="info-list">
+                <div class="info-item">
+                    <strong>⌨️ 조작 방법</strong>
+                    <span><span class="key">Space</span> 또는 화면의 BRAKE 버튼을 누르세요.</span>
+                </div>
+                <div class="info-item">
+                    <strong>🏢 운행 구간</strong>
+                    <span>B4부터 48F까지 총 52개 층을 이동합니다.</span>
+                </div>
+                <div class="info-item">
+                    <strong>✨ PERFECT</strong>
+                    <span>목표 층과의 오차가 작을수록 점수와 콤보 보너스가 커집니다.</span>
+                </div>
+                <div class="info-item">
+                    <strong>❤️ 생명</strong>
+                    <span>크게 빗나가면 생명이 줄어들며, 생명 3개를 모두 잃으면 게임이 끝납니다.</span>
+                </div>
+                <div class="info-item">
+                    <strong>🔒 기록 저장 없음</strong>
+                    <span>랭킹, 로그인, 개인 기록 저장 기능을 사용하지 않습니다.</span>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+</div>
+
+<script>
+    'use strict';
+
+    class SoundManager {
+        constructor() {
+            this.enabled = true;
+            this.context = null;
+        }
+
+        init() {
+            if (!this.enabled || this.context) return;
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContextClass) return;
+            this.context = new AudioContextClass();
+        }
+
+        toggle() {
+            this.enabled = !this.enabled;
+            if (this.enabled) this.init();
+            return this.enabled;
+        }
+
+        beep(frequency, duration = 0.08, volume = 0.04, type = 'sine') {
+            if (!this.enabled) return;
+            this.init();
+            if (!this.context) return;
+
+            if (this.context.state === 'suspended') {
+                this.context.resume().catch(() => {});
+            }
+
+            const osc = this.context.createOscillator();
+            const gain = this.context.createGain();
+            const now = this.context.currentTime;
+
+            osc.type = type;
+            osc.frequency.setValueAtTime(frequency, now);
+            gain.gain.setValueAtTime(volume, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+            osc.connect(gain);
+            gain.connect(this.context.destination);
+            osc.start(now);
+            osc.stop(now + duration);
+        }
+
+        countdown(step) {
+            this.beep(step === 'GO' ? 740 : 440, step === 'GO' ? 0.14 : 0.07, 0.045, 'square');
+        }
+
+        judgment(type) {
+            if (type === 'PERFECT') {
+                this.beep(880, 0.12, 0.05);
+                setTimeout(() => this.beep(1100, 0.14, 0.04), 80);
+            } else if (type === 'GOOD') {
+                this.beep(620, 0.1, 0.04);
+            } else {
+                this.beep(180, 0.18, 0.05, 'sawtooth');
+            }
+        }
+    }
+
+    class ElevatorGame {
+        constructor() {
+            this.canvas = document.getElementById('gameCanvas');
+            this.ctx = this.canvas.getContext('2d');
+            this.stage = document.getElementById('gameStage');
+            this.sound = new SoundManager();
+
+            this.scenes = {
+                lobby: document.getElementById('lobbyScene'),
+                countdown: document.getElementById('countdownScene'),
+                game: document.getElementById('gameScene'),
+                result: document.getElementById('resultScene')
+            };
+
+            this.scoreValue = document.getElementById('scoreValue');
+            this.comboValue = document.getElementById('comboValue');
+            this.lifeValue = document.getElementById('lifeValue');
+            this.currentFloor = document.getElementById('currentFloor');
+            this.targetFloor = document.getElementById('targetFloor');
+            this.directionArrow = document.getElementById('directionArrow');
+            this.speedFill = document.getElementById('speedFill');
+            this.speedText = document.getElementById('speedText');
+            this.brakeButton = document.getElementById('brakeButton');
+            this.judgmentMain = document.getElementById('judgmentMain');
+            this.judgmentSub = document.getElementById('judgmentSub');
+
+            this.floors = [];
+            for (let i = 4; i >= 1; i--) this.floors.push(`B${i}`);
+            for (let i = 1; i <= 48; i++) this.floors.push(`${i}F`);
+
+            this.totalFloors = this.floors.length;
+            this.floorHeight = 86;
+            this.maxVelocity = 0.34;
+            this.acceleration = 0.00105;
+            this.friction = 0.0055;
+
+            this.state = 'LOBBY';
+            this.score = 0;
+            this.combo = 0;
+            this.lives = 3;
+            this.y = 4;
+            this.targetY = 10;
+            this.direction = 1;
+            this.velocity = 0;
+            this.shake = 0;
+            this.lastTime = 0;
+            this.judgmentTimer = null;
+
+            this.bindEvents();
+            this.resize();
+            this.switchScene('lobby');
+            requestAnimationFrame((time) => this.loop(time));
+        }
+
+        bindEvents() {
+            document.getElementById('startButton').addEventListener('click', () => {
+                this.sound.init();
+                this.startGame();
+            });
+
+            document.getElementById('restartButton').addEventListener('click', () => {
+                this.sound.init();
+                this.startGame();
+            });
+
+            document.getElementById('homeButton').addEventListener('click', () => {
+                this.resetToLobby();
+            });
+
+            document.getElementById('soundButton').addEventListener('click', (event) => {
+                const enabled = this.sound.toggle();
+                event.currentTarget.textContent = enabled ? '🔊 소리 켬' : '🔇 소리 끔';
+                event.currentTarget.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+            });
+
+            this.brakeButton.addEventListener('click', () => this.brake());
+
+            window.addEventListener('keydown', (event) => {
+                if (event.code !== 'Space') return;
+                if (this.state !== 'MOVING') return;
+                event.preventDefault();
+                this.brake();
+            });
+
+            window.addEventListener('resize', () => this.resize());
+        }
+
+        resize() {
+            const rect = this.stage.getBoundingClientRect();
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            this.canvas.width = Math.round(rect.width * dpr);
+            this.canvas.height = Math.round(rect.height * dpr);
+            this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            this.canvas.logicalWidth = rect.width;
+            this.canvas.logicalHeight = rect.height;
+        }
+
+        switchScene(name) {
+            Object.values(this.scenes).forEach((scene) => scene.classList.add('hidden'));
+            this.scenes[name].classList.remove('hidden');
+        }
+
+        resetToLobby() {
+            this.state = 'LOBBY';
+            this.velocity = 0;
+            this.shake = 0;
+            this.brakeButton.disabled = true;
+            this.switchScene('lobby');
+        }
+
+        startGame() {
+            this.score = 0;
+            this.combo = 0;
+            this.lives = 3;
+            this.y = 4;
+            this.velocity = 0;
+            this.updateHud();
+            this.startRound();
+        }
+
+        async startRound() {
+            this.state = 'READY';
+            this.brakeButton.disabled = true;
+            this.velocity = 0;
+
+            const current = Math.round(this.y);
+            const minDistance = Math.min(7 + this.combo * 2, 28);
+            const maxDistance = Math.min(minDistance + 10, this.totalFloors - 1);
+            let candidates = [];
+
+            for (let floor = 0; floor < this.totalFloors; floor++) {
+                const distance = Math.abs(floor - current);
+                if (distance >= minDistance && distance <= maxDistance) {
+                    candidates.push(floor);
+                }
+            }
+
+            if (!candidates.length) {
+                candidates = Array.from({ length: this.totalFloors }, (_, i) => i)
+                .filter((floor) => Math.abs(floor - current) >= 5);
+            }
+
+            this.targetY = candidates[Math.floor(Math.random() * candidates.length)];
+            this.direction = this.targetY > this.y ? 1 : -1;
+
+            document.getElementById('countdownTarget').textContent = `목표: ${this.floors[this.targetY]}`;
+            this.updateHud();
+            await this.runCountdown();
+
+            if (this.state !== 'READY') return;
+            this.state = 'MOVING';
+            this.brakeButton.disabled = false;
+            this.switchScene('game');
+        }
+
+        async runCountdown() {
+            this.switchScene('countdown');
+            const text = document.getElementById('countdownText');
+            const steps = ['3', '2', '1', 'GO'];
+
+            for (const step of steps) {
+                if (this.state !== 'READY') return;
+                text.textContent = step;
+                this.sound.countdown(step);
+                await this.wait(step === 'GO' ? 500 : 620);
+            }
+        }
+
+        wait(ms) {
+            return new Promise((resolve) => setTimeout(resolve, ms));
+        }
+
+        brake() {
+            if (this.state !== 'MOVING') return;
+            this.state = 'BRAKING';
+            this.brakeButton.disabled = true;
+            this.sound.beep(260, 0.09, 0.035, 'square');
+        }
+
+        evaluateRound() {
+            if (this.state === 'EVALUATING' || this.state === 'GAMEOVER') return;
+            this.state = 'EVALUATING';
+            this.velocity = 0;
+            this.brakeButton.disabled = true;
+
+            const error = Math.abs(this.y - this.targetY);
+            let type = 'MISS';
+            let label = 'MISS';
+            let sub = `오차 ${error.toFixed(2)}층`;
+            let color = '#dc2626';
+            let earned = 0;
+
+            if (error <= 0.18) {
+                type = 'PERFECT';
+                label = 'PERFECT!';
+                color = '#16803c';
+                this.combo += 1;
+                earned = 1000 + this.combo * 180;
+                sub = `+${earned.toLocaleString()}점 · ${this.combo} COMBO`;
+            } else if (error <= 0.55) {
+                type = 'GOOD';
+                label = 'GOOD!';
+                color = '#b7791f';
+                this.combo += 1;
+                earned = 500 + this.combo * 90;
+                sub = `+${earned.toLocaleString()}점 · ${this.combo} COMBO`;
+            } else if (error <= 1.25) {
+                type = 'GOOD';
+                label = 'SAFE';
+                color = '#2563eb';
+                this.combo = 0;
+                earned = 180;
+                sub = `+${earned.toLocaleString()}점 · 오차 ${error.toFixed(2)}층`;
+            } else {
+                this.combo = 0;
+                this.lives -= 1;
+                sub = `오차 ${error.toFixed(2)}층 · 생명 -1`;
+            }
+
+            this.score += earned;
+            this.y = Math.max(0, Math.min(this.totalFloors - 1, this.y));
+            this.sound.judgment(type);
+            this.showJudgment(label, sub, color);
+            this.updateHud();
+
+            setTimeout(() => {
+                if (this.lives <= 0) {
+                    this.gameOver();
+                    return;
+                }
+                this.startRound();
+            }, 1500);
+        }
+
+        showJudgment(main, sub, color) {
+            clearTimeout(this.judgmentTimer);
+            this.judgmentMain.textContent = main;
+            this.judgmentMain.style.color = color;
+            this.judgmentSub.textContent = sub;
+            this.judgmentMain.classList.add('show');
+            this.judgmentSub.classList.add('show');
+
+            this.judgmentTimer = setTimeout(() => {
+                this.judgmentMain.classList.remove('show');
+                this.judgmentSub.classList.remove('show');
+            }, 1250);
+        }
+
+        gameOver() {
+            this.state = 'GAMEOVER';
+            this.velocity = 0;
+            this.brakeButton.disabled = true;
+
+            document.getElementById('resultScore').textContent = this.score.toLocaleString();
+
+            let stars = 1;
+            if (this.score >= 30000) stars = 5;
+            else if (this.score >= 15000) stars = 4;
+            else if (this.score >= 5000) stars = 3;
+            else if (this.score >= 1000) stars = 2;
+
+            document.getElementById('resultStars').textContent = '★'.repeat(stars) + '☆'.repeat(5 - stars);
+
+            const message = stars >= 4
+                ? '정확한 제동 감각이 아주 좋습니다. 한 번 더 완벽한 운행에 도전해보세요.'
+                : stars >= 2
+                    ? '좋은 기록입니다. 목표 층보다 조금 일찍 브레이크를 잡아보세요.'
+                    : '속도가 오르기 전에 제동 거리를 익히면 훨씬 안정적으로 멈출 수 있습니다.';
+
+            document.getElementById('resultMessage').textContent = message;
+            this.switchScene('result');
+        }
+
+        update(delta) {
+            const frameScale = Math.min(delta / 16.6667, 2.2);
+
+            if (this.state === 'MOVING') {
+                this.velocity += this.acceleration * (1 + this.velocity * 1.25) * frameScale;
+                this.velocity = Math.min(this.velocity, this.maxVelocity);
+                this.y += this.velocity * this.direction * frameScale;
+
+                const overshoot = this.direction > 0
+                    ? this.y - this.targetY
+                    : this.targetY - this.y;
+
+                if (overshoot > 5) {
+                    this.evaluateRound();
+                    return;
+                }
+
+                if (this.y <= 0 || this.y >= this.totalFloors - 1) {
+                    this.y = Math.max(0, Math.min(this.totalFloors - 1, this.y));
+                    this.brake();
+                }
+
+                this.shake = (this.velocity / this.maxVelocity) * 2.2;
+            }
+
+            if (this.state === 'BRAKING') {
+                this.velocity -= this.friction * frameScale;
+                if (this.velocity < 0) this.velocity = 0;
+                this.y += this.velocity * this.direction * frameScale;
+                this.shake *= 0.88;
+
+                if (this.velocity === 0) {
+                    this.shake = 0;
+                    this.evaluateRound();
+                }
+            }
+
+            this.updateHud();
+        }
+
+        updateHud() {
+            const currentIndex = Math.max(0, Math.min(this.totalFloors - 1, Math.round(this.y)));
+            const speedRatio = Math.min(1, this.velocity / this.maxVelocity);
+
+            this.scoreValue.textContent = this.score.toLocaleString();
+            this.comboValue.textContent = this.combo.toString();
+            this.lifeValue.textContent = '❤️'.repeat(Math.max(0, this.lives)) || '—';
+            this.currentFloor.textContent = this.floors[currentIndex];
+            this.targetFloor.textContent = this.floors[this.targetY];
+            this.directionArrow.textContent = this.direction > 0 ? '▲' : '▼';
+            this.speedFill.style.width = `${Math.round(speedRatio * 100)}%`;
+            this.speedText.textContent = `${Math.round(speedRatio * 100)}%`;
+        }
+
+        draw() {
+            const width = this.canvas.logicalWidth || this.stage.clientWidth;
+            const height = this.canvas.logicalHeight || this.stage.clientHeight;
+            const ctx = this.ctx;
+
+            ctx.clearRect(0, 0, width, height);
+
+            if (!['MOVING', 'BRAKING', 'EVALUATING'].includes(this.state)) return;
+
+            ctx.save();
+            if (this.shake > 0) {
+                ctx.translate((Math.random() - 0.5) * this.shake, (Math.random() - 0.5) * this.shake);
+            }
+
+            const shaftWidth = Math.min(width * 0.58, 360);
+            const shaftX = (width - shaftWidth) / 2;
+            const centerY = height * 0.53;
+
+            ctx.fillStyle = '#f1f5f9';
+            ctx.fillRect(shaftX, 0, shaftWidth, height);
+
+            ctx.strokeStyle = '#d6dde6';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(shaftX, 0);
+            ctx.lineTo(shaftX, height);
+            ctx.moveTo(shaftX + shaftWidth, 0);
+            ctx.lineTo(shaftX + shaftWidth, height);
+            ctx.stroke();
+
+            const targetDistance = Math.abs(this.y - this.targetY);
+            if (targetDistance < 5) {
+                const targetScreenY = centerY - ((this.targetY - this.y) * this.floorHeight);
+                const alpha = Math.max(0.05, 0.2 - targetDistance * 0.03);
+                ctx.fillStyle = `rgba(22, 128, 60, ${alpha})`;
+                ctx.fillRect(shaftX, targetScreenY - this.floorHeight * 0.35, shaftWidth, this.floorHeight * 0.7);
+            }
+
+            const startFloor = Math.floor(this.y - 5);
+            const endFloor = Math.ceil(this.y + 5);
+
+            ctx.textBaseline = 'middle';
+
+            for (let floor = startFloor; floor <= endFloor; floor++) {
+                if (floor < 0 || floor >= this.totalFloors) continue;
+
+                const drawY = centerY - ((floor - this.y) * this.floorHeight);
+                const isTarget = floor === this.targetY;
+
+                ctx.strokeStyle = isTarget ? '#16803c' : '#d8dee6';
+                ctx.lineWidth = isTarget ? 3 : 1;
+                ctx.beginPath();
+                ctx.moveTo(shaftX, drawY);
+                ctx.lineTo(shaftX + shaftWidth, drawY);
+                ctx.stroke();
+
+                ctx.font = isTarget ? '800 18px Noto Sans KR' : '700 14px Noto Sans KR';
+                ctx.fillStyle = isTarget ? '#16803c' : '#64748b';
+                ctx.textAlign = 'right';
+                ctx.fillText(this.floors[floor], shaftX - 12, drawY);
+
+                if (isTarget) {
+                    ctx.textAlign = 'left';
+                    ctx.fillText('← TARGET', shaftX + shaftWidth + 12, drawY);
+                }
+            }
+
+            const carWidth = shaftWidth * 0.72;
+            const carHeight = 112;
+            const carX = shaftX + (shaftWidth - carWidth) / 2;
+            const carY = centerY - carHeight / 2;
+
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#8a2442';
+            ctx.lineWidth = 3;
+            this.roundRect(ctx, carX, carY, carWidth, carHeight, 18);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = '#f8edf1';
+            this.roundRect(ctx, carX + 12, carY + 12, carWidth - 24, carHeight - 24, 12);
+            ctx.fill();
+
+            ctx.strokeStyle = '#d8b6c2';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(carX + carWidth / 2, carY + 12);
+            ctx.lineTo(carX + carWidth / 2, carY + carHeight - 12);
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        roundRect(ctx, x, y, width, height, radius) {
+            const r = Math.min(radius, width / 2, height / 2);
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.arcTo(x + width, y, x + width, y + height, r);
+            ctx.arcTo(x + width, y + height, x, y + height, r);
+            ctx.arcTo(x, y + height, x, y, r);
+            ctx.arcTo(x, y, x + width, y, r);
+            ctx.closePath();
+        }
+
+        loop(time) {
+            const delta = this.lastTime ? time - this.lastTime : 16.6667;
+            this.lastTime = time;
+            this.update(delta);
+            this.draw();
+            requestAnimationFrame((nextTime) => this.loop(nextTime));
+        }
+    }
+
+    new ElevatorGame();
+</script>
+</body>
+</html>
