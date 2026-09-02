@@ -1,0 +1,2176 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+    <title>프리셀 - FreeCell</title>
+
+    <meta
+            name="description"
+            content="회원가입과 설치 없이 즐길 수 있는 깔끔한 웹 프리셀 카드 게임입니다."
+    >
+    <meta
+            name="keywords"
+            content="프리셀, FreeCell, 카드게임, 솔리테어, 무료게임"
+    >
+
+    <meta property="og:title" content="프리셀 - FreeCell">
+    <meta
+            property="og:description"
+            content="브라우저에서 바로 즐기는 무료 프리셀 카드 게임"
+    >
+    <meta property="og:type" content="website">
+
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="manifest" href="/manifest.webmanifest">
+
+    <style>
+        :root {
+            --background: #f5f7f9;
+            --surface: #ffffff;
+            --surface-soft: #f8fafb;
+
+            --text: #181b20;
+            --text-soft: #6b7280;
+            --text-light: #9ca3af;
+
+            --border: #dde2e7;
+            --border-dark: #cbd2d9;
+
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --primary-soft: #eff6ff;
+
+            --green: #15803d;
+            --green-soft: #ecfdf3;
+
+            --red: #dc2626;
+
+            --shadow: 0 1px 2px rgba(0, 0, 0, 0.04),
+            0 8px 24px rgba(0, 0, 0, 0.05);
+
+            --radius: 20px;
+
+            --card-width: 88px;
+            --card-height: 124px;
+            --card-gap-y: 31px;
+
+            --board-width: 920px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            min-width: 320px;
+            background: var(--background);
+        }
+
+        body {
+            margin: 0;
+            color: var(--text);
+            background: var(--background);
+            font-family: -apple-system,
+            BlinkMacSystemFont,
+            "Apple SD Gothic Neo",
+            "Pretendard",
+            "Noto Sans KR",
+            "Segoe UI",
+            sans-serif;
+            font-size: 15px;
+            line-height: 1.5;
+            letter-spacing: -0.03em;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        button {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .app {
+            width: min(100% - 32px, 1180px);
+            margin: 0 auto;
+            padding: 32px 0 48px;
+        }
+
+        /* =========================
+           HEADER
+        ========================= */
+
+        .page-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 24px;
+            margin-bottom: 22px;
+        }
+
+        .page-title-wrap {
+            min-width: 0;
+        }
+
+        .page-title {
+            margin: 0;
+            font-size: 30px;
+            font-weight: 800;
+            line-height: 1.25;
+            letter-spacing: -0.05em;
+        }
+
+        .page-description {
+            margin: 8px 0 0;
+            color: var(--text-soft);
+            font-size: 14px;
+        }
+
+        .header-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .button {
+            min-height: 42px;
+            padding: 0 16px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            background: var(--surface);
+            cursor: pointer;
+            font-weight: 700;
+            transition: background 0.15s ease,
+            border-color 0.15s ease,
+            color 0.15s ease,
+            transform 0.15s ease;
+        }
+
+        .button:hover {
+            border-color: var(--border-dark);
+            background: var(--surface-soft);
+        }
+
+        .button:active {
+            transform: translateY(1px);
+        }
+
+        .button-primary {
+            color: #ffffff;
+            border-color: var(--primary);
+            background: var(--primary);
+        }
+
+        .button-primary:hover {
+            color: #ffffff;
+            border-color: var(--primary-hover);
+            background: var(--primary-hover);
+        }
+
+        .button:disabled {
+            opacity: 0.45;
+            cursor: default;
+            transform: none;
+        }
+
+        /* =========================
+           STATUS
+        ========================= */
+
+        .status-panel {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 16px;
+            padding: 14px 18px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: var(--surface);
+            box-shadow: var(--shadow);
+        }
+
+        .stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 22px;
+        }
+
+        .stat {
+            display: flex;
+            align-items: baseline;
+            gap: 7px;
+        }
+
+        .stat-label {
+            color: var(--text-soft);
+            font-size: 13px;
+        }
+
+        .stat-value {
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .game-message {
+            min-height: 22px;
+            color: var(--text-soft);
+            font-size: 14px;
+            text-align: right;
+        }
+
+        .game-message.success {
+            color: var(--green);
+            font-weight: 800;
+        }
+
+        /* =========================
+           GAME AREA
+        ========================= */
+
+        .game-shell {
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--surface);
+            box-shadow: var(--shadow);
+        }
+
+        .game-scroll {
+            overflow-x: auto;
+            padding: 24px;
+            scrollbar-width: thin;
+        }
+
+        .game-board {
+            width: var(--board-width);
+            min-width: var(--board-width);
+            margin: 0 auto;
+            user-select: none;
+        }
+
+        /* =========================
+           TOP AREA
+        ========================= */
+
+        .top-area {
+            display: grid;
+            grid-template-columns: repeat(4, var(--card-width)) 1fr repeat(4, var(--card-width));
+            gap: 12px;
+            align-items: start;
+            margin-bottom: 34px;
+        }
+
+        .top-divider {
+            min-width: 20px;
+        }
+
+        .slot {
+            position: relative;
+            width: var(--card-width);
+            height: var(--card-height);
+            border: 2px dashed #d6dce2;
+            border-radius: 12px;
+            background: #f8fafb;
+            cursor: pointer;
+        }
+
+        .slot::before {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            color: #c7cdd4;
+            font-size: 28px;
+            font-weight: 800;
+            pointer-events: none;
+        }
+
+        .freecell-slot::before {
+            content: "FREE";
+            font-size: 11px;
+            letter-spacing: 0;
+        }
+
+        .foundation-slot[data-suit="S"]::before {
+            content: "♠";
+        }
+
+        .foundation-slot[data-suit="H"]::before {
+            content: "♥";
+        }
+
+        .foundation-slot[data-suit="D"]::before {
+            content: "♦";
+        }
+
+        .foundation-slot[data-suit="C"]::before {
+            content: "♣";
+        }
+
+        .slot.valid-target {
+            border-color: var(--primary);
+            background: var(--primary-soft);
+        }
+
+        /* =========================
+           TABLEAU
+        ========================= */
+
+        .tableau {
+            display: grid;
+            grid-template-columns: repeat(8, var(--card-width));
+            gap: 30px;
+            align-items: start;
+        }
+
+        .column {
+            position: relative;
+            min-height: var(--card-height);
+            border-radius: 12px;
+            cursor: pointer;
+        }
+
+        .column.empty {
+            border: 2px dashed #e0e4e8;
+            background: #fafbfc;
+        }
+
+        .column.empty::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+        }
+
+        .column.valid-target {
+            outline: 3px solid rgba(37, 99, 235, 0.28);
+            background: var(--primary-soft);
+        }
+
+        /* =========================
+           CARD
+        ========================= */
+
+        .card {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: var(--card-width);
+            height: var(--card-height);
+            border: 1px solid #cfd5dc;
+            border-radius: 11px;
+            background: linear-gradient(
+                    145deg,
+                    #ffffff 0%,
+                    #ffffff 65%,
+                    #fafafa 100%
+            );
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.09),
+            0 6px 14px rgba(0, 0, 0, 0.04);
+            cursor: pointer;
+            overflow: hidden;
+            transition: transform 0.12s ease,
+            box-shadow 0.12s ease,
+            outline 0.12s ease;
+            touch-action: manipulation;
+        }
+
+        .card:hover {
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.12),
+            0 8px 18px rgba(0, 0, 0, 0.06);
+        }
+
+        .card.red {
+            color: var(--red);
+        }
+
+        .card.black {
+            color: #1c2025;
+        }
+
+        .card.selected {
+            z-index: 100 !important;
+            outline: 3px solid var(--primary);
+            outline-offset: 2px;
+            transform: translateY(-5px);
+        }
+
+        .card.sequence-selected {
+            outline: 2px solid var(--primary);
+            outline-offset: 1px;
+        }
+
+        .card-corner {
+            position: absolute;
+            top: 7px;
+            left: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1;
+        }
+
+        .card-rank {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+        }
+
+        .card-suit-small {
+            margin-top: 3px;
+            font-size: 17px;
+        }
+
+        .card-center {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            padding-top: 15px;
+            font-size: 42px;
+            line-height: 1;
+        }
+
+        /* =========================
+           INFO
+        ========================= */
+
+        .information {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin-top: 18px;
+        }
+
+        .info-card {
+            padding: 20px;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            background: var(--surface);
+        }
+
+        .info-title {
+            margin: 0 0 10px;
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .info-text {
+            margin: 0;
+            color: var(--text-soft);
+            font-size: 14px;
+            line-height: 1.75;
+        }
+
+        /* =========================
+           MODAL
+        ========================= */
+
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(15, 23, 42, 0.38);
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-dialog {
+            width: min(100%, 420px);
+            padding: 28px;
+            border-radius: 22px;
+            background: var(--surface);
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .modal-icon {
+            margin-bottom: 10px;
+            font-size: 48px;
+        }
+
+        .modal-title {
+            margin: 0;
+            font-size: 25px;
+            font-weight: 800;
+        }
+
+        .modal-description {
+            margin: 12px 0 22px;
+            color: var(--text-soft);
+            line-height: 1.7;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        /* =========================
+           RESPONSIVE
+        ========================= */
+
+        @media (max-width: 760px) {
+            :root {
+                --card-width: 72px;
+                --card-height: 102px;
+                --card-gap-y: 26px;
+                --board-width: 768px;
+            }
+
+            .app {
+                width: min(100% - 20px, 1180px);
+                padding-top: 20px;
+                padding-bottom: 30px;
+            }
+
+            .page-header {
+                display: block;
+            }
+
+            .page-title {
+                font-size: 25px;
+            }
+
+            .page-description {
+                font-size: 13px;
+            }
+
+            .header-actions {
+                justify-content: flex-start;
+                margin-top: 16px;
+            }
+
+            .button {
+                min-height: 40px;
+                padding: 0 13px;
+                font-size: 13px;
+            }
+
+            .status-panel {
+                display: block;
+                padding: 13px 15px;
+            }
+
+            .stats {
+                gap: 15px;
+            }
+
+            .game-message {
+                margin-top: 8px;
+                text-align: left;
+            }
+
+            .game-scroll {
+                padding: 18px;
+            }
+
+            .top-area {
+                gap: 10px;
+                margin-bottom: 28px;
+            }
+
+            .tableau {
+                gap: 27px;
+            }
+
+            .card-rank {
+                font-size: 17px;
+            }
+
+            .card-suit-small {
+                font-size: 15px;
+            }
+
+            .card-center {
+                font-size: 34px;
+            }
+
+            .information {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-actions {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .button-primary {
+                grid-column: 1 / -1;
+            }
+
+            .stats {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .stat {
+                display: block;
+            }
+
+            .stat-label,
+            .stat-value {
+                display: block;
+            }
+
+            .stat-value {
+                margin-top: 2px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <header class="page-header">
+        <div class="page-title-wrap">
+            <h1 class="page-title">🃏 프리셀 <span lang="en">FreeCell</span></h1>
+
+            <p class="page-description">
+                52장의 카드를 정리해 네 개의 파운데이션을 완성하세요.
+            </p>
+        </div>
+
+        <div class="header-actions">
+            <button
+                    type="button"
+                    class="button"
+                    id="restartButton"
+            >
+                ↻ 다시 시작
+            </button>
+
+            <button
+                    type="button"
+                    class="button"
+                    id="undoButton"
+                    disabled
+            >
+                ↶ 되돌리기
+            </button>
+
+            <button
+                    type="button"
+                    class="button button-primary"
+                    id="newGameButton"
+            >
+                🎲 새 게임
+            </button>
+        </div>
+    </header>
+
+    <section class="status-panel" aria-label="게임 정보">
+        <div class="stats">
+            <div class="stat">
+                <span class="stat-label">게임</span>
+                <span class="stat-value" id="gameNumber">-</span>
+            </div>
+
+            <div class="stat">
+                <span class="stat-label">이동</span>
+                <span class="stat-value" id="moveCount">0</span>
+            </div>
+
+            <div class="stat">
+                <span class="stat-label">시간</span>
+                <span class="stat-value" id="timer">00:00</span>
+            </div>
+        </div>
+
+        <div
+                class="game-message"
+                id="gameMessage"
+                aria-live="polite"
+        >
+            카드를 선택하여 게임을 시작하세요.
+        </div>
+    </section>
+
+    <main class="game-shell">
+
+        <div class="game-scroll">
+
+            <div
+                    class="game-board"
+                    id="gameBoard"
+                    aria-label="프리셀 게임판"
+            >
+
+                <section class="top-area">
+
+                    <div
+                            class="slot freecell-slot"
+                            data-type="freecell"
+                            data-index="0"
+                            aria-label="프리셀 1"
+                    ></div>
+
+                    <div
+                            class="slot freecell-slot"
+                            data-type="freecell"
+                            data-index="1"
+                            aria-label="프리셀 2"
+                    ></div>
+
+                    <div
+                            class="slot freecell-slot"
+                            data-type="freecell"
+                            data-index="2"
+                            aria-label="프리셀 3"
+                    ></div>
+
+                    <div
+                            class="slot freecell-slot"
+                            data-type="freecell"
+                            data-index="3"
+                            aria-label="프리셀 4"
+                    ></div>
+
+                    <div class="top-divider"></div>
+
+                    <div
+                            class="slot foundation-slot"
+                            data-type="foundation"
+                            data-index="0"
+                            data-suit="S"
+                            aria-label="스페이드 파운데이션"
+                    ></div>
+
+                    <div
+                            class="slot foundation-slot"
+                            data-type="foundation"
+                            data-index="1"
+                            data-suit="H"
+                            aria-label="하트 파운데이션"
+                    ></div>
+
+                    <div
+                            class="slot foundation-slot"
+                            data-type="foundation"
+                            data-index="2"
+                            data-suit="D"
+                            aria-label="다이아몬드 파운데이션"
+                    ></div>
+
+                    <div
+                            class="slot foundation-slot"
+                            data-type="foundation"
+                            data-index="3"
+                            data-suit="C"
+                            aria-label="클로버 파운데이션"
+                    ></div>
+
+                </section>
+
+                <section
+                        class="tableau"
+                        id="tableau"
+                        aria-label="카드 배열"
+                ></section>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <section class="information">
+
+        <article class="info-card">
+            <h2 class="info-title">🎯 게임 방법</h2>
+
+            <p class="info-text">
+                카드를 클릭한 뒤 이동할 위치를 클릭하세요.
+                아래 카드보다 숫자가 하나 작고 색상이 다른 카드만
+                이어서 놓을 수 있습니다.
+                빈 열에는 어떤 카드든 이동할 수 있습니다.
+            </p>
+        </article>
+
+        <article class="info-card">
+            <h2 class="info-title">💡 프리셀 규칙</h2>
+
+            <p class="info-text">
+                왼쪽 위의 네 칸은 카드를 한 장씩 임시 보관하는
+                프리셀입니다. 오른쪽 위 파운데이션에는 같은 무늬의
+                카드를 A부터 K까지 순서대로 올려놓습니다.
+                모든 카드를 파운데이션으로 옮기면 승리합니다.
+            </p>
+        </article>
+
+    </section>
+
+</div>
+
+
+<div
+        class="modal"
+        id="winModal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="winTitle"
+>
+    <div class="modal-dialog">
+
+        <div class="modal-icon">🎉</div>
+
+        <h2 class="modal-title" id="winTitle">
+            게임 완료!
+        </h2>
+
+        <p class="modal-description" id="winDescription">
+            프리셀을 완성했습니다.
+        </p>
+
+        <div class="modal-actions">
+            <button
+                    type="button"
+                    class="button"
+                    id="closeModalButton"
+            >
+                닫기
+            </button>
+
+            <button
+                    type="button"
+                    class="button button-primary"
+                    id="modalNewGameButton"
+            >
+                새 게임
+            </button>
+        </div>
+
+    </div>
+</div>
+
+
+<script>
+    (function () {
+        'use strict';
+
+        /* =========================================
+           기본 설정
+        ========================================= */
+
+        var SUITS = ['S', 'H', 'D', 'C'];
+
+        var SUIT_SYMBOLS = {
+            S: '♠',
+            H: '♥',
+            D: '♦',
+            C: '♣'
+        };
+
+        var RANK_NAMES = {
+            1 : 'A',
+            11: 'J',
+            12: 'Q',
+            13: 'K'
+        };
+
+        var state = {
+            tableau    : [],
+            freecells  : [null, null, null, null],
+            foundations: {
+                S: [],
+                H: [],
+                D: [],
+                C: []
+            },
+
+            selected: null,
+            history : [],
+
+            moves       : 0,
+            seconds     : 0,
+            timerId     : null,
+            timerStarted: false,
+
+            gameNumber        : 0,
+            originalGameNumber: 0,
+            won               : false
+        };
+
+
+        /* =========================================
+           DOM
+        ========================================= */
+
+        var tableauElement = document.getElementById('tableau');
+
+        var gameNumberElement = document.getElementById('gameNumber');
+        var moveCountElement = document.getElementById('moveCount');
+        var timerElement = document.getElementById('timer');
+        var gameMessageElement = document.getElementById('gameMessage');
+
+        var newGameButton = document.getElementById('newGameButton');
+        var restartButton = document.getElementById('restartButton');
+        var undoButton = document.getElementById('undoButton');
+
+        var winModal = document.getElementById('winModal');
+        var winDescription = document.getElementById('winDescription');
+
+        var closeModalButton = document.getElementById('closeModalButton');
+        var modalNewGameButton = document.getElementById('modalNewGameButton');
+
+
+        /* =========================================
+           카드 생성
+        ========================================= */
+
+        function createDeck() {
+            var deck = [];
+            var id = 0;
+
+            SUITS.forEach(function (suit) {
+                for (var rank = 1; rank <= 13; rank++) {
+                    deck.push({
+                        id  : id++,
+                        suit: suit,
+                        rank: rank
+                    });
+                }
+            });
+
+            return deck;
+        }
+
+
+        function getCardColor(card) {
+            return card.suit === 'H' || card.suit === 'D'
+                ? 'red'
+                : 'black';
+        }
+
+
+        function getRankLabel(rank) {
+            return RANK_NAMES[rank] || String(rank);
+        }
+
+
+        /* =========================================
+           Seed Random
+        ========================================= */
+
+        function seededRandom(seed) {
+            var value = seed % 2147483647;
+
+            if (value <= 0) {
+                value += 2147483646;
+            }
+
+            return function () {
+                value = value * 16807 % 2147483647;
+
+                return (value - 1) / 2147483646;
+            };
+        }
+
+
+        function shuffleDeck(deck, seed) {
+            var random = seededRandom(seed);
+
+            for (var i = deck.length - 1; i > 0; i--) {
+                var j = Math.floor(random() * (i + 1));
+
+                var temp = deck[i];
+                deck[i] = deck[j];
+                deck[j] = temp;
+            }
+
+            return deck;
+        }
+
+
+        /* =========================================
+           새 게임
+        ========================================= */
+
+        function generateGameNumber() {
+            return Math.floor(Math.random() * 999999) + 1;
+        }
+
+
+        function newGame(gameNumber) {
+            stopTimer();
+
+            state.gameNumber = gameNumber || generateGameNumber();
+            state.originalGameNumber = state.gameNumber;
+
+            state.moves = 0;
+            state.seconds = 0;
+            state.timerStarted = false;
+            state.won = false;
+
+            state.history = [];
+            state.selected = null;
+
+            state.freecells = [
+                null,
+                null,
+                null,
+                null
+            ];
+
+            state.foundations = {
+                S: [],
+                H: [],
+                D: [],
+                C: []
+            };
+
+            state.tableau = [
+                [],
+                [],
+                [],
+                [],
+                [],
+                [],
+                [],
+                []
+            ];
+
+            var deck = shuffleDeck(
+                createDeck(),
+                state.gameNumber
+            );
+
+            deck.forEach(function (card, index) {
+                state.tableau[index % 8].push(card);
+            });
+
+            hideWinModal();
+
+            setMessage(
+                '카드를 선택하여 게임을 시작하세요.'
+            );
+
+            render();
+        }
+
+
+        function restartGame() {
+            newGame(state.originalGameNumber);
+        }
+
+
+        /* =========================================
+           타이머
+        ========================================= */
+
+        function startTimer() {
+            if (state.timerStarted || state.won) {
+                return;
+            }
+
+            state.timerStarted = true;
+
+            state.timerId = window.setInterval(function () {
+                state.seconds++;
+                updateTimer();
+            }, 1000);
+        }
+
+
+        function stopTimer() {
+            if (state.timerId) {
+                window.clearInterval(state.timerId);
+                state.timerId = null;
+            }
+        }
+
+
+        function updateTimer() {
+            var minutes = Math.floor(state.seconds / 60);
+            var seconds = state.seconds % 60;
+
+            timerElement.textContent =
+                String(minutes).padStart(2, '0') +
+                ':' +
+                String(seconds).padStart(2, '0');
+        }
+
+
+        /* =========================================
+           히스토리
+        ========================================= */
+
+        function createSnapshot() {
+            return {
+                tableau: JSON.parse(
+                    JSON.stringify(state.tableau)
+                ),
+
+                freecells: JSON.parse(
+                    JSON.stringify(state.freecells)
+                ),
+
+                foundations: JSON.parse(
+                    JSON.stringify(state.foundations)
+                ),
+
+                moves: state.moves
+            };
+        }
+
+
+        function saveHistory() {
+            state.history.push(createSnapshot());
+
+            if (state.history.length > 200) {
+                state.history.shift();
+            }
+        }
+
+
+        function undo() {
+            if (!state.history.length || state.won) {
+                return;
+            }
+
+            var snapshot = state.history.pop();
+
+            state.tableau = snapshot.tableau;
+            state.freecells = snapshot.freecells;
+            state.foundations = snapshot.foundations;
+            state.moves = snapshot.moves;
+
+            state.selected = null;
+
+            setMessage('마지막 이동을 되돌렸습니다.');
+
+            render();
+        }
+
+
+        /* =========================================
+           선택
+        ========================================= */
+
+        function selectCard(type, index, cardIndex) {
+            startTimer();
+
+            state.selected = {
+                type     : type,
+                index    : index,
+                cardIndex: cardIndex
+            };
+
+            setMessage('이동할 위치를 선택하세요.');
+
+            render();
+        }
+
+
+        function clearSelection() {
+            state.selected = null;
+            render();
+        }
+
+
+        function getSelectedCards() {
+            if (!state.selected) {
+                return [];
+            }
+
+            if (state.selected.type === 'tableau') {
+                return state.tableau[
+                    state.selected.index
+                    ].slice(state.selected.cardIndex);
+            }
+
+            if (state.selected.type === 'freecell') {
+                var card =
+                        state.freecells[state.selected.index];
+
+                return card ? [card] : [];
+            }
+
+            if (state.selected.type === 'foundation') {
+                var suit = SUITS[state.selected.index];
+
+                var cards = state.foundations[suit];
+
+                if (!cards.length) {
+                    return [];
+                }
+
+                return [cards[cards.length - 1]];
+            }
+
+            return [];
+        }
+
+
+        /* =========================================
+           카드 배열 규칙
+        ========================================= */
+
+        function isOppositeColor(cardA, cardB) {
+            return getCardColor(cardA) !==
+                getCardColor(cardB);
+        }
+
+
+        function canStackCard(card, targetCard) {
+            if (!targetCard) {
+                return true;
+            }
+
+            return (
+                targetCard.rank === card.rank + 1 &&
+                isOppositeColor(card, targetCard)
+            );
+        }
+
+
+        function isValidSequence(cards) {
+            if (!cards.length) {
+                return false;
+            }
+
+            for (var i = 0; i < cards.length - 1; i++) {
+                var current = cards[i];
+                var next = cards[i + 1];
+
+                if (
+                    current.rank !== next.rank + 1 ||
+                    !isOppositeColor(current, next)
+                ) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+
+        /* =========================================
+           여러 장 이동 가능 개수
+        ========================================= */
+
+        function getMaxMovableCards(
+            destinationColumnIndex
+        ) {
+            var emptyFreecells = state.freecells.filter(
+                function (card) {
+                    return card === null;
+                }
+            ).length;
+
+            var emptyColumns = state.tableau.filter(
+                function (column, index) {
+                    if (index === destinationColumnIndex) {
+                        return false;
+                    }
+
+                    return column.length === 0;
+                }
+            ).length;
+
+            return (
+                (emptyFreecells + 1) *
+                Math.pow(2, emptyColumns)
+            );
+        }
+
+
+        /* =========================================
+           원본 위치에서 제거
+        ========================================= */
+
+        function removeSelectedCards() {
+            var selected = state.selected;
+
+            if (!selected) {
+                return [];
+            }
+
+            if (selected.type === 'tableau') {
+                return state.tableau[
+                    selected.index
+                    ].splice(selected.cardIndex);
+            }
+
+            if (selected.type === 'freecell') {
+                var card =
+                        state.freecells[selected.index];
+
+                state.freecells[selected.index] = null;
+
+                return card ? [card] : [];
+            }
+
+            if (selected.type === 'foundation') {
+                var suit = SUITS[selected.index];
+
+                var foundation = state.foundations[suit];
+
+                if (!foundation.length) {
+                    return [];
+                }
+
+                return [foundation.pop()];
+            }
+
+            return [];
+        }
+
+
+        /* =========================================
+           Tableau 이동
+        ========================================= */
+
+        function moveToTableau(columnIndex) {
+            if (!state.selected) {
+                return false;
+            }
+
+            if (
+                state.selected.type === 'tableau' &&
+                state.selected.index === columnIndex
+            ) {
+                clearSelection();
+                return false;
+            }
+
+            var cards = getSelectedCards();
+
+            if (!cards.length) {
+                return false;
+            }
+
+            if (!isValidSequence(cards)) {
+                setMessage(
+                    '연속된 카드는 색상을 번갈아 숫자 순서로 정렬되어야 합니다.'
+                );
+
+                return false;
+            }
+
+            var destination =
+                    state.tableau[columnIndex];
+
+            var targetCard =
+                    destination.length
+                        ? destination[destination.length - 1]
+                        : null;
+
+            if (!canStackCard(cards[0], targetCard)) {
+                setMessage(
+                    '색상이 다르고 숫자가 하나 큰 카드 위에 놓을 수 있습니다.'
+                );
+
+                return false;
+            }
+
+            var maxCards =
+                    getMaxMovableCards(columnIndex);
+
+            if (cards.length > maxCards) {
+                setMessage(
+                    '현재 빈 프리셀과 빈 열로는 한 번에 ' +
+                    maxCards +
+                    '장까지 이동할 수 있습니다.'
+                );
+
+                return false;
+            }
+
+            saveHistory();
+
+            var movedCards = removeSelectedCards();
+
+            Array.prototype.push.apply(
+                destination,
+                movedCards
+            );
+
+            completeMove();
+
+            return true;
+        }
+
+
+        /* =========================================
+           FreeCell 이동
+        ========================================= */
+
+        function moveToFreecell(index) {
+            if (!state.selected) {
+                return false;
+            }
+
+            if (state.freecells[index]) {
+                var occupiedCard =
+                        state.freecells[index];
+
+                if (
+                    state.selected.type === 'freecell' &&
+                    state.selected.index === index
+                ) {
+                    clearSelection();
+                    return false;
+                }
+
+                selectCard('freecell', index, 0);
+
+                return false;
+            }
+
+            var cards = getSelectedCards();
+
+            if (cards.length !== 1) {
+                setMessage(
+                    '프리셀에는 카드 한 장만 보관할 수 있습니다.'
+                );
+
+                return false;
+            }
+
+            saveHistory();
+
+            var movedCards = removeSelectedCards();
+
+            state.freecells[index] = movedCards[0];
+
+            completeMove();
+
+            return true;
+        }
+
+
+        /* =========================================
+           Foundation 이동
+        ========================================= */
+
+        function canMoveToFoundation(card, suit) {
+            if (!card || card.suit !== suit) {
+                return false;
+            }
+
+            var foundation =
+                    state.foundations[suit];
+
+            if (!foundation.length) {
+                return card.rank === 1;
+            }
+
+            var topCard =
+                    foundation[foundation.length - 1];
+
+            return card.rank === topCard.rank + 1;
+        }
+
+
+        function moveToFoundation(index) {
+            if (!state.selected) {
+                return false;
+            }
+
+            var cards = getSelectedCards();
+
+            if (cards.length !== 1) {
+                setMessage(
+                    '파운데이션에는 카드 한 장씩 이동할 수 있습니다.'
+                );
+
+                return false;
+            }
+
+            var suit = SUITS[index];
+            var card = cards[0];
+
+            if (!canMoveToFoundation(card, suit)) {
+                setMessage(
+                    '같은 무늬의 카드를 A부터 순서대로 올려주세요.'
+                );
+
+                return false;
+            }
+
+            saveHistory();
+
+            var movedCards = removeSelectedCards();
+
+            state.foundations[suit].push(
+                movedCards[0]
+            );
+
+            completeMove();
+
+            return true;
+        }
+
+
+        /* =========================================
+           더블클릭 자동 이동
+        ========================================= */
+
+        function autoMoveCard(
+            type,
+            index,
+            cardIndex
+        ) {
+            var card = null;
+
+            if (type === 'tableau') {
+                var column = state.tableau[index];
+
+                if (
+                    cardIndex !== column.length - 1
+                ) {
+                    return;
+                }
+
+                card = column[cardIndex];
+            }
+
+            if (type === 'freecell') {
+                card = state.freecells[index];
+            }
+
+            if (!card) {
+                return;
+            }
+
+            var foundationIndex =
+                    SUITS.indexOf(card.suit);
+
+            state.selected = {
+                type     : type,
+                index    : index,
+                cardIndex: cardIndex
+            };
+
+            moveToFoundation(foundationIndex);
+        }
+
+
+        /* =========================================
+           이동 완료
+        ========================================= */
+
+        function completeMove() {
+            state.moves++;
+            state.selected = null;
+
+            setMessage('카드를 이동했습니다.');
+
+            render();
+
+            checkWin();
+        }
+
+
+        /* =========================================
+           승리
+        ========================================= */
+
+        function checkWin() {
+            var total = 0;
+
+            SUITS.forEach(function (suit) {
+                total += state.foundations[suit].length;
+            });
+
+            if (total !== 52) {
+                return;
+            }
+
+            state.won = true;
+            stopTimer();
+
+            setMessage(
+                '🎉 축하합니다! 프리셀을 완성했습니다.',
+                true
+            );
+
+            winDescription.textContent =
+                state.moves +
+                '번 이동 · ' +
+                formatTime(state.seconds) +
+                ' 만에 게임을 완료했습니다.';
+
+            showWinModal();
+        }
+
+
+        /* =========================================
+           렌더링
+        ========================================= */
+
+        function render() {
+            renderTableau();
+            renderFreecells();
+            renderFoundations();
+            renderStats();
+
+            undoButton.disabled =
+                state.history.length === 0 ||
+                state.won;
+        }
+
+
+        function renderTableau() {
+            tableauElement.innerHTML = '';
+
+            state.tableau.forEach(
+                function (column, columnIndex) {
+                    var columnElement =
+                            document.createElement('div');
+
+                    columnElement.className =
+                        'column' +
+                        (
+                            column.length === 0
+                                ? ' empty'
+                                : ''
+                        );
+
+                    columnElement.dataset.index =
+                        columnIndex;
+
+                    var columnHeight =
+                            column.length === 0
+                                ? getCardHeight()
+                                : getCardHeight() +
+                                ((column.length - 1) *
+                                    getCardGap());
+
+                    columnElement.style.height =
+                        columnHeight + 'px';
+
+                    columnElement.addEventListener(
+                        'click',
+                        function (event) {
+                            if (
+                                event.target.closest('.card')
+                            ) {
+                                return;
+                            }
+
+                            if (state.selected) {
+                                moveToTableau(columnIndex);
+                            }
+                        }
+                    );
+
+                    column.forEach(
+                        function (card, cardIndex) {
+                            var cardElement =
+                                    createCardElement(card);
+
+                            cardElement.style.top =
+                                (
+                                    cardIndex *
+                                    getCardGap()
+                                ) + 'px';
+
+                            cardElement.style.zIndex =
+                                cardIndex + 1;
+
+                            if (
+                                state.selected &&
+                                state.selected.type ===
+                                'tableau' &&
+                                state.selected.index ===
+                                columnIndex &&
+                                cardIndex >=
+                                state.selected.cardIndex
+                            ) {
+                                cardElement.classList.add(
+                                    cardIndex ===
+                                    state.selected.cardIndex
+                                        ? 'selected'
+                                        : 'sequence-selected'
+                                );
+                            }
+
+                            cardElement.addEventListener(
+                                'click',
+                                function (event) {
+                                    event.stopPropagation();
+
+                                    handleTableauCardClick(
+                                        columnIndex,
+                                        cardIndex
+                                    );
+                                }
+                            );
+
+                            cardElement.addEventListener(
+                                'dblclick',
+                                function (event) {
+                                    event.stopPropagation();
+
+                                    autoMoveCard(
+                                        'tableau',
+                                        columnIndex,
+                                        cardIndex
+                                    );
+                                }
+                            );
+
+                            columnElement.appendChild(
+                                cardElement
+                            );
+                        }
+                    );
+
+                    tableauElement.appendChild(
+                        columnElement
+                    );
+                }
+            );
+        }
+
+
+        function handleTableauCardClick(
+            columnIndex,
+            cardIndex
+        ) {
+            if (state.won) {
+                return;
+            }
+
+            if (!state.selected) {
+                selectCard(
+                    'tableau',
+                    columnIndex,
+                    cardIndex
+                );
+
+                return;
+            }
+
+            if (
+                state.selected.type === 'tableau' &&
+                state.selected.index === columnIndex
+            ) {
+                selectCard(
+                    'tableau',
+                    columnIndex,
+                    cardIndex
+                );
+
+                return;
+            }
+
+            var moved =
+                    moveToTableau(columnIndex);
+
+            if (!moved) {
+                var column =
+                        state.tableau[columnIndex];
+
+                if (cardIndex < column.length) {
+                    selectCard(
+                        'tableau',
+                        columnIndex,
+                        cardIndex
+                    );
+                }
+            }
+        }
+
+
+        function renderFreecells() {
+            var slots =
+                    document.querySelectorAll(
+                        '.freecell-slot'
+                    );
+
+            slots.forEach(function (slot, index) {
+                slot.innerHTML = '';
+
+                var card = state.freecells[index];
+
+                if (card) {
+                    var cardElement =
+                            createCardElement(card);
+
+                    if (
+                        state.selected &&
+                        state.selected.type ===
+                        'freecell' &&
+                        state.selected.index === index
+                    ) {
+                        cardElement.classList.add(
+                            'selected'
+                        );
+                    }
+
+                    cardElement.addEventListener(
+                        'click',
+                        function (event) {
+                            event.stopPropagation();
+
+                            if (
+                                state.selected &&
+                                !(
+                                    state.selected.type ===
+                                    'freecell' &&
+                                    state.selected.index ===
+                                    index
+                                )
+                            ) {
+                                selectCard(
+                                    'freecell',
+                                    index,
+                                    0
+                                );
+                            } else if (
+                                state.selected &&
+                                state.selected.type ===
+                                'freecell' &&
+                                state.selected.index === index
+                            ) {
+                                clearSelection();
+                            } else {
+                                selectCard(
+                                    'freecell',
+                                    index,
+                                    0
+                                );
+                            }
+                        }
+                    );
+
+                    cardElement.addEventListener(
+                        'dblclick',
+                        function (event) {
+                            event.stopPropagation();
+
+                            autoMoveCard(
+                                'freecell',
+                                index,
+                                0
+                            );
+                        }
+                    );
+
+                    slot.appendChild(cardElement);
+                }
+
+                slot.onclick = function () {
+                    if (!card && state.selected) {
+                        moveToFreecell(index);
+                    }
+                };
+            });
+        }
+
+
+        function renderFoundations() {
+            var slots =
+                    document.querySelectorAll(
+                        '.foundation-slot'
+                    );
+
+            slots.forEach(function (slot, index) {
+                slot.innerHTML = '';
+
+                var suit = SUITS[index];
+                var cards = state.foundations[suit];
+
+                if (cards.length) {
+                    var topCard =
+                            cards[cards.length - 1];
+
+                    var cardElement =
+                            createCardElement(topCard);
+
+                    if (
+                        state.selected &&
+                        state.selected.type ===
+                        'foundation' &&
+                        state.selected.index === index
+                    ) {
+                        cardElement.classList.add(
+                            'selected'
+                        );
+                    }
+
+                    cardElement.addEventListener(
+                        'click',
+                        function (event) {
+                            event.stopPropagation();
+
+                            if (
+                                state.selected &&
+                                state.selected.type ===
+                                'foundation' &&
+                                state.selected.index === index
+                            ) {
+                                clearSelection();
+                                return;
+                            }
+
+                            if (state.selected) {
+                                moveToFoundation(index);
+                                return;
+                            }
+
+                            selectCard(
+                                'foundation',
+                                index,
+                                cards.length - 1
+                            );
+                        }
+                    );
+
+                    slot.appendChild(cardElement);
+                }
+
+                slot.onclick = function () {
+                    if (state.selected) {
+                        moveToFoundation(index);
+                    }
+                };
+            });
+        }
+
+
+        function createCardElement(card) {
+            var element =
+                    document.createElement('div');
+
+            var color =
+                    getCardColor(card);
+
+            element.className =
+                'card ' + color;
+
+            element.dataset.cardId = card.id;
+
+            element.innerHTML =
+                '<div class="card-corner">' +
+                '<span class="card-rank">' +
+                getRankLabel(card.rank) +
+                '</span>' +
+                '<span class="card-suit-small">' +
+                SUIT_SYMBOLS[card.suit] +
+                '</span>' +
+                '</div>' +
+
+                '<div class="card-center">' +
+                SUIT_SYMBOLS[card.suit] +
+                '</div>';
+
+            element.setAttribute(
+                'aria-label',
+                getRankLabel(card.rank) +
+                ' ' +
+                SUIT_SYMBOLS[card.suit]
+            );
+
+            return element;
+        }
+
+
+        function renderStats() {
+            gameNumberElement.textContent =
+                '#' + state.gameNumber;
+
+            moveCountElement.textContent =
+                state.moves;
+
+            updateTimer();
+        }
+
+
+        /* =========================================
+           CSS 값
+        ========================================= */
+
+        function getCardHeight() {
+            return parseFloat(
+                getComputedStyle(
+                    document.documentElement
+                ).getPropertyValue(
+                    '--card-height'
+                )
+            );
+        }
+
+
+        function getCardGap() {
+            return parseFloat(
+                getComputedStyle(
+                    document.documentElement
+                ).getPropertyValue(
+                    '--card-gap-y'
+                )
+            );
+        }
+
+
+        /* =========================================
+           메시지
+        ========================================= */
+
+        function setMessage(message, success) {
+            gameMessageElement.textContent = message;
+
+            gameMessageElement.classList.toggle(
+                'success',
+                Boolean(success)
+            );
+        }
+
+
+        function formatTime(totalSeconds) {
+            var minutes =
+                    Math.floor(totalSeconds / 60);
+
+            var seconds =
+                    totalSeconds % 60;
+
+            return (
+                String(minutes).padStart(2, '0') +
+                ':' +
+                String(seconds).padStart(2, '0')
+            );
+        }
+
+
+        /* =========================================
+           Modal
+        ========================================= */
+
+        function showWinModal() {
+            winModal.classList.add('show');
+        }
+
+
+        function hideWinModal() {
+            winModal.classList.remove('show');
+        }
+
+
+        /* =========================================
+           이벤트
+        ========================================= */
+
+        newGameButton.addEventListener(
+            'click',
+            function () {
+                newGame();
+            }
+        );
+
+
+        restartButton.addEventListener(
+            'click',
+            function () {
+                restartGame();
+            }
+        );
+
+
+        undoButton.addEventListener(
+            'click',
+            function () {
+                undo();
+            }
+        );
+
+
+        closeModalButton.addEventListener(
+            'click',
+            function () {
+                hideWinModal();
+            }
+        );
+
+
+        modalNewGameButton.addEventListener(
+            'click',
+            function () {
+                newGame();
+            }
+        );
+
+
+        winModal.addEventListener(
+            'click',
+            function (event) {
+                if (event.target === winModal) {
+                    hideWinModal();
+                }
+            }
+        );
+
+
+        document.addEventListener(
+            'keydown',
+            function (event) {
+                if (event.key === 'Escape') {
+                    if (
+                        winModal.classList.contains('show')
+                    ) {
+                        hideWinModal();
+                        return;
+                    }
+
+                    if (state.selected) {
+                        clearSelection();
+
+                        setMessage(
+                            '카드 선택을 취소했습니다.'
+                        );
+                    }
+                }
+
+                if (
+                    (
+                        event.ctrlKey ||
+                        event.metaKey
+                    ) &&
+                    event.key.toLowerCase() === 'z'
+                ) {
+                    event.preventDefault();
+                    undo();
+                }
+            }
+        );
+
+
+        window.addEventListener(
+            'resize',
+            function () {
+                renderTableau();
+            }
+        );
+
+
+        /* =========================================
+           시작
+        ========================================= */
+
+        newGame();
+
+    })();
+</script>
+
+</body>
+</html>
