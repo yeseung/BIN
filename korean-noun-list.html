@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0"
+    />
+
+    <meta
+            name="description"
+            content="위키낱말사전에서 한국어 명사 목록을 가져오는 바닐라 JavaScript 예제"
+    />
+
+    <title>한국어 명사 가져오기</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #f5f6f8;
+            color: #222;
+            font-family:
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Noto Sans KR",
+                    "Apple SD Gothic Neo",
+                    Arial,
+                    sans-serif;
+            line-height: 1.6;
+        }
+
+        .container {
+            width: min(100% - 32px, 900px);
+            margin: 60px auto;
+        }
+
+        .card {
+            padding: 32px;
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+            background: #fff;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+        }
+
+        h1 {
+            margin: 0 0 10px;
+            font-size: 28px;
+        }
+
+        .description {
+            margin: 0 0 24px;
+            color: #666;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        button {
+            min-height: 44px;
+            padding: 0 18px;
+            border: 0;
+            border-radius: 10px;
+            background: #111827;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #374151;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .status {
+            margin-bottom: 20px;
+            padding: 14px 16px;
+            border-radius: 10px;
+            background: #f3f4f6;
+            font-size: 14px;
+        }
+
+        .count {
+            font-weight: 700;
+        }
+
+        .word-list {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .word-item {
+            min-width: 0;
+            padding: 10px 12px;
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: #fff;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .empty {
+            padding: 40px 10px;
+            color: #888;
+            text-align: center;
+        }
+
+        @media (max-width: 700px) {
+            .container {
+                margin: 24px auto;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .word-list {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <main class="card">
+        <h1>📚 한국어 명사 목록</h1>
+
+        <p class="description">
+            위키낱말사전의 한국어 명사 분류에서 단어를 가져옵니다.
+        </p>
+
+        <div class="toolbar">
+            <button
+                    type="button"
+                    id="loadButton"
+            >
+                명사 가져오기
+            </button>
+
+            <button
+                    type="button"
+                    id="loadAllButton"
+            >
+                전체 가져오기
+            </button>
+        </div>
+
+        <div
+                class="status"
+                id="status"
+                aria-live="polite"
+        >
+            가져오기 버튼을 눌러주세요.
+        </div>
+
+        <ul
+                class="word-list"
+                id="wordList"
+        ></ul>
+    </main>
+</div>
+
+
+<script>
+    (function () {
+        "use strict";
+
+        var API_URL = "https://ko.wiktionary.org/w/api.php";
+
+        var CATEGORY_NAME = "분류:한국어 명사";
+
+        var wordList = document.getElementById("wordList");
+        var statusElement = document.getElementById("status");
+
+        var loadButton = document.getElementById("loadButton");
+        var loadAllButton = document.getElementById("loadAllButton");
+
+
+        /*
+         * 한 페이지 가져오기
+         */
+        async function getWords(continueToken) {
+
+            var params = new URLSearchParams({
+                action: "query",
+                format: "json",
+                origin: "*",
+                list: "categorymembers",
+                cmtitle: CATEGORY_NAME,
+                cmnamespace: "0",
+                cmlimit: "500"
+            });
+
+
+            if (continueToken) {
+                params.set("cmcontinue", continueToken);
+            }
+
+
+            var url = API_URL + "?" + params.toString();
+            console.log(url);
+
+
+            var response = await fetch(url);
+
+
+            if (!response.ok) {
+                throw new Error(
+                    "HTTP 오류: " + response.status
+                );
+            }
+
+
+            var data = await response.json();
+
+
+            if (
+                !data.query ||
+                !data.query.categorymembers
+            ) {
+                return {
+                    words: [],
+                    continueToken: null
+                };
+            }
+
+
+            var words = data.query.categorymembers
+            .map(function (item) {
+                return item.title.trim();
+            })
+            .filter(function (title) {
+                return title !== "";
+            });
+
+
+            var nextToken = null;
+
+
+            if (
+                data.continue &&
+                data.continue.cmcontinue
+            ) {
+                nextToken = data.continue.cmcontinue;
+            }
+
+
+            return {
+                words: words,
+                continueToken: nextToken
+            };
+        }
+
+
+        /*
+         * 목록 출력
+         */
+        function renderWords(words) {
+
+            wordList.innerHTML = "";
+
+
+            if (!words.length) {
+                wordList.innerHTML =
+                    '<li class="empty">단어가 없습니다.</li>';
+
+                return;
+            }
+
+
+            var fragment = document.createDocumentFragment();
+
+
+            words.forEach(function (word) {
+
+                var li = document.createElement("li");
+
+                li.className = "word-item";
+                li.textContent = word;
+                li.title = word;
+
+                fragment.appendChild(li);
+            });
+
+
+            wordList.appendChild(fragment);
+        }
+
+
+        /*
+         * 중복 제거 + 가나다순 정렬
+         */
+        function cleanWords(words) {
+
+            return Array.from(
+                new Set(words)
+            ).sort(function (a, b) {
+
+                return a.localeCompare(
+                    b,
+                    "ko"
+                );
+            });
+        }
+
+
+        /*
+         * 500개 가져오기
+         */
+        async function loadFirstPage() {
+
+            setLoading(true);
+
+            statusElement.textContent =
+                "한국어 명사를 가져오는 중입니다...";
+
+
+            try {
+
+                var result = await getWords();
+
+                var words = cleanWords(
+                    result.words
+                );
+
+
+                renderWords(words);
+
+
+                statusElement.innerHTML =
+                    '<span class="count">' +
+                    words.length.toLocaleString() +
+                    "</span>개의 명사를 가져왔습니다.";
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                statusElement.textContent =
+                    "데이터를 가져오지 못했습니다.";
+
+            } finally {
+
+                setLoading(false);
+            }
+        }
+
+
+        /*
+         * 전체 명사 가져오기
+         */
+        async function loadAllWords() {
+
+            setLoading(true);
+
+            wordList.innerHTML = "";
+
+            statusElement.textContent =
+                "전체 한국어 명사를 가져오는 중입니다...";
+
+
+            try {
+
+                var allWords = [];
+
+                var continueToken = null;
+
+                var page = 0;
+
+
+                do {
+
+                    page++;
+
+
+                    var result = await getWords(
+                        continueToken
+                    );
+
+
+                    allWords = allWords.concat(
+                        result.words
+                    );
+
+
+                    continueToken =
+                        result.continueToken;
+
+
+                    statusElement.innerHTML =
+                        "가져오는 중... " +
+                        '<span class="count">' +
+                        allWords.length.toLocaleString() +
+                        "</span>개";
+
+
+                } while (continueToken);
+
+
+                allWords = cleanWords(allWords);
+
+
+                renderWords(allWords);
+
+
+                statusElement.innerHTML =
+                    "총 " +
+                    '<span class="count">' +
+                    allWords.length.toLocaleString() +
+                    "</span>개의 명사를 가져왔습니다.";
+
+
+                /*
+                 * 콘솔에서도 확인 가능
+                 */
+                console.log(allWords);
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                statusElement.textContent =
+                    "전체 데이터를 가져오지 못했습니다.";
+
+            } finally {
+
+                setLoading(false);
+            }
+        }
+
+
+        /*
+         * 버튼 상태
+         */
+        function setLoading(loading) {
+
+            loadButton.disabled = loading;
+            loadAllButton.disabled = loading;
+
+
+            if (loading) {
+
+                loadButton.textContent =
+                    "불러오는 중...";
+
+                loadAllButton.textContent =
+                    "불러오는 중...";
+
+            } else {
+
+                loadButton.textContent =
+                    "명사 가져오기";
+
+                loadAllButton.textContent =
+                    "전체 가져오기";
+            }
+        }
+
+
+        /*
+         * 이벤트
+         */
+        loadButton.addEventListener(
+            "click",
+            loadFirstPage
+        );
+
+
+        loadAllButton.addEventListener(
+            "click",
+            loadAllWords
+        );
+
+
+        /*
+         * 처음 접속하면 자동으로 500개 가져오기
+         */
+        loadFirstPage();
+
+    })();
+</script>
+
+</body>
+</html>
+
