@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+            name="description"
+            content="위키낱말사전의 한국어 명사를 활용하여 재미있는 랜덤 닉네임을 만들어주는 무료 닉네임 생성기입니다."
+    >
+
+    <meta
+            name="keywords"
+            content="닉네임 생성기, 랜덤 닉네임, 한국어 닉네임, 한글 닉네임, 닉네임 추천"
+    >
+
+    <meta
+            property="og:title"
+            content="닉네임 생성기"
+    >
+
+    <meta
+            property="og:description"
+            content="한국어 명사를 조합해 재미있는 랜덤 닉네임을 만들어보세요."
+    >
+
+    <meta
+            property="og:type"
+            content="website"
+    >
+
+    <title>닉네임 생성기</title>
+
+    <style>
+        :root {
+            --background: #f7f8fa;
+            --surface: #ffffff;
+            --text: #191919;
+            --text-sub: #777777;
+            --border: #e8e8e8;
+            --border-hover: #cccccc;
+            --primary: #222222;
+            --primary-hover: #444444;
+            --soft: #f4f4f4;
+            --radius: 20px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            margin: 0;
+            background: var(--background);
+            color: var(--text);
+            font-family:
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Apple SD Gothic Neo",
+                    "Pretendard",
+                    "Noto Sans KR",
+                    Arial,
+                    sans-serif;
+            line-height: 1.6;
+            letter-spacing: -0.03em;
+        }
+
+        button,
+        select {
+            font: inherit;
+        }
+
+        button {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .wrap {
+            width: min(calc(100% - 32px), 720px);
+            margin: 0 auto;
+            padding: 48px 0 80px;
+        }
+
+        .header {
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .title {
+            margin: 0;
+            font-size: clamp(30px, 7vw, 42px);
+            font-weight: 800;
+            line-height: 1.25;
+            letter-spacing: -0.05em;
+        }
+
+        .description {
+            margin: 10px 0 0;
+            color: var(--text-sub);
+            font-size: 15px;
+        }
+
+        .card {
+            padding: 28px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--surface);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.035);
+        }
+
+        .result-area {
+            display: flex;
+            min-height: 180px;
+            align-items: center;
+            justify-content: center;
+            padding: 28px 20px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: #fafafa;
+            text-align: center;
+        }
+
+        .nickname {
+            margin: 0;
+            overflow-wrap: anywhere;
+            font-size: clamp(29px, 7vw, 46px);
+            font-weight: 800;
+            line-height: 1.35;
+            letter-spacing: -0.05em;
+        }
+
+        .status {
+            min-height: 24px;
+            margin: 14px 0 0;
+            color: var(--text-sub);
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 22px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .field-label {
+            color: #555555;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .select {
+            width: 100%;
+            height: 48px;
+            padding: 0 40px 0 14px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            outline: none;
+            background-color: #ffffff;
+            color: var(--text);
+            cursor: pointer;
+            transition:
+                    border-color 0.15s ease,
+                    box-shadow 0.15s ease;
+        }
+
+        .select:hover {
+            border-color: var(--border-hover);
+        }
+
+        .select:focus {
+            border-color: #999999;
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .button {
+            min-height: 54px;
+            padding: 0 20px;
+            border: 0;
+            border-radius: 14px;
+            cursor: pointer;
+            font-weight: 800;
+            transition:
+                    background 0.15s ease,
+                    transform 0.08s ease;
+        }
+
+        .button:active {
+            transform: translateY(1px);
+        }
+
+        .button-primary {
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        .button-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .button-sub {
+            min-width: 100px;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            color: var(--text);
+        }
+
+        .button-sub:hover {
+            background: var(--soft);
+        }
+
+        .button:disabled {
+            cursor: not-allowed;
+            opacity: 0.45;
+        }
+
+        .info {
+            margin-top: 18px;
+            padding: 16px 18px;
+            border-radius: 14px;
+            background: var(--soft);
+            color: #666666;
+            font-size: 13px;
+        }
+
+        .info strong {
+            color: #333333;
+        }
+
+        .footer {
+            margin-top: 22px;
+            color: #999999;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        @media (max-width: 520px) {
+            .wrap {
+                width: min(calc(100% - 24px), 720px);
+                padding-top: 28px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .controls {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+
+            .button-sub {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<main class="wrap">
+
+    <header class="header">
+        <h1 class="title">
+            🎲 닉네임 생성기
+        </h1>
+
+        <p class="description">
+            한국어 명사를 무작위로 조합해 닉네임을 만들어보세요.
+        </p>
+    </header>
+
+
+    <section
+            class="card"
+            aria-labelledby="nicknameTitle"
+    >
+
+        <div
+                class="result-area"
+                aria-live="polite"
+        >
+            <p
+                    class="nickname"
+                    id="nicknameTitle"
+            >
+                닉네임 준비 중...
+            </p>
+        </div>
+
+
+        <p
+                class="status"
+                id="status"
+        >
+            한국어 명사 데이터를 불러오고 있습니다.
+        </p>
+
+
+        <div class="controls">
+
+            <label class="field">
+                <span class="field-label">
+                    생성 방식
+                </span>
+
+                <select
+                        class="select"
+                        id="typeSelect"
+                >
+                    <option value="random">
+                        랜덤
+                    </option>
+
+                    <option value="single">
+                        명사 1개
+                    </option>
+
+                    <option value="pair">
+                        명사 2개
+                    </option>
+
+                    <option value="particle">
+                        명사 + 조사 + 명사
+                    </option>
+                </select>
+            </label>
+
+
+            <label class="field">
+                <span class="field-label">
+                    단어 길이
+                </span>
+
+                <select
+                        class="select"
+                        id="lengthSelect"
+                >
+                    <option value="all">
+                        전체
+                    </option>
+
+                    <option value="2">
+                        2글자
+                    </option>
+
+                    <option value="3">
+                        3글자
+                    </option>
+
+                    <option value="4">
+                        4글자 이상
+                    </option>
+                </select>
+            </label>
+
+        </div>
+
+
+        <div class="button-group">
+
+            <button
+                    type="button"
+                    class="button button-primary"
+                    id="generateButton"
+                    disabled
+            >
+                🎲 닉네임 만들기
+            </button>
+
+            <button
+                    type="button"
+                    class="button button-sub"
+                    id="copyButton"
+                    disabled
+            >
+                복사
+            </button>
+
+        </div>
+
+
+        <div class="info">
+            <strong>사용 방법</strong><br>
+            생성 방식을 선택하고 버튼을 누르면 새로운 닉네임이 만들어집니다.
+            Space 키를 눌러서도 다시 생성할 수 있습니다.
+        </div>
+
+    </section>
+
+
+    <footer class="footer">
+        별도의 회원가입이나 설치 없이 사용할 수 있습니다.
+    </footer>
+
+</main>
+
+
+<script>
+    (function () {
+        "use strict";
+
+
+        /*
+         * ========================================
+         * 기본 설정
+         * ========================================
+         */
+
+        var API_URL =
+                "https://ko.wiktionary.org/w/api.php";
+
+        var CATEGORY_NAME =
+                "분류:한국어 명사";
+
+        var MAX_PAGES = 6;
+
+
+        /*
+         * 위키 API 연결이 불가능할 경우 사용할
+         * 기본 한국어 명사 목록
+         */
+        var fallbackWords = [
+            "하늘",
+            "바다",
+            "구름",
+            "별빛",
+            "달빛",
+            "햇살",
+            "노을",
+            "새벽",
+            "여름",
+            "겨울",
+            "봄날",
+            "가을",
+            "바람",
+            "소나기",
+            "눈꽃",
+            "파도",
+            "호수",
+            "강물",
+            "숲길",
+            "나무",
+            "꽃잎",
+            "들꽃",
+            "장미",
+            "민들레",
+            "벚꽃",
+            "코스모스",
+            "라일락",
+            "고양이",
+            "강아지",
+            "토끼",
+            "여우",
+            "호랑이",
+            "사자",
+            "늑대",
+            "곰",
+            "수달",
+            "판다",
+            "다람쥐",
+            "고래",
+            "돌고래",
+            "상어",
+            "문어",
+            "오징어",
+            "거북이",
+            "참새",
+            "비둘기",
+            "독수리",
+            "부엉이",
+            "까치",
+            "병아리",
+            "펭귄",
+            "사과",
+            "포도",
+            "딸기",
+            "수박",
+            "복숭아",
+            "자두",
+            "레몬",
+            "망고",
+            "바나나",
+            "오렌지",
+            "체리",
+            "감자",
+            "고구마",
+            "당근",
+            "양파",
+            "마늘",
+            "호박",
+            "버섯",
+            "김치",
+            "라면",
+            "김밥",
+            "만두",
+            "국밥",
+            "냉면",
+            "떡볶이",
+            "순대",
+            "붕어빵",
+            "호떡",
+            "팥빙수",
+            "초콜릿",
+            "사탕",
+            "쿠키",
+            "푸딩",
+            "커피",
+            "우유",
+            "주스",
+            "콜라",
+            "책상",
+            "의자",
+            "연필",
+            "지우개",
+            "공책",
+            "가방",
+            "우산",
+            "시계",
+            "안경",
+            "모자",
+            "신발",
+            "자전거",
+            "자동차",
+            "기차",
+            "비행기",
+            "로봇",
+            "컴퓨터",
+            "키보드",
+            "마우스",
+            "모니터",
+            "게임",
+            "용사",
+            "마법사",
+            "기사",
+            "왕자",
+            "공주",
+            "왕국",
+            "마법",
+            "보물",
+            "모험",
+            "여행",
+            "우주",
+            "행성",
+            "은하",
+            "별자리",
+            "혜성",
+            "유성",
+            "태양",
+            "지구",
+            "달나라",
+            "꿈",
+            "희망",
+            "행복",
+            "미소",
+            "웃음",
+            "사랑",
+            "마음",
+            "추억",
+            "기억",
+            "친구",
+            "행운",
+            "기적"
+        ];
+
+
+        /*
+         * ========================================
+         * DOM
+         * ========================================
+         */
+
+        var nicknameElement =
+                document.getElementById("nicknameTitle");
+
+        var statusElement =
+                document.getElementById("status");
+
+        var generateButton =
+                document.getElementById("generateButton");
+
+        var copyButton =
+                document.getElementById("copyButton");
+
+        var typeSelect =
+                document.getElementById("typeSelect");
+
+        var lengthSelect =
+                document.getElementById("lengthSelect");
+
+
+        /*
+         * ========================================
+         * 데이터
+         * ========================================
+         */
+
+        var words = [];
+
+        var currentNickname = "";
+
+
+        /*
+         * ========================================
+         * 랜덤
+         * ========================================
+         */
+
+        function randomItem(array) {
+
+            if (!array.length) {
+                return "";
+            }
+
+            return array[
+                Math.floor(
+                    Math.random() * array.length
+                )
+                ];
+        }
+
+
+        /*
+         * ========================================
+         * 한글 받침 확인
+         *
+         * 원본 nicknameGererator 프로젝트에서
+         * 사용하던 방식과 동일한 원리
+         * ========================================
+         */
+
+        function hasBatchim(word) {
+
+            if (
+                typeof word !== "string" ||
+                !word.length
+            ) {
+                return false;
+            }
+
+
+            var lastLetter =
+                    word.charAt(word.length - 1);
+
+            var code =
+                    lastLetter.charCodeAt(0);
+
+
+            /*
+             * 한글 음절 범위
+             */
+            if (
+                code < 44032 ||
+                code > 55203
+            ) {
+                return false;
+            }
+
+
+            return (
+                (code - 44032) % 28 !== 0
+            );
+        }
+
+
+        /*
+         * ========================================
+         * 단어 정리
+         * ========================================
+         */
+
+        function cleanWords(list) {
+
+            var result = [];
+
+            var exists = Object.create(null);
+
+
+            list.forEach(function (word) {
+
+                if (
+                    typeof word !== "string"
+                ) {
+                    return;
+                }
+
+
+                word = word.trim();
+
+
+                /*
+                 * 일반적인 한글 단어만 사용
+                 */
+                if (
+                    !/^[가-힣]{2,10}$/.test(word)
+                ) {
+                    return;
+                }
+
+
+                if (!exists[word]) {
+
+                    exists[word] = true;
+
+                    result.push(word);
+                }
+
+            });
+
+
+            return result;
+        }
+
+
+        /*
+         * ========================================
+         * 글자수 필터
+         * ========================================
+         */
+
+        function getFilteredWords() {
+
+            var length =
+                    lengthSelect.value;
+
+
+            if (length === "all") {
+                return words;
+            }
+
+
+            if (length === "4") {
+
+                return words.filter(
+                    function (word) {
+                        return word.length >= 4;
+                    }
+                );
+            }
+
+
+            var targetLength =
+                    Number(length);
+
+
+            return words.filter(
+                function (word) {
+
+                    return (
+                        word.length ===
+                        targetLength
+                    );
+                }
+            );
+        }
+
+
+        /*
+         * ========================================
+         * 위키낱말사전 API
+         * ========================================
+         */
+
+        async function fetchWordPage(
+            continueToken
+        ) {
+
+            var params =
+                    new URLSearchParams({
+                        action: "query",
+                        format: "json",
+                        origin: "*",
+                        list: "categorymembers",
+                        cmtitle: CATEGORY_NAME,
+                        cmnamespace: "0",
+                        cmlimit: "500"
+                    });
+
+
+            if (continueToken) {
+
+                params.set(
+                    "cmcontinue",
+                    continueToken
+                );
+            }
+
+
+            var response = await fetch(
+                API_URL +
+                "?" +
+                params.toString()
+            );
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "HTTP " +
+                    response.status
+                );
+            }
+
+
+            var data =
+                    await response.json();
+
+
+            var members = [];
+
+
+            if (
+                data.query &&
+                Array.isArray(
+                    data.query.categorymembers
+                )
+            ) {
+
+                members =
+                    data.query.categorymembers;
+            }
+
+
+            return {
+                words: members.map(
+                    function (item) {
+                        return item.title;
+                    }
+                ),
+
+                continueToken:
+                    data.continue &&
+                    data.continue.cmcontinue
+                        ? data.continue.cmcontinue
+                        : null
+            };
+        }
+
+
+        /*
+         * ========================================
+         * 여러 페이지 가져오기
+         *
+         * 위키낱말사전에 과도한 요청을 보내지 않도록
+         * 기본적으로 MAX_PAGES까지만 가져옵니다.
+         * ========================================
+         */
+
+        async function loadWords() {
+
+            var loaded = [];
+
+            var continueToken = null;
+
+            var page = 0;
+
+
+            try {
+
+                do {
+
+                    page++;
+
+
+                    statusElement.textContent =
+                        "한국어 명사 데이터 불러오는 중... (" +
+                        page +
+                        "/" +
+                        MAX_PAGES +
+                        ")";
+
+
+                    var result =
+                            await fetchWordPage(
+                                continueToken
+                            );
+
+
+                    loaded =
+                        loaded.concat(
+                            result.words
+                        );
+
+
+                    continueToken =
+                        result.continueToken;
+
+
+                } while (
+                    continueToken &&
+                    page < MAX_PAGES
+                    );
+
+
+                words =
+                    cleanWords(loaded);
+
+
+                /*
+                 * 데이터가 너무 적으면
+                 * 기본 목록도 함께 사용
+                 */
+                if (words.length < 30) {
+
+                    words = cleanWords(
+                        words.concat(
+                            fallbackWords
+                        )
+                    );
+                }
+
+
+                statusElement.textContent =
+                    words.length.toLocaleString() +
+                    "개의 한국어 명사를 준비했습니다.";
+
+
+            } catch (error) {
+
+                console.error(error);
+
+
+                /*
+                 * API 오류 시에도 서비스가
+                 * 동작하도록 기본 데이터 사용
+                 */
+                words =
+                    cleanWords(
+                        fallbackWords
+                    );
+
+
+                statusElement.textContent =
+                    "기본 단어 " +
+                    words.length.toLocaleString() +
+                    "개를 사용합니다.";
+
+            }
+
+
+            generateButton.disabled = false;
+
+            copyButton.disabled = false;
+
+
+            createNickname();
+        }
+
+
+        /*
+         * ========================================
+         * 명사 하나
+         * ========================================
+         */
+
+        function createSingle(list) {
+
+            return randomItem(list);
+        }
+
+
+        /*
+         * ========================================
+         * 명사 + 명사
+         * ========================================
+         */
+
+        function createPair(list) {
+
+            var first =
+                    randomItem(list);
+
+            var second =
+                    randomItem(list);
+
+
+            /*
+             * 같은 단어가 연속으로 나오는 경우
+             */
+            if (
+                list.length > 1 &&
+                first === second
+            ) {
+
+                second =
+                    randomItem(list);
+            }
+
+
+            return first + second;
+        }
+
+
+        /*
+         * ========================================
+         * 명사 + 조사 + 명사
+         *
+         * 예:
+         * 고양이의 우주
+         * 바람과 구름
+         * 사과와 바다
+         * ========================================
+         */
+
+        function createParticleNickname(list) {
+
+            var first =
+                    randomItem(list);
+
+            var second =
+                    randomItem(list);
+
+
+            if (
+                list.length > 1 &&
+                first === second
+            ) {
+
+                second =
+                    randomItem(list);
+            }
+
+
+            var particles;
+
+
+            if (hasBatchim(first)) {
+
+                particles = [
+                    "의",
+                    "과"
+                ];
+
+            } else {
+
+                particles = [
+                    "의",
+                    "와"
+                ];
+            }
+
+
+            var particle =
+                    randomItem(particles);
+
+
+            return (
+                first +
+                particle +
+                " " +
+                second
+            );
+        }
+
+
+        /*
+         * ========================================
+         * 닉네임 생성
+         * ========================================
+         */
+
+        function createNickname() {
+
+            var filtered =
+                    getFilteredWords();
+
+
+            /*
+             * 선택한 글자수에 단어가 없으면
+             * 전체 데이터 사용
+             */
+            if (!filtered.length) {
+
+                filtered = words;
+
+                statusElement.textContent =
+                    "선택한 길이의 단어가 부족해 전체 명사에서 생성했습니다.";
+            }
+
+
+            if (!filtered.length) {
+
+                nicknameElement.textContent =
+                    "단어가 없습니다.";
+
+                return;
+            }
+
+
+            var type =
+                    typeSelect.value;
+
+
+            if (type === "random") {
+
+                /*
+                 * 원본 프로젝트와 비슷하게
+                 * 여러 생성 방식을 무작위 선택
+                 */
+                var randomTypes = [
+                    "single",
+                    "single",
+                    "pair",
+                    "particle",
+                    "particle"
+                ];
+
+
+                type =
+                    randomItem(
+                        randomTypes
+                    );
+            }
+
+
+            var nickname = "";
+
+
+            switch (type) {
+
+                case "single":
+
+                    nickname =
+                        createSingle(
+                            filtered
+                        );
+
+                    break;
+
+
+                case "pair":
+
+                    nickname =
+                        createPair(
+                            filtered
+                        );
+
+                    break;
+
+
+                case "particle":
+
+                    nickname =
+                        createParticleNickname(
+                            filtered
+                        );
+
+                    break;
+
+
+                default:
+
+                    nickname =
+                        createSingle(
+                            filtered
+                        );
+            }
+
+
+            currentNickname =
+                nickname;
+
+
+            nicknameElement.textContent =
+                nickname;
+        }
+
+
+        /*
+         * ========================================
+         * 클립보드 복사
+         * ========================================
+         */
+
+        async function copyNickname() {
+
+            if (!currentNickname) {
+                return;
+            }
+
+
+            try {
+
+                await navigator.clipboard.writeText(
+                    currentNickname
+                );
+
+
+                var oldText =
+                        copyButton.textContent;
+
+
+                copyButton.textContent =
+                    "복사 완료 ✓";
+
+
+                setTimeout(
+                    function () {
+
+                        copyButton.textContent =
+                            oldText;
+
+                    },
+                    1200
+                );
+
+
+            } catch (error) {
+
+                /*
+                 * 구형 브라우저 대응
+                 */
+                var textarea =
+                        document.createElement(
+                            "textarea"
+                        );
+
+
+                textarea.value =
+                    currentNickname;
+
+                textarea.setAttribute(
+                    "readonly",
+                    ""
+                );
+
+
+                textarea.style.position =
+                    "fixed";
+
+                textarea.style.opacity =
+                    "0";
+
+
+                document.body.appendChild(
+                    textarea
+                );
+
+
+                textarea.select();
+
+
+                try {
+
+                    document.execCommand(
+                        "copy"
+                    );
+
+                    copyButton.textContent =
+                        "복사 완료 ✓";
+
+
+                    setTimeout(
+                        function () {
+
+                            copyButton.textContent =
+                                "복사";
+
+                        },
+                        1200
+                    );
+
+                } catch (copyError) {
+
+                    console.error(
+                        copyError
+                    );
+                }
+
+
+                document.body.removeChild(
+                    textarea
+                );
+            }
+        }
+
+
+        /*
+         * ========================================
+         * 이벤트
+         * ========================================
+         */
+
+        generateButton.addEventListener(
+            "click",
+            createNickname
+        );
+
+
+        copyButton.addEventListener(
+            "click",
+            copyNickname
+        );
+
+
+        typeSelect.addEventListener(
+            "change",
+            function () {
+
+                if (words.length) {
+                    createNickname();
+                }
+            }
+        );
+
+
+        lengthSelect.addEventListener(
+            "change",
+            function () {
+
+                if (words.length) {
+                    createNickname();
+                }
+            }
+        );
+
+
+        /*
+         * Space 키로 다시 생성
+         */
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.code !== "Space" ||
+                    event.target.tagName === "SELECT" ||
+                    event.target.tagName === "INPUT" ||
+                    event.target.tagName === "TEXTAREA" ||
+                    generateButton.disabled
+                ) {
+                    return;
+                }
+
+
+                event.preventDefault();
+
+                createNickname();
+            }
+        );
+
+
+        /*
+         * ========================================
+         * 시작
+         * ========================================
+         */
+
+        loadWords();
+
+    })();
+</script>
+
+</body>
+</html>
+
