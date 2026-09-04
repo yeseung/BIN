@@ -1,0 +1,950 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="2단부터 18단까지 무작위로 출제되는 20문제 구구단 실력 평가 게임입니다.">
+    <title>구구단 마스터 - 20문제 챌린지</title>
+
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --surface-soft: #f8fbff;
+            --text: #1f2937;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --primary-soft: #eff6ff;
+            --success: #16a34a;
+            --success-soft: #f0fdf4;
+            --danger: #dc2626;
+            --danger-soft: #fef2f2;
+            --warning: #d97706;
+            --purple: #7c3aed;
+            --shadow: 0 22px 50px rgba(15, 23, 42, 0.11);
+            --radius: 24px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            min-width: 320px;
+        }
+
+        body {
+            min-height: 100dvh;
+            margin: 0;
+            display: grid;
+            place-items: center;
+            padding: 20px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            "Noto Sans KR",
+            sans-serif;
+            letter-spacing: -0.03em;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        button {
+            font: inherit;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        .game-card {
+            width: min(100%, 480px);
+            padding: 32px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--surface);
+            box-shadow: var(--shadow);
+            text-align: center;
+            transition: border-color 0.2s ease,
+            box-shadow 0.2s ease;
+        }
+
+        .game-card.correct-flash {
+            border-color: #86efac;
+            box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.13),
+            var(--shadow);
+        }
+
+        .game-card.wrong-flash {
+            border-color: #fca5a5;
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12),
+            var(--shadow);
+        }
+
+        .screen {
+            animation: fade-in 0.3s ease-out;
+        }
+
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes shake {
+            10%, 90% {
+                transform: translateX(-1px);
+            }
+
+            20%, 80% {
+                transform: translateX(2px);
+            }
+
+            30%, 50%, 70% {
+                transform: translateX(-4px);
+            }
+
+            40%, 60% {
+                transform: translateX(4px);
+            }
+        }
+
+        .shake {
+            animation: shake 0.45s ease both;
+        }
+
+        .title {
+            margin: 0 0 16px;
+            color: var(--primary);
+            font-size: clamp(30px, 7vw, 40px);
+            font-weight: 900;
+            line-height: 1.25;
+        }
+
+        .intro {
+            margin: 0 0 28px;
+            color: var(--muted);
+            font-size: 17px;
+            line-height: 1.7;
+            word-break: keep-all;
+        }
+
+        .intro strong {
+            color: var(--primary);
+        }
+
+        .primary-button {
+            min-height: 54px;
+            padding: 13px 28px;
+            border: 0;
+            border-radius: 14px;
+            background: var(--primary);
+            color: #ffffff;
+            cursor: pointer;
+            font-weight: 850;
+            box-shadow: 0 10px 22px rgba(37, 99, 235, 0.2);
+            transition: background-color 0.15s ease,
+            transform 0.15s ease,
+            box-shadow 0.15s ease;
+        }
+
+        .primary-button:hover {
+            background: var(--primary-hover);
+            box-shadow: 0 12px 26px rgba(37, 99, 235, 0.24);
+        }
+
+        .primary-button:active {
+            transform: scale(0.98);
+        }
+
+        .primary-button:focus-visible,
+        .answer-button:focus-visible {
+            outline: 4px solid rgba(37, 99, 235, 0.18);
+            outline-offset: 3px;
+        }
+
+        .game-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 12px;
+            color: var(--muted);
+            font-size: 15px;
+            font-weight: 750;
+        }
+
+        .question-count {
+            color: var(--primary);
+        }
+
+        .timer-text {
+            color: var(--danger);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 10px;
+            margin-bottom: 30px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: #e5e7eb;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 100%;
+            border-radius: inherit;
+            background: var(--primary);
+            transition: width 0.1s linear,
+            background-color 0.2s ease;
+        }
+
+        .progress-bar.warning {
+            background: var(--warning);
+        }
+
+        .progress-bar.danger {
+            background: var(--danger);
+        }
+
+        .question-label {
+            margin: 0 0 8px;
+            color: #94a3b8;
+            font-size: 13px;
+            font-weight: 750;
+        }
+
+        .question {
+            margin: 0 0 30px;
+            color: var(--text);
+            font-size: clamp(48px, 14vw, 68px);
+            font-weight: 950;
+            line-height: 1.1;
+            letter-spacing: 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .answer-button {
+            min-height: 74px;
+            padding: 12px;
+            border: 2px solid #dbeafe;
+            border-radius: 14px;
+            background: #ffffff;
+            color: #1e40af;
+            cursor: pointer;
+            font-size: 24px;
+            font-weight: 900;
+            font-variant-numeric: tabular-nums;
+            transition: border-color 0.15s ease,
+            background-color 0.15s ease,
+            color 0.15s ease,
+            transform 0.15s ease,
+            opacity 0.15s ease;
+        }
+
+        .answer-button:hover:not(:disabled) {
+            border-color: #60a5fa;
+            background: var(--primary-soft);
+            transform: translateY(-1px);
+        }
+
+        .answer-button:disabled {
+            cursor: default;
+        }
+
+        .answer-button.correct {
+            border-color: #4ade80;
+            background: var(--success-soft);
+            color: #15803d;
+        }
+
+        .answer-button.wrong {
+            border-color: #f87171;
+            background: var(--danger-soft);
+            color: #b91c1c;
+        }
+
+        .answer-button.dimmed {
+            opacity: 0.55;
+        }
+
+        .live-feedback {
+            min-height: 24px;
+            margin: 14px 0 -4px;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .live-feedback.correct-text {
+            color: var(--success);
+        }
+
+        .live-feedback.wrong-text {
+            color: var(--danger);
+        }
+
+        .live-feedback.timeout-text {
+            color: var(--warning);
+        }
+
+        .result-title {
+            margin: 0 0 8px;
+            color: var(--primary);
+            font-size: 30px;
+            font-weight: 900;
+        }
+
+        .rank {
+            margin: 12px 0 22px;
+            font-size: clamp(54px, 15vw, 76px);
+            font-weight: 950;
+            line-height: 1;
+        }
+
+        .rank-sss {
+            color: var(--purple);
+        }
+
+        .rank-a {
+            color: var(--primary);
+        }
+
+        .rank-b {
+            color: var(--success);
+        }
+
+        .rank-c {
+            color: var(--warning);
+        }
+
+        .rank-f {
+            color: var(--danger);
+        }
+
+        .result-stats {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 22px;
+            padding: 18px;
+            border: 1px solid #dbeafe;
+            border-radius: 16px;
+            background: var(--surface-soft);
+            text-align: left;
+        }
+
+        .result-stat {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .result-stat strong {
+            color: var(--text);
+            white-space: nowrap;
+        }
+
+        .result-feedback {
+            min-height: 56px;
+            margin: 0 0 26px;
+            color: var(--muted);
+            font-size: 16px;
+            font-weight: 650;
+            line-height: 1.65;
+            word-break: keep-all;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 14px;
+            }
+
+            .game-card {
+                padding: 26px 20px;
+            }
+
+            .game-status {
+                gap: 8px;
+                font-size: 14px;
+            }
+
+            .answer-button {
+                min-height: 68px;
+                font-size: 22px;
+            }
+        }
+
+        @media (max-width: 350px) {
+            .options {
+                grid-template-columns: 1fr;
+            }
+
+            .answer-button {
+                min-height: 58px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<main class="game-card" id="game-container">
+    <section class="screen" id="start-screen">
+        <h1 class="title">20문제 챌린지! 🏆</h1>
+
+        <p class="intro">
+            <strong>2단부터 18단까지</strong> 무작위!<br>
+            20문제를 모두 풀면 실력을 평가해 드립니다.
+        </p>
+
+        <button class="primary-button" id="start-button" type="button">
+            도전 시작!
+        </button>
+    </section>
+
+    <section class="screen" id="game-screen" hidden>
+        <div class="game-status">
+            <div class="question-count">
+                문제: <span id="question-count">1</span> / 20
+            </div>
+
+            <div class="timer-text">
+                남은 시간: <span id="timer">10.0</span>초
+            </div>
+        </div>
+
+        <div
+                class="progress-track"
+                id="timer-progress"
+                role="progressbar"
+                aria-label="현재 문제 남은 시간"
+                aria-valuemin="0"
+                aria-valuemax="10"
+                aria-valuenow="10"
+        >
+            <div class="progress-bar" id="progress"></div>
+        </div>
+
+        <p class="question-label">정답을 선택하세요</p>
+
+        <div
+                class="question"
+                id="question"
+                aria-live="polite"
+        >
+            <span id="num1">?</span>
+            <span aria-hidden="true">×</span>
+            <span id="num2">?</span>
+        </div>
+
+        <div class="options" id="options" aria-label="정답 보기"></div>
+
+        <p
+                class="live-feedback"
+                id="live-feedback"
+                aria-live="polite"
+        ></p>
+    </section>
+
+    <section class="screen" id="result-screen" hidden>
+        <h2 class="result-title">분석 결과</h2>
+
+        <div class="rank rank-a" id="evaluation-rank">A</div>
+
+        <div class="result-stats">
+            <p class="result-stat">
+                <span>✅ 맞힌 개수</span>
+                <strong>
+                    <span id="final-correct">0</span> / 20
+                </strong>
+            </p>
+
+            <p class="result-stat">
+                <span>⏱️ 평균 응답 속도</span>
+                <strong>
+                    <span id="avg-speed">0.00</span>초
+                </strong>
+            </p>
+        </div>
+
+        <p class="result-feedback" id="feedback"></p>
+
+        <button class="primary-button" id="restart-button" type="button">
+            다시 도전하기
+        </button>
+    </section>
+</main>
+
+<script>
+    (() => {
+        "use strict";
+
+        const CONFIG = Object.freeze({
+            minDan        : 2,
+            maxDan        : 18,
+            minMultiplier : 1,
+            maxMultiplier : 9,
+            totalQuestions: 20,
+            timeLimit     : 10,
+            timerTick     : 100,
+            answerCount   : 4,
+            correctDelay  : 400,
+            wrongDelay    : 800,
+            timeoutDelay  : 500
+        });
+
+        const state = {
+            questionPool        : [],
+            currentQuestionIndex: 0,
+            currentNum1         : 0,
+            currentNum2         : 0,
+            correctAnswer       : 0,
+            correctCount        : 0,
+            totalTimeUsed       : 0,
+            timeLeft            : CONFIG.timeLimit,
+            canAnswer           : false,
+            timerId             : null,
+            nextTimerId         : null
+        };
+
+        const elements = {
+            container    : document.getElementById("game-container"),
+            startScreen  : document.getElementById("start-screen"),
+            gameScreen   : document.getElementById("game-screen"),
+            resultScreen : document.getElementById("result-screen"),
+            startButton  : document.getElementById("start-button"),
+            restartButton: document.getElementById("restart-button"),
+            timer        : document.getElementById("timer"),
+            timerProgress: document.getElementById("timer-progress"),
+            progress     : document.getElementById("progress"),
+            num1         : document.getElementById("num1"),
+            num2         : document.getElementById("num2"),
+            options      : document.getElementById("options"),
+            questionCount: document.getElementById("question-count"),
+            liveFeedback : document.getElementById("live-feedback"),
+            finalCorrect : document.getElementById("final-correct"),
+            avgSpeed     : document.getElementById("avg-speed"),
+            feedback     : document.getElementById("feedback"),
+            rank         : document.getElementById("evaluation-rank")
+        };
+
+        function shuffle(items) {
+            const array = [...items];
+
+            for (let index = array.length - 1; index > 0; index -= 1) {
+                const randomIndex = Math.floor(
+                    Math.random() * (index + 1)
+                );
+
+                [array[index], array[randomIndex]] =
+                    [array[randomIndex], array[index]];
+            }
+
+            return array;
+        }
+
+        function createQuestionPool() {
+            const pool = [];
+
+            for (
+                let dan = CONFIG.minDan;
+                dan <= CONFIG.maxDan;
+                dan += 1
+            ) {
+                for (
+                    let multiplier = CONFIG.minMultiplier;
+                    multiplier <= CONFIG.maxMultiplier;
+                    multiplier += 1
+                ) {
+                    pool.push({
+                        n1: dan,
+                        n2: multiplier
+                    });
+                }
+            }
+
+            return shuffle(pool);
+        }
+
+        function clearTimers() {
+            window.clearInterval(state.timerId);
+            window.clearTimeout(state.nextTimerId);
+
+            state.timerId = null;
+            state.nextTimerId = null;
+        }
+
+        function showScreen(name) {
+            elements.startScreen.hidden = name !== "start";
+            elements.gameScreen.hidden = name !== "game";
+            elements.resultScreen.hidden = name !== "result";
+        }
+
+        function startGame() {
+            clearTimers();
+
+            state.questionPool = createQuestionPool();
+            state.currentQuestionIndex = 0;
+            state.currentNum1 = 0;
+            state.currentNum2 = 0;
+            state.correctAnswer = 0;
+            state.correctCount = 0;
+            state.totalTimeUsed = 0;
+            state.timeLeft = CONFIG.timeLimit;
+            state.canAnswer = false;
+
+            resetContainerFeedback();
+            showScreen("game");
+            nextQuestion();
+        }
+
+        function nextQuestion() {
+            clearTimers();
+            resetContainerFeedback();
+
+            if (
+                state.currentQuestionIndex >=
+                CONFIG.totalQuestions
+            ) {
+                showResult();
+                return;
+            }
+
+            const question = state.questionPool.pop();
+
+            state.currentQuestionIndex += 1;
+            state.currentNum1 = question.n1;
+            state.currentNum2 = question.n2;
+            state.correctAnswer =
+                state.currentNum1 * state.currentNum2;
+            state.timeLeft = CONFIG.timeLimit;
+            state.canAnswer = true;
+
+            elements.questionCount.textContent =
+                state.currentQuestionIndex;
+            elements.num1.textContent = state.currentNum1;
+            elements.num2.textContent = state.currentNum2;
+            elements.liveFeedback.textContent = "";
+            elements.liveFeedback.className = "live-feedback";
+
+            renderOptions();
+            updateTimerDisplay();
+            startTimer();
+        }
+
+        function renderOptions() {
+            const answers = new Set([state.correctAnswer]);
+
+            while (answers.size < CONFIG.answerCount) {
+                const offset =
+                          Math.floor(Math.random() * 10) + 1;
+                const direction =
+                          Math.random() < 0.5 ? -1 : 1;
+                const wrongAnswer =
+                          state.correctAnswer +
+                          offset * direction;
+
+                if (wrongAnswer > 0) {
+                    answers.add(wrongAnswer);
+                }
+            }
+
+            const shuffledAnswers = shuffle([...answers]);
+            const fragment = document.createDocumentFragment();
+
+            shuffledAnswers.forEach((answer) => {
+                const button = document.createElement("button");
+
+                button.type = "button";
+                button.className = "answer-button";
+                button.textContent = answer;
+                button.dataset.answer = String(answer);
+
+                button.addEventListener("click", () => {
+                    checkAnswer(answer, button);
+                });
+
+                fragment.appendChild(button);
+            });
+
+            elements.options.replaceChildren(fragment);
+
+            elements.options
+            .querySelector(".answer-button")
+            ?.focus({preventScroll: true});
+        }
+
+        function startTimer() {
+            state.timerId = window.setInterval(() => {
+                state.timeLeft = Math.max(
+                    0,
+                    state.timeLeft -
+                    CONFIG.timerTick / 1000
+                );
+
+                updateTimerDisplay();
+
+                if (state.timeLeft <= 0) {
+                    handleTimeout();
+                }
+            }, CONFIG.timerTick);
+        }
+
+        function updateTimerDisplay() {
+            const remaining = Math.max(0, state.timeLeft);
+            const percentage =
+                      (remaining / CONFIG.timeLimit) * 100;
+
+            elements.timer.textContent = remaining.toFixed(1);
+            elements.progress.style.width =
+                `${percentage}%`;
+
+            elements.timerProgress.setAttribute(
+                "aria-valuenow",
+                remaining.toFixed(1)
+            );
+
+            elements.progress.classList.toggle(
+                "warning",
+                remaining <= 5 && remaining > 3
+            );
+
+            elements.progress.classList.toggle(
+                "danger",
+                remaining <= 3
+            );
+        }
+
+        function checkAnswer(selected, selectedButton) {
+            if (!state.canAnswer) {
+                return;
+            }
+
+            state.canAnswer = false;
+            window.clearInterval(state.timerId);
+            state.timerId = null;
+
+            state.totalTimeUsed +=
+                CONFIG.timeLimit - state.timeLeft;
+
+            disableAnswers();
+
+            if (selected === state.correctAnswer) {
+                state.correctCount += 1;
+
+                selectedButton.classList.add("correct");
+                elements.container.classList.add(
+                    "correct-flash"
+                );
+
+                setLiveFeedback(
+                    "정답입니다!",
+                    "correct-text"
+                );
+
+                scheduleNext(CONFIG.correctDelay);
+                return;
+            }
+
+            selectedButton.classList.add("wrong");
+            highlightCorrectAnswer();
+
+            elements.container.classList.add(
+                "wrong-flash",
+                "shake"
+            );
+
+            setLiveFeedback(
+                `정답은 ${state.correctAnswer}입니다.`,
+                "wrong-text"
+            );
+
+            scheduleNext(CONFIG.wrongDelay);
+        }
+
+        function handleTimeout() {
+            if (!state.canAnswer) {
+                return;
+            }
+
+            state.canAnswer = false;
+            window.clearInterval(state.timerId);
+            state.timerId = null;
+
+            state.timeLeft = 0;
+            state.totalTimeUsed += CONFIG.timeLimit;
+
+            updateTimerDisplay();
+            disableAnswers();
+            highlightCorrectAnswer(true);
+
+            setLiveFeedback(
+                `시간 초과! 정답은 ${state.correctAnswer}입니다.`,
+                "timeout-text"
+            );
+
+            scheduleNext(CONFIG.timeoutDelay);
+        }
+
+        function disableAnswers() {
+            Array.from(elements.options.children).forEach(
+                (button) => {
+                    button.disabled = true;
+                }
+            );
+        }
+
+        function highlightCorrectAnswer(dimOthers = false) {
+            Array.from(elements.options.children).forEach(
+                (button) => {
+                    const answer = Number(
+                        button.dataset.answer
+                    );
+
+                    if (answer === state.correctAnswer) {
+                        button.classList.add("correct");
+                    } else if (dimOthers) {
+                        button.classList.add("dimmed");
+                    }
+                }
+            );
+        }
+
+        function setLiveFeedback(message, className) {
+            elements.liveFeedback.textContent = message;
+            elements.liveFeedback.className =
+                `live-feedback ${className}`;
+        }
+
+        function scheduleNext(delay) {
+            state.nextTimerId = window.setTimeout(
+                nextQuestion,
+                delay
+            );
+        }
+
+        function resetContainerFeedback() {
+            elements.container.classList.remove(
+                "correct-flash",
+                "wrong-flash",
+                "shake"
+            );
+        }
+
+        function showResult() {
+            clearTimers();
+            state.canAnswer = false;
+
+            const averageSpeed =
+                      state.totalTimeUsed /
+                      CONFIG.totalQuestions;
+
+            const evaluation =
+                      getEvaluation(state.correctCount);
+
+            elements.finalCorrect.textContent =
+                state.correctCount;
+            elements.avgSpeed.textContent =
+                averageSpeed.toFixed(2);
+            elements.rank.textContent =
+                evaluation.rank;
+            elements.rank.className =
+                `rank ${evaluation.className}`;
+            elements.feedback.textContent =
+                evaluation.message;
+
+            showScreen("result");
+            elements.restartButton.focus();
+        }
+
+        function getEvaluation(correctCount) {
+            if (correctCount === 20) {
+                return {
+                    rank     : "SSS",
+                    className: "rank-sss",
+                    message  :
+                        "완벽합니다! 당신은 인간 계산기인가요? 18단까지 정복 완료!"
+                };
+            }
+
+            if (correctCount >= 18) {
+                return {
+                    rank     : "A",
+                    className: "rank-a",
+                    message  :
+                        "대단한 실력입니다! 약간의 실수만 줄이면 신의 경지에 오를 거예요."
+                };
+            }
+
+            if (correctCount >= 14) {
+                return {
+                    rank     : "B",
+                    className: "rank-b",
+                    message  :
+                        "좋은 실력입니다. 고난도 단수(11~18단)를 조금 더 연습해 보세요!"
+                };
+            }
+
+            if (correctCount >= 10) {
+                return {
+                    rank     : "C",
+                    className: "rank-c",
+                    message  :
+                        "절반은 맞히셨네요! 꾸준히 연습하면 실력이 쑥쑥 늘 거예요."
+                };
+            }
+
+            return {
+                rank     : "F",
+                className: "rank-f",
+                message  :
+                    "기초부터 다시 차근차근! 포기하지 말고 다시 도전해 보세요."
+            };
+        }
+
+        elements.startButton.addEventListener(
+            "click",
+            startGame
+        );
+
+        elements.restartButton.addEventListener(
+            "click",
+            startGame
+        );
+
+        window.addEventListener(
+            "beforeunload",
+            clearTimers
+        );
+    })();
+</script>
+</body>
+</html>
