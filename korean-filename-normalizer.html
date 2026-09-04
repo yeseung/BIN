@@ -1,0 +1,1460 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>자모야 모여라 - 한글 파일명 자모 합치기</title>
+
+    <meta
+            name="description"
+            content="한글 자모가 분리되어 표시되는 파일 이름을 정상적인 한글 파일명으로 변환하는 온라인 도구입니다."
+    >
+
+    <meta
+            name="keywords"
+            content="한글 자모 합치기, 파일명 자모 분리, 한글 파일명 복구, NFC, NFD, 맥 파일명, 자모야 모여라"
+    >
+
+    <meta property="og:title" content="자모야 모여라">
+    <meta
+            property="og:description"
+            content="한글 자모가 분리되어 표시되는 파일 이름을 정상적인 한글 파일명으로 변환합니다."
+    >
+    <meta property="og:type" content="website">
+
+    <style>
+        :root {
+            --background: #f7f8fa;
+            --surface: #ffffff;
+            --surface-soft: #f8fafc;
+
+            --text: #18181b;
+            --text-secondary: #71717a;
+            --text-light: #a1a1aa;
+
+            --border: #e4e4e7;
+            --border-hover: #a1a1aa;
+
+            --primary: #0d9488;
+            --primary-hover: #0f766e;
+            --primary-soft: #f0fdfa;
+
+            --danger: #dc2626;
+
+            --radius: 18px;
+            --shadow:
+                    0 1px 2px rgba(0, 0, 0, 0.03),
+                    0 8px 30px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            margin: 0px;
+            min-width: 320px;
+            min-height: 100vh;
+
+            background: var(--background);
+            color: var(--text);
+
+            font-family:
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Apple SD Gothic Neo",
+                    "Pretendard",
+                    "Noto Sans KR",
+                    "Segoe UI",
+                    sans-serif;
+
+            line-height: 1.6;
+            letter-spacing: -0.03em;
+        }
+
+        button,
+        input,
+        textarea {
+            font: inherit;
+        }
+
+        button {
+            border: 0;
+            cursor: pointer;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .page {
+            display: flex;
+            flex-direction: column;
+
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: min(720px, calc(100% - 40px));
+            margin: 0 auto;
+        }
+
+        /* Header */
+
+        .header {
+            padding: 28px 0 0;
+        }
+
+        .header-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .logo {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--text);
+            white-space: nowrap;
+        }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .nav-button {
+            position: relative;
+
+            padding: 7px 0;
+
+            background: none;
+            color: var(--text-secondary);
+
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .nav-button:hover {
+            color: var(--primary);
+        }
+
+        .nav-button.active {
+            color: var(--text);
+        }
+
+        .nav-button.active::after {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            left: 0;
+
+            height: 2px;
+
+            background: var(--primary);
+
+            content: "";
+        }
+
+        /* Main */
+
+        .main {
+            display: flex;
+            flex: 1;
+            align-items: center;
+
+            padding: 70px 20px;
+        }
+
+        .content {
+            width: 100%;
+        }
+
+        .intro {
+            margin-bottom: 35px;
+            text-align: center;
+        }
+
+        .title {
+            margin: 0;
+
+            font-size: clamp(27px, 6vw, 40px);
+            font-weight: 800;
+            line-height: 1.3;
+            letter-spacing: -0.055em;
+        }
+
+        .title-before {
+            color: var(--text-light);
+        }
+
+        .title-arrow {
+            display: inline-block;
+
+            margin: 0 10px;
+
+            color: var(--primary);
+        }
+
+        .title-after {
+            color: var(--text);
+        }
+
+        .description {
+            max-width: 570px;
+            margin: 18px auto 0;
+
+            color: var(--text-secondary);
+
+            font-size: 15px;
+            line-height: 1.8;
+        }
+
+        /* Panels */
+
+        .panel {
+            overflow: hidden;
+
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+
+            box-shadow: var(--shadow);
+        }
+
+        /* File */
+
+        .drop-zone {
+            position: relative;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+
+            min-height: 280px;
+            padding: 45px 30px;
+
+            border: 2px dashed transparent;
+            border-radius: var(--radius);
+
+            text-align: center;
+
+            transition:
+                    background-color 0.2s ease,
+                    border-color 0.2s ease,
+                    transform 0.2s ease;
+        }
+
+        .drop-zone.dragging {
+            background: var(--primary-soft);
+            border-color: var(--primary);
+            transform: scale(0.995);
+        }
+
+        .file-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            width: 68px;
+            height: 68px;
+            margin-bottom: 21px;
+
+            background: var(--primary-soft);
+            border-radius: 20px;
+
+            color: var(--primary);
+
+            font-size: 31px;
+        }
+
+        .drop-title {
+            margin: 0;
+
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .drop-description {
+            margin: 8px 0 0;
+
+            color: var(--text-secondary);
+
+            font-size: 14px;
+        }
+
+        .file-button {
+            margin-top: 25px;
+            padding: 12px 24px;
+
+            background: var(--primary);
+            border-radius: 10px;
+
+            color: #ffffff;
+
+            font-size: 14px;
+            font-weight: 700;
+
+            transition:
+                    background-color 0.15s ease,
+                    transform 0.15s ease;
+        }
+
+        .file-button:hover {
+            background: var(--primary-hover);
+        }
+
+        .file-button:active {
+            transform: translateY(1px);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .privacy {
+            margin-top: 18px;
+
+            color: var(--text-light);
+
+            font-size: 12px;
+        }
+
+        /* Result */
+
+        .result {
+            display: none;
+
+            margin-top: 18px;
+            padding: 20px 22px;
+
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result-title {
+            margin: 0 0 10px;
+
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .result-message {
+            margin: 0;
+
+            color: var(--text-secondary);
+
+            font-size: 14px;
+        }
+
+        .result-message strong {
+            color: var(--primary);
+        }
+
+        /* Text normalizer */
+
+        .text-panel {
+            display: none;
+            padding: 26px;
+        }
+
+        .text-panel.active {
+            display: block;
+        }
+
+        .textarea-label {
+            display: block;
+            margin-bottom: 9px;
+
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .textarea {
+            display: block;
+
+            width: 100%;
+            min-height: 130px;
+            padding: 15px 16px;
+
+            background: var(--surface-soft);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            outline: none;
+
+            color: var(--text);
+
+            line-height: 1.7;
+
+            resize: vertical;
+
+            transition:
+                    border-color 0.15s ease,
+                    box-shadow 0.15s ease;
+        }
+
+        .textarea:focus {
+            background: #ffffff;
+            border-color: var(--primary);
+
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+        }
+
+        .text-actions {
+            display: flex;
+            gap: 10px;
+
+            margin-top: 14px;
+        }
+
+        .action-button {
+            flex: 1;
+
+            padding: 12px 18px;
+
+            border-radius: 10px;
+
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .action-button.primary {
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        .action-button.primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .action-button.secondary {
+            background: #f4f4f5;
+            color: var(--text);
+        }
+
+        .action-button.secondary:hover {
+            background: #e4e4e7;
+        }
+
+        .output-wrap {
+            margin-top: 22px;
+        }
+
+        /* Explanation */
+
+        .info {
+            margin-top: 32px;
+            padding: 25px 27px;
+
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+
+        .info-title {
+            margin: 0 0 13px;
+
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .info p {
+            margin: 0;
+
+            color: var(--text-secondary);
+
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .example {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 36px minmax(0, 1fr);
+            align-items: center;
+
+            margin-top: 18px;
+            padding: 16px;
+
+            background: var(--surface-soft);
+            border-radius: 12px;
+
+            font-size: 13px;
+        }
+
+        .example-before,
+        .example-after {
+            overflow-wrap: anywhere;
+        }
+
+        .example-before {
+            color: var(--text-secondary);
+        }
+
+        .example-after {
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .example-arrow {
+            text-align: center;
+            color: var(--text-light);
+        }
+
+        /* Footer */
+
+        .footer {
+            padding: 0 0 30px;
+        }
+
+        .footer-inner {
+            color: var(--text-light);
+
+            font-size: 12px;
+            text-align: center;
+        }
+
+        /* Drag overlay */
+
+        .drag-overlay {
+            position: fixed;
+            z-index: 1000;
+            inset: 0;
+
+            display: none;
+            align-items: center;
+            justify-content: center;
+
+            padding: 30px;
+
+            background: rgba(240, 253, 250, 0.96);
+
+            backdrop-filter: blur(4px);
+        }
+
+        .drag-overlay.show {
+            display: flex;
+        }
+
+        .drag-overlay-box {
+            width: min(500px, 100%);
+            padding: 50px 25px;
+
+            border: 2px dashed var(--primary);
+            border-radius: 24px;
+
+            color: var(--primary);
+
+            font-size: 19px;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        /* Toast */
+
+        .toast {
+            position: fixed;
+            z-index: 2000;
+            right: 20px;
+            bottom: 20px;
+
+            max-width: calc(100% - 40px);
+            padding: 12px 17px;
+
+            background: #18181b;
+            border-radius: 10px;
+
+            color: #ffffff;
+
+            font-size: 13px;
+
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(10px);
+
+            transition:
+                    opacity 0.2s ease,
+                    transform 0.2s ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                width: min(100% - 28px, 720px);
+            }
+
+            .header {
+                padding-top: 20px;
+            }
+
+            .header-inner {
+                align-items: flex-start;
+            }
+
+            .nav {
+                gap: 16px;
+            }
+
+            .main {
+                padding: 45px 0;
+            }
+
+            .intro {
+                margin-bottom: 25px;
+            }
+
+            .title-arrow {
+                margin: 0 5px;
+            }
+
+            .drop-zone {
+                min-height: 250px;
+                padding: 35px 20px;
+            }
+
+            .text-panel {
+                padding: 20px;
+            }
+
+            .text-actions {
+                flex-direction: column;
+            }
+
+            .info {
+                padding: 21px;
+            }
+
+            .example {
+                grid-template-columns: 1fr;
+                gap: 8px;
+
+                text-align: center;
+            }
+
+            .example-arrow {
+                transform: rotate(90deg);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="page">
+
+    <header class="header">
+        <div class="container header-inner">
+
+            <div class="logo">
+                자모야 모여라
+            </div>
+
+            <nav class="nav" aria-label="기능 선택">
+                <button
+                        type="button"
+                        class="nav-button active"
+                        id="fileTab"
+                >
+                    파일
+                </button>
+
+                <button
+                        type="button"
+                        class="nav-button"
+                        id="textTab"
+                >
+                    텍스트
+                </button>
+            </nav>
+
+        </div>
+    </header>
+
+
+    <main class="main">
+        <div class="container content">
+
+            <section class="intro">
+
+                <h1 class="title">
+                    <span class="title-before">ㅍㅏㅇㅣㄹㅁㅕㅇ</span>
+                    <span class="title-arrow">→</span>
+                    <span class="title-after">파일명</span>
+                </h1>
+
+                <p class="description">
+                    macOS 등에서 만들어진 파일을 Windows에서 열었을 때
+                    한글 파일명이 자음과 모음으로 분리되어 보이는 문제를
+                    간단하게 해결할 수 있습니다.
+                </p>
+
+            </section>
+
+
+            <!-- 파일 변환 -->
+            <section
+                    class="panel"
+                    id="filePanel"
+                    aria-label="파일명 변환"
+            >
+
+                <div
+                        class="drop-zone"
+                        id="dropZone"
+                >
+
+                    <div class="file-icon" aria-hidden="true">
+                        📄
+                    </div>
+
+                    <p class="drop-title">
+                        파일을 선택하거나 끌어다 놓으세요
+                    </p>
+
+                    <p class="drop-description">
+                        여러 파일을 한 번에 선택할 수도 있습니다.
+                    </p>
+
+                    <button
+                            type="button"
+                            class="file-button"
+                            id="selectButton"
+                    >
+                        파일 선택
+                    </button>
+
+                    <input
+                            type="file"
+                            class="file-input"
+                            id="fileInput"
+                            multiple
+                    >
+
+                    <p class="privacy">
+                        파일은 서버로 업로드되지 않고 브라우저에서 처리됩니다.
+                    </p>
+
+                </div>
+
+            </section>
+
+
+            <div
+                    class="result"
+                    id="result"
+                    role="status"
+                    aria-live="polite"
+            >
+                <p class="result-title">
+                    변환 완료
+                </p>
+
+                <p
+                        class="result-message"
+                        id="resultMessage"
+                ></p>
+            </div>
+
+
+            <!-- 텍스트 변환 -->
+            <section
+                    class="panel text-panel"
+                    id="textPanel"
+                    aria-label="텍스트 자모 변환"
+            >
+
+                <label
+                        class="textarea-label"
+                        for="inputText"
+                >
+                    자모가 분리된 텍스트
+                </label>
+
+                <textarea
+                        class="textarea"
+                        id="inputText"
+                        placeholder="예: ㅎㅏㄴㄱㅡㄹ 또는 자모가 분리된 문자열을 붙여 넣으세요."
+                ></textarea>
+
+                <div class="text-actions">
+
+                    <button
+                            type="button"
+                            class="action-button primary"
+                            id="normalizeTextButton"
+                    >
+                        자모 합치기
+                    </button>
+
+                    <button
+                            type="button"
+                            class="action-button secondary"
+                            id="clearTextButton"
+                    >
+                        초기화
+                    </button>
+
+                </div>
+
+                <div
+                        class="output-wrap"
+                        id="outputWrap"
+                        hidden
+                >
+
+                    <label
+                            class="textarea-label"
+                            for="outputText"
+                    >
+                        변환 결과
+                    </label>
+
+                    <textarea
+                            class="textarea"
+                            id="outputText"
+                            readonly
+                    ></textarea>
+
+                    <div class="text-actions">
+
+                        <button
+                                type="button"
+                                class="action-button primary"
+                                id="copyButton"
+                        >
+                            결과 복사
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <section class="info">
+
+                <h2 class="info-title">
+                    왜 파일명이 분리되어 보이나요?
+                </h2>
+
+                <p>
+                    운영체제마다 한글을 파일명에 저장하는 방식이 달라
+                    같은 한글이라도 자음과 모음이 분리되어 표시되는 경우가 있습니다.
+                    이 도구는 JavaScript의 Unicode NFC 정규화를 이용하여
+                    조합 가능한 한글 자모를 정상적인 형태로 변환합니다.
+                </p>
+
+                <div class="example">
+
+                    <span class="example-before">
+                        ㅍㅏㅇㅣㄹㅁㅕㅇ.txt
+                    </span>
+
+                    <span class="example-arrow">
+                        →
+                    </span>
+
+                    <span class="example-after">
+                        파일명.txt
+                    </span>
+
+                </div>
+
+            </section>
+
+        </div>
+    </main>
+
+
+    <footer class="footer">
+        <div class="container footer-inner">
+            한글 파일명 자모 정규화 도구
+        </div>
+    </footer>
+
+</div>
+
+
+<div
+        class="drag-overlay"
+        id="dragOverlay"
+        aria-hidden="true"
+>
+    <div class="drag-overlay-box">
+        📂 파일과 폴더를 이곳에 놓으세요
+    </div>
+</div>
+
+
+<div
+        class="toast"
+        id="toast"
+        role="status"
+        aria-live="polite"
+></div>
+
+
+<script>
+    (function () {
+        'use strict';
+
+
+        /* ==============================
+           Element
+        ============================== */
+
+        var fileTab = document.getElementById('fileTab');
+        var textTab = document.getElementById('textTab');
+
+        var filePanel = document.getElementById('filePanel');
+        var textPanel = document.getElementById('textPanel');
+
+        var dropZone = document.getElementById('dropZone');
+        var dragOverlay = document.getElementById('dragOverlay');
+
+        var selectButton = document.getElementById('selectButton');
+        var fileInput = document.getElementById('fileInput');
+
+        var result = document.getElementById('result');
+        var resultMessage = document.getElementById('resultMessage');
+
+        var inputText = document.getElementById('inputText');
+        var outputText = document.getElementById('outputText');
+        var outputWrap = document.getElementById('outputWrap');
+
+        var normalizeTextButton =
+                document.getElementById('normalizeTextButton');
+
+        var clearTextButton =
+                document.getElementById('clearTextButton');
+
+        var copyButton =
+                document.getElementById('copyButton');
+
+        var toast = document.getElementById('toast');
+
+
+        /* ==============================
+           State
+        ============================== */
+
+        var downloadDelay = 0;
+        var dragCounter = 0;
+        var toastTimer = null;
+
+
+        /* ==============================
+           Tab
+        ============================== */
+
+        function showFileTab() {
+            fileTab.classList.add('active');
+            textTab.classList.remove('active');
+
+            filePanel.style.display = 'block';
+            textPanel.classList.remove('active');
+
+            result.classList.remove('show');
+        }
+
+
+        function showTextTab() {
+            textTab.classList.add('active');
+            fileTab.classList.remove('active');
+
+            filePanel.style.display = 'none';
+            textPanel.classList.add('active');
+
+            result.classList.remove('show');
+
+            setTimeout(function () {
+                inputText.focus();
+            }, 100);
+        }
+
+
+        fileTab.addEventListener('click', showFileTab);
+        textTab.addEventListener('click', showTextTab);
+
+
+        /* ==============================
+           NFC Normalize
+        ============================== */
+
+        function normalizeString(value) {
+            if (typeof value !== 'string') {
+                return '';
+            }
+
+            if (typeof value.normalize === 'function') {
+                return value.normalize('NFC');
+            }
+
+            return value;
+        }
+
+
+        /* ==============================
+           File Download
+        ============================== */
+
+        function downloadNormalizedFile(file) {
+            if (!file) {
+                return;
+            }
+
+            var normalizedName = normalizeString(file.name);
+
+            var objectUrl = URL.createObjectURL(file);
+
+            var link = document.createElement('a');
+
+            link.href = objectUrl;
+            link.download = normalizedName;
+            link.style.display = 'none';
+
+            document.body.appendChild(link);
+
+            link.click();
+
+            document.body.removeChild(link);
+
+            setTimeout(function () {
+                URL.revokeObjectURL(objectUrl);
+            }, 1000);
+        }
+
+
+        function queueDownload(file) {
+            if (!file) {
+                return;
+            }
+
+            var delay = downloadDelay * 200;
+
+            setTimeout(function () {
+                downloadNormalizedFile(file);
+            }, delay);
+
+            downloadDelay++;
+        }
+
+
+        function processFiles(files) {
+            if (!files || files.length === 0) {
+                return;
+            }
+
+            downloadDelay = 0;
+
+            var changedCount = 0;
+
+            for (var i = 0; i < files.length; i++) {
+
+                var file = files[i];
+
+                if (!file) {
+                    continue;
+                }
+
+                var beforeName = file.name;
+                var afterName = normalizeString(beforeName);
+
+                if (beforeName !== afterName) {
+                    changedCount++;
+                }
+
+                queueDownload(file);
+            }
+
+            showFileResult(files.length, changedCount);
+        }
+
+
+        function showFileResult(total, changed) {
+            result.classList.add('show');
+
+            if (changed > 0) {
+                resultMessage.innerHTML =
+                    '총 <strong>' +
+                    total +
+                    '개</strong> 파일을 처리했습니다. ' +
+                    '<strong>' +
+                    changed +
+                    '개</strong> 파일명의 한글 자모를 정규화했습니다.';
+            } else {
+                resultMessage.innerHTML =
+                    '총 <strong>' +
+                    total +
+                    '개</strong> 파일을 확인했습니다. ' +
+                    '이미 정상적인 파일명도 변환된 이름으로 다시 다운로드합니다.';
+            }
+        }
+
+
+        /* ==============================
+           File Select
+        ============================== */
+
+        selectButton.addEventListener('click', function () {
+            fileInput.click();
+        });
+
+
+        fileInput.addEventListener('change', function () {
+            processFiles(fileInput.files);
+
+            /*
+             * 같은 파일을 다시 선택할 수 있도록 초기화
+             */
+            fileInput.value = '';
+        });
+
+
+        /* ==============================
+           Folder / Entry
+        ============================== */
+
+        function isHiddenFile(name) {
+            return name && name.charAt(0) === '.';
+        }
+
+
+        function readEntry(entry) {
+            if (!entry) {
+                return;
+            }
+
+
+            /*
+             * File
+             */
+            if (entry.isFile) {
+
+                if (isHiddenFile(entry.name)) {
+                    return;
+                }
+
+                entry.file(function (file) {
+                    queueDownload(file);
+                });
+
+                return;
+            }
+
+
+            /*
+             * Directory
+             */
+            if (entry.isDirectory) {
+
+                var reader = entry.createReader();
+
+                readDirectoryEntries(reader);
+            }
+        }
+
+
+        /*
+         * Chrome 계열에서 readEntries()는
+         * 폴더가 큰 경우 여러 번 호출해야 할 수 있습니다.
+         */
+        function readDirectoryEntries(reader) {
+
+            reader.readEntries(function (entries) {
+
+                if (!entries || entries.length === 0) {
+                    return;
+                }
+
+                for (var i = 0; i < entries.length; i++) {
+                    readEntry(entries[i]);
+                }
+
+                readDirectoryEntries(reader);
+            });
+        }
+
+
+        function processDataTransfer(dataTransfer) {
+            if (!dataTransfer) {
+                return;
+            }
+
+            downloadDelay = 0;
+
+            var items = dataTransfer.items;
+
+            /*
+             * 폴더 드롭이 가능한 브라우저
+             */
+            if (items && items.length) {
+
+                var hasEntry = false;
+
+                for (var i = 0; i < items.length; i++) {
+
+                    var item = items[i];
+
+                    if (item.kind !== 'file') {
+                        continue;
+                    }
+
+                    if (typeof item.webkitGetAsEntry === 'function') {
+
+                        var entry = item.webkitGetAsEntry();
+
+                        if (entry) {
+                            hasEntry = true;
+                            readEntry(entry);
+                        }
+
+                    } else {
+
+                        var file = item.getAsFile();
+
+                        if (file) {
+                            queueDownload(file);
+                        }
+                    }
+                }
+
+                if (hasEntry) {
+                    showToast(
+                        '폴더와 파일을 확인하여 변환을 시작했습니다.'
+                    );
+                } else {
+                    showToast(
+                        '파일명 변환을 시작했습니다.'
+                    );
+                }
+
+                return;
+            }
+
+
+            /*
+             * 일반 FileList
+             */
+            processFiles(dataTransfer.files);
+        }
+
+
+        /* ==============================
+           Drag & Drop
+        ============================== */
+
+        function preventDrag(event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+
+        document.addEventListener('dragenter', function (event) {
+            preventDrag(event);
+
+            dragCounter++;
+
+            dragOverlay.classList.add('show');
+            dragOverlay.setAttribute('aria-hidden', 'false');
+
+            dropZone.classList.add('dragging');
+        });
+
+
+        document.addEventListener('dragover', function (event) {
+            preventDrag(event);
+
+            if (event.dataTransfer) {
+                event.dataTransfer.dropEffect = 'copy';
+            }
+        });
+
+
+        document.addEventListener('dragleave', function (event) {
+            preventDrag(event);
+
+            dragCounter--;
+
+            if (dragCounter <= 0) {
+                dragCounter = 0;
+
+                dragOverlay.classList.remove('show');
+                dragOverlay.setAttribute('aria-hidden', 'true');
+
+                dropZone.classList.remove('dragging');
+            }
+        });
+
+
+        document.addEventListener('drop', function (event) {
+            preventDrag(event);
+
+            dragCounter = 0;
+
+            dragOverlay.classList.remove('show');
+            dragOverlay.setAttribute('aria-hidden', 'true');
+
+            dropZone.classList.remove('dragging');
+
+            processDataTransfer(event.dataTransfer);
+        });
+
+
+        /* ==============================
+           Text Normalize
+        ============================== */
+
+        normalizeTextButton.addEventListener('click', function () {
+
+            var value = inputText.value;
+
+            if (!value.trim()) {
+                showToast('변환할 텍스트를 입력해 주세요.');
+                inputText.focus();
+                return;
+            }
+
+            outputText.value = normalizeString(value);
+            outputWrap.hidden = false;
+
+            showToast('텍스트를 변환했습니다.');
+        });
+
+
+        clearTextButton.addEventListener('click', function () {
+
+            inputText.value = '';
+            outputText.value = '';
+
+            outputWrap.hidden = true;
+
+            inputText.focus();
+        });
+
+
+        copyButton.addEventListener('click', function () {
+
+            var value = outputText.value;
+
+            if (!value) {
+                return;
+            }
+
+            copyText(value);
+        });
+
+
+        function copyText(value) {
+
+            /*
+             * Clipboard API
+             */
+            if (
+                navigator.clipboard &&
+                window.isSecureContext
+            ) {
+                navigator.clipboard
+                .writeText(value)
+                .then(function () {
+                    showToast('결과를 복사했습니다.');
+                })
+                .catch(function () {
+                    fallbackCopy(value);
+                });
+
+                return;
+            }
+
+            fallbackCopy(value);
+        }
+
+
+        function fallbackCopy(value) {
+
+            var textarea = document.createElement('textarea');
+
+            textarea.value = value;
+
+            textarea.setAttribute('readonly', '');
+
+            textarea.style.position = 'fixed';
+            textarea.style.left = '-9999px';
+            textarea.style.top = '0';
+
+            document.body.appendChild(textarea);
+
+            textarea.select();
+            textarea.setSelectionRange(
+                0,
+                textarea.value.length
+            );
+
+            try {
+                document.execCommand('copy');
+                showToast('결과를 복사했습니다.');
+            } catch (error) {
+                showToast('복사하지 못했습니다.');
+            }
+
+            document.body.removeChild(textarea);
+        }
+
+
+        /* ==============================
+           Toast
+        ============================== */
+
+        function showToast(message) {
+
+            if (toastTimer) {
+                clearTimeout(toastTimer);
+            }
+
+            toast.textContent = message;
+            toast.classList.add('show');
+
+            toastTimer = setTimeout(function () {
+                toast.classList.remove('show');
+            }, 2200);
+        }
+
+    })();
+</script>
+
+</body>
+</html>
