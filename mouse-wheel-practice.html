@@ -1,0 +1,726 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="마우스 휠을 위아래로 움직이며 스크롤 조작과 정밀한 위치 이동을 연습하는 20단계 게임입니다.">
+    <title>마우스 휠 조작 연습</title>
+
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --surface-soft: #f8fafc;
+            --text: #1e293b;
+            --muted: #64748b;
+            --muted-light: #94a3b8;
+            --border: #e2e8f0;
+            --primary: #2563eb;
+            --primary-soft: #eff6ff;
+            --success: #16a34a;
+            --success-hover: #15803d;
+            --shadow: 0 24px 55px rgba(15, 23, 42, 0.14);
+            --radius: 24px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            min-height: 100%;
+            margin: 0;
+        }
+
+        body {
+            min-height: 100dvh;
+            overflow: hidden;
+            background: var(--bg);
+            color: var(--text);
+            font-family:
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    "Noto Sans KR",
+                    sans-serif;
+            letter-spacing: -0.03em;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        button {
+            font: inherit;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        .app {
+            display: flex;
+            min-height: 100dvh;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .game-card {
+            position: relative;
+            width: min(100%, 720px);
+            padding: 30px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--surface);
+            box-shadow: var(--shadow);
+        }
+
+        .game-header {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 24px;
+            align-items: center;
+            margin-bottom: 22px;
+        }
+
+        .game-title {
+            margin: 0;
+            font-size: clamp(24px, 4vw, 31px);
+            font-weight: 900;
+            line-height: 1.25;
+        }
+
+        .level-display {
+            color: var(--primary);
+            white-space: nowrap;
+        }
+
+        .instruction {
+            margin: 7px 0 0;
+            color: var(--muted);
+            font-size: clamp(16px, 2.6vw, 19px);
+            font-weight: 700;
+            line-height: 1.45;
+        }
+
+        .progress-panel {
+            width: 132px;
+            text-align: right;
+        }
+
+        .progress-label {
+            color: var(--muted-light);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 12px;
+            margin-top: 6px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: #f1f5f9;
+        }
+
+        .progress-bar {
+            width: 5%;
+            height: 100%;
+            border-radius: inherit;
+            background: #3b82f6;
+            transition: width 0.35s ease;
+        }
+
+        .game-area {
+            position: relative;
+        }
+
+        .scroll-container {
+            position: relative;
+            height: min(60vh, 500px);
+            min-height: 320px;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            border: 4px solid var(--border);
+            border-radius: 18px;
+            background: var(--surface-soft);
+            scroll-behavior: auto;
+            scrollbar-color: #cbd5e1 #f1f5f9;
+            scrollbar-width: auto;
+        }
+
+        .scroll-container:focus-visible {
+            outline: 4px solid rgba(37, 99, 235, 0.2);
+            outline-offset: 3px;
+        }
+
+        .scroll-container::-webkit-scrollbar {
+            width: 24px;
+        }
+
+        .scroll-container::-webkit-scrollbar-track {
+            border-radius: 12px;
+            background: #f1f5f9;
+        }
+
+        .scroll-container::-webkit-scrollbar-thumb {
+            border: 4px solid #f1f5f9;
+            border-radius: 12px;
+            background: #cbd5e1;
+        }
+
+        .scroll-container::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .scroll-content {
+            position: relative;
+            width: 100%;
+        }
+
+        .target-box {
+            position: absolute;
+            left: 50%;
+            display: grid;
+            width: 100px;
+            height: 100px;
+            place-items: center;
+            padding: 0;
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+            background: #ffffff;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.1);
+            cursor: pointer;
+            font-size: 50px;
+            line-height: 1;
+            transform: translateX(-50%);
+            transition:
+                    background-color 0.12s ease,
+                    transform 0.12s ease,
+                    box-shadow 0.12s ease;
+        }
+
+        .target-box:hover {
+            background: #f1f5f9;
+            box-shadow: 0 10px 22px rgba(15, 23, 42, 0.14);
+            transform: translateX(-50%) scale(1.04);
+        }
+
+        .target-box:active {
+            background: #e2e8f0;
+            transform: translateX(-50%) scale(0.98);
+        }
+
+        .target-box:focus-visible {
+            outline: 5px solid rgba(37, 99, 235, 0.22);
+            outline-offset: 4px;
+        }
+
+        .overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 24px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(5px);
+            text-align: center;
+        }
+
+        .success-icon,
+        .finish-icon {
+            margin-bottom: 8px;
+            font-size: 62px;
+            line-height: 1;
+        }
+
+        .success-title {
+            margin: 0;
+            color: var(--primary);
+            font-size: 32px;
+            font-weight: 900;
+        }
+
+        .finish-title {
+            margin: 0;
+            font-size: 38px;
+            font-weight: 900;
+        }
+
+        .finish-description {
+            margin: 12px 0 0;
+            color: var(--muted);
+            font-size: 20px;
+            font-weight: 650;
+            line-height: 1.6;
+        }
+
+        .restart-button {
+            margin-top: 28px;
+            padding: 14px 28px;
+            border: 0;
+            border-radius: 999px;
+            background: var(--success);
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 17px;
+            font-weight: 850;
+            transition:
+                    background-color 0.15s ease,
+                    transform 0.15s ease;
+        }
+
+        .restart-button:hover {
+            background: var(--success-hover);
+            transform: translateY(-2px);
+        }
+
+        .restart-button:active {
+            transform: scale(0.98);
+        }
+
+        .restart-button:focus-visible {
+            outline: 4px solid rgba(22, 163, 74, 0.22);
+            outline-offset: 4px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            min-width: 0;
+            padding: 12px;
+            border: 1px solid #f1f5f9;
+            border-radius: 12px;
+            background: var(--surface-soft);
+            text-align: center;
+        }
+
+        .stat-label {
+            display: block;
+            margin-bottom: 4px;
+            color: var(--muted-light);
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .stat-value {
+            display: block;
+            overflow: hidden;
+            color: #334155;
+            font-size: 14px;
+            font-weight: 850;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .stat-value.primary {
+            color: var(--primary);
+        }
+
+        @media (max-width: 640px) {
+            .app {
+                padding: 10px;
+            }
+
+            .game-card {
+                padding: 20px 16px;
+                border-radius: 20px;
+            }
+
+            .game-header {
+                grid-template-columns: 1fr;
+                gap: 14px;
+                margin-bottom: 16px;
+            }
+
+            .progress-panel {
+                width: 100%;
+                text-align: left;
+            }
+
+            .scroll-container {
+                height: calc(100dvh - 330px);
+                min-height: 300px;
+                max-height: none;
+            }
+
+            .stats {
+                gap: 8px;
+            }
+
+            .stat-card {
+                padding: 10px 6px;
+            }
+
+            .stat-value {
+                font-size: 12px;
+            }
+        }
+
+        @media (max-height: 720px) and (min-width: 641px) {
+            .app {
+                padding: 10px;
+            }
+
+            .game-card {
+                padding: 20px 24px;
+            }
+
+            .game-header {
+                margin-bottom: 14px;
+            }
+
+            .scroll-container {
+                height: 52vh;
+                min-height: 260px;
+            }
+
+            .stats {
+                margin-top: 14px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                transition-duration: 0.01ms !important;
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<main class="app">
+    <section class="game-card" aria-labelledby="game-title">
+        <header class="game-header">
+            <div>
+                <h1 class="game-title" id="game-title">
+                    휠 마스터 연습
+                    <span class="level-display" id="level-display">Step 1/20</span>
+                </h1>
+
+                <p class="instruction" id="instruction">
+                    휠을 아래로 끝까지 감아서 그림을 클릭하세요!
+                </p>
+            </div>
+
+            <div class="progress-panel">
+                <div class="progress-label">진행도</div>
+                <div
+                        class="progress-track"
+                        id="progress-track"
+                        role="progressbar"
+                        aria-label="게임 진행률"
+                        aria-valuemin="1"
+                        aria-valuemax="20"
+                        aria-valuenow="1"
+                >
+                    <div class="progress-bar" id="progress-bar"></div>
+                </div>
+            </div>
+        </header>
+
+        <div class="game-area">
+            <div
+                    class="scroll-container"
+                    id="scroll-container"
+                    tabindex="0"
+                    aria-label="마우스 휠 연습 영역"
+            >
+                <div class="scroll-content" id="scroll-content"></div>
+            </div>
+
+            <div class="overlay" id="temp-success" role="status" aria-live="polite" hidden>
+                <div class="success-icon" aria-hidden="true">✨</div>
+                <h2 class="success-title">성공!</h2>
+            </div>
+
+            <div
+                    class="overlay"
+                    id="finish-overlay"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="finish-title"
+                    hidden
+            >
+                <div class="finish-icon" aria-hidden="true">🏆</div>
+                <h2 class="finish-title" id="finish-title">축하합니다!</h2>
+                <p class="finish-description">
+                    모든 단계를 완료했습니다.<br>
+                    당신은 진정한 휠 마스터입니다!
+                </p>
+                <button class="restart-button" id="restart-button" type="button">
+                    처음부터 다시하기
+                </button>
+            </div>
+        </div>
+
+        <footer class="stats" aria-label="현재 게임 정보">
+            <div class="stat-card">
+                <span class="stat-label">현재 모드</span>
+                <span class="stat-value primary" id="mode-badge">휠 감기 (하단)</span>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-label">스크롤 길이</span>
+                <span class="stat-value" id="height-badge">1,600px</span>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-label">클릭 횟수</span>
+                <span class="stat-value" id="click-badge">0</span>
+            </div>
+        </footer>
+    </section>
+</main>
+
+<script>
+    (() => {
+        "use strict";
+
+        const CONFIG = Object.freeze({
+            maxLevel: 20,
+            baseHeight: 1200,
+            heightStep: 400,
+            successDelay: 400,
+            targetSize: 100,
+            bottomOffset: 150,
+            topOffset: 50,
+            precisionPadding: 200
+        });
+
+        const EMOJIS = Object.freeze([
+            "🍎", "🚀", "⭐", "🎈", "🎮",
+            "🐯", "🍕", "🌈", "🍦", "💎",
+            "🎨", "🎸", "⚽", "🍔", "🎁",
+            "🐶", "🦄", "🐳", "🍀", "👑"
+        ]);
+
+        const MODE = Object.freeze({
+            DOWN: 1,
+            UP: 2,
+            PRECISION: 0
+        });
+
+        const state = {
+            currentLevel: 1,
+            totalClicks: 0,
+            isTransitioning: false,
+            transitionTimer: null
+        };
+
+        const elements = {
+            scrollContainer: document.getElementById("scroll-container"),
+            scrollContent: document.getElementById("scroll-content"),
+            levelDisplay: document.getElementById("level-display"),
+            instruction: document.getElementById("instruction"),
+            progressBar: document.getElementById("progress-bar"),
+            progressTrack: document.getElementById("progress-track"),
+            tempSuccess: document.getElementById("temp-success"),
+            finishOverlay: document.getElementById("finish-overlay"),
+            restartButton: document.getElementById("restart-button"),
+            modeBadge: document.getElementById("mode-badge"),
+            heightBadge: document.getElementById("height-badge"),
+            clickBadge: document.getElementById("click-badge")
+        };
+
+        function getLevelHeight(level) {
+            return CONFIG.baseHeight + level * CONFIG.heightStep;
+        }
+
+        function getLevelMode(level) {
+            return level % 3;
+        }
+
+        function getRandomPrecisionTop(levelHeight) {
+            const availableRange =
+                      levelHeight - CONFIG.precisionPadding * 2;
+
+            return (
+                Math.floor(Math.random() * availableRange) +
+                CONFIG.precisionPadding
+            );
+        }
+
+        function getLevelSettings(level, levelHeight) {
+            const mode = getLevelMode(level);
+
+            if (mode === MODE.DOWN) {
+                return {
+                    modeLabel: "휠 감기 (하단)",
+                    instruction: "휠을 아래로 끝까지 감아서 그림을 클릭하세요!",
+                    targetTop: levelHeight - CONFIG.bottomOffset,
+                    initialScrollTop: 0
+                };
+            }
+
+            if (mode === MODE.UP) {
+                return {
+                    modeLabel: "휠 풀기 (상단)",
+                    instruction: "휠을 위로 끝까지 풀어서 그림을 클릭하세요!",
+                    targetTop: CONFIG.topOffset,
+                    initialScrollTop: levelHeight
+                };
+            }
+
+            return {
+                modeLabel: "정밀 조절 (중간)",
+                instruction: "휠을 천천히 돌려 중간에 숨은 그림을 찾아 클릭하세요!",
+                targetTop: getRandomPrecisionTop(levelHeight),
+                initialScrollTop:
+                    level % 2 === 0 ? levelHeight : 0
+            };
+        }
+
+        function updateHeader(level, levelHeight, settings) {
+            const progress = (level / CONFIG.maxLevel) * 100;
+
+            elements.levelDisplay.textContent =
+                `Step ${level}/${CONFIG.maxLevel}`;
+            elements.progressBar.style.width = `${progress}%`;
+            elements.progressTrack.setAttribute(
+                "aria-valuenow",
+                String(level)
+            );
+
+            elements.instruction.textContent = settings.instruction;
+            elements.modeBadge.textContent = settings.modeLabel;
+            elements.heightBadge.textContent =
+                `${levelHeight.toLocaleString()}px`;
+            elements.clickBadge.textContent =
+                String(state.totalClicks);
+        }
+
+        function createTarget(level, settings) {
+            const target = document.createElement("button");
+
+            target.type = "button";
+            target.className = "target-box";
+            target.style.top = `${settings.targetTop}px`;
+            target.textContent = EMOJIS[level - 1];
+            target.setAttribute(
+                "aria-label",
+                `${level}단계 목표 그림 ${EMOJIS[level - 1]}`
+            );
+
+            target.addEventListener("click", handleTargetClick);
+
+            return target;
+        }
+
+        function initLevel() {
+            if (state.currentLevel > CONFIG.maxLevel) {
+                showFinish();
+                return;
+            }
+
+            state.isTransitioning = false;
+            elements.tempSuccess.hidden = true;
+            elements.scrollContent.replaceChildren();
+
+            const level = state.currentLevel;
+            const levelHeight = getLevelHeight(level);
+            const settings = getLevelSettings(level, levelHeight);
+
+            elements.scrollContent.style.height = `${levelHeight}px`;
+            updateHeader(level, levelHeight, settings);
+
+            const target = createTarget(level, settings);
+            elements.scrollContent.appendChild(target);
+
+            requestAnimationFrame(() => {
+                elements.scrollContainer.scrollTop =
+                    settings.initialScrollTop;
+                elements.scrollContainer.focus({
+                    preventScroll: true
+                });
+            });
+        }
+
+        function handleTargetClick() {
+            if (state.isTransitioning) {
+                return;
+            }
+
+            state.isTransitioning = true;
+            state.totalClicks += 1;
+            elements.clickBadge.textContent =
+                String(state.totalClicks);
+            elements.tempSuccess.hidden = false;
+
+            clearTimeout(state.transitionTimer);
+
+            state.transitionTimer = window.setTimeout(() => {
+                state.currentLevel += 1;
+                initLevel();
+            }, CONFIG.successDelay);
+        }
+
+        function showFinish() {
+            elements.tempSuccess.hidden = true;
+            elements.progressBar.style.width = "100%";
+            elements.progressTrack.setAttribute(
+                "aria-valuenow",
+                String(CONFIG.maxLevel)
+            );
+            elements.finishOverlay.hidden = false;
+            elements.restartButton.focus();
+        }
+
+        function resetGame() {
+            clearTimeout(state.transitionTimer);
+
+            state.currentLevel = 1;
+            state.totalClicks = 0;
+            state.isTransitioning = false;
+            state.transitionTimer = null;
+
+            elements.finishOverlay.hidden = true;
+            elements.clickBadge.textContent = "0";
+
+            initLevel();
+        }
+
+        function preventKeyboardScrolling(event) {
+            const blockedKeys = new Set([
+                " ",
+                "PageUp",
+                "PageDown",
+                "Home",
+                "End",
+                "ArrowUp",
+                "ArrowDown"
+            ]);
+
+            if (
+                elements.finishOverlay.hidden &&
+                blockedKeys.has(event.key)
+            ) {
+                event.preventDefault();
+            }
+        }
+
+        elements.restartButton.addEventListener("click", resetGame);
+        window.addEventListener("keydown", preventKeyboardScrolling);
+
+        initLevel();
+    })();
+</script>
+</body>
+</html>

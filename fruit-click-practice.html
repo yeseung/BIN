@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="화면에 나타나는 과일을 클릭하며 마우스 사용을 연습하는 간단한 게임입니다.">
+    <title>과일 클릭 연습 게임</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --color-bg: #f0fdf4;
+            --color-surface: rgba(255, 255, 255, 0.9);
+            --color-text: #374151;
+            --color-green: #16a34a;
+            --color-green-dark: #15803d;
+            --color-green-border: #22c55e;
+            --color-orange: #f97316;
+            --color-orange-dark: #ea580c;
+            --color-orange-text: #9a3412;
+            --color-orange-light: #ffedd5;
+            --color-overlay: rgba(0, 0, 0, 0.5);
+            --shadow-card: 0 10px 25px rgba(0, 0, 0, 0.12);
+            --shadow-modal: 0 24px 60px rgba(0, 0, 0, 0.22);
+            --radius-card: 18px;
+            --radius-modal: 24px;
+            --hud-height: 126px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            overflow: hidden;
+            background: var(--color-bg);
+            color: var(--color-text);
+            font-family: "Jua", sans-serif;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        button {
+            font: inherit;
+        }
+
+        .game {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            min-height: 100dvh;
+            overflow: hidden;
+        }
+
+        .hud {
+            position: fixed;
+            inset: 0 0 auto 0;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 24px;
+            pointer-events: none;
+        }
+
+        .hud-card {
+            min-width: 200px;
+            padding: 14px 16px;
+            border: 2px solid var(--color-green-border);
+            border-radius: var(--radius-card);
+            background: var(--color-surface);
+            box-shadow: var(--shadow-card);
+            backdrop-filter: blur(8px);
+            pointer-events: auto;
+        }
+
+        .hud-card--progress {
+            width: min(260px, 42vw);
+            border-color: var(--color-orange);
+        }
+
+        .hud-title {
+            margin: 0 0 4px;
+            color: #166534;
+            font-size: 24px;
+            font-weight: 400;
+        }
+
+        .hud-text {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .progress-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 6px;
+            color: var(--color-orange-text);
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 16px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: var(--color-orange-light);
+        }
+
+        .progress-bar {
+            width: 0;
+            height: 100%;
+            border-radius: inherit;
+            background: var(--color-orange);
+            transition: width 0.3s ease;
+        }
+
+        .game-canvas {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+        }
+
+        .fruit {
+            position: absolute;
+            z-index: 10;
+            display: grid;
+            width: 96px;
+            height: 96px;
+            padding: 0;
+            place-items: center;
+            border: 0;
+            border-radius: 50%;
+            background: transparent;
+            cursor: pointer;
+            font-size: 64px;
+            line-height: 1;
+            touch-action: manipulation;
+            animation: fruit-pop 0.3s ease-out;
+            transition: transform 0.1s ease;
+        }
+
+        .fruit:hover {
+            transform: scale(1.1);
+        }
+
+        .fruit:active {
+            transform: scale(0.9);
+        }
+
+        .fruit:focus-visible {
+            outline: 4px solid rgba(22, 163, 74, 0.35);
+            outline-offset: 2px;
+        }
+
+        .fruit.is-clicked {
+            pointer-events: none;
+            animation: fruit-fade 0.4s forwards;
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: var(--color-overlay);
+        }
+
+        .modal[hidden] {
+            display: none;
+        }
+
+        .modal-card {
+            width: min(100%, 448px);
+            padding: 32px;
+            border-radius: var(--radius-modal);
+            background: #fff;
+            box-shadow: var(--shadow-modal);
+            text-align: center;
+        }
+
+        .modal-icon {
+            margin-bottom: 14px;
+            font-size: 60px;
+            line-height: 1;
+        }
+
+        .modal-title {
+            margin: 0 0 14px;
+            color: var(--color-green-dark);
+            font-size: 32px;
+            font-weight: 400;
+        }
+
+        .modal-title--orange {
+            color: var(--color-orange-dark);
+        }
+
+        .modal-description {
+            margin: 0 0 24px;
+            color: #4b5563;
+            font-size: 18px;
+            line-height: 1.55;
+        }
+
+        .primary-button {
+            width: 100%;
+            min-height: 58px;
+            padding: 14px 20px;
+            border: 0;
+            border-radius: 16px;
+            background: var(--color-green);
+            color: #fff;
+            box-shadow: 0 8px 18px rgba(22, 163, 74, 0.22);
+            cursor: pointer;
+            font-size: 22px;
+            transition:
+                    background 0.15s ease,
+                    transform 0.15s ease;
+        }
+
+        .primary-button:hover {
+            background: var(--color-green-dark);
+        }
+
+        .primary-button:active {
+            transform: scale(0.97);
+        }
+
+        .primary-button:focus-visible {
+            outline: 4px solid rgba(22, 163, 74, 0.3);
+            outline-offset: 3px;
+        }
+
+        .primary-button--orange {
+            background: var(--color-orange);
+            box-shadow: 0 8px 18px rgba(249, 115, 22, 0.22);
+        }
+
+        .primary-button--orange:hover {
+            background: var(--color-orange-dark);
+        }
+
+        @keyframes fruit-pop {
+            from {
+                opacity: 0;
+                transform: scale(0);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes fruit-fade {
+            from {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            to {
+                opacity: 0;
+                transform: scale(1.5);
+            }
+        }
+
+        @media (max-width: 640px) {
+            :root {
+                --hud-height: 176px;
+            }
+
+            .hud {
+                align-items: stretch;
+                flex-direction: column;
+                gap: 10px;
+                padding: 14px;
+            }
+
+            .hud-card,
+            .hud-card--progress {
+                width: 100%;
+                min-width: 0;
+                padding: 10px 12px;
+            }
+
+            .hud-title {
+                font-size: 21px;
+            }
+
+            .hud-text,
+            .progress-head {
+                font-size: 16px;
+            }
+
+            .fruit {
+                width: 76px;
+                height: 76px;
+                font-size: 52px;
+            }
+
+            .modal-card {
+                padding: 26px 22px;
+            }
+
+            .modal-title {
+                font-size: 28px;
+            }
+
+            .modal-description {
+                font-size: 17px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                transition-duration: 0.01ms !important;
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+<main class="game" aria-label="과일 클릭 연습 게임">
+    <section class="hud" aria-label="게임 상태">
+        <div class="hud-card">
+            <h1 class="hud-title">
+                레벨: <span id="level-display">1</span>
+            </h1>
+            <p class="hud-text">
+                남은 과일:
+                <span id="count-display">10</span> /
+                <span id="total-display">10</span>
+            </p>
+        </div>
+
+        <div class="hud-card hud-card--progress">
+            <div class="progress-head">
+                <span>진행도</span>
+                <span id="progress-text">0%</span>
+            </div>
+
+            <div
+                    class="progress-track"
+                    role="progressbar"
+                    aria-label="현재 레벨 진행도"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    aria-valuenow="0"
+                    id="progress-track"
+            >
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+        </div>
+    </section>
+
+    <section
+            id="game-canvas"
+            class="game-canvas"
+            aria-label="과일이 나타나는 게임 영역"
+    ></section>
+
+    <div
+            id="start-modal"
+            class="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="start-title"
+    >
+        <div class="modal-card">
+            <div class="modal-icon" aria-hidden="true">🍎</div>
+            <h2 class="modal-title" id="start-title">마우스 클릭 연습</h2>
+            <p class="modal-description">
+                화면에 나타나는 과일 10개를 클릭해서 모두 없애보세요!
+                단계가 올라갈수록 과일이 더 빠르게 나타납니다.
+            </p>
+            <button class="primary-button" id="start-button" type="button">
+                게임 시작하기
+            </button>
+        </div>
+    </div>
+
+    <div
+            id="clear-modal"
+            class="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="clear-title"
+            hidden
+    >
+        <div class="modal-card">
+            <div class="modal-icon" aria-hidden="true">🎉</div>
+            <h2 class="modal-title modal-title--orange" id="clear-title">
+                레벨 통과!
+            </h2>
+            <p class="modal-description" id="clear-message">
+                참 잘하셨어요! 다음 단계는 더 빨라집니다.
+            </p>
+            <button
+                    class="primary-button primary-button--orange"
+                    id="next-button"
+                    type="button"
+            >
+                다음 단계로 가기
+            </button>
+        </div>
+    </div>
+</main>
+
+<script>
+    (() => {
+        "use strict";
+
+        const CONFIG = Object.freeze({
+            maxLevel: 5,
+            totalPerLevel: 10,
+            baseSpawnDelay: 1200,
+            levelSpeedStep: 200,
+            minimumSpawnDelay: 300,
+            fruitSizeDesktop: 96,
+            fruitSizeMobile: 76,
+            sidePadding: 20,
+            bottomPadding: 20,
+            clearDelay: 600,
+            removeDelay: 400
+        });
+
+        const FRUITS = Object.freeze([
+            "🍎", "🍐", "🍊", "🍋", "🍌",
+            "🍉", "🍇", "🍓", "🫐", "🍈",
+            "🍒", "🍑", "🥭", "🍍", "🥝"
+        ]);
+
+        const state = {
+            level: 1,
+            score: 0,
+            activeFruits: 0,
+            spawnTimerId: null,
+            clearTimerId: null,
+            gameActive: false
+        };
+
+        const elements = {
+            canvas: document.getElementById("game-canvas"),
+            levelDisplay: document.getElementById("level-display"),
+            countDisplay: document.getElementById("count-display"),
+            totalDisplay: document.getElementById("total-display"),
+            progressBar: document.getElementById("progress-bar"),
+            progressText: document.getElementById("progress-text"),
+            progressTrack: document.getElementById("progress-track"),
+            startModal: document.getElementById("start-modal"),
+            clearModal: document.getElementById("clear-modal"),
+            clearMessage: document.getElementById("clear-message"),
+            startButton: document.getElementById("start-button"),
+            nextButton: document.getElementById("next-button")
+        };
+
+        function getRandomItem(items) {
+            return items[Math.floor(Math.random() * items.length)];
+        }
+
+        function getSpawnDelay() {
+            return Math.max(
+                CONFIG.minimumSpawnDelay,
+                CONFIG.baseSpawnDelay - state.level * CONFIG.levelSpeedStep
+            );
+        }
+
+        function getFruitSize() {
+            return window.matchMedia("(max-width: 640px)").matches
+                ? CONFIG.fruitSizeMobile
+                : CONFIG.fruitSizeDesktop;
+        }
+
+        function getHudBottom() {
+            const hud = document.querySelector(".hud");
+            return hud ? hud.getBoundingClientRect().bottom : 0;
+        }
+
+        function getRandomPosition() {
+            const rect = elements.canvas.getBoundingClientRect();
+            const fruitSize = getFruitSize();
+            const hudBottom = getHudBottom();
+
+            const minX = CONFIG.sidePadding;
+            const maxX = Math.max(
+                minX,
+                rect.width - fruitSize - CONFIG.sidePadding
+            );
+
+            const minY = Math.max(
+                hudBottom - rect.top + 12,
+                CONFIG.sidePadding
+            );
+
+            const maxY = Math.max(
+                minY,
+                rect.height - fruitSize - CONFIG.bottomPadding
+            );
+
+            return {
+                x: minX + Math.random() * (maxX - minX),
+                y: minY + Math.random() * (maxY - minY)
+            };
+        }
+
+        function clearTimers() {
+            if (state.spawnTimerId !== null) {
+                clearInterval(state.spawnTimerId);
+                state.spawnTimerId = null;
+            }
+
+            if (state.clearTimerId !== null) {
+                clearTimeout(state.clearTimerId);
+                state.clearTimerId = null;
+            }
+        }
+
+        function clearFruits() {
+            elements.canvas.replaceChildren();
+            state.activeFruits = 0;
+        }
+
+        function updateUI() {
+            const remaining = Math.max(
+                0,
+                CONFIG.totalPerLevel - state.score
+            );
+
+            const percent = Math.min(
+                100,
+                Math.round(
+                    (state.score / CONFIG.totalPerLevel) * 100
+                )
+            );
+
+            elements.levelDisplay.textContent = String(state.level);
+            elements.countDisplay.textContent = String(remaining);
+            elements.totalDisplay.textContent = String(CONFIG.totalPerLevel);
+            elements.progressText.textContent = `${percent}%`;
+            elements.progressBar.style.width = `${percent}%`;
+            elements.progressTrack.setAttribute(
+                "aria-valuenow",
+                String(percent)
+            );
+        }
+
+        function createFruit() {
+            const button = document.createElement("button");
+            const fruit = getRandomItem(FRUITS);
+            const position = getRandomPosition();
+
+            button.type = "button";
+            button.className = "fruit";
+            button.textContent = fruit;
+            button.style.left = `${position.x}px`;
+            button.style.top = `${position.y}px`;
+            button.setAttribute("aria-label", `${fruit} 과일 클릭`);
+
+            button.addEventListener(
+                "click",
+                () => handleFruitClick(button),
+                { once: true }
+            );
+
+            return button;
+        }
+
+        function spawnFruit() {
+            if (!state.gameActive) {
+                return;
+            }
+
+            if (
+                state.score + state.activeFruits >=
+                CONFIG.totalPerLevel
+            ) {
+                return;
+            }
+
+            const fruitElement = createFruit();
+            elements.canvas.appendChild(fruitElement);
+            state.activeFruits += 1;
+        }
+
+        function handleFruitClick(fruitElement) {
+            if (!state.gameActive || fruitElement.classList.contains("is-clicked")) {
+                return;
+            }
+
+            fruitElement.classList.add("is-clicked");
+
+            state.score += 1;
+            state.activeFruits = Math.max(0, state.activeFruits - 1);
+
+            updateUI();
+
+            window.setTimeout(() => {
+                fruitElement.remove();
+            }, CONFIG.removeDelay);
+
+            if (state.score >= CONFIG.totalPerLevel) {
+                completeLevel();
+            }
+        }
+
+        function startSpawnTimer() {
+            const delay = getSpawnDelay();
+
+            state.spawnTimerId = window.setInterval(() => {
+                spawnFruit();
+            }, delay);
+        }
+
+        function resetLevel() {
+            clearTimers();
+            clearFruits();
+
+            state.score = 0;
+            state.gameActive = true;
+
+            updateUI();
+            spawnFruit();
+            startSpawnTimer();
+        }
+
+        function startGame() {
+            elements.startModal.hidden = true;
+            resetLevel();
+        }
+
+        function completeLevel() {
+            if (!state.gameActive) {
+                return;
+            }
+
+            state.gameActive = false;
+
+            if (state.spawnTimerId !== null) {
+                clearInterval(state.spawnTimerId);
+                state.spawnTimerId = null;
+            }
+
+            state.clearTimerId = window.setTimeout(() => {
+                const isFinalLevel = state.level === CONFIG.maxLevel;
+
+                elements.clearMessage.textContent = isFinalLevel
+                    ? "최고 단계까지 완료했습니다! 마우스 달인이 되셨네요!"
+                    : `참 잘하셨어요! ${state.level}단계를 통과했습니다. 다음은 더 빨라집니다!`;
+
+                elements.nextButton.textContent = isFinalLevel
+                    ? "처음부터 다시하기"
+                    : "다음 단계로 가기";
+
+                elements.clearModal.hidden = false;
+                elements.nextButton.focus();
+                state.clearTimerId = null;
+            }, CONFIG.clearDelay);
+        }
+
+        function goToNextLevel() {
+            state.level =
+                state.level >= CONFIG.maxLevel
+                    ? 1
+                    : state.level + 1;
+
+            elements.clearModal.hidden = true;
+            resetLevel();
+        }
+
+        elements.startButton.addEventListener("click", startGame);
+        elements.nextButton.addEventListener("click", goToNextLevel);
+
+        window.addEventListener("resize", () => {
+            if (!state.gameActive) {
+                return;
+            }
+
+            const fruits = elements.canvas.querySelectorAll(".fruit");
+            fruits.forEach((fruitElement) => {
+                const position = getRandomPosition();
+                fruitElement.style.left = `${position.x}px`;
+                fruitElement.style.top = `${position.y}px`;
+            });
+        });
+
+        window.addEventListener("beforeunload", clearTimers);
+
+        updateUI();
+        elements.startButton.focus();
+    })();
+</script>
+</body>
+</html>

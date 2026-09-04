@@ -1,0 +1,814 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="파일, 동물, 사물 등을 알맞은 위치로 끌어 놓으며 마우스 드래그 앤 드롭을 연습하는 20단계 게임입니다.">
+    <title>드래그 앤 드롭 연습 - 20단계</title>
+
+    <style>
+        :root {
+            --bg: #f0f9ff;
+            --surface: #ffffff;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --primary: #2563eb;
+            --primary-soft: #eff6ff;
+            --primary-border: #bfdbfe;
+            --success: #22c55e;
+            --success-soft: #dcfce7;
+            --border: #e5e7eb;
+            --shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+            --radius: 28px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            min-height: 100%;
+            margin: 0;
+        }
+
+        body {
+            min-height: 100dvh;
+            overflow: hidden;
+            background: var(--bg);
+            color: var(--text);
+            font-family:
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    "Noto Sans KR",
+                    sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        button {
+            font: inherit;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        .app {
+            display: flex;
+            min-height: 100dvh;
+            flex-direction: column;
+        }
+
+        .header {
+            position: relative;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+        }
+
+        .title {
+            margin: 0;
+            color: var(--primary);
+            font-size: clamp(24px, 3vw, 32px);
+            font-weight: 900;
+            letter-spacing: -0.04em;
+        }
+
+        .progress-track {
+            width: min(100%, 460px);
+            height: 14px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: #e5e7eb;
+        }
+
+        .progress-bar {
+            width: 5%;
+            height: 100%;
+            border-radius: inherit;
+            background: var(--success);
+            transition: width 0.35s ease;
+        }
+
+        .level-text {
+            margin: 0;
+            color: var(--muted);
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        .main {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+            align-items: center;
+            justify-content: center;
+            padding: 22px;
+        }
+
+        .game-card {
+            position: relative;
+            display: flex;
+            width: min(100%, 900px);
+            height: min(500px, calc(100dvh - 155px));
+            min-height: 400px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 4px solid var(--primary-border);
+            border-radius: var(--radius);
+            background: var(--surface);
+            box-shadow: var(--shadow);
+        }
+
+        .level-content {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around;
+            padding: 36px 48px;
+        }
+
+        .level-title {
+            margin: 0;
+            font-size: clamp(28px, 4vw, 40px);
+            font-weight: 900;
+            text-align: center;
+            letter-spacing: -0.04em;
+        }
+
+        .practice-row {
+            display: grid;
+            width: min(100%, 680px);
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            gap: 36px;
+        }
+
+        .practice-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .drag-item {
+            display: grid;
+            width: 170px;
+            height: 170px;
+            place-items: center;
+            border: 0;
+            border-radius: 26px;
+            background: transparent;
+            cursor: grab;
+            font-size: clamp(78px, 10vw, 104px);
+            line-height: 1;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            animation: float 3s ease-in-out infinite;
+            transition:
+                    opacity 0.18s ease,
+                    transform 0.18s ease,
+                    box-shadow 0.18s ease;
+        }
+
+        .drag-item:hover {
+            background: #f8fafc;
+        }
+
+        .drag-item:active,
+        .drag-item.is-dragging {
+            cursor: grabbing;
+            transform: scale(1.08);
+            animation-play-state: paused;
+        }
+
+        .drag-item:focus-visible {
+            outline: 5px solid rgba(37, 99, 235, 0.2);
+            outline-offset: 3px;
+        }
+
+        .drag-item.is-pointer-dragging {
+            position: fixed;
+            z-index: 100;
+            margin: 0;
+            pointer-events: none;
+            animation: none;
+            transform: scale(1.08);
+            filter: drop-shadow(0 12px 16px rgba(15, 23, 42, 0.18));
+        }
+
+        .item-label {
+            color: var(--muted);
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .arrow {
+            color: #dbeafe;
+            font-size: 50px;
+            animation: pulse 1.6s ease-in-out infinite;
+        }
+
+        .drop-zone {
+            display: grid;
+            width: 170px;
+            height: 170px;
+            place-items: center;
+            border: 4px dashed var(--primary-border);
+            border-radius: 28px;
+            background: rgba(239, 246, 255, 0.55);
+            font-size: clamp(78px, 10vw, 104px);
+            line-height: 1;
+            transition:
+                    border-color 0.2s ease,
+                    background 0.2s ease,
+                    transform 0.2s ease;
+        }
+
+        .drop-zone.is-hover {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.14);
+            transform: scale(1.05);
+        }
+
+        .drop-zone.is-success {
+            border-color: var(--success);
+            background: var(--success-soft);
+        }
+
+        .success-animation {
+            animation: pop 0.5s ease-out forwards;
+        }
+
+        .feedback {
+            position: fixed;
+            z-index: 80;
+            bottom: 28px;
+            left: 50%;
+            padding: 10px 22px;
+            border-radius: 999px;
+            background: var(--success);
+            color: #fff;
+            box-shadow: 0 10px 28px rgba(34, 197, 94, 0.3);
+            font-size: 19px;
+            font-weight: 800;
+            opacity: 0;
+            pointer-events: none;
+            transform: translate(-50%, 12px);
+            transition:
+                    opacity 0.2s ease,
+                    transform 0.2s ease;
+        }
+
+        .feedback.is-visible {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+
+        .complete-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(15, 23, 42, 0.72);
+            backdrop-filter: blur(6px);
+        }
+
+        .modal-card {
+            width: min(100%, 520px);
+            padding: 40px 30px;
+            border-radius: 28px;
+            background: #fff;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        .modal-title {
+            margin: 0 0 16px;
+            color: #eab308;
+            font-size: clamp(36px, 6vw, 52px);
+            font-weight: 900;
+            letter-spacing: -0.04em;
+        }
+
+        .modal-description {
+            margin: 0 0 28px;
+            color: #374151;
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .restart-button {
+            padding: 15px 30px;
+            border: 0;
+            border-radius: 999px;
+            background: #3b82f6;
+            color: #fff;
+            cursor: pointer;
+            font-size: 21px;
+            font-weight: 800;
+            transition:
+                    background 0.15s ease,
+                    transform 0.15s ease;
+        }
+
+        .restart-button:hover {
+            background: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .restart-button:active {
+            transform: scale(0.98);
+        }
+
+        .restart-button:focus-visible {
+            outline: 4px solid rgba(37, 99, 235, 0.25);
+            outline-offset: 4px;
+        }
+
+        @keyframes float {
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        @keyframes pulse {
+            0%,
+            100% {
+                opacity: 0.35;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes pop {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(0);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .header {
+                padding: 14px 16px;
+            }
+
+            .main {
+                padding: 12px;
+            }
+
+            .game-card {
+                height: calc(100dvh - 130px);
+                min-height: 430px;
+                border-width: 3px;
+                border-radius: 22px;
+            }
+
+            .level-content {
+                padding: 26px 18px;
+            }
+
+            .practice-row {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .drag-item,
+            .drop-zone {
+                width: 130px;
+                height: 130px;
+            }
+
+            .arrow {
+                transform: rotate(90deg);
+                font-size: 36px;
+            }
+
+            .item-label {
+                font-size: 17px;
+            }
+        }
+
+        @media (max-height: 650px) and (min-width: 701px) {
+            .header {
+                padding-block: 10px;
+            }
+
+            .game-card {
+                height: calc(100dvh - 112px);
+                min-height: 330px;
+            }
+
+            .level-content {
+                padding: 20px 36px;
+            }
+
+            .drag-item,
+            .drop-zone {
+                width: 140px;
+                height: 140px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="app">
+    <header class="header">
+        <h1 class="title">드래그 앤 드롭 연습 🚀</h1>
+
+        <div
+                class="progress-track"
+                id="progress-track"
+                role="progressbar"
+                aria-label="게임 진행률"
+                aria-valuemin="1"
+                aria-valuemax="20"
+                aria-valuenow="1"
+        >
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+
+        <p class="level-text" id="level-text">단계: 1 / 20</p>
+    </header>
+
+    <main class="main">
+        <section class="game-card" id="game-canvas" aria-live="polite"></section>
+    </main>
+</div>
+
+<div class="feedback" id="feedback" role="status" aria-live="polite">
+    성공! 👍
+</div>
+
+<section
+        class="complete-modal"
+        id="complete-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="complete-title"
+        hidden
+>
+    <div class="modal-card">
+        <h2 class="modal-title" id="complete-title">참 잘했어요! 🎉</h2>
+        <p class="modal-description">모든 연습을 마쳤습니다!</p>
+        <button class="restart-button" id="restart-button" type="button">
+            다시 하기
+        </button>
+    </div>
+</section>
+
+<script>
+    (() => {
+        "use strict";
+
+        const LEVELS = Object.freeze([
+            { id: 1, title: "파일을 폴더에 넣기", drag: "📄", drop: "📁", dragText: "파일", dropText: "폴더" },
+            { id: 2, title: "네모 상자에 넣기", drag: "📦", drop: "🔲", dragText: "짐", dropText: "상자" },
+            { id: 3, title: "풍선 터트리기", drag: "🎈", drop: "📍", dragText: "풍선", dropText: "바늘" },
+            { id: 4, title: "고양이에게 생선 주기", drag: "🐟", drop: "🐱", dragText: "생선", dropText: "고양이" },
+            { id: 5, title: "원숭이에게 바나나 주기", drag: "🍌", drop: "🐒", dragText: "바나나", dropText: "원숭이" },
+            { id: 6, title: "곰에게 꿀 주기", drag: "🍯", drop: "🐻", dragText: "꿀단지", dropText: "곰" },
+            { id: 7, title: "휴지통에 버리기", drag: "🥫", drop: "🗑️", dragText: "쓰레기", dropText: "휴지통" },
+            { id: 8, title: "토끼에게 당근 주기", drag: "🥕", drop: "🐰", dragText: "당근", dropText: "토끼" },
+            { id: 9, title: "자동차에 기름 넣기", drag: "⛽", drop: "🚗", dragText: "기름", dropText: "자동차" },
+            { id: 10, title: "우체통에 편지 넣기", drag: "✉️", drop: "📮", dragText: "편지", dropText: "우체통" },
+            { id: 11, title: "강아지에게 뼈다귀 주기", drag: "🦴", drop: "🐶", dragText: "뼈다귀", dropText: "강아지" },
+            { id: 12, title: "화분에 물 주기", drag: "💧", drop: "🪴", dragText: "물방울", dropText: "화분" },
+            { id: 13, title: "열쇠로 문 열기", drag: "🔑", drop: "🚪", dragText: "열쇠", dropText: "문" },
+            { id: 14, title: "다람쥐에게 도토리 주기", drag: "🌰", drop: "🐿️", dragText: "도토리", dropText: "다람쥐" },
+            { id: 15, title: "벌을 꽃으로 보내기", drag: "🐝", drop: "🌻", dragText: "꿀벌", dropText: "해바라기" },
+            { id: 16, title: "달걀을 둥지에 넣기", drag: "🥚", drop: "🪹", dragText: "달걀", dropText: "둥지" },
+            { id: 17, title: "냄비에 채소 넣기", drag: "🥦", drop: "🍲", dragText: "브로콜리", dropText: "냄비" },
+            { id: 18, title: "안경을 얼굴에 씌우기", drag: "👓", drop: "👤", dragText: "안경", dropText: "사람" },
+            { id: 19, title: "축구공을 골대에 넣기", drag: "⚽", drop: "🥅", dragText: "축구공", dropText: "골대" },
+            { id: 20, title: "금메달을 선수에게 주기", drag: "🥇", drop: "🏃", dragText: "금메달", dropText: "선수" }
+        ]);
+
+        const CONFIG = Object.freeze({
+            successDelay: 800
+        });
+
+        const state = {
+            currentLevelIndex: 0,
+            locked: false,
+            pointerDrag: null
+        };
+
+        const elements = {
+            gameCanvas: document.getElementById("game-canvas"),
+            progressBar: document.getElementById("progress-bar"),
+            progressTrack: document.getElementById("progress-track"),
+            levelText: document.getElementById("level-text"),
+            feedback: document.getElementById("feedback"),
+            completeModal: document.getElementById("complete-modal"),
+            restartButton: document.getElementById("restart-button")
+        };
+
+        function getCurrentLevel() {
+            return LEVELS[state.currentLevelIndex];
+        }
+
+        function isPointInsideElement(x, y, element) {
+            const rect = element.getBoundingClientRect();
+
+            return (
+                x >= rect.left &&
+                x <= rect.right &&
+                y >= rect.top &&
+                y <= rect.bottom
+            );
+        }
+
+        function updateProgress() {
+            const level = getCurrentLevel();
+            const percent = (level.id / LEVELS.length) * 100;
+
+            elements.levelText.textContent = `단계: ${level.id} / ${LEVELS.length}`;
+            elements.progressBar.style.width = `${percent}%`;
+            elements.progressTrack.setAttribute("aria-valuenow", String(level.id));
+        }
+
+        function createLevelMarkup(level) {
+            return `
+                    <div class="level-content">
+                        <h2 class="level-title">${level.title}</h2>
+
+                        <div class="practice-row">
+                            <div class="practice-item">
+                                <button
+                                    class="drag-item"
+                                    id="drag-item"
+                                    type="button"
+                                    draggable="true"
+                                    aria-label="${level.dragText}. 드래그해서 ${level.dropText} 위치에 놓으세요."
+                                >${level.drag}</button>
+                                <span class="item-label">${level.dragText}</span>
+                            </div>
+
+                            <div class="arrow" aria-hidden="true">➡️</div>
+
+                            <div class="practice-item">
+                                <div
+                                    class="drop-zone"
+                                    id="drop-zone"
+                                    role="button"
+                                    tabindex="0"
+                                    aria-label="${level.dropText}. 여기에 ${level.dragText}을 놓으세요."
+                                >${level.drop}</div>
+                                <span class="item-label">${level.dropText}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+        }
+
+        function initLevel() {
+            state.locked = false;
+            state.pointerDrag = null;
+
+            const level = getCurrentLevel();
+
+            updateProgress();
+            elements.gameCanvas.innerHTML = createLevelMarkup(level);
+            setupDragAndDrop();
+        }
+
+        function setupDragAndDrop() {
+            const dragItem = document.getElementById("drag-item");
+            const dropZone = document.getElementById("drop-zone");
+
+            dragItem.addEventListener("dragstart", (event) => {
+                if (state.locked) {
+                    event.preventDefault();
+                    return;
+                }
+
+                event.dataTransfer.effectAllowed = "move";
+                event.dataTransfer.setData("text/plain", "dragging");
+                dragItem.classList.add("is-dragging");
+                dragItem.style.opacity = "0.5";
+            });
+
+            dragItem.addEventListener("dragend", () => {
+                dragItem.classList.remove("is-dragging");
+                dragItem.style.opacity = "1";
+                dropZone.classList.remove("is-hover");
+            });
+
+            dropZone.addEventListener("dragover", (event) => {
+                event.preventDefault();
+
+                if (!state.locked) {
+                    dropZone.classList.add("is-hover");
+                }
+            });
+
+            dropZone.addEventListener("dragleave", () => {
+                dropZone.classList.remove("is-hover");
+            });
+
+            dropZone.addEventListener("drop", (event) => {
+                event.preventDefault();
+
+                if (!state.locked) {
+                    handleSuccess();
+                }
+            });
+
+            dragItem.addEventListener("pointerdown", (event) => {
+                if (
+                    state.locked ||
+                    event.pointerType === "mouse"
+                ) {
+                    return;
+                }
+
+                event.preventDefault();
+
+                const rect = dragItem.getBoundingClientRect();
+
+                state.pointerDrag = {
+                    pointerId: event.pointerId,
+                    offsetX: event.clientX - rect.left,
+                    offsetY: event.clientY - rect.top
+                };
+
+                dragItem.setPointerCapture(event.pointerId);
+                dragItem.classList.add("is-pointer-dragging");
+                dragItem.style.width = `${rect.width}px`;
+                dragItem.style.height = `${rect.height}px`;
+
+                movePointerDrag(event, dragItem, dropZone);
+            });
+
+            dragItem.addEventListener("pointermove", (event) => {
+                if (
+                    !state.pointerDrag ||
+                    event.pointerId !== state.pointerDrag.pointerId
+                ) {
+                    return;
+                }
+
+                event.preventDefault();
+                movePointerDrag(event, dragItem, dropZone);
+            });
+
+            dragItem.addEventListener("pointerup", (event) => {
+                finishPointerDrag(event, dragItem, dropZone);
+            });
+
+            dragItem.addEventListener("pointercancel", (event) => {
+                finishPointerDrag(event, dragItem, dropZone, true);
+            });
+
+            dropZone.addEventListener("keydown", (event) => {
+                if ((event.key === "Enter" || event.key === " ") && !state.locked) {
+                    event.preventDefault();
+                    handleSuccess();
+                }
+            });
+        }
+
+        function movePointerDrag(event, dragItem, dropZone) {
+            const drag = state.pointerDrag;
+
+            if (!drag) {
+                return;
+            }
+
+            dragItem.style.left = `${event.clientX - drag.offsetX}px`;
+            dragItem.style.top = `${event.clientY - drag.offsetY}px`;
+
+            dropZone.classList.toggle(
+                "is-hover",
+                isPointInsideElement(event.clientX, event.clientY, dropZone)
+            );
+        }
+
+        function finishPointerDrag(event, dragItem, dropZone, cancelled = false) {
+            const drag = state.pointerDrag;
+
+            if (
+                !drag ||
+                event.pointerId !== drag.pointerId
+            ) {
+                return;
+            }
+
+            const success =
+                      !cancelled &&
+                      isPointInsideElement(event.clientX, event.clientY, dropZone);
+
+            state.pointerDrag = null;
+
+            if (dragItem.hasPointerCapture(event.pointerId)) {
+                dragItem.releasePointerCapture(event.pointerId);
+            }
+
+            dragItem.classList.remove("is-pointer-dragging");
+            dragItem.removeAttribute("style");
+            dropZone.classList.remove("is-hover");
+
+            if (success && !state.locked) {
+                handleSuccess();
+            }
+        }
+
+        function handleSuccess() {
+            if (state.locked) {
+                return;
+            }
+
+            state.locked = true;
+
+            const dragItem = document.getElementById("drag-item");
+            const dropZone = document.getElementById("drop-zone");
+
+            dragItem.classList.add("success-animation");
+            dropZone.classList.remove("is-hover");
+            dropZone.classList.add("is-success");
+            elements.feedback.classList.add("is-visible");
+
+            window.setTimeout(() => {
+                elements.feedback.classList.remove("is-visible");
+                nextLevel();
+            }, CONFIG.successDelay);
+        }
+
+        function nextLevel() {
+            state.currentLevelIndex += 1;
+
+            if (state.currentLevelIndex < LEVELS.length) {
+                initLevel();
+                return;
+            }
+
+            elements.progressBar.style.width = "100%";
+            elements.progressTrack.setAttribute(
+                "aria-valuenow",
+                String(LEVELS.length)
+            );
+            elements.completeModal.hidden = false;
+            elements.restartButton.focus();
+        }
+
+        function resetGame() {
+            state.currentLevelIndex = 0;
+            state.locked = false;
+            state.pointerDrag = null;
+            elements.completeModal.hidden = true;
+            elements.feedback.classList.remove("is-visible");
+            initLevel();
+        }
+
+        elements.restartButton.addEventListener("click", resetGame);
+
+        initLevel();
+    })();
+</script>
+</body>
+</html>

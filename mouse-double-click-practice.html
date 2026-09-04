@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="풍선을 마우스 왼쪽 버튼으로 두 번 연속 클릭하며 더블클릭을 연습하는 게임입니다.">
+    <title>마우스 더블클릭 연습 게임</title>
+
+    <style>
+        :root {
+            --bg: #f1f5f9;
+            --surface: #ffffff;
+            --surface-soft: #f8fafc;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --text-light: #94a3b8;
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --primary-light: #e0e7ff;
+            --danger: #f43f5e;
+            --border: #e2e8f0;
+            --overlay: rgba(15, 23, 42, 0.5);
+            --overlay-primary: rgba(49, 46, 129, 0.4);
+            --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+            --shadow-modal: 0 24px 60px rgba(15, 23, 42, 0.2);
+            --radius: 20px;
+            --radius-large: 28px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            min-width: 100%;
+            min-height: 100%;
+            margin: 0;
+        }
+
+        body {
+            overflow: hidden;
+            background: var(--bg);
+            color: var(--text);
+            font-family:
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    "Noto Sans KR",
+                    sans-serif;
+            user-select: none;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        button {
+            font: inherit;
+        }
+
+        .app {
+            width: min(100%, 920px);
+            height: 100dvh;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            padding: 18px 20px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--surface);
+            box-shadow: var(--shadow);
+        }
+
+        .brand-title {
+            margin: 0;
+            color: var(--primary);
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+        }
+
+        .brand-description {
+            margin: 5px 0 0;
+            color: var(--text-muted);
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .stats {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            text-align: center;
+        }
+
+        .stat-label {
+            margin-bottom: 2px;
+            color: var(--text-light);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-value {
+            color: #334155;
+            font-size: 28px;
+            font-weight: 900;
+        }
+
+        .stat-value--primary {
+            color: var(--primary);
+        }
+
+        .stat-value--danger {
+            color: var(--danger);
+        }
+
+        .game-area {
+            position: relative;
+            width: 100%;
+            height: calc(100dvh - 166px);
+            min-height: 300px;
+            margin-top: 10px;
+            overflow: hidden;
+            border: 4px solid #fff;
+            border-radius: 24px;
+            background: var(--surface-soft);
+            box-shadow: inset 0 2px 10px rgba(15, 23, 42, 0.05);
+        }
+
+        .target {
+            position: absolute;
+            z-index: 10;
+            display: grid;
+            place-items: center;
+            padding: 0;
+            border: 4px solid rgba(255, 255, 255, 0.55);
+            border-radius: 50%;
+            color: #fff;
+            box-shadow: 0 16px 30px rgba(15, 23, 42, 0.18);
+            cursor: pointer;
+            transition:
+                    left 0.3s ease-out,
+                    top 0.3s ease-out,
+                    transform 0.15s ease;
+        }
+
+        .target:hover {
+            filter: brightness(1.04);
+        }
+
+        .target:active,
+        .target.is-hinting {
+            transform: scale(0.95);
+        }
+
+        .target:focus-visible {
+            outline: 5px solid rgba(79, 70, 229, 0.25);
+            outline-offset: 4px;
+        }
+
+        .target-emoji {
+            display: block;
+            line-height: 1;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            z-index: 20;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #facc15;
+            pointer-events: none;
+            animation: explode 0.6s ease-out forwards;
+        }
+
+        .modal {
+            position: absolute;
+            inset: 0;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            border-radius: 20px;
+            background: var(--overlay);
+            backdrop-filter: blur(6px);
+        }
+
+        .modal--result {
+            background: var(--overlay-primary);
+        }
+
+        .modal[hidden] {
+            display: none;
+        }
+
+        .modal-card {
+            width: min(100%, 450px);
+            padding: 38px 34px;
+            border: 4px solid var(--primary-light);
+            border-radius: var(--radius-large);
+            background: var(--surface);
+            box-shadow: var(--shadow-modal);
+            text-align: center;
+        }
+
+        .modal--result .modal-card {
+            border-color: #fff;
+        }
+
+        .modal-icon {
+            margin-bottom: 20px;
+            font-size: 60px;
+            line-height: 1;
+        }
+
+        .modal-title {
+            margin: 0 0 14px;
+            font-size: 30px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+        }
+
+        .modal-description {
+            margin: 0 0 26px;
+            color: var(--text-muted);
+            font-size: 18px;
+            font-weight: 500;
+            line-height: 1.65;
+        }
+
+        .modal-description strong {
+            color: var(--primary);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        .primary-button {
+            width: 100%;
+            min-height: 58px;
+            padding: 14px 22px;
+            border: 0;
+            border-radius: 16px;
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 10px 22px rgba(79, 70, 229, 0.22);
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: 700;
+            transition:
+                    background 0.15s ease,
+                    transform 0.15s ease;
+        }
+
+        .primary-button:hover {
+            background: var(--primary-dark);
+            transform: scale(1.02);
+        }
+
+        .primary-button:active {
+            transform: scale(0.97);
+        }
+
+        .primary-button:focus-visible {
+            outline: 4px solid rgba(79, 70, 229, 0.25);
+            outline-offset: 3px;
+        }
+
+        .footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 12px 4px 0;
+        }
+
+        .footer-guide {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .footer-edition {
+            margin: 0;
+            color: #818cf8;
+            font-size: 12px;
+            font-style: italic;
+        }
+
+        @keyframes explode {
+            to {
+                opacity: 0;
+                transform: translate(var(--x), var(--y));
+            }
+        }
+
+        @media (max-width: 720px) {
+            .app {
+                padding: 10px;
+            }
+
+            .header {
+                align-items: stretch;
+                flex-direction: column;
+                gap: 14px;
+                padding: 15px;
+            }
+
+            .brand-title {
+                font-size: 22px;
+            }
+
+            .brand-description {
+                font-size: 14px;
+            }
+
+            .stats {
+                justify-content: space-between;
+                gap: 10px;
+            }
+
+            .stat-label {
+                font-size: 11px;
+            }
+
+            .stat-value {
+                font-size: 23px;
+            }
+
+            .game-area {
+                height: calc(100dvh - 225px);
+                min-height: 260px;
+            }
+
+            .footer {
+                display: block;
+                padding-top: 8px;
+            }
+
+            .footer-guide {
+                font-size: 12px;
+            }
+
+            .footer-edition {
+                display: none;
+            }
+
+            .modal-card {
+                padding: 28px 20px;
+            }
+
+            .modal-icon {
+                font-size: 52px;
+            }
+
+            .modal-title {
+                font-size: 27px;
+            }
+
+            .modal-description {
+                font-size: 16px;
+            }
+        }
+
+        @media (max-height: 620px) {
+            .brand-description,
+            .footer {
+                display: none;
+            }
+
+            .header {
+                padding-block: 10px;
+            }
+
+            .game-area {
+                height: calc(100dvh - 100px);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<main class="app">
+    <header class="header">
+        <div>
+            <h1 class="brand-title">실버 마우스 연습실</h1>
+            <p class="brand-description">풍선을 빠르게 두 번 톡톡! 누르세요</p>
+        </div>
+
+        <div class="stats" aria-label="게임 상태">
+            <div>
+                <div class="stat-label">현재 단계</div>
+                <div class="stat-value" id="level-display">1 / 5</div>
+            </div>
+
+            <div>
+                <div class="stat-label">성공 점수</div>
+                <div class="stat-value stat-value--primary" id="score-display">0</div>
+            </div>
+
+            <div>
+                <div class="stat-label">남은 시간</div>
+                <div class="stat-value stat-value--danger" id="timer-display">45s</div>
+            </div>
+        </div>
+    </header>
+
+    <section class="game-area" id="game-area" aria-label="더블클릭 연습 영역">
+        <div
+                class="modal"
+                id="start-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="start-title"
+        >
+            <div class="modal-card">
+                <div class="modal-icon" aria-hidden="true">🎈</div>
+                <h2 class="modal-title" id="start-title">더블클릭 연습</h2>
+                <p class="modal-description">
+                    화면에 나오는 풍선을<br>
+                    <strong>왼쪽 버튼으로 두 번 연속</strong><br>
+                    눌러서 터뜨려 보세요!
+                </p>
+                <button class="primary-button" id="start-button" type="button">
+                    연습 시작하기
+                </button>
+            </div>
+        </div>
+
+        <div
+                class="modal modal--result"
+                id="message-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="message-title"
+                hidden
+        >
+            <div class="modal-card">
+                <div class="modal-icon" id="message-icon" aria-hidden="true">🎊</div>
+                <h2 class="modal-title" id="message-title">참 잘하셨습니다!</h2>
+                <p class="modal-description" id="message-description">
+                    다음 단계는 풍선이 조금 더 작아집니다.
+                </p>
+                <button class="primary-button" id="next-button" type="button">
+                    계속하기
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <p class="footer-guide">
+            ※ 더블클릭이 힘들 때는 손가락 힘을 빼고 "톡톡" 가볍게 눌러보세요.
+        </p>
+        <p class="footer-edition">Senior Friendly Edition</p>
+    </footer>
+</main>
+
+<script>
+    (() => {
+        "use strict";
+
+        const CONFIG = Object.freeze({
+            maxLevel: 5,
+            levelTime: 45,
+            particleCount: 10,
+            particleDistance: 70,
+            particleDuration: 600,
+            targetPadding: 10,
+            hintDuration: 150
+        });
+
+        const LEVELS = Object.freeze({
+            1: Object.freeze({
+                size: 120,
+                speed: null,
+                target: 5,
+                description: "멈춰있는 큰 풍선을 천천히 두 번 눌러보세요."
+            }),
+            2: Object.freeze({
+                size: 100,
+                speed: 4000,
+                target: 7,
+                description: "풍선이 아주 천천히 자리를 옮깁니다."
+            }),
+            3: Object.freeze({
+                size: 85,
+                speed: 3000,
+                target: 8,
+                description: "조금 더 집중해서 풍선을 따라가 보세요."
+            }),
+            4: Object.freeze({
+                size: 75,
+                speed: 2500,
+                target: 10,
+                description: "풍선이 조금 작아졌지만 충분히 할 수 있습니다!"
+            }),
+            5: Object.freeze({
+                size: 65,
+                speed: 2000,
+                target: 12,
+                description: "마지막 단계입니다. 차분하게 풍선을 눌러보세요."
+            })
+        });
+
+        const TARGET_COLORS = Object.freeze([
+            "#6366f1",
+            "#ec4899",
+            "#f59e0b",
+            "#10b981",
+            "#3b82f6",
+            "#f43f5e"
+        ]);
+
+        const state = {
+            level: 1,
+            score: 0,
+            timeLeft: CONFIG.levelTime,
+            isPlaying: false,
+            timerId: null,
+            moveTimerId: null
+        };
+
+        const elements = {
+            gameArea: document.getElementById("game-area"),
+            levelDisplay: document.getElementById("level-display"),
+            scoreDisplay: document.getElementById("score-display"),
+            timerDisplay: document.getElementById("timer-display"),
+            startModal: document.getElementById("start-modal"),
+            messageModal: document.getElementById("message-modal"),
+            startButton: document.getElementById("start-button"),
+            nextButton: document.getElementById("next-button"),
+            messageIcon: document.getElementById("message-icon"),
+            messageTitle: document.getElementById("message-title"),
+            messageDescription: document.getElementById("message-description")
+        };
+
+        function getLevelConfig() {
+            return LEVELS[state.level];
+        }
+
+        function getRandomItem(items) {
+            return items[Math.floor(Math.random() * items.length)];
+        }
+
+        function clearTimers() {
+            if (state.timerId !== null) {
+                clearInterval(state.timerId);
+                state.timerId = null;
+            }
+
+            if (state.moveTimerId !== null) {
+                clearInterval(state.moveTimerId);
+                state.moveTimerId = null;
+            }
+        }
+
+        function removeTarget() {
+            elements.gameArea.querySelector(".target")?.remove();
+        }
+
+        function updateUI() {
+            elements.levelDisplay.textContent =
+                `${Math.min(state.level, CONFIG.maxLevel)} / ${CONFIG.maxLevel}`;
+            elements.scoreDisplay.textContent = String(state.score);
+            elements.timerDisplay.textContent = `${state.timeLeft}s`;
+        }
+
+        function getTargetPosition(size) {
+            const width = elements.gameArea.clientWidth;
+            const height = elements.gameArea.clientHeight;
+
+            const maxX = Math.max(
+                CONFIG.targetPadding,
+                width - size - CONFIG.targetPadding
+            );
+
+            const maxY = Math.max(
+                CONFIG.targetPadding,
+                height - size - CONFIG.targetPadding
+            );
+
+            return {
+                x:
+                    CONFIG.targetPadding +
+                    Math.random() * (maxX - CONFIG.targetPadding),
+                y:
+                    CONFIG.targetPadding +
+                    Math.random() * (maxY - CONFIG.targetPadding)
+            };
+        }
+
+        function positionTarget(target) {
+            const config = getLevelConfig();
+            const position = getTargetPosition(config.size);
+
+            target.style.left = `${position.x}px`;
+            target.style.top = `${position.y}px`;
+        }
+
+        function createTarget() {
+            const config = getLevelConfig();
+            const target = document.createElement("button");
+            const emoji = document.createElement("span");
+
+            target.type = "button";
+            target.className = "target";
+            target.style.width = `${config.size}px`;
+            target.style.height = `${config.size}px`;
+            target.style.backgroundColor = getRandomItem(TARGET_COLORS);
+            target.setAttribute("aria-label", "풍선 더블클릭");
+
+            emoji.className = "target-emoji";
+            emoji.textContent = "🎈";
+            emoji.style.fontSize = `${config.size / 1.8}px`;
+
+            target.appendChild(emoji);
+
+            target.addEventListener("dblclick", handleTargetDoubleClick);
+            target.addEventListener("click", handleTargetSingleClick);
+
+            positionTarget(target);
+
+            return target;
+        }
+
+        function spawnTarget() {
+            removeTarget();
+            elements.gameArea.appendChild(createTarget());
+        }
+
+        function moveTarget() {
+            if (!state.isPlaying) {
+                return;
+            }
+
+            const target = elements.gameArea.querySelector(".target");
+
+            if (target) {
+                positionTarget(target);
+            }
+        }
+
+        function startMoveTimer() {
+            if (state.moveTimerId !== null) {
+                clearInterval(state.moveTimerId);
+                state.moveTimerId = null;
+            }
+
+            const speed = getLevelConfig().speed;
+
+            if (speed !== null) {
+                state.moveTimerId = window.setInterval(moveTarget, speed);
+            }
+        }
+
+        function handleTargetSingleClick(event) {
+            const target = event.currentTarget;
+
+            target.classList.add("is-hinting");
+
+            window.setTimeout(() => {
+                target.classList.remove("is-hinting");
+            }, CONFIG.hintDuration);
+        }
+
+        function handleTargetDoubleClick(event) {
+            if (!state.isPlaying) {
+                return;
+            }
+
+            const rect = elements.gameArea.getBoundingClientRect();
+
+            createParticles(
+                event.clientX - rect.left,
+                event.clientY - rect.top
+            );
+
+            state.score += 1;
+            updateUI();
+
+            if (state.score >= getLevelConfig().target) {
+                endLevel(true);
+                return;
+            }
+
+            spawnTarget();
+            startMoveTimer();
+        }
+
+        function createParticles(x, y) {
+            for (let i = 0; i < CONFIG.particleCount; i += 1) {
+                const particle = document.createElement("span");
+                const angle =
+                          (Math.PI * 2 * i) / CONFIG.particleCount;
+
+                particle.className = "particle";
+                particle.style.left = `${x - 6}px`;
+                particle.style.top = `${y - 6}px`;
+                particle.style.setProperty(
+                    "--x",
+                    `${Math.cos(angle) * CONFIG.particleDistance}px`
+                );
+                particle.style.setProperty(
+                    "--y",
+                    `${Math.sin(angle) * CONFIG.particleDistance}px`
+                );
+
+                elements.gameArea.appendChild(particle);
+
+                window.setTimeout(() => {
+                    particle.remove();
+                }, CONFIG.particleDuration);
+            }
+        }
+
+        function startCountdown() {
+            state.timerId = window.setInterval(() => {
+                state.timeLeft = Math.max(0, state.timeLeft - 1);
+                updateUI();
+
+                if (state.timeLeft === 0) {
+                    endLevel(false);
+                }
+            }, 1000);
+        }
+
+        function startLevel() {
+            clearTimers();
+            removeTarget();
+
+            state.score = 0;
+            state.timeLeft = CONFIG.levelTime;
+            state.isPlaying = true;
+
+            updateUI();
+            spawnTarget();
+            startCountdown();
+            startMoveTimer();
+        }
+
+        function startGame() {
+            elements.startModal.hidden = true;
+            startLevel();
+        }
+
+        function showResult({
+                                icon,
+                                title,
+                                description,
+                                buttonText
+                            }) {
+            elements.messageIcon.textContent = icon;
+            elements.messageTitle.textContent = title;
+            elements.messageDescription.textContent = description;
+            elements.nextButton.textContent = buttonText;
+            elements.messageModal.hidden = false;
+            elements.nextButton.focus();
+        }
+
+        function endLevel(success) {
+            if (!state.isPlaying) {
+                return;
+            }
+
+            state.isPlaying = false;
+            clearTimers();
+            removeTarget();
+
+            if (!success) {
+                showResult({
+                    icon: "☕",
+                    title: "잠시 쉬어갈까요?",
+                    description:
+                        "차분하게 다시 도전해 보세요. 천천히 해도 괜찮습니다.",
+                    buttonText: "다시 도전하기"
+                });
+                return;
+            }
+
+            const completedLevel = state.level;
+
+            if (completedLevel < CONFIG.maxLevel) {
+                state.level += 1;
+
+                showResult({
+                    icon: "👍",
+                    title: `${completedLevel}단계를 통과했습니다!`,
+                    description: LEVELS[state.level].description,
+                    buttonText: "다음 연습하기"
+                });
+
+                return;
+            }
+
+            state.level = CONFIG.maxLevel + 1;
+
+            showResult({
+                icon: "🎖️",
+                title: "마우스 박사님!",
+                description:
+                    "모든 단계를 훌륭하게 마치셨습니다. 정말 대단하세요!",
+                buttonText: "처음부터 다시하기"
+            });
+        }
+
+        function resetToStart() {
+            clearTimers();
+            removeTarget();
+
+            state.level = 1;
+            state.score = 0;
+            state.timeLeft = CONFIG.levelTime;
+            state.isPlaying = false;
+
+            updateUI();
+            elements.startModal.hidden = false;
+            elements.startButton.focus();
+        }
+
+        function handleNextButton() {
+            elements.messageModal.hidden = true;
+
+            if (state.level > CONFIG.maxLevel) {
+                resetToStart();
+                return;
+            }
+
+            startLevel();
+        }
+
+        function handleResize() {
+            if (!state.isPlaying) {
+                return;
+            }
+
+            const target = elements.gameArea.querySelector(".target");
+
+            if (target) {
+                positionTarget(target);
+            }
+        }
+
+        elements.startButton.addEventListener("click", startGame);
+        elements.nextButton.addEventListener("click", handleNextButton);
+        window.addEventListener("resize", handleResize);
+        window.addEventListener("beforeunload", clearTimers);
+
+        updateUI();
+        elements.startButton.focus();
+    })();
+</script>
+</body>
+</html>

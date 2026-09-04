@@ -1,0 +1,937 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="동물 친구들과 함께 마우스 오른쪽 버튼과 메뉴 선택을 연습하는 20단계 우클릭 연습 게임입니다.">
+    <title>동물 친구들 우클릭 연습 - 20단계</title>
+
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --surface-soft: #f8fbff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --text-light: #94a3b8;
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-soft: #dbeafe;
+            --primary-border: #eff6ff;
+            --danger: #ef4444;
+            --success: #16a34a;
+            --border: #e2e8f0;
+            --shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+            --shadow-menu: 0 16px 38px rgba(15, 23, 42, 0.16);
+            --radius: 24px;
+            --radius-large: 40px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            min-width: 100%;
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            overflow: hidden;
+            background: var(--bg);
+            color: var(--text);
+            font-family:
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    "Noto Sans KR",
+                    sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        button {
+            font: inherit;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        .app {
+            display: flex;
+            min-height: 100dvh;
+            flex-direction: column;
+        }
+
+        .header {
+            position: relative;
+            z-index: 30;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            min-height: 118px;
+            padding: 20px 28px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: 0 4px 18px rgba(15, 23, 42, 0.06);
+        }
+
+        .header-left {
+            min-width: 0;
+        }
+
+        .title-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .game-title {
+            margin: 0;
+            color: var(--primary);
+            font-size: 25px;
+            font-weight: 900;
+            letter-spacing: -0.04em;
+        }
+
+        .step-badge {
+            flex: 0 0 auto;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: var(--primary-soft);
+            color: var(--primary-dark);
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .progress {
+            width: min(300px, 40vw);
+            height: 10px;
+            margin-top: 10px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: var(--border);
+        }
+
+        .progress-fill {
+            width: 5%;
+            height: 100%;
+            border-radius: inherit;
+            background: var(--primary);
+            transition: width 0.25s ease;
+        }
+
+        .step-title {
+            margin: 0;
+            color: #334155;
+            font-size: 20px;
+            font-weight: 800;
+            text-align: right;
+            letter-spacing: -0.03em;
+        }
+
+        .main {
+            display: flex;
+            flex: 1;
+            align-items: center;
+            justify-content: center;
+            min-height: 0;
+            padding: 22px;
+        }
+
+        .game-area {
+            position: relative;
+            display: flex;
+            width: min(100%, 900px);
+            aspect-ratio: 16 / 9;
+            min-height: 360px;
+            max-height: calc(100dvh - 165px);
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 8px solid var(--primary-border);
+            border-radius: var(--radius-large);
+            background: var(--surface);
+            box-shadow: var(--shadow);
+        }
+
+        .instruction {
+            position: absolute;
+            top: 42px;
+            left: 20px;
+            right: 20px;
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 23px;
+            font-weight: 650;
+            line-height: 1.6;
+            text-align: center;
+            letter-spacing: -0.03em;
+        }
+
+        .instruction .right-click {
+            color: var(--danger);
+            font-weight: 900;
+            text-decoration: underline;
+            text-underline-offset: 4px;
+        }
+
+        .instruction .action-hint {
+            color: var(--primary);
+            font-weight: 900;
+        }
+
+        .instruction .left-click {
+            color: var(--text);
+            font-weight: 900;
+        }
+
+        .animal {
+            display: grid;
+            min-width: 220px;
+            min-height: 190px;
+            place-items: center;
+            padding: 20px;
+            border: 0;
+            border-radius: 32px;
+            background: transparent;
+            cursor: context-menu;
+            font-size: clamp(104px, 14vw, 160px);
+            line-height: 1;
+            transition:
+                    background 0.18s ease,
+                    transform 0.18s ease;
+        }
+
+        .animal:hover {
+            background: #f8fafc;
+            transform: scale(1.03);
+        }
+
+        .animal:active {
+            transform: scale(0.98);
+        }
+
+        .animal:focus-visible {
+            outline: 5px solid rgba(37, 99, 235, 0.2);
+            outline-offset: 4px;
+        }
+
+        .feedback {
+            min-height: 32px;
+            margin: 28px 20px 0;
+            color: var(--danger);
+            font-size: 19px;
+            font-weight: 800;
+            opacity: 0;
+            text-align: center;
+            transition: opacity 0.18s ease;
+        }
+
+        .feedback.is-visible {
+            opacity: 1;
+        }
+
+        .context-menu {
+            position: fixed;
+            z-index: 1000;
+            width: max-content;
+            min-width: 190px;
+            max-width: min(300px, calc(100vw - 20px));
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: var(--surface);
+            box-shadow: var(--shadow-menu);
+            animation: menu-in 0.12s ease-out;
+        }
+
+        .menu-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .menu-item {
+            width: 100%;
+            padding: 14px 18px;
+            border: 0;
+            border-bottom: 1px solid #f1f5f9;
+            background: var(--surface);
+            color: #334155;
+            cursor: pointer;
+            font-size: 17px;
+            font-weight: 650;
+            text-align: left;
+            transition:
+                    background 0.14s ease,
+                    color 0.14s ease;
+        }
+
+        .menu-list li:last-child .menu-item {
+            border-bottom: 0;
+        }
+
+        .menu-item:hover,
+        .menu-item:focus-visible {
+            outline: none;
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .menu-icon {
+            margin-right: 8px;
+        }
+
+        .final-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            background: rgba(15, 23, 42, 0.92);
+            color: #fff;
+            backdrop-filter: blur(8px);
+            text-align: center;
+        }
+
+        .final-icon {
+            margin-bottom: 24px;
+            font-size: clamp(78px, 11vw, 128px);
+            line-height: 1;
+        }
+
+        .final-title {
+            margin: 0 0 20px;
+            color: #facc15;
+            font-size: clamp(38px, 6vw, 64px);
+            font-weight: 900;
+            letter-spacing: -0.04em;
+        }
+
+        .final-description {
+            margin: 0 0 38px;
+            color: #e2e8f0;
+            font-size: clamp(18px, 2.4vw, 24px);
+            line-height: 1.6;
+        }
+
+        .restart-button {
+            min-width: 260px;
+            padding: 18px 30px;
+            border: 0;
+            border-radius: 18px;
+            background: #3b82f6;
+            color: #fff;
+            box-shadow: 0 14px 30px rgba(37, 99, 235, 0.28);
+            cursor: pointer;
+            font-size: 21px;
+            font-weight: 800;
+            transition:
+                    background 0.15s ease,
+                    transform 0.15s ease;
+        }
+
+        .restart-button:hover {
+            background: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .restart-button:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .restart-button:focus-visible {
+            outline: 4px solid rgba(255, 255, 255, 0.35);
+            outline-offset: 4px;
+        }
+
+        @keyframes menu-in {
+            from {
+                opacity: 0;
+                transform: scale(0.96);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @media (max-width: 720px) {
+            .header {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 12px;
+                min-height: 142px;
+                padding: 16px;
+            }
+
+            .title-row {
+                flex-wrap: wrap;
+            }
+
+            .game-title {
+                font-size: 21px;
+            }
+
+            .progress {
+                width: min(100%, 320px);
+            }
+
+            .step-title {
+                font-size: 16px;
+                text-align: left;
+            }
+
+            .main {
+                padding: 12px;
+            }
+
+            .game-area {
+                min-height: 390px;
+                max-height: calc(100dvh - 166px);
+                border-width: 5px;
+                border-radius: 28px;
+            }
+
+            .instruction {
+                top: 26px;
+                font-size: 18px;
+            }
+
+            .animal {
+                min-width: 170px;
+                min-height: 150px;
+            }
+
+            .feedback {
+                margin-top: 20px;
+                font-size: 16px;
+            }
+        }
+
+        @media (max-height: 650px) and (min-width: 721px) {
+            .header {
+                min-height: 86px;
+                padding-block: 12px;
+            }
+
+            .progress {
+                margin-top: 6px;
+            }
+
+            .main {
+                padding: 10px 18px;
+            }
+
+            .game-area {
+                min-height: 0;
+                max-height: calc(100dvh - 106px);
+            }
+
+            .instruction {
+                top: 20px;
+                font-size: 19px;
+            }
+
+            .animal {
+                min-height: 140px;
+                font-size: 110px;
+            }
+
+            .feedback {
+                margin-top: 10px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="app">
+    <header class="header">
+        <div class="header-left">
+            <div class="title-row">
+                <h1 class="game-title">마우스 우클릭 마스터 (20단계)</h1>
+                <span class="step-badge" id="step-badge">1 / 20</span>
+            </div>
+
+            <div
+                    class="progress"
+                    role="progressbar"
+                    aria-label="단계 진행률"
+                    aria-valuemin="1"
+                    aria-valuemax="20"
+                    aria-valuenow="1"
+                    id="progress"
+            >
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+        </div>
+
+        <p class="step-title" id="step-title">1단계: 잠자는 강아지</p>
+    </header>
+
+    <main class="main">
+        <section class="game-area" id="game-area" aria-label="마우스 우클릭 연습 영역">
+            <p class="instruction">
+                마우스
+                <span class="right-click">오른쪽</span>
+                버튼 클릭 후<br>
+                <span class="action-hint" id="action-hint">"깨우기"</span>를
+                <span class="left-click">왼쪽</span>
+                버튼으로 누르세요!
+            </p>
+
+            <button
+                    class="animal"
+                    id="animal"
+                    type="button"
+                    aria-label="잠자는 강아지. 마우스 오른쪽 버튼을 눌러 메뉴를 여세요."
+            >
+                😴🐶
+            </button>
+
+            <p class="feedback" id="feedback" aria-live="polite">
+                앗, 다른 메뉴를 골랐어요! 다시 해보세요.
+            </p>
+        </section>
+    </main>
+</div>
+
+<nav
+        class="context-menu"
+        id="context-menu"
+        aria-label="동물 행동 메뉴"
+        hidden
+>
+    <ul class="menu-list" id="menu-list" role="menu"></ul>
+</nav>
+
+<section
+        class="final-overlay"
+        id="final-overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="final-title"
+        hidden
+>
+    <div class="final-icon" aria-hidden="true">💎</div>
+    <h2 class="final-title" id="final-title">완벽한 마스터!</h2>
+    <p class="final-description">
+        20단계를 모두 통과하셨습니다.<br>
+        이제 마우스 오른쪽 버튼 사용의 달인이십니다!
+    </p>
+    <button class="restart-button" id="restart-button" type="button">
+        다시 한 번 도전하기
+    </button>
+</section>
+
+<script>
+    (() => {
+        "use strict";
+
+        const LEVELS = Object.freeze([
+            {
+                id: 1,
+                name: "잠자는 강아지",
+                emoji: "😴🐶",
+                hint: "깨우기",
+                menu: ["간식 주기", "쓰다듬기", "깨우기", "이름 부르기"],
+                target: "깨우기"
+            },
+            {
+                id: 2,
+                name: "배고픈 고양이",
+                emoji: "😿",
+                hint: "생선 주기",
+                menu: ["우유 주기", "생선 주기", "꼬리 만지기", "낮잠 자기"],
+                target: "생선 주기"
+            },
+            {
+                id: 3,
+                name: "숨어있는 토끼",
+                emoji: "🌿🌿",
+                hint: "풀 베기",
+                menu: ["물 뿌리기", "노래 부르기", "풀 베기", "지켜보기"],
+                target: "풀 베기"
+            },
+            {
+                id: 4,
+                name: "목마른 코끼리",
+                emoji: "🐘🏜️",
+                hint: "물 뿌리기",
+                menu: ["등 밀어주기", "물 뿌리기", "사과 주기", "박수 치기"],
+                target: "물 뿌리기"
+            },
+            {
+                id: 5,
+                name: "화려한 공작새",
+                emoji: "🦚",
+                hint: "깃털 펼치기",
+                menu: ["사진 찍기", "깃털 펼치기", "말 걸기", "인사하기"],
+                target: "깃털 펼치기"
+            },
+            {
+                id: 6,
+                name: "길 잃은 꿀벌",
+                emoji: "🐝☁️",
+                hint: "꽃으로 보내기",
+                menu: ["꽃으로 보내기", "벌집 만들기", "꿀 먹기", "날려 보내기"],
+                target: "꽃으로 보내기"
+            },
+            {
+                id: 7,
+                name: "배고픈 원숭이",
+                emoji: "🐒",
+                hint: "껍질 까기",
+                menu: ["나무 오르기", "껍질 까기", "공놀이 하기", "간지럽히기"],
+                target: "껍질 까기"
+            },
+            {
+                id: 8,
+                name: "느릿느릿 거북이",
+                emoji: "🐢",
+                hint: "반짝반짝 닦기",
+                menu: ["경주하기", "반짝반짝 닦기", "상추 주기", "헤엄치기"],
+                target: "반짝반짝 닦기"
+            },
+            {
+                id: 9,
+                name: "멋쟁이 사자",
+                emoji: "🦁",
+                hint: "멋지게 빗질하기",
+                menu: ["고기 주기", "멋지게 빗질하기", "포효하기", "낮잠 자기"],
+                target: "멋지게 빗질하기"
+            },
+            {
+                id: 10,
+                name: "귀여운 판다",
+                emoji: "🐼",
+                hint: "대나무 선물하기",
+                menu: ["구르기", "대나무 선물하기", "사진 찍기", "안아주기"],
+                target: "대나무 선물하기"
+            },
+            {
+                id: 11,
+                name: "헤엄치는 돌고래",
+                emoji: "🐬🌊",
+                hint: "점프시키기",
+                menu: ["점프시키기", "물고기 주기", "노래하기", "손 흔들기"],
+                target: "점프시키기"
+            },
+            {
+                id: 12,
+                name: "추운 펭귄",
+                emoji: "🐧❄️",
+                hint: "털모자 씌우기",
+                menu: ["얼음 주기", "털모자 씌우기", "춤추기", "미끄러지기"],
+                target: "털모자 씌우기"
+            },
+            {
+                id: 13,
+                name: "행복한 돼지",
+                emoji: "🐷",
+                hint: "진흙 목욕하기",
+                menu: ["사과 주기", "진흙 목욕하기", "달리기", "잠자기"],
+                target: "진흙 목욕하기"
+            },
+            {
+                id: 14,
+                name: "바쁜 다람쥐",
+                emoji: "🐿️",
+                hint: "도토리 주기",
+                menu: ["나무 심기", "도토리 주기", "숨바꼭질", "노래하기"],
+                target: "도토리 주기"
+            },
+            {
+                id: 15,
+                name: "멋진 유니콘",
+                emoji: "🦄",
+                hint: "마법 걸기",
+                menu: ["마법 걸기", "구름 타기", "무지개 만들기", "쓰다듬기"],
+                target: "마법 걸기"
+            },
+            {
+                id: 16,
+                name: "느긋한 나무늘보",
+                emoji: "🦥",
+                hint: "천천히 흔들기",
+                menu: ["빨리 달리기", "잠자기", "천천히 흔들기", "나뭇잎 주기"],
+                target: "천천히 흔들기"
+            },
+            {
+                id: 17,
+                name: "반짝이는 반딧불이",
+                emoji: "🪲",
+                hint: "빛나게 하기",
+                menu: ["불 끄기", "날개 펴기", "빛나게 하기", "친구 찾기"],
+                target: "빛나게 하기"
+            },
+            {
+                id: 18,
+                name: "용감한 호랑이",
+                emoji: "🐯",
+                hint: "사냥 연습하기",
+                menu: ["낮잠 자기", "사냥 연습하기", "빗질하기", "고기 먹기"],
+                target: "사냥 연습하기"
+            },
+            {
+                id: 19,
+                name: "부지런한 개미",
+                emoji: "🐜",
+                hint: "먹이 옮기기",
+                menu: ["먹이 옮기기", "구멍 파기", "노래하기", "잠자기"],
+                target: "먹이 옮기기"
+            },
+            {
+                id: 20,
+                name: "우아한 백조",
+                emoji: "🦢",
+                hint: "우아하게 헤엄치기",
+                menu: ["날개 씻기", "우아하게 헤엄치기", "빵 조각 주기", "깃털 정리"],
+                target: "우아하게 헤엄치기"
+            }
+        ]);
+
+        const state = {
+            currentLevelIndex: 0
+        };
+
+        const elements = {
+            gameArea: document.getElementById("game-area"),
+            stepBadge: document.getElementById("step-badge"),
+            stepTitle: document.getElementById("step-title"),
+            progress: document.getElementById("progress"),
+            progressFill: document.getElementById("progress-fill"),
+            actionHint: document.getElementById("action-hint"),
+            animal: document.getElementById("animal"),
+            feedback: document.getElementById("feedback"),
+            contextMenu: document.getElementById("context-menu"),
+            menuList: document.getElementById("menu-list"),
+            finalOverlay: document.getElementById("final-overlay"),
+            restartButton: document.getElementById("restart-button")
+        };
+
+        function getCurrentLevel() {
+            return LEVELS[state.currentLevelIndex];
+        }
+
+        function shuffle(items) {
+            const result = [...items];
+
+            for (let i = result.length - 1; i > 0; i -= 1) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [result[i], result[j]] = [result[j], result[i]];
+            }
+
+            return result;
+        }
+
+        function hideMenu() {
+            elements.contextMenu.hidden = true;
+        }
+
+        function hideFeedback() {
+            elements.feedback.classList.remove("is-visible");
+        }
+
+        function showFeedback() {
+            elements.feedback.classList.add("is-visible");
+        }
+
+        function updateLevel() {
+            const level = getCurrentLevel();
+            const progressPercent = (level.id / LEVELS.length) * 100;
+
+            elements.stepTitle.textContent = `${level.id}단계: ${level.name}`;
+            elements.stepBadge.textContent = `${level.id} / ${LEVELS.length}`;
+            elements.actionHint.textContent = `"${level.hint}"`;
+            elements.progressFill.style.width = `${progressPercent}%`;
+            elements.progress.setAttribute("aria-valuenow", String(level.id));
+            elements.animal.textContent = level.emoji;
+            elements.animal.setAttribute(
+                "aria-label",
+                `${level.name}. 마우스 오른쪽 버튼을 눌러 메뉴를 여세요.`
+            );
+
+            hideFeedback();
+            hideMenu();
+        }
+
+        function createMenuItem(label) {
+            const listItem = document.createElement("li");
+            const button = document.createElement("button");
+            const icon = document.createElement("span");
+
+            button.type = "button";
+            button.className = "menu-item";
+            button.setAttribute("role", "menuitem");
+
+            icon.className = "menu-icon";
+            icon.textContent = "🖱️";
+            icon.setAttribute("aria-hidden", "true");
+
+            button.append(icon, document.createTextNode(label));
+
+            button.addEventListener("click", (event) => {
+                event.stopPropagation();
+                handleMenuSelection(label);
+            });
+
+            listItem.appendChild(button);
+
+            return listItem;
+        }
+
+        function renderMenu(items) {
+            const fragment = document.createDocumentFragment();
+
+            elements.menuList.replaceChildren();
+
+            shuffle(items).forEach((item) => {
+                fragment.appendChild(createMenuItem(item));
+            });
+
+            elements.menuList.appendChild(fragment);
+        }
+
+        function getMenuPosition(clientX, clientY) {
+            const menuRect = elements.contextMenu.getBoundingClientRect();
+            const margin = 10;
+
+            return {
+                left: Math.min(
+                    Math.max(margin, clientX),
+                    window.innerWidth - menuRect.width - margin
+                ),
+                top: Math.min(
+                    Math.max(margin, clientY),
+                    window.innerHeight - menuRect.height - margin
+                )
+            };
+        }
+
+        function showMenu(clientX, clientY) {
+            const level = getCurrentLevel();
+
+            renderMenu(level.menu);
+
+            elements.contextMenu.style.left = "0px";
+            elements.contextMenu.style.top = "0px";
+            elements.contextMenu.hidden = false;
+
+            const position = getMenuPosition(clientX, clientY);
+
+            elements.contextMenu.style.left = `${position.left}px`;
+            elements.contextMenu.style.top = `${position.top}px`;
+
+            const firstButton = elements.menuList.querySelector(".menu-item");
+
+            if (firstButton) {
+                firstButton.focus({ preventScroll: true });
+            }
+        }
+
+        function handleMenuSelection(item) {
+            const level = getCurrentLevel();
+
+            hideMenu();
+
+            if (item === level.target) {
+                completeLevel();
+                return;
+            }
+
+            showFeedback();
+            elements.animal.focus({ preventScroll: true });
+        }
+
+        function completeLevel() {
+            hideFeedback();
+
+            if (state.currentLevelIndex < LEVELS.length - 1) {
+                state.currentLevelIndex += 1;
+                updateLevel();
+                elements.animal.focus({ preventScroll: true });
+                return;
+            }
+
+            elements.progressFill.style.width = "100%";
+            elements.progress.setAttribute("aria-valuenow", String(LEVELS.length));
+            elements.finalOverlay.hidden = false;
+            elements.restartButton.focus();
+        }
+
+        function resetGame() {
+            state.currentLevelIndex = 0;
+            elements.finalOverlay.hidden = true;
+            updateLevel();
+            elements.animal.focus({ preventScroll: true });
+        }
+
+        function handleAnimalContextMenu(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            hideFeedback();
+            showMenu(event.clientX, event.clientY);
+        }
+
+        function handleDocumentContextMenu(event) {
+            event.preventDefault();
+
+            if (!elements.animal.contains(event.target)) {
+                hideMenu();
+            }
+        }
+
+        function handleDocumentClick(event) {
+            if (!elements.contextMenu.contains(event.target)) {
+                hideMenu();
+            }
+        }
+
+        function handleKeydown(event) {
+            if (event.key === "Escape") {
+                hideMenu();
+                elements.animal.focus({ preventScroll: true });
+            }
+        }
+
+        function handleResize() {
+            hideMenu();
+        }
+
+        elements.animal.addEventListener("contextmenu", handleAnimalContextMenu);
+        elements.restartButton.addEventListener("click", resetGame);
+        document.addEventListener("contextmenu", handleDocumentContextMenu);
+        document.addEventListener("click", handleDocumentClick);
+        document.addEventListener("keydown", handleKeydown);
+        window.addEventListener("resize", handleResize);
+
+        updateLevel();
+    })();
+</script>
+</body>
+</html>
