@@ -1,0 +1,2398 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>지뢰찾기 - 무료 웹 게임</title>
+
+    <meta
+            name="description"
+            content="윈도우 클래식 지뢰찾기를 웹에서 즐겨보세요. 초급, 중급, 고급 난이도를 지원하며 PC와 모바일에서 무료로 플레이할 수 있습니다."
+    >
+    <meta
+            name="keywords"
+            content="지뢰찾기, Minesweeper, 지뢰찾기 게임, 무료 게임, 웹 게임, 퍼즐 게임"
+    >
+
+    <meta property="og:title" content="💣 지뢰찾기">
+    <meta
+            property="og:description"
+            content="숫자를 보고 숨겨진 지뢰를 추리하세요. 첫 클릭은 항상 안전합니다."
+    >
+    <meta property="og:type" content="website">
+
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="manifest" href="/manifest.webmanifest">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+            href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap"
+            rel="stylesheet"
+    >
+
+    <style>
+        :root {
+            --background: #ffffff;
+            --surface: #ffffff;
+            --surface-soft: #f8fafc;
+
+            --text: #111827;
+            --text-soft: #6b7280;
+
+            --border: #e5e7eb;
+            --border-dark: #d1d5db;
+
+            --cell: #f3f4f6;
+            --cell-hover: #e5e7eb;
+            --cell-open: #ffffff;
+
+            --danger: #ef4444;
+
+            --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+            --radius: 24px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+
+            background: var(--background);
+            color: var(--text);
+
+            font-family: "Noto Sans KR", sans-serif;
+            letter-spacing: -0.04em;
+            word-break: keep-all;
+        }
+
+        button,
+        select {
+            font: inherit;
+        }
+
+        button {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container {
+            width: min(100% - 32px, 1000px);
+            margin: 0 auto;
+            padding: 60px 0;
+        }
+
+        .page-header {
+            margin-bottom: 28px;
+            text-align: center;
+        }
+
+        h1 {
+            margin: 0 0 12px;
+
+            font-size: clamp(2rem, 6vw, 3rem);
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .lead {
+            max-width: 700px;
+            margin: 0 auto;
+
+            color: var(--text-soft);
+
+            font-size: 1.05rem;
+            line-height: 1.8;
+        }
+
+        .card {
+            padding: 24px;
+
+            background: var(--surface);
+
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+
+            box-shadow: var(--shadow);
+        }
+
+        /* HUD */
+
+        .ms-hud {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+
+            gap: 8px;
+
+            margin-bottom: 20px;
+        }
+
+        .level-label,
+        .stat {
+            display: inline-flex;
+            align-items: center;
+
+            min-height: 40px;
+            padding: 7px 12px;
+
+            background: var(--surface-soft);
+
+            border: 1px solid var(--border);
+            border-radius: 14px;
+
+            color: var(--text-soft);
+
+            font-size: 0.88rem;
+            white-space: nowrap;
+        }
+
+        .stat span {
+            margin-left: 4px;
+
+            color: var(--text);
+
+            font-weight: 800;
+        }
+
+        select {
+            height: 30px;
+            margin-left: 7px;
+            padding: 0 28px 0 9px;
+
+            background: #ffffff;
+            color: var(--text);
+
+            border: 1px solid var(--border-dark);
+            border-radius: 9px;
+
+            outline: none;
+
+            cursor: pointer;
+
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        select:focus {
+            border-color: #9ca3af;
+            box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.08);
+        }
+
+        button.secondary {
+            min-height: 40px;
+            padding: 7px 12px;
+
+            background: #ffffff;
+            color: var(--text);
+
+            border: 1px solid var(--border-dark);
+            border-radius: 14px;
+
+            cursor: pointer;
+
+            font-weight: 700;
+
+            transition:
+                    background 0.15s ease,
+                    border-color 0.15s ease,
+                    transform 0.15s ease;
+        }
+
+        button.secondary:hover {
+            background: var(--surface-soft);
+            border-color: #9ca3af;
+        }
+
+        button.secondary:active {
+            transform: scale(0.97);
+        }
+
+        button.secondary:focus-visible {
+            outline: 3px solid rgba(17, 24, 39, 0.12);
+            outline-offset: 2px;
+        }
+
+        .ms-flagmode.on {
+            background: #fff7ed;
+            border-color: #fdba74;
+        }
+
+        /* 게임 영역 */
+
+        .ms-wrap {
+            width: 100%;
+
+            overflow-x: auto;
+            overflow-y: hidden;
+
+            padding: 6px;
+
+            background: var(--surface-soft);
+
+            border: 1px solid var(--border);
+            border-radius: 18px;
+
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .ms-grid {
+            display: grid;
+
+            gap: 2px;
+
+            width: max-content;
+            min-width: max-content;
+
+            margin: 0 auto;
+
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        .ms-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            width: 34px;
+            height: 34px;
+            padding: 0;
+
+            background: var(--cell);
+
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+
+            color: var(--text);
+
+            cursor: pointer;
+
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            font-weight: 800;
+            line-height: 1;
+
+            user-select: none;
+            -webkit-user-select: none;
+
+            transition:
+                    background 0.08s ease,
+                    transform 0.08s ease;
+        }
+
+        .ms-cell:hover:not(.open) {
+            background: var(--cell-hover);
+        }
+
+        .ms-cell:active:not(.open) {
+            transform: scale(0.94);
+        }
+
+        .ms-cell:focus-visible {
+            position: relative;
+            z-index: 2;
+
+            outline: 2px solid #111827;
+            outline-offset: 1px;
+        }
+
+        .ms-cell.open {
+            background: var(--cell-open);
+
+            border-color: #e5e7eb;
+
+            cursor: default;
+        }
+
+        .ms-cell.flag {
+            background: #fff7ed;
+        }
+
+        .ms-cell.mine {
+            background: #fee2e2;
+        }
+
+        .ms-cell.boom {
+            background: #fecaca;
+
+            border-color: var(--danger);
+        }
+
+        .ms-cell.wrong {
+            background: #fef2f2;
+        }
+
+        /* 숫자 색상 */
+
+        .ms-cell.n1 {
+            color: #2563eb;
+        }
+
+        .ms-cell.n2 {
+            color: #16a34a;
+        }
+
+        .ms-cell.n3 {
+            color: #dc2626;
+        }
+
+        .ms-cell.n4 {
+            color: #4338ca;
+        }
+
+        .ms-cell.n5 {
+            color: #991b1b;
+        }
+
+        .ms-cell.n6 {
+            color: #0891b2;
+        }
+
+        .ms-cell.n7 {
+            color: #111827;
+        }
+
+        .ms-cell.n8 {
+            color: #6b7280;
+        }
+
+        /* 상태 */
+
+        .status {
+            min-height: 1.5em;
+            margin: 14px 0 0;
+
+            font-weight: 700;
+            line-height: 1.5;
+            text-align: center;
+        }
+
+        .game-help {
+            margin: 8px 0 0;
+
+            color: var(--text-soft);
+
+            font-size: 0.85rem;
+            line-height: 1.7;
+            text-align: center;
+        }
+
+        .game-help strong {
+            color: var(--text);
+            font-weight: 700;
+        }
+
+        @media (max-width: 700px) {
+            .container {
+                width: min(100% - 20px, 1000px);
+                padding: 32px 0;
+            }
+
+            .card {
+                padding: 14px;
+                border-radius: 20px;
+            }
+
+            .ms-hud {
+                gap: 6px;
+                margin-bottom: 14px;
+            }
+
+            .level-label {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .stat {
+                flex: 1 1 auto;
+                justify-content: center;
+
+                min-width: 90px;
+            }
+
+            button.secondary {
+                flex: 1 1 auto;
+            }
+
+            .ms-cell {
+                width: 32px;
+                height: 32px;
+
+                font-size: 15px;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .container {
+                width: min(100% - 12px, 1000px);
+            }
+
+            .card {
+                padding: 10px;
+            }
+
+            .stat {
+                min-width: 0;
+                padding: 6px 8px;
+
+                font-size: 0.78rem;
+            }
+
+            button.secondary {
+                min-height: 38px;
+                padding: 6px 9px;
+
+                font-size: 0.8rem;
+            }
+
+            .ms-cell {
+                width: 30px;
+                height: 30px;
+
+                font-size: 14px;
+            }
+
+            .game-help {
+                font-size: 0.78rem;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<main class="container">
+
+    <header class="page-header">
+
+        <h1>💣 지뢰찾기</h1>
+
+        <p class="lead">
+            윈도우에 있던 바로 그 게임.
+            숫자는 주변 8칸에 숨은 지뢰의 개수 —
+            추리해서 지뢰가 아닌 칸을 모두 여세요.
+            첫 클릭은 절대 지뢰가 아닙니다.
+        </p>
+
+    </header>
+
+    <section
+            class="card typing-card"
+            aria-label="지뢰찾기 게임"
+    >
+
+        <div class="ms-hud">
+
+            <label
+                    class="level-label"
+                    for="level"
+            >
+                난이도
+
+                <select id="level">
+                    <option value="easy" selected>
+                        초급 9×9
+                    </option>
+
+                    <option value="mid">
+                        중급 16×16
+                    </option>
+
+                    <option value="hard">
+                        고급 30×16
+                    </option>
+                </select>
+            </label>
+
+            <span class="stat">
+          💣
+          <span id="hud-mines">10</span>
+        </span>
+
+            <span class="stat">
+          ⏱
+          <span id="hud-time">0</span>초
+        </span>
+
+            <span class="stat">
+          🏆
+          <span id="hud-best">—</span>
+        </span>
+
+            <button
+                    id="flag-mode"
+                    class="secondary ms-flagmode"
+                    type="button"
+                    title="깃발 모드 - 탭하면 깃발이 꽂힙니다"
+                    aria-pressed="false"
+            >
+                🚩 깃발 모드
+            </button>
+
+            <button
+                    id="restart"
+                    class="secondary"
+                    type="button"
+                    title="새 게임"
+            >
+                🙂 새 게임
+            </button>
+
+            <button
+                    id="sfx-btn"
+                    class="secondary"
+                    type="button"
+                    title="효과음 켜기 또는 끄기"
+                    aria-label="효과음 켜기 또는 끄기"
+                    aria-pressed="false"
+            >
+                🔇
+            </button>
+
+        </div>
+
+        <div class="ms-wrap">
+
+            <div
+                    class="ms-grid"
+                    id="grid"
+                    role="grid"
+                    aria-label="지뢰찾기 게임판"
+            ></div>
+
+        </div>
+
+        <p
+                id="status"
+                class="status"
+                aria-live="polite"
+        ></p>
+
+        <p class="game-help">
+            💻 PC: 좌클릭 열기 · 우클릭 깃발 ·
+            숫자 클릭 = 주변 한꺼번에 열기
+            <br>
+            📱 모바일: 탭 열기 ·
+            <strong>길게 눌러 깃발</strong>
+            또는 깃발 모드 켜기
+        </p>
+
+    </section>
+
+</main>
+
+<script>
+    "use strict";
+
+    /*
+     * Minesweeper
+     * Vanilla JavaScript
+     */
+
+    const $ = function (id) {
+        return document.getElementById(id);
+    };
+
+    /*
+     * UI 문구
+     */
+
+    const TEXT = {
+        newGame: "🙂 새 게임",
+        retry: "😵 다시 도전",
+        again: "😎 한 판 더",
+
+        boom:
+            "💥 펑! 지뢰를 밟았습니다.",
+
+        clear: function (time) {
+            return (
+                "🎉 클리어! " +
+                time +
+                "초"
+            );
+        },
+
+        best:
+            " — 🏆 최고 기록!",
+
+        second: "초",
+
+        ariaClosed: "닫힌 칸",
+        ariaFlag: "깃발",
+        ariaEmpty: "빈 칸",
+
+        ariaNear: function (number) {
+            return (
+                "지뢰 " +
+                number +
+                "개 인접"
+            );
+        },
+
+        resumed:
+            "▶ 진행 중이던 판을 이어합니다"
+    };
+
+    /*
+     * 난이도
+     */
+
+    const LEVELS = {
+        easy: {
+            cols: 9,
+            rows: 9,
+            mines: 10
+        },
+
+        mid: {
+            cols: 16,
+            rows: 16,
+            mines: 40
+        },
+
+        hard: {
+            cols: 30,
+            rows: 16,
+            mines: 99
+        }
+    };
+
+    /*
+     * localStorage
+     */
+
+    const BEST_KEY =
+              "ms_best_v1";
+
+    const SAVE_KEY =
+              "ms_save_v1";
+
+    let bestRecords = {};
+
+    try {
+
+        bestRecords =
+            JSON.parse(
+                localStorage.getItem(
+                    BEST_KEY
+                ) || "{}"
+            );
+
+    } catch (error) {
+
+        bestRecords = {};
+    }
+
+    /*
+     * DOM
+     */
+
+    const grid =
+              $("grid");
+
+    const levelSelect =
+              $("level");
+
+    const mineHud =
+              $("hud-mines");
+
+    const timeHud =
+              $("hud-time");
+
+    const bestHud =
+              $("hud-best");
+
+    const statusElement =
+              $("status");
+
+    const restartButton =
+              $("restart");
+
+    const flagModeButton =
+              $("flag-mode");
+
+    const sfxButton =
+              $("sfx-btn");
+
+    /*
+     * 게임 상태
+     */
+
+    let level = "easy";
+
+    let cols = 9;
+    let rows = 9;
+    let mines = 10;
+
+    let cells = [];
+
+    let started = false;
+    let gameEnded = false;
+
+    let openedCount = 0;
+    let flagCount = 0;
+
+    let startTime = 0;
+    let timerId = null;
+
+    let finalTime = 0;
+
+    let flagMode = false;
+
+    let pressTimer = null;
+    let suppressClick = false;
+
+    /*
+     * 효과음
+     */
+
+    const SFX_KEY =
+              "minesweeper_sfx_v1";
+
+    let sfxEnabled =
+            localStorage.getItem(
+                SFX_KEY
+            ) === "1";
+
+    let audioContext = null;
+
+    function updateSfxButton() {
+
+        sfxButton.textContent =
+            sfxEnabled
+                ? "🔊"
+                : "🔇";
+
+        sfxButton.setAttribute(
+            "aria-pressed",
+            String(sfxEnabled)
+        );
+
+        sfxButton.setAttribute(
+            "aria-label",
+            sfxEnabled
+                ? "효과음 끄기"
+                : "효과음 켜기"
+        );
+    }
+
+    function getAudioContext() {
+
+        if (!audioContext) {
+
+            const AudioContextClass =
+                      window.AudioContext ||
+                      window.webkitAudioContext;
+
+            if (!AudioContextClass) {
+                return null;
+            }
+
+            audioContext =
+                new AudioContextClass();
+        }
+
+        if (
+            audioContext.state ===
+            "suspended"
+        ) {
+            audioContext.resume();
+        }
+
+        return audioContext;
+    }
+
+    function playTone(
+        frequency,
+        duration,
+        volume,
+        type
+    ) {
+
+        if (!sfxEnabled) {
+            return;
+        }
+
+        const context =
+                  getAudioContext();
+
+        if (!context) {
+            return;
+        }
+
+        const oscillator =
+                  context.createOscillator();
+
+        const gain =
+                  context.createGain();
+
+        oscillator.type =
+            type || "sine";
+
+        oscillator.frequency.setValueAtTime(
+            frequency,
+            context.currentTime
+        );
+
+        gain.gain.setValueAtTime(
+            volume,
+            context.currentTime
+        );
+
+        gain.gain.exponentialRampToValueAtTime(
+            0.001,
+            context.currentTime +
+            duration
+        );
+
+        oscillator.connect(gain);
+
+        gain.connect(
+            context.destination
+        );
+
+        oscillator.start();
+
+        oscillator.stop(
+            context.currentTime +
+            duration
+        );
+    }
+
+    function playOpenSound() {
+        playTone(
+            300,
+            0.035,
+            0.018,
+            "sine"
+        );
+    }
+
+    function playFlagSound() {
+        playTone(
+            620,
+            0.06,
+            0.025,
+            "sine"
+        );
+    }
+
+    function playBoomSound() {
+
+        playTone(
+            90,
+            0.4,
+            0.05,
+            "sawtooth"
+        );
+
+        window.setTimeout(
+            function () {
+
+                playTone(
+                    55,
+                    0.5,
+                    0.035,
+                    "square"
+                );
+
+            },
+            80
+        );
+    }
+
+    function playWinSound() {
+
+        playTone(
+            520,
+            0.1,
+            0.03,
+            "sine"
+        );
+
+        window.setTimeout(
+            function () {
+
+                playTone(
+                    660,
+                    0.1,
+                    0.03,
+                    "sine"
+                );
+
+            },
+            90
+        );
+
+        window.setTimeout(
+            function () {
+
+                playTone(
+                    880,
+                    0.18,
+                    0.035,
+                    "sine"
+                );
+
+            },
+            180
+        );
+    }
+
+    sfxButton.addEventListener(
+        "click",
+        function () {
+
+            sfxEnabled =
+                !sfxEnabled;
+
+            localStorage.setItem(
+                SFX_KEY,
+                sfxEnabled
+                    ? "1"
+                    : "0"
+            );
+
+            updateSfxButton();
+
+            if (sfxEnabled) {
+
+                playTone(
+                    700,
+                    0.08,
+                    0.03,
+                    "sine"
+                );
+            }
+        }
+    );
+
+    /*
+     * 인덱스
+     */
+
+    function getIndex(
+        row,
+        column
+    ) {
+
+        return (
+            row * cols +
+            column
+        );
+    }
+
+    /*
+     * 주변 8칸 반환
+     */
+
+    function getNeighbors(
+        index
+    ) {
+
+        const result = [];
+
+        const row =
+                  Math.floor(
+                      index / cols
+                  );
+
+        const column =
+                  index % cols;
+
+        for (
+            let rowOffset = -1;
+            rowOffset <= 1;
+            rowOffset++
+        ) {
+
+            for (
+                let columnOffset = -1;
+                columnOffset <= 1;
+                columnOffset++
+            ) {
+
+                if (
+                    rowOffset === 0 &&
+                    columnOffset === 0
+                ) {
+                    continue;
+                }
+
+                const nextRow =
+                          row + rowOffset;
+
+                const nextColumn =
+                          column +
+                          columnOffset;
+
+                if (
+                    nextRow >= 0 &&
+                    nextRow < rows &&
+                    nextColumn >= 0 &&
+                    nextColumn < cols
+                ) {
+
+                    result.push(
+                        getIndex(
+                            nextRow,
+                            nextColumn
+                        )
+                    );
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /*
+     * 진행 중 게임 저장
+     */
+
+    function saveState() {
+
+        if (
+            !started ||
+            gameEnded
+        ) {
+
+            localStorage.removeItem(
+                SAVE_KEY
+            );
+
+            return;
+        }
+
+        const elapsed =
+                  performance.now() -
+                  startTime;
+
+        const data = {
+            level: level,
+
+            mine:
+                cells.map(
+                    function (cell) {
+                        return cell.mine
+                            ? 1
+                            : 0;
+                    }
+                ),
+
+            open:
+                cells.map(
+                    function (cell) {
+                        return cell.open
+                            ? 1
+                            : 0;
+                    }
+                ),
+
+            flag:
+                cells.map(
+                    function (cell) {
+                        return cell.flag
+                            ? 1
+                            : 0;
+                    }
+                ),
+
+            elapsed: elapsed
+        };
+
+        try {
+
+            localStorage.setItem(
+                SAVE_KEY,
+                JSON.stringify(data)
+            );
+
+        } catch (error) {
+            /* 저장 실패 시 게임은 계속 진행 */
+        }
+    }
+
+    /*
+     * 새 게임
+     */
+
+    function newGame() {
+
+        localStorage.removeItem(
+            SAVE_KEY
+        );
+
+        cols =
+            LEVELS[level].cols;
+
+        rows =
+            LEVELS[level].rows;
+
+        mines =
+            LEVELS[level].mines;
+
+        started = false;
+        gameEnded = false;
+
+        openedCount = 0;
+        flagCount = 0;
+
+        finalTime = 0;
+
+        clearInterval(
+            timerId
+        );
+
+        timerId = null;
+
+        timeHud.textContent =
+            "0";
+
+        mineHud.textContent =
+            String(mines);
+
+        bestHud.textContent =
+            bestRecords[level]
+                ? bestRecords[level].toFixed(1) +
+                TEXT.second
+                : "—";
+
+        restartButton.textContent =
+            TEXT.newGame;
+
+        statusElement.textContent =
+            "";
+
+        flagMode = false;
+
+        flagModeButton.classList.remove(
+            "on"
+        );
+
+        flagModeButton.setAttribute(
+            "aria-pressed",
+            "false"
+        );
+
+        /*
+         * 고급 난이도는 가로 스크롤
+         */
+
+        grid.style.gridTemplateColumns =
+            "repeat(" +
+            cols +
+            ", auto)";
+
+        grid.innerHTML = "";
+
+        cells =
+            Array.from(
+                {
+                    length:
+                        cols * rows
+                },
+
+                function (_, index) {
+
+                    const button =
+                              document.createElement(
+                                  "button"
+                              );
+
+                    button.type =
+                        "button";
+
+                    button.className =
+                        "ms-cell";
+
+                    button.dataset.index =
+                        String(index);
+
+                    button.setAttribute(
+                        "role",
+                        "gridcell"
+                    );
+
+                    button.setAttribute(
+                        "aria-label",
+                        TEXT.ariaClosed
+                    );
+
+                    grid.appendChild(
+                        button
+                    );
+
+                    return {
+                        mine: false,
+                        open: false,
+                        flag: false,
+                        number: 0,
+                        element: button
+                    };
+                }
+            );
+    }
+
+    /*
+     * 첫 클릭 후 지뢰 배치
+     *
+     * 첫 클릭 칸뿐만 아니라
+     * 주변 8칸까지 안전하게 합니다.
+     */
+
+    function placeMines(
+        safeIndex
+    ) {
+
+        const banned =
+                  new Set(
+                      [
+                          safeIndex
+                      ].concat(
+                          getNeighbors(
+                              safeIndex
+                          )
+                      )
+                  );
+
+        const pool = [];
+
+        for (
+            let index = 0;
+            index < cells.length;
+            index++
+        ) {
+
+            if (
+                !banned.has(index)
+            ) {
+
+                pool.push(index);
+            }
+        }
+
+        for (
+            let placed = 0;
+            placed < mines;
+            placed++
+        ) {
+
+            const randomIndex =
+                      Math.floor(
+                          Math.random() *
+                          pool.length
+                      );
+
+            const cellIndex =
+                      pool[randomIndex];
+
+            cells[cellIndex].mine =
+                true;
+
+            pool.splice(
+                randomIndex,
+                1
+            );
+        }
+
+        /*
+         * 주변 지뢰 숫자 계산
+         */
+
+        cells.forEach(
+            function (cell, index) {
+
+                if (cell.mine) {
+                    return;
+                }
+
+                let count = 0;
+
+                const neighbors =
+                          getNeighbors(index);
+
+                neighbors.forEach(
+                    function (
+                        neighborIndex
+                    ) {
+
+                        if (
+                            cells[
+                                neighborIndex
+                                ].mine
+                        ) {
+
+                            count++;
+                        }
+                    }
+                );
+
+                cell.number = count;
+            }
+        );
+
+        started = true;
+
+        startTime =
+            performance.now();
+
+        startTimer();
+    }
+
+    /*
+     * 타이머
+     */
+
+    function startTimer() {
+
+        clearInterval(
+            timerId
+        );
+
+        timerId =
+            window.setInterval(
+                function () {
+
+                    if (
+                        !started ||
+                        gameEnded
+                    ) {
+                        return;
+                    }
+
+                    const elapsed =
+                              performance.now() -
+                              startTime;
+
+                    timeHud.textContent =
+                        String(
+                            Math.floor(
+                                elapsed /
+                                1000
+                            )
+                        );
+                },
+                250
+            );
+    }
+
+    function stopTimer() {
+
+        clearInterval(
+            timerId
+        );
+
+        timerId = null;
+
+        finalTime =
+            started
+                ? (
+                performance.now() -
+                startTime
+            ) / 1000
+                : 0;
+    }
+
+    /*
+     * 빈 칸 자동 열기
+     */
+
+    function openCell(
+        index
+    ) {
+
+        const stack = [
+            index
+        ];
+
+        while (
+            stack.length
+            ) {
+
+            const currentIndex =
+                      stack.pop();
+
+            const cell =
+                      cells[
+                          currentIndex
+                          ];
+
+            if (
+                cell.open ||
+                cell.flag
+            ) {
+                continue;
+            }
+
+            cell.open = true;
+
+            openedCount++;
+
+            cell.element.classList.add(
+                "open"
+            );
+
+            cell.element.setAttribute(
+                "aria-label",
+                cell.number
+                    ? TEXT.ariaNear(
+                        cell.number
+                    )
+                    : TEXT.ariaEmpty
+            );
+
+            if (
+                cell.number
+            ) {
+
+                cell.element.textContent =
+                    String(
+                        cell.number
+                    );
+
+                cell.element.classList.add(
+                    "n" +
+                    cell.number
+                );
+
+            } else {
+
+                const neighbors =
+                          getNeighbors(
+                              currentIndex
+                          );
+
+                neighbors.forEach(
+                    function (
+                        neighborIndex
+                    ) {
+
+                        if (
+                            !cells[
+                                neighborIndex
+                                ].open &&
+                            !cells[
+                                neighborIndex
+                                ].flag
+                        ) {
+
+                            stack.push(
+                                neighborIndex
+                            );
+                        }
+                    }
+                );
+            }
+        }
+    }
+
+    /*
+     * 칸 열기
+     */
+
+    function reveal(
+        index
+    ) {
+
+        const cell =
+                  cells[index];
+
+        if (
+            gameEnded ||
+            cell.open ||
+            cell.flag
+        ) {
+            return;
+        }
+
+        /*
+         * 첫 클릭 시 지뢰 생성
+         */
+
+        if (!started) {
+
+            placeMines(
+                index
+            );
+        }
+
+        if (
+            cell.mine
+        ) {
+
+            lose(index);
+
+            return;
+        }
+
+        playOpenSound();
+
+        openCell(index);
+
+        checkWin();
+
+        saveState();
+    }
+
+    /*
+     * 숫자 칸 주변 한꺼번에 열기
+     *
+     * 주변 깃발 수가 숫자와 같으면
+     * 깃발이 없는 주변 칸을 엽니다.
+     */
+
+    function chord(
+        index
+    ) {
+
+        const cell =
+                  cells[index];
+
+        if (
+            gameEnded ||
+            !cell.open ||
+            !cell.number
+        ) {
+            return;
+        }
+
+        const neighbors =
+                  getNeighbors(index);
+
+        let nearbyFlags = 0;
+
+        neighbors.forEach(
+            function (
+                neighborIndex
+            ) {
+
+                if (
+                    cells[
+                        neighborIndex
+                        ].flag
+                ) {
+
+                    nearbyFlags++;
+                }
+            }
+        );
+
+        if (
+            nearbyFlags !==
+            cell.number
+        ) {
+            return;
+        }
+
+        for (
+            let i = 0;
+            i < neighbors.length;
+            i++
+        ) {
+
+            const neighborIndex =
+                      neighbors[i];
+
+            const neighbor =
+                      cells[
+                          neighborIndex
+                          ];
+
+            if (
+                neighbor.flag ||
+                neighbor.open
+            ) {
+                continue;
+            }
+
+            if (
+                neighbor.mine
+            ) {
+
+                lose(
+                    neighborIndex
+                );
+
+                return;
+            }
+
+            openCell(
+                neighborIndex
+            );
+        }
+
+        playOpenSound();
+
+        checkWin();
+
+        saveState();
+    }
+
+    /*
+     * 깃발
+     */
+
+    function toggleFlag(
+        index
+    ) {
+
+        const cell =
+                  cells[index];
+
+        if (
+            gameEnded ||
+            cell.open
+        ) {
+            return;
+        }
+
+        cell.flag =
+            !cell.flag;
+
+        flagCount +=
+            cell.flag
+                ? 1
+                : -1;
+
+        cell.element.classList.toggle(
+            "flag",
+            cell.flag
+        );
+
+        cell.element.textContent =
+            cell.flag
+                ? "🚩"
+                : "";
+
+        cell.element.setAttribute(
+            "aria-label",
+            cell.flag
+                ? TEXT.ariaFlag
+                : TEXT.ariaClosed
+        );
+
+        mineHud.textContent =
+            String(
+                mines -
+                flagCount
+            );
+
+        playFlagSound();
+
+        saveState();
+    }
+
+    /*
+     * 패배
+     */
+
+    function lose(
+        hitIndex
+    ) {
+
+        gameEnded = true;
+
+        stopTimer();
+
+        cells.forEach(
+            function (cell) {
+
+                if (
+                    cell.mine &&
+                    !cell.flag
+                ) {
+
+                    cell.element.classList.add(
+                        "open",
+                        "mine"
+                    );
+
+                    cell.element.textContent =
+                        "💣";
+                }
+
+                if (
+                    !cell.mine &&
+                    cell.flag
+                ) {
+
+                    cell.element.classList.add(
+                        "wrong"
+                    );
+
+                    cell.element.textContent =
+                        "❌";
+                }
+            }
+        );
+
+        cells[
+            hitIndex
+            ].element.classList.add(
+            "boom"
+        );
+
+        cells[
+            hitIndex
+            ].element.textContent =
+            "💥";
+
+        restartButton.textContent =
+            TEXT.retry;
+
+        statusElement.textContent =
+            TEXT.boom;
+
+        playBoomSound();
+
+        /*
+         * 종료된 게임은
+         * 이어하기 데이터 삭제
+         */
+
+        saveState();
+    }
+
+    /*
+     * 승리
+     */
+
+    function checkWin() {
+
+        if (
+            openedCount !==
+            cols * rows -
+            mines
+        ) {
+            return;
+        }
+
+        gameEnded = true;
+
+        stopTimer();
+
+        /*
+         * 남은 지뢰에 자동 깃발
+         */
+
+        cells.forEach(
+            function (cell) {
+
+                if (
+                    cell.mine &&
+                    !cell.flag
+                ) {
+
+                    cell.flag = true;
+
+                    cell.element.classList.add(
+                        "flag"
+                    );
+
+                    cell.element.textContent =
+                        "🚩";
+                }
+            }
+        );
+
+        mineHud.textContent =
+            "0";
+
+        const time =
+                  Math.round(
+                      finalTime * 10
+                  ) / 10;
+
+        timeHud.textContent =
+            String(
+                Math.floor(time)
+            );
+
+        restartButton.textContent =
+            TEXT.again;
+
+        let message =
+                TEXT.clear(
+                    time.toFixed(1)
+                );
+
+        /*
+         * 난이도별 최고 기록
+         */
+
+        if (
+            !bestRecords[level] ||
+            time <
+            bestRecords[level]
+        ) {
+
+            bestRecords[level] =
+                time;
+
+            localStorage.setItem(
+                BEST_KEY,
+                JSON.stringify(
+                    bestRecords
+                )
+            );
+
+            bestHud.textContent =
+                time.toFixed(1) +
+                TEXT.second;
+
+            message +=
+                TEXT.best;
+        }
+
+        statusElement.textContent =
+            message;
+
+        playWinSound();
+
+        /*
+         * 게임 종료 후
+         * 이어하기 데이터 삭제
+         */
+
+        saveState();
+    }
+
+    /*
+     * 클릭한 셀 인덱스
+     */
+
+    function getCellIndex(
+        event
+    ) {
+
+        const button =
+                  event.target.closest(
+                      ".ms-cell"
+                  );
+
+        if (!button) {
+            return null;
+        }
+
+        return Number(
+            button.dataset.index
+        );
+    }
+
+    /*
+     * 좌클릭 / 모바일 탭
+     */
+
+    grid.addEventListener(
+        "click",
+        function (event) {
+
+            const index =
+                      getCellIndex(
+                          event
+                      );
+
+            if (
+                index === null
+            ) {
+                return;
+            }
+
+            /*
+             * 모바일 길게 누르기 후
+             * 발생하는 click 무시
+             */
+
+            if (
+                suppressClick
+            ) {
+
+                suppressClick =
+                    false;
+
+                return;
+            }
+
+            /*
+             * 깃발 모드
+             */
+
+            if (
+                flagMode &&
+                !cells[index].open
+            ) {
+
+                toggleFlag(
+                    index
+                );
+
+                return;
+            }
+
+            /*
+             * 열린 숫자 칸을 누르면
+             * 주변 한꺼번에 열기
+             */
+
+            if (
+                cells[index].open
+            ) {
+
+                chord(index);
+
+                return;
+            }
+
+            reveal(index);
+        }
+    );
+
+    /*
+     * PC 우클릭
+     */
+
+    grid.addEventListener(
+        "contextmenu",
+        function (event) {
+
+            event.preventDefault();
+
+            const index =
+                      getCellIndex(
+                          event
+                      );
+
+            if (
+                index !== null
+            ) {
+
+                toggleFlag(
+                    index
+                );
+            }
+        }
+    );
+
+    /*
+     * 모바일 길게 누르기
+     */
+
+    grid.addEventListener(
+        "pointerdown",
+        function (event) {
+
+            if (
+                event.pointerType ===
+                "mouse"
+            ) {
+                return;
+            }
+
+            const index =
+                      getCellIndex(
+                          event
+                      );
+
+            if (
+                index === null
+            ) {
+                return;
+            }
+
+            clearTimeout(
+                pressTimer
+            );
+
+            pressTimer =
+                window.setTimeout(
+                    function () {
+
+                        pressTimer =
+                            null;
+
+                        suppressClick =
+                            true;
+
+                        if (
+                            !cells[index].open
+                        ) {
+
+                            toggleFlag(
+                                index
+                            );
+
+                            if (
+                                navigator.vibrate
+                            ) {
+
+                                navigator.vibrate(
+                                    30
+                                );
+                            }
+                        }
+                    },
+                    380
+                );
+        }
+    );
+
+    [
+        "pointerup",
+        "pointercancel",
+        "pointerleave"
+    ].forEach(
+        function (eventName) {
+
+            grid.addEventListener(
+                eventName,
+                function () {
+
+                    clearTimeout(
+                        pressTimer
+                    );
+
+                    pressTimer =
+                        null;
+                }
+            );
+        }
+    );
+
+    /*
+     * 깃발 모드
+     */
+
+    flagModeButton.addEventListener(
+        "click",
+        function () {
+
+            flagMode =
+                !flagMode;
+
+            flagModeButton.classList.toggle(
+                "on",
+                flagMode
+            );
+
+            flagModeButton.setAttribute(
+                "aria-pressed",
+                String(flagMode)
+            );
+        }
+    );
+
+    /*
+     * 새 게임
+     */
+
+    restartButton.addEventListener(
+        "click",
+        function () {
+
+            newGame();
+        }
+    );
+
+    /*
+     * 난이도 변경
+     */
+
+    levelSelect.addEventListener(
+        "change",
+        function () {
+
+            level =
+                levelSelect.value;
+
+            newGame();
+        }
+    );
+
+    /*
+     * 진행 중 게임 복원
+     */
+
+    function tryRestore() {
+
+        try {
+
+            const saved =
+                      JSON.parse(
+                          localStorage.getItem(
+                              SAVE_KEY
+                          ) || "null"
+                      );
+
+            if (
+                !saved ||
+                !saved.mine ||
+                !saved.open ||
+                !saved.flag ||
+                !LEVELS[
+                    saved.level
+                    ]
+            ) {
+                return false;
+            }
+
+            level =
+                saved.level;
+
+            levelSelect.value =
+                level;
+
+            newGame();
+
+            if (
+                saved.mine.length !==
+                cells.length ||
+                saved.open.length !==
+                cells.length ||
+                saved.flag.length !==
+                cells.length
+            ) {
+
+                return false;
+            }
+
+            /*
+             * 지뢰 복원
+             */
+
+            saved.mine.forEach(
+                function (
+                    mine,
+                    index
+                ) {
+
+                    cells[index].mine =
+                        Boolean(mine);
+                }
+            );
+
+            /*
+             * 주변 숫자 재계산
+             */
+
+            cells.forEach(
+                function (
+                    cell,
+                    index
+                ) {
+
+                    if (
+                        cell.mine
+                    ) {
+                        return;
+                    }
+
+                    let count = 0;
+
+                    getNeighbors(
+                        index
+                    ).forEach(
+                        function (
+                            neighborIndex
+                        ) {
+
+                            if (
+                                cells[
+                                    neighborIndex
+                                    ].mine
+                            ) {
+
+                                count++;
+                            }
+                        }
+                    );
+
+                    cell.number =
+                        count;
+                }
+            );
+
+            /*
+             * 깃발 복원
+             */
+
+            saved.flag.forEach(
+                function (
+                    flag,
+                    index
+                ) {
+
+                    if (!flag) {
+                        return;
+                    }
+
+                    cells[index].flag =
+                        true;
+
+                    flagCount++;
+
+                    cells[
+                        index
+                        ].element.classList.add(
+                        "flag"
+                    );
+
+                    cells[
+                        index
+                        ].element.textContent =
+                        "🚩";
+
+                    cells[
+                        index
+                        ].element.setAttribute(
+                        "aria-label",
+                        TEXT.ariaFlag
+                    );
+                }
+            );
+
+            /*
+             * 열린 칸 복원
+             */
+
+            saved.open.forEach(
+                function (
+                    open,
+                    index
+                ) {
+
+                    if (!open) {
+                        return;
+                    }
+
+                    const cell =
+                              cells[index];
+
+                    cell.open =
+                        true;
+
+                    openedCount++;
+
+                    cell.element.classList.add(
+                        "open"
+                    );
+
+                    if (
+                        cell.number
+                    ) {
+
+                        cell.element.textContent =
+                            String(
+                                cell.number
+                            );
+
+                        cell.element.classList.add(
+                            "n" +
+                            cell.number
+                        );
+
+                        cell.element.setAttribute(
+                            "aria-label",
+                            TEXT.ariaNear(
+                                cell.number
+                            )
+                        );
+
+                    } else {
+
+                        cell.element.setAttribute(
+                            "aria-label",
+                            TEXT.ariaEmpty
+                        );
+                    }
+                }
+            );
+
+            mineHud.textContent =
+                String(
+                    mines -
+                    flagCount
+                );
+
+            started = true;
+
+            startTime =
+                performance.now() -
+                Number(
+                    saved.elapsed ||
+                    0
+                );
+
+            startTimer();
+
+            timeHud.textContent =
+                String(
+                    Math.floor(
+                        (
+                            performance.now() -
+                            startTime
+                        ) /
+                        1000
+                    )
+                );
+
+            statusElement.textContent =
+                TEXT.resumed;
+
+            /*
+             * newGame()이 저장 데이터를
+             * 삭제했으므로 다시 저장
+             */
+
+            saveState();
+
+            return true;
+
+        } catch (error) {
+
+            return false;
+        }
+    }
+
+    /*
+     * 초기화
+     */
+
+    function initializeGame() {
+
+        updateSfxButton();
+
+        if (
+            !tryRestore()
+        ) {
+
+            newGame();
+        }
+    }
+
+    initializeGame();
+</script>
+
+</body>
+</html>
