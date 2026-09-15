@@ -1,0 +1,3286 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>네모로직 - 노노그램 논리 퍼즐</title>
+
+    <meta
+            name="description"
+            content="숫자 힌트를 이용해 숨은 그림을 완성하는 무료 네모로직 노노그램 퍼즐입니다. 5×5, 10×10, 15×15 난이도와 오늘의 퍼즐을 제공합니다."
+    >
+    <meta
+            name="keywords"
+            content="네모로직, 노노그램, nonogram, picross, 퍼즐, 논리 퍼즐, 무료 게임"
+    >
+
+    <meta property="og:title" content="🧩 네모로직 (노노그램)">
+    <meta
+            property="og:description"
+            content="숫자 힌트로 숨은 그림을 완성하는 논리 퍼즐. 오늘의 퍼즐에도 도전해 보세요."
+    >
+    <meta property="og:type" content="website">
+
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="manifest" href="/manifest.webmanifest">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+            href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap"
+            rel="stylesheet"
+    >
+
+    <style>
+        :root {
+            --background: #ffffff;
+            --surface: #ffffff;
+            --surface-soft: #f8fafc;
+            --surface-alt: #f1f5f9;
+
+            --text: #111827;
+            --text-soft: #6b7280;
+
+            --border: #e5e7eb;
+            --border-dark: #cbd5e1;
+
+            --fill: #1f2937;
+            --danger: #ef4444;
+
+            --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+            --radius: 24px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+
+            background: var(--background);
+            color: var(--text);
+
+            font-family: "Noto Sans KR", sans-serif;
+            letter-spacing: -0.04em;
+            word-break: keep-all;
+        }
+
+        button {
+            font: inherit;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container {
+            width: min(100% - 32px, 900px);
+            margin: 0 auto;
+            padding: 60px 0;
+        }
+
+        .page-header {
+            margin-bottom: 28px;
+            text-align: center;
+        }
+
+        h1 {
+            margin: 0 0 12px;
+
+            font-size: clamp(2rem, 6vw, 3rem);
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .lead {
+            max-width: 720px;
+            margin: 0 auto;
+
+            color: var(--text-soft);
+
+            font-size: 1.05rem;
+            line-height: 1.8;
+        }
+
+        .card {
+            padding: 24px;
+
+            background: var(--surface);
+
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+
+            box-shadow: var(--shadow);
+        }
+
+        /* 탭 */
+
+        .tabs {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+
+            gap: 7px;
+        }
+
+        .tab,
+        .secondary {
+            min-height: 40px;
+            padding: 8px 15px;
+
+            background: #ffffff;
+            color: var(--text);
+
+            border: 1px solid var(--border-dark);
+            border-radius: 13px;
+
+            cursor: pointer;
+
+            font-weight: 700;
+
+            transition:
+                    background 0.15s ease,
+                    border-color 0.15s ease,
+                    transform 0.15s ease;
+        }
+
+        .tab:hover,
+        .secondary:hover {
+            background: var(--surface-soft);
+            border-color: #94a3b8;
+        }
+
+        .tab:active,
+        .secondary:active {
+            transform: scale(0.97);
+        }
+
+        .tab:focus-visible,
+        .secondary:focus-visible {
+            outline: 3px solid rgba(15, 23, 42, 0.12);
+            outline-offset: 2px;
+        }
+
+        .tab.active {
+            background: #111827;
+            color: #ffffff;
+            border-color: #111827;
+        }
+
+        #level-tabs {
+            margin-bottom: 14px;
+        }
+
+        /* HUD */
+
+        .type-hud {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+
+            gap: 8px;
+
+            margin-bottom: 22px;
+        }
+
+        .hud-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+
+            min-height: 40px;
+            padding: 8px 13px;
+
+            background: var(--surface-soft);
+
+            border: 1px solid var(--border);
+            border-radius: 13px;
+
+            color: var(--text-soft);
+
+            font-size: 0.88rem;
+            white-space: nowrap;
+        }
+
+        .hud-item strong {
+            color: var(--text);
+
+            font-size: 0.95rem;
+            font-weight: 800;
+        }
+
+        .sfx-button {
+            width: 42px;
+            padding: 7px;
+
+            font-size: 1rem;
+            line-height: 1;
+        }
+
+        /* 네모로직 */
+
+        .nono-scroll {
+            width: 100%;
+            overflow: auto;
+
+            padding: 4px 0;
+
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #nono {
+            --n: 10;
+            --cell-size: 32px;
+            --clue-size: 105px;
+            --top-clue-size: 90px;
+
+            display: grid;
+
+            grid-template-columns:
+        var(--clue-size)
+        calc(var(--cell-size) * var(--n));
+
+            grid-template-rows:
+        var(--top-clue-size)
+        calc(var(--cell-size) * var(--n));
+
+            width: max-content;
+            min-width: max-content;
+
+            margin: 0 auto;
+
+            border: 1px solid #94a3b8;
+            border-radius: 10px;
+
+            overflow: hidden;
+
+            background: #ffffff;
+        }
+
+        #corner {
+            grid-column: 1;
+            grid-row: 1;
+
+            background: var(--surface-soft);
+
+            border-right: 2px solid #64748b;
+            border-bottom: 2px solid #64748b;
+        }
+
+        #col-clues {
+            grid-column: 2;
+            grid-row: 1;
+
+            display: grid;
+
+            height: var(--top-clue-size);
+
+            background: #ffffff;
+
+            border-bottom: 2px solid #64748b;
+        }
+
+        #row-clues {
+            grid-column: 1;
+            grid-row: 2;
+
+            display: grid;
+
+            grid-template-rows:
+        repeat(
+          var(--n),
+          var(--cell-size)
+        );
+
+            width: var(--clue-size);
+
+            background: #ffffff;
+
+            border-right: 2px solid #64748b;
+        }
+
+        #grid {
+            grid-column: 2;
+            grid-row: 2;
+
+            display: grid;
+
+            width:
+                    calc(
+                            var(--cell-size) *
+                            var(--n)
+                    );
+
+            height:
+                    calc(
+                            var(--cell-size) *
+                            var(--n)
+                    );
+
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .cclue {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+
+            min-width: var(--cell-size);
+            height: var(--top-clue-size);
+
+            padding: 4px 1px 7px;
+
+            border-right: 1px solid var(--border);
+
+            color: #334155;
+
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.3;
+            text-align: center;
+
+            transition: opacity 0.15s ease;
+        }
+
+        .cclue:nth-child(5n) {
+            border-right-color: #64748b;
+        }
+
+        .rclue {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+
+            width: var(--clue-size);
+            height: var(--cell-size);
+
+            padding: 0 8px 0 4px;
+
+            border-bottom: 1px solid var(--border);
+
+            color: #334155;
+
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1;
+            text-align: right;
+
+            white-space: nowrap;
+
+            transition: opacity 0.15s ease;
+        }
+
+        .rclue:nth-child(5n) {
+            border-bottom-color: #64748b;
+        }
+
+        .cclue.ok,
+        .rclue.ok {
+            opacity: 0.3;
+        }
+
+        /* 칸 */
+
+        .ncell {
+            position: relative;
+
+            width: var(--cell-size);
+            height: var(--cell-size);
+
+            background: #ffffff;
+
+            border: 0;
+            border-right: 1px solid #dbe1e8;
+            border-bottom: 1px solid #dbe1e8;
+
+            cursor: pointer;
+
+            touch-action: none;
+        }
+
+        .ncell.alt {
+            background: #fbfcfd;
+        }
+
+        .ncell:nth-child(5n) {
+            border-right-color: #64748b;
+        }
+
+        .ncell.fill {
+            background: var(--fill);
+        }
+
+        .ncell.x::before,
+        .ncell.x::after {
+            content: "";
+
+            position: absolute;
+            top: 50%;
+            left: 50%;
+
+            width: 54%;
+            height: 2px;
+
+            background: #94a3b8;
+
+            border-radius: 2px;
+        }
+
+        .ncell.x::before {
+            transform:
+                    translate(-50%, -50%)
+                    rotate(45deg);
+        }
+
+        .ncell.x::after {
+            transform:
+                    translate(-50%, -50%)
+                    rotate(-45deg);
+        }
+
+        /* 가로 5칸 단위 선 */
+
+        #grid .ncell:nth-child(5n) {
+            border-right-width: 2px;
+        }
+
+        /* 세로 5칸 단위 선 */
+
+        #nono[data-size="5"]
+        .ncell:nth-child(n+1):nth-child(-n+5),
+
+        #nono[data-size="10"]
+        .ncell:nth-child(n+41):nth-child(-n+50),
+
+        #nono[data-size="15"]
+        .ncell:nth-child(n+61):nth-child(-n+75),
+
+        #nono[data-size="15"]
+        .ncell:nth-child(n+136):nth-child(-n+150) {
+            border-bottom-width: 2px;
+            border-bottom-color: #64748b;
+        }
+
+        /* 조작 */
+
+        #nono-ops {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+
+            gap: 8px;
+
+            margin-top: 22px;
+        }
+
+        #mode-tabs {
+            display: flex;
+            gap: 6px;
+        }
+
+        #status {
+            min-height: 1.5em;
+            margin: 16px 0 0;
+
+            font-weight: 700;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        .game-help {
+            margin: 8px 0 0;
+
+            color: var(--text-soft);
+
+            font-size: 0.85rem;
+            line-height: 1.7;
+            text-align: center;
+        }
+
+        @media (max-width: 700px) {
+            .container {
+                width: min(100% - 20px, 900px);
+                padding: 32px 0;
+            }
+
+            .card {
+                padding: 14px;
+                border-radius: 20px;
+            }
+
+            #nono {
+                --cell-size: 29px;
+                --clue-size: 90px;
+                --top-clue-size: 80px;
+            }
+
+            .cclue,
+            .rclue {
+                font-size: 11px;
+            }
+
+            #nono-ops {
+                margin-top: 16px;
+            }
+
+            #mode-tabs {
+                width: 100%;
+            }
+
+            #mode-tabs .tab {
+                flex: 1;
+            }
+
+            #nono-ops > .secondary {
+                flex: 1 1 auto;
+            }
+        }
+
+        @media (max-width: 450px) {
+            .container {
+                width: min(100% - 12px, 900px);
+            }
+
+            .card {
+                padding: 10px;
+            }
+
+            .type-hud {
+                display: grid;
+                grid-template-columns:
+          repeat(4, minmax(0, 1fr))
+          40px;
+
+                gap: 5px;
+            }
+
+            .hud-item {
+                flex-direction: column;
+                justify-content: center;
+
+                min-width: 0;
+                min-height: 48px;
+
+                padding: 5px 2px;
+
+                font-size: 0.72rem;
+            }
+
+            .hud-item strong {
+                font-size: 0.8rem;
+            }
+
+            .sfx-button {
+                width: 40px;
+                min-height: 48px;
+            }
+
+            #nono {
+                --cell-size: 27px;
+                --clue-size: 78px;
+                --top-clue-size: 76px;
+            }
+
+            .cclue {
+                font-size: 10px;
+            }
+
+            .rclue {
+                padding-right: 5px;
+                font-size: 10px;
+            }
+
+            .tab,
+            .secondary {
+                padding: 7px 10px;
+                font-size: 0.82rem;
+            }
+
+            .game-help {
+                font-size: 0.78rem;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<main class="container">
+
+    <header class="page-header">
+
+        <h1>🧩 네모로직 (노노그램)</h1>
+
+        <p class="lead">
+            숫자 힌트로 숨은 그림을 캐내는 논리 퍼즐.
+            모든 퍼즐은 찍기 없이 논리만으로 풀리도록
+            검증된 뒤에 출제됩니다.
+            오늘의 퍼즐로 모두 같은 문제에 도전해 보세요.
+        </p>
+
+    </header>
+
+    <section
+            class="card typing-card"
+            aria-label="네모로직 게임"
+    >
+
+        <div
+                class="tabs"
+                id="level-tabs"
+                aria-label="난이도 선택"
+        >
+
+            <button
+                    class="tab"
+                    data-level="easy"
+                    type="button"
+            >
+                5×5
+            </button>
+
+            <button
+                    class="tab active"
+                    data-level="mid"
+                    type="button"
+            >
+                10×10
+            </button>
+
+            <button
+                    class="tab"
+                    data-level="hard"
+                    type="button"
+            >
+                15×15
+            </button>
+
+        </div>
+
+        <div class="type-hud">
+
+        <span class="hud-item">
+          시간
+          <strong id="hud-time">0:00</strong>
+        </span>
+
+            <span class="hud-item">
+          실수
+          <strong id="hud-miss">0/3</strong>
+        </span>
+
+            <span class="hud-item">
+          최고
+          <strong id="hud-best">—</strong>
+        </span>
+
+            <span class="hud-item">
+          🔥연속
+          <strong id="hud-streak">0</strong>
+        </span>
+
+            <button
+                    id="sfx-btn"
+                    class="secondary sfx-button"
+                    type="button"
+                    aria-label="효과음 켜기 또는 끄기"
+                    aria-pressed="false"
+            >
+                🔇
+            </button>
+
+        </div>
+
+        <div class="nono-scroll">
+
+            <div
+                    id="nono"
+                    data-size="10"
+            >
+
+                <div id="corner"></div>
+
+                <div id="col-clues"></div>
+
+                <div id="row-clues"></div>
+
+                <div
+                        id="grid"
+                        aria-label="네모로직 보드"
+                ></div>
+
+            </div>
+
+        </div>
+
+        <div id="nono-ops">
+
+            <div
+                    class="tabs"
+                    id="mode-tabs"
+                    aria-label="입력 모드"
+            >
+
+                <button
+                        class="tab active"
+                        data-mode="1"
+                        type="button"
+                >
+                    🖌️ 칠하기
+                </button>
+
+                <button
+                        class="tab"
+                        data-mode="2"
+                        type="button"
+                >
+                    ✕ 표시
+                </button>
+
+            </div>
+
+            <button
+                    id="hint-btn"
+                    class="secondary"
+                    type="button"
+            >
+                💡 힌트 (+30초)
+            </button>
+
+            <button
+                    id="daily-btn"
+                    class="secondary"
+                    type="button"
+            >
+                📅 오늘의 퍼즐
+            </button>
+
+            <button
+                    id="new-game"
+                    class="secondary"
+                    type="button"
+            >
+                🔄 새 퍼즐
+            </button>
+
+            <button
+                    id="share-daily"
+                    class="secondary"
+                    type="button"
+                    hidden
+            >
+                📤 기록 공유
+            </button>
+
+        </div>
+
+        <p
+                id="status"
+                aria-live="polite"
+        ></p>
+
+        <p class="game-help">
+            칸을 끌면 연속으로 칠해집니다 ·
+            확실히 빈 칸은 <strong>✕ 표시</strong>로 정리하세요
+        </p>
+
+    </section>
+
+</main>
+
+<script>
+    "use strict";
+
+    const $ = function (id) {
+        return document.getElementById(id);
+    };
+
+    /*
+     * 저장 키
+     */
+
+    const BEST_KEY =
+              "nono_best_v1";
+
+    const STREAK_KEY =
+              "nono_daily_v1";
+
+    const SAVE_KEY =
+              "nono_save_v1";
+
+    const LEVEL_KEY =
+              "nono_level_v1";
+
+    const SFX_KEY =
+              "nono_sfx_v1";
+
+    /*
+     * 난이도
+     */
+
+    const LEVELS = {
+        easy: {
+            n: 5,
+            density: 0.62,
+            name: "5×5"
+        },
+
+        mid: {
+            n: 10,
+            density: 0.60,
+            name: "10×10"
+        },
+
+        hard: {
+            n: 15,
+            density: 0.58,
+            name: "15×15"
+        }
+    };
+
+    /*
+     * 오늘의 퍼즐용 시드 RNG
+     */
+
+    function mulberry32(seed) {
+
+        return function () {
+
+            seed |= 0;
+
+            seed =
+                (
+                    seed +
+                    0x6D2B79F5
+                ) | 0;
+
+            let value =
+                    Math.imul(
+                        seed ^
+                        (
+                            seed >>> 15
+                        ),
+                        1 | seed
+                    );
+
+            value =
+                (
+                    value +
+                    Math.imul(
+                        value ^
+                        (
+                            value >>> 7
+                        ),
+                        61 | value
+                    )
+                ) ^ value;
+
+            return (
+                (
+                    value ^
+                    (
+                        value >>> 14
+                    )
+                ) >>> 0
+            ) / 4294967296;
+        };
+    }
+
+    function hashString(text) {
+
+        let hash = 809;
+
+        for (
+            const character of text
+            ) {
+
+            hash =
+                Math.imul(
+                    hash ^
+                    character.charCodeAt(0),
+                    2654435761
+                ) >>> 0;
+        }
+
+        return hash;
+    }
+
+    /*
+     * 로컬 날짜
+     */
+
+    function todayKey() {
+
+        const date =
+                  new Date();
+
+        const year =
+                  date.getFullYear();
+
+        const month =
+                  String(
+                      date.getMonth() + 1
+                  ).padStart(2, "0");
+
+        const day =
+                  String(
+                      date.getDate()
+                  ).padStart(2, "0");
+
+        return (
+            year +
+            "-" +
+            month +
+            "-" +
+            day
+        );
+    }
+
+    /*
+     * 힌트 생성
+     */
+
+    function clueOf(line) {
+
+        const clues = [];
+
+        let run = 0;
+
+        for (
+            const value of line
+            ) {
+
+            if (
+                value === 1
+            ) {
+
+                run++;
+
+            } else if (run) {
+
+                clues.push(run);
+
+                run = 0;
+            }
+        }
+
+        if (run) {
+            clues.push(run);
+        }
+
+        return clues.length
+            ? clues
+            : [0];
+    }
+
+    /*
+     * 한 줄의 가능한 모든 배치를 확인해
+     * 반드시 칠해야 하는 칸과
+     * 반드시 비워야 하는 칸을 계산합니다.
+     *
+     * cells:
+     *  1  = 칠함
+     *  0  = 빈칸
+     * -1  = 미정
+     */
+
+    function solveLine(
+        cells,
+        clue
+    ) {
+
+        const length =
+                  cells.length;
+
+        const blocks =
+                  clue[0] === 0
+                      ? []
+                      : clue;
+
+        let mustFill = null;
+        let mustEmpty = null;
+        let found = false;
+
+        const line =
+                  new Array(length);
+
+        function place(
+            blockIndex,
+            position
+        ) {
+
+            if (
+                blockIndex ===
+                blocks.length
+            ) {
+
+                for (
+                    let i = position;
+                    i < length;
+                    i++
+                ) {
+
+                    if (
+                        cells[i] === 1
+                    ) {
+                        return;
+                    }
+
+                    line[i] = 0;
+                }
+
+                found = true;
+
+                if (!mustFill) {
+
+                    mustFill =
+                        line.map(
+                            function (value) {
+                                return value === 1;
+                            }
+                        );
+
+                    mustEmpty =
+                        line.map(
+                            function (value) {
+                                return value === 0;
+                            }
+                        );
+
+                } else {
+
+                    for (
+                        let i = 0;
+                        i < length;
+                        i++
+                    ) {
+
+                        if (
+                            line[i] !== 1
+                        ) {
+                            mustFill[i] =
+                                false;
+                        }
+
+                        if (
+                            line[i] !== 0
+                        ) {
+                            mustEmpty[i] =
+                                false;
+                        }
+                    }
+                }
+
+                return;
+            }
+
+            const blockLength =
+                      blocks[
+                          blockIndex
+                          ];
+
+            let remaining = 0;
+
+            for (
+                let i =
+                        blockIndex + 1;
+                i < blocks.length;
+                i++
+            ) {
+
+                remaining +=
+                    blocks[i] + 1;
+            }
+
+            for (
+                let start = position;
+
+                start +
+                blockLength +
+                remaining <=
+                length;
+
+                start++
+            ) {
+
+                if (
+                    cells[
+                    start - 1
+                        ] === 1
+                ) {
+                    break;
+                }
+
+                let valid = true;
+
+                for (
+                    let i = position;
+                    i < start;
+                    i++
+                ) {
+
+                    if (
+                        cells[i] === 1
+                    ) {
+
+                        valid = false;
+
+                        break;
+                    }
+                }
+
+                if (!valid) {
+                    break;
+                }
+
+                for (
+                    let i = start;
+                    i <
+                    start +
+                    blockLength;
+                    i++
+                ) {
+
+                    if (
+                        cells[i] === 0
+                    ) {
+
+                        valid = false;
+
+                        break;
+                    }
+                }
+
+                if (
+                    valid &&
+                    cells[
+                    start +
+                    blockLength
+                        ] !== 1
+                ) {
+
+                    for (
+                        let i = position;
+                        i < start;
+                        i++
+                    ) {
+
+                        line[i] = 0;
+                    }
+
+                    for (
+                        let i = start;
+                        i <
+                        start +
+                        blockLength;
+                        i++
+                    ) {
+
+                        line[i] = 1;
+                    }
+
+                    if (
+                        start +
+                        blockLength <
+                        length
+                    ) {
+
+                        line[
+                        start +
+                        blockLength
+                            ] = 0;
+                    }
+
+                    place(
+                        blockIndex + 1,
+                        start +
+                        blockLength +
+                        1
+                    );
+                }
+            }
+        }
+
+        place(0, 0);
+
+        if (!found) {
+            return null;
+        }
+
+        const output =
+                  cells.slice();
+
+        let changed =
+                false;
+
+        for (
+            let i = 0;
+            i < length;
+            i++
+        ) {
+
+            if (
+                output[i] !== -1
+            ) {
+                continue;
+            }
+
+            if (
+                mustFill[i]
+            ) {
+
+                output[i] = 1;
+
+                changed = true;
+
+            } else if (
+                mustEmpty[i]
+            ) {
+
+                output[i] = 0;
+
+                changed = true;
+            }
+        }
+
+        return {
+            output: output,
+            changed: changed
+        };
+    }
+
+    /*
+     * 행/열 논리 전파만으로
+     * 끝까지 풀리는지 검사
+     */
+
+    function isLineSolvable(
+        rowClues,
+        columnClues,
+        size
+    ) {
+
+        let testGrid =
+                Array.from(
+                    {
+                        length: size
+                    },
+                    function () {
+
+                        return new Array(
+                            size
+                        ).fill(-1);
+                    }
+                );
+
+        for (
+            let guard = 0;
+            guard < 200;
+            guard++
+        ) {
+
+            let changed =
+                    false;
+
+            /*
+             * 행
+             */
+
+            for (
+                let row = 0;
+                row < size;
+                row++
+            ) {
+
+                const result =
+                          solveLine(
+                              testGrid[row],
+                              rowClues[row]
+                          );
+
+                if (!result) {
+                    return false;
+                }
+
+                if (
+                    result.changed
+                ) {
+
+                    testGrid[row] =
+                        result.output;
+
+                    changed = true;
+                }
+            }
+
+            /*
+             * 열
+             */
+
+            for (
+                let column = 0;
+                column < size;
+                column++
+            ) {
+
+                const columnData =
+                          testGrid.map(
+                              function (row) {
+                                  return row[column];
+                              }
+                          );
+
+                const result =
+                          solveLine(
+                              columnData,
+                              columnClues[
+                                  column
+                                  ]
+                          );
+
+                if (!result) {
+                    return false;
+                }
+
+                if (
+                    result.changed
+                ) {
+
+                    result.output.forEach(
+                        function (
+                            value,
+                            row
+                        ) {
+
+                            testGrid[
+                                row
+                                ][
+                                column
+                                ] = value;
+                        }
+                    );
+
+                    changed = true;
+                }
+            }
+
+            if (!changed) {
+                break;
+            }
+        }
+
+        return testGrid.every(
+            function (row) {
+
+                return row.every(
+                    function (value) {
+
+                        return (
+                            value !== -1
+                        );
+                    }
+                );
+            }
+        );
+    }
+
+    /*
+     * 논리적으로 풀 수 있는
+     * 퍼즐 생성
+     */
+
+    function generatePuzzle(
+        size,
+        density,
+        random
+    ) {
+
+        for (
+            let attempt = 0;
+            attempt < 400;
+            attempt++
+        ) {
+
+            const solution =
+                      Array.from(
+                          {
+                              length: size
+                          },
+                          function () {
+
+                              return Array.from(
+                                  {
+                                      length: size
+                                  },
+                                  function () {
+
+                                      return (
+                                          random() <
+                                          density
+                                              ? 1
+                                              : 0
+                                      );
+                                  }
+                              );
+                          }
+                      );
+
+            const rowClues =
+                      solution.map(
+                          clueOf
+                      );
+
+            const columnClues =
+                      Array.from(
+                          {
+                              length: size
+                          },
+                          function (
+                              _,
+                              column
+                          ) {
+
+                              return clueOf(
+                                  solution.map(
+                                      function (row) {
+
+                                          return row[
+                                              column
+                                              ];
+                                      }
+                                  )
+                              );
+                          }
+                      );
+
+            /*
+             * 빈 행 제외 +
+             * 논리 풀이 가능 여부 검사
+             */
+
+            const validRows =
+                      rowClues.every(
+                          function (clue) {
+
+                              return (
+                                  clue[0] !== 0
+                              );
+                          }
+                      );
+
+            if (
+                validRows &&
+                isLineSolvable(
+                    rowClues,
+                    columnClues,
+                    size
+                )
+            ) {
+
+                return {
+                    solution: solution,
+                    rowClues: rowClues,
+                    columnClues:
+                    columnClues
+                };
+            }
+        }
+
+        return null;
+    }
+
+    /*
+     * 상태
+     */
+
+    let level =
+            localStorage.getItem(
+                LEVEL_KEY
+            ) || "easy";
+
+    if (!LEVELS[level]) {
+        level = "easy";
+    }
+
+    let size =
+            LEVELS[level].n;
+
+    let solution = null;
+
+    let rowClues = null;
+    let columnClues = null;
+
+    /*
+     * playerGrid:
+     * 0 = 미정
+     * 1 = 칠함
+     * 2 = X
+     */
+
+    let playerGrid = null;
+
+    /*
+     * 1 = 칠하기
+     * 2 = X
+     */
+
+    let mode = 1;
+
+    let mistakes = 0;
+
+    let done = false;
+
+    let daily = false;
+
+    let startTimestamp = 0;
+
+    let timerId = null;
+
+    let paint = null;
+
+    let bestRecords = {};
+
+    try {
+
+        bestRecords =
+            JSON.parse(
+                localStorage.getItem(
+                    BEST_KEY
+                ) || "{}"
+            );
+
+    } catch (error) {
+
+        bestRecords = {};
+    }
+
+    /*
+     * 효과음
+     */
+
+    let sfxEnabled =
+            localStorage.getItem(
+                SFX_KEY
+            ) === "1";
+
+    let audioContext = null;
+
+    function updateSfxButton() {
+
+        $("sfx-btn").textContent =
+            sfxEnabled
+                ? "🔊"
+                : "🔇";
+
+        $("sfx-btn").setAttribute(
+            "aria-pressed",
+            String(sfxEnabled)
+        );
+    }
+
+    function getAudioContext() {
+
+        if (!audioContext) {
+
+            const AudioContextClass =
+                      window.AudioContext ||
+                      window.webkitAudioContext;
+
+            if (!AudioContextClass) {
+                return null;
+            }
+
+            audioContext =
+                new AudioContextClass();
+        }
+
+        if (
+            audioContext.state ===
+            "suspended"
+        ) {
+            audioContext.resume();
+        }
+
+        return audioContext;
+    }
+
+    function playTone(
+        frequency,
+        duration,
+        volume,
+        type
+    ) {
+
+        if (!sfxEnabled) {
+            return;
+        }
+
+        const context =
+                  getAudioContext();
+
+        if (!context) {
+            return;
+        }
+
+        const oscillator =
+                  context.createOscillator();
+
+        const gain =
+                  context.createGain();
+
+        oscillator.type =
+            type || "sine";
+
+        oscillator.frequency.setValueAtTime(
+            frequency,
+            context.currentTime
+        );
+
+        gain.gain.setValueAtTime(
+            volume,
+            context.currentTime
+        );
+
+        gain.gain.exponentialRampToValueAtTime(
+            0.001,
+            context.currentTime +
+            duration
+        );
+
+        oscillator.connect(gain);
+
+        gain.connect(
+            context.destination
+        );
+
+        oscillator.start();
+
+        oscillator.stop(
+            context.currentTime +
+            duration
+        );
+    }
+
+    function playClickSound() {
+        playTone(
+            350,
+            0.035,
+            0.018,
+            "sine"
+        );
+    }
+
+    function playBadSound() {
+        playTone(
+            130,
+            0.16,
+            0.04,
+            "square"
+        );
+    }
+
+    function playHintSound() {
+
+        playTone(
+            600,
+            0.08,
+            0.03,
+            "sine"
+        );
+
+        window.setTimeout(
+            function () {
+
+                playTone(
+                    800,
+                    0.12,
+                    0.03,
+                    "sine"
+                );
+
+            },
+            80
+        );
+    }
+
+    function playWinSound() {
+
+        playTone(
+            520,
+            0.1,
+            0.03,
+            "sine"
+        );
+
+        window.setTimeout(
+            function () {
+
+                playTone(
+                    660,
+                    0.1,
+                    0.03,
+                    "sine"
+                );
+
+            },
+            90
+        );
+
+        window.setTimeout(
+            function () {
+
+                playTone(
+                    880,
+                    0.18,
+                    0.04,
+                    "sine"
+                );
+
+            },
+            180
+        );
+    }
+
+    function playGameOverSound() {
+
+        playTone(
+            160,
+            0.18,
+            0.04,
+            "sawtooth"
+        );
+
+        window.setTimeout(
+            function () {
+
+                playTone(
+                    90,
+                    0.3,
+                    0.04,
+                    "sawtooth"
+                );
+
+            },
+            130
+        );
+    }
+
+    $("sfx-btn").addEventListener(
+        "click",
+        function () {
+
+            sfxEnabled =
+                !sfxEnabled;
+
+            localStorage.setItem(
+                SFX_KEY,
+                sfxEnabled
+                    ? "1"
+                    : "0"
+            );
+
+            updateSfxButton();
+
+            if (sfxEnabled) {
+
+                playTone(
+                    700,
+                    0.08,
+                    0.03,
+                    "sine"
+                );
+            }
+        }
+    );
+
+    /*
+     * 난이도 탭 동기화
+     */
+
+    function syncLevelTabs() {
+
+        document
+        .querySelectorAll(
+            "#level-tabs .tab"
+        )
+        .forEach(
+            function (button) {
+
+                button.classList.toggle(
+                    "active",
+                    button.dataset.level ===
+                    level
+                );
+            }
+        );
+    }
+
+    /*
+     * 시간 표시
+     */
+
+    function formatTime(
+        seconds
+    ) {
+
+        const whole =
+                  Math.floor(seconds);
+
+        const minutes =
+                  Math.floor(
+                      whole / 60
+                  );
+
+        const remain =
+                  String(
+                      whole % 60
+                  ).padStart(
+                      2,
+                      "0"
+                  );
+
+        return (
+            minutes +
+            ":" +
+            remain
+        );
+    }
+
+    /*
+     * 저장
+     */
+
+    function saveState() {
+
+        if (
+            done ||
+            !playerGrid
+        ) {
+
+            localStorage.removeItem(
+                SAVE_KEY
+            );
+
+            return;
+        }
+
+        const data = {
+            level: level,
+            daily: daily,
+            day: todayKey(),
+
+            solution: solution,
+
+            rowClues: rowClues,
+
+            columnClues:
+            columnClues,
+
+            playerGrid:
+            playerGrid,
+
+            mistakes:
+            mistakes,
+
+            elapsed:
+                Date.now() -
+                startTimestamp
+        };
+
+        try {
+
+            localStorage.setItem(
+                SAVE_KEY,
+                JSON.stringify(data)
+            );
+
+        } catch (error) {
+            /* 저장 실패 시 게임 계속 */
+        }
+    }
+
+    /*
+     * 타이머
+     */
+
+    function startTimer(
+        elapsed
+    ) {
+
+        const savedElapsed =
+                  elapsed || 0;
+
+        startTimestamp =
+            Date.now() -
+            savedElapsed;
+
+        clearInterval(
+            timerId
+        );
+
+        timerId =
+            window.setInterval(
+                function () {
+
+                    if (!done) {
+
+                        $("hud-time")
+                            .textContent =
+                            formatTime(
+                                (
+                                    Date.now() -
+                                    startTimestamp
+                                ) / 1000
+                            );
+                    }
+                },
+                500
+            );
+
+        $("hud-time").textContent =
+            formatTime(
+                savedElapsed /
+                1000
+            );
+    }
+
+    /*
+     * HUD
+     */
+
+    function updateHud() {
+
+        $("hud-miss")
+            .textContent =
+            mistakes + "/3";
+
+        $("hud-best")
+            .textContent =
+            bestRecords[level]
+                ? formatTime(
+                    bestRecords[
+                        level
+                        ]
+                )
+                : "—";
+
+        let streakData = {};
+
+        try {
+
+            streakData =
+                JSON.parse(
+                    localStorage.getItem(
+                        STREAK_KEY
+                    ) || "{}"
+                );
+
+        } catch (error) {
+
+            streakData = {};
+        }
+
+        $("hud-streak")
+            .textContent =
+            streakData.streak ||
+            0;
+    }
+
+    /*
+     * 보드
+     */
+
+    function buildBoard() {
+
+        const columnWrap =
+                  $("col-clues");
+
+        const rowWrap =
+                  $("row-clues");
+
+        const board =
+                  $("grid");
+
+        columnWrap.innerHTML =
+            columnClues.map(
+                function (clue) {
+
+                    return (
+                        '<div class="cclue">' +
+                        clue.join("<br>") +
+                        "</div>"
+                    );
+                }
+            ).join("");
+
+        rowWrap.innerHTML =
+            rowClues.map(
+                function (clue) {
+
+                    return (
+                        '<div class="rclue">' +
+                        clue.join(" ") +
+                        "</div>"
+                    );
+                }
+            ).join("");
+
+        board.style
+            .gridTemplateColumns =
+            "repeat(" +
+            size +
+            ", 1fr)";
+
+        columnWrap.style
+            .gridTemplateColumns =
+            "repeat(" +
+            size +
+            ", 1fr)";
+
+        board.innerHTML = "";
+
+        for (
+            let index = 0;
+            index <
+            size * size;
+            index++
+        ) {
+
+            const cell =
+                      document.createElement(
+                          "div"
+                      );
+
+            const row =
+                      Math.floor(
+                          index / size
+                      );
+
+            const column =
+                      index % size;
+
+            const alternate =
+                      (
+                          Math.floor(
+                              column / 5
+                          ) +
+                          Math.floor(
+                              row / 5
+                          )
+                      ) % 2;
+
+            cell.className =
+                "ncell" +
+                (
+                    alternate
+                        ? " alt"
+                        : ""
+                );
+
+            cell.dataset.index =
+                String(index);
+
+            cell.setAttribute(
+                "role",
+                "button"
+            );
+
+            cell.setAttribute(
+                "aria-label",
+                (row + 1) +
+                "행 " +
+                (column + 1) +
+                "열"
+            );
+
+            board.appendChild(
+                cell
+            );
+        }
+
+        $("nono").style
+        .setProperty(
+            "--n",
+            size
+        );
+
+        $("nono").dataset.size =
+            String(size);
+
+        render();
+    }
+
+    /*
+     * 보드 렌더
+     */
+
+    function render() {
+
+        const cells =
+                  $("grid").children;
+
+        for (
+            let index = 0;
+            index <
+            size * size;
+            index++
+        ) {
+
+            const row =
+                      Math.floor(
+                          index / size
+                      );
+
+            const column =
+                      index % size;
+
+            const value =
+                      playerGrid[
+                          row
+                          ][
+                          column
+                          ];
+
+            cells[
+                index
+                ].classList.toggle(
+                "fill",
+                value === 1
+            );
+
+            cells[
+                index
+                ].classList.toggle(
+                "x",
+                value === 2
+            );
+
+            cells[
+                index
+                ].setAttribute(
+                "aria-pressed",
+                value === 1
+                    ? "true"
+                    : "false"
+            );
+        }
+
+        /*
+         * 완성된 행 힌트 흐리게
+         */
+
+        const rowElements =
+                  $("row-clues")
+                      .children;
+
+        for (
+            let row = 0;
+            row < size;
+            row++
+        ) {
+
+            const currentClue =
+                      clueOf(
+                          playerGrid[
+                              row
+                              ].map(
+                              function (value) {
+
+                                  return (
+                                      value === 1
+                                          ? 1
+                                          : 0
+                                  );
+                              }
+                          )
+                      );
+
+            rowElements[
+                row
+                ].classList.toggle(
+                "ok",
+                JSON.stringify(
+                    currentClue
+                ) ===
+                JSON.stringify(
+                    rowClues[
+                        row
+                        ]
+                )
+            );
+        }
+
+        /*
+         * 완성된 열 힌트 흐리게
+         */
+
+        const columnElements =
+                  $("col-clues")
+                      .children;
+
+        for (
+            let column = 0;
+            column < size;
+            column++
+        ) {
+
+            const currentLine =
+                      playerGrid.map(
+                          function (row) {
+
+                              return (
+                                  row[column] === 1
+                                      ? 1
+                                      : 0
+                              );
+                          }
+                      );
+
+            const currentClue =
+                      clueOf(
+                          currentLine
+                      );
+
+            columnElements[
+                column
+                ].classList.toggle(
+                "ok",
+                JSON.stringify(
+                    currentClue
+                ) ===
+                JSON.stringify(
+                    columnClues[
+                        column
+                        ]
+                )
+            );
+        }
+    }
+
+    /*
+     * 새 퍼즐
+     */
+
+    function newGame(
+        useDaily
+    ) {
+
+        daily =
+            Boolean(
+                useDaily
+            );
+
+        /*
+         * 오늘의 퍼즐은
+         * 원본과 동일하게 10×10
+         */
+
+        if (daily) {
+            level = "mid";
+        }
+
+        localStorage.setItem(
+            LEVEL_KEY,
+            level
+        );
+
+        syncLevelTabs();
+
+        size =
+            LEVELS[level].n;
+
+        /*
+         * 오늘의 퍼즐은 날짜 기반
+         * 고정 RNG 사용
+         */
+
+        const random =
+                  daily
+                      ? mulberry32(
+                          hashString(
+                              "nono:" +
+                              todayKey()
+                          )
+                      )
+                      : Math.random;
+
+        const generated =
+                  generatePuzzle(
+                      size,
+                      LEVELS[level]
+                          .density,
+                      random
+                  );
+
+        if (!generated) {
+
+            $("status").textContent =
+                "퍼즐 생성에 실패했습니다. 새 퍼즐을 눌러 다시 시도해 주세요.";
+
+            return;
+        }
+
+        solution =
+            generated.solution;
+
+        rowClues =
+            generated.rowClues;
+
+        columnClues =
+            generated.columnClues;
+
+        playerGrid =
+            Array.from(
+                {
+                    length: size
+                },
+                function () {
+
+                    return new Array(
+                        size
+                    ).fill(0);
+                }
+            );
+
+        mistakes = 0;
+
+        done = false;
+
+        mode = 1;
+
+        document
+        .querySelectorAll(
+            "#mode-tabs .tab"
+        )
+        .forEach(
+            function (button) {
+
+                button.classList.toggle(
+                    "active",
+                    button.dataset.mode ===
+                    "1"
+                );
+            }
+        );
+
+        if (daily) {
+
+            $("status")
+                .textContent =
+                "📅 " +
+                todayKey() +
+                " — 오늘 모두 같은 퍼즐에 도전 중!";
+
+        } else {
+
+            $("status")
+                .textContent =
+                "";
+        }
+
+        $("share-daily")
+            .hidden = true;
+
+        startTimer(0);
+
+        updateHud();
+
+        buildBoard();
+
+        saveState();
+    }
+
+    /*
+     * 저장된 퍼즐 복원
+     */
+
+    function tryRestore() {
+
+        try {
+
+            const saved =
+                      JSON.parse(
+                          localStorage.getItem(
+                              SAVE_KEY
+                          ) || "null"
+                      );
+
+            if (
+                !saved ||
+                !saved.solution ||
+                !LEVELS[
+                    saved.level
+                    ]
+            ) {
+                return false;
+            }
+
+            /*
+             * 어제의 오늘 퍼즐은 복원하지 않음
+             */
+
+            if (
+                saved.daily &&
+                saved.day !==
+                todayKey()
+            ) {
+
+                localStorage.removeItem(
+                    SAVE_KEY
+                );
+
+                return false;
+            }
+
+            level =
+                saved.level;
+
+            daily =
+                Boolean(
+                    saved.daily
+                );
+
+            solution =
+                saved.solution;
+
+            rowClues =
+                saved.rowClues;
+
+            columnClues =
+                saved.columnClues;
+
+            playerGrid =
+                saved.playerGrid;
+
+            mistakes =
+                Number(
+                    saved.mistakes ||
+                    0
+                );
+
+            size =
+                LEVELS[level].n;
+
+            done = false;
+
+            syncLevelTabs();
+
+            $("share-daily")
+                .hidden = true;
+
+            startTimer(
+                saved.elapsed
+            );
+
+            updateHud();
+
+            buildBoard();
+
+            $("status")
+                .textContent =
+                "▶ 진행 중이던 퍼즐을 이어합니다";
+
+            return true;
+
+        } catch (error) {
+
+            return false;
+        }
+    }
+
+    /*
+     * 칸 입력
+     */
+
+    function applyCell(
+        index
+    ) {
+
+        if (
+            done ||
+            index === null ||
+            !paint
+        ) {
+            return;
+        }
+
+        const row =
+                  Math.floor(
+                      index / size
+                  );
+
+        const column =
+                  index % size;
+
+        const current =
+                  playerGrid[
+                      row
+                      ][
+                      column
+                      ];
+
+        /*
+         * 같은 모드의 칸에서
+         * 드래그 시작하면 지우기
+         */
+
+        if (
+            paint.erase
+        ) {
+
+            if (
+                current ===
+                paint.set
+            ) {
+
+                playerGrid[
+                    row
+                    ][
+                    column
+                    ] = 0;
+            }
+
+            render();
+
+            saveState();
+
+            return;
+        }
+
+        /*
+         * 이미 표시된 칸은 건너뜀
+         */
+
+        if (
+            current !== 0
+        ) {
+            return;
+        }
+
+        /*
+         * 잘못 칠한 경우
+         *
+         * 실수 +1
+         * 해당 칸은 자동 X
+         */
+
+        if (
+            paint.set === 1 &&
+            solution[
+                row
+                ][
+                column
+                ] !== 1
+        ) {
+
+            playerGrid[
+                row
+                ][
+                column
+                ] = 2;
+
+            mistakes++;
+
+            playBadSound();
+
+            updateHud();
+
+            render();
+
+            if (
+                mistakes >= 3
+            ) {
+
+                done = true;
+
+                clearInterval(
+                    timerId
+                );
+
+                $("status")
+                    .textContent =
+                    "😵 실수 3회 — 게임 오버";
+
+                playGameOverSound();
+            }
+
+            saveState();
+
+            return;
+        }
+
+        playerGrid[
+            row
+            ][
+            column
+            ] = paint.set;
+
+        playClickSound();
+
+        render();
+
+        if (
+            paint.set === 1
+        ) {
+
+            checkWin();
+        }
+
+        saveState();
+    }
+
+    /*
+     * 힌트
+     *
+     * 아직 칠하지 않은 정답 칸
+     * 하나를 대신 칠하고
+     * 30초를 추가합니다.
+     */
+
+    function useHint() {
+
+        if (
+            done ||
+            !playerGrid
+        ) {
+            return;
+        }
+
+        const candidates = [];
+
+        for (
+            let row = 0;
+            row < size;
+            row++
+        ) {
+
+            for (
+                let column = 0;
+                column < size;
+                column++
+            ) {
+
+                if (
+                    solution[
+                        row
+                        ][
+                        column
+                        ] === 1 &&
+                    playerGrid[
+                        row
+                        ][
+                        column
+                        ] !== 1
+                ) {
+
+                    candidates.push([
+                        row,
+                        column
+                    ]);
+                }
+            }
+        }
+
+        if (
+            !candidates.length
+        ) {
+            return;
+        }
+
+        const candidate =
+                  candidates[
+                      Math.floor(
+                          Math.random() *
+                          candidates.length
+                      )
+                      ];
+
+        const row =
+                  candidate[0];
+
+        const column =
+                  candidate[1];
+
+        playerGrid[
+            row
+            ][
+            column
+            ] = 1;
+
+        /*
+         * +30초 패널티
+         */
+
+        startTimestamp -=
+            30000;
+
+        $("hud-time")
+            .textContent =
+            formatTime(
+                (
+                    Date.now() -
+                    startTimestamp
+                ) / 1000
+            );
+
+        $("status")
+            .textContent =
+            "💡 힌트 사용 — 시간 +30초";
+
+        playHintSound();
+
+        render();
+
+        checkWin();
+
+        saveState();
+    }
+
+    /*
+     * 승리 검사
+     */
+
+    function checkWin() {
+
+        for (
+            let row = 0;
+            row < size;
+            row++
+        ) {
+
+            for (
+                let column = 0;
+                column < size;
+                column++
+            ) {
+
+                const answerFilled =
+                          solution[
+                              row
+                              ][
+                              column
+                              ] === 1;
+
+                const playerFilled =
+                          playerGrid[
+                              row
+                              ][
+                              column
+                              ] === 1;
+
+                if (
+                    answerFilled !==
+                    playerFilled
+                ) {
+
+                    return;
+                }
+            }
+        }
+
+        done = true;
+
+        clearInterval(
+            timerId
+        );
+
+        const time =
+                  Math.round(
+                      (
+                          Date.now() -
+                          startTimestamp
+                      ) / 100
+                  ) / 10;
+
+        $("hud-time")
+            .textContent =
+            formatTime(time);
+
+        playWinSound();
+
+        /*
+         * 최고 기록
+         */
+
+        if (
+            !bestRecords[level] ||
+            time <
+            bestRecords[level]
+        ) {
+
+            bestRecords[level] =
+                time;
+
+            localStorage.setItem(
+                BEST_KEY,
+                JSON.stringify(
+                    bestRecords
+                )
+            );
+        }
+
+        let message =
+                "🎉 클리어! " +
+                formatTime(time);
+
+        /*
+         * 오늘의 퍼즐 연속 기록
+         */
+
+        if (daily) {
+
+            let streakData = {};
+
+            try {
+
+                streakData =
+                    JSON.parse(
+                        localStorage.getItem(
+                            STREAK_KEY
+                        ) || "{}"
+                    );
+
+            } catch (error) {
+
+                streakData = {};
+            }
+
+            if (
+                streakData.last !==
+                todayKey()
+            ) {
+
+                const yesterday =
+                          new Date(
+                              Date.now() -
+                              86400000
+                          );
+
+                const yesterdayKey =
+                          yesterday.getFullYear() +
+                          "-" +
+                          String(
+                              yesterday.getMonth() +
+                              1
+                          ).padStart(2, "0") +
+                          "-" +
+                          String(
+                              yesterday.getDate()
+                          ).padStart(2, "0");
+
+                streakData.streak =
+                    streakData.last ===
+                    yesterdayKey
+                        ? (
+                        streakData.streak ||
+                        0
+                    ) + 1
+                        : 1;
+
+                streakData.last =
+                    todayKey();
+
+                streakData.time =
+                    time;
+
+                localStorage.setItem(
+                    STREAK_KEY,
+                    JSON.stringify(
+                        streakData
+                    )
+                );
+            }
+
+            message +=
+                " · 🔥 " +
+                (
+                    streakData.streak ||
+                    0
+                ) +
+                "일 연속";
+
+            $("share-daily")
+                .hidden = false;
+        }
+
+        $("status")
+            .textContent =
+            message;
+
+        updateHud();
+
+        render();
+
+        /*
+         * 완료한 퍼즐의
+         * 이어하기 데이터 삭제
+         */
+
+        saveState();
+    }
+
+    /*
+     * 이벤트 좌표에서 칸 찾기
+     */
+
+    function cellFromEvent(
+        event
+    ) {
+
+        const element =
+                  document.elementFromPoint(
+                      event.clientX,
+                      event.clientY
+                  );
+
+        if (
+            !element ||
+            !element.classList
+            .contains("ncell")
+        ) {
+
+            return null;
+        }
+
+        return Number(
+            element.dataset.index
+        );
+    }
+
+    /*
+     * 드래그 시작
+     */
+
+    $("grid").addEventListener(
+        "pointerdown",
+        function (event) {
+
+            event.preventDefault();
+
+            const index =
+                      cellFromEvent(
+                          event
+                      );
+
+            if (
+                index === null ||
+                done
+            ) {
+                return;
+            }
+
+            const row =
+                      Math.floor(
+                          index / size
+                      );
+
+            const column =
+                      index % size;
+
+            const current =
+                      playerGrid[
+                          row
+                          ][
+                          column
+                          ];
+
+            paint = {
+                set: mode,
+                erase:
+                    current === mode
+            };
+
+            applyCell(
+                index
+            );
+        }
+    );
+
+    /*
+     * 드래그 이동
+     */
+
+    window.addEventListener(
+        "pointermove",
+        function (event) {
+
+            if (!paint) {
+                return;
+            }
+
+            applyCell(
+                cellFromEvent(
+                    event
+                )
+            );
+        }
+    );
+
+    /*
+     * 드래그 종료
+     */
+
+    window.addEventListener(
+        "pointerup",
+        function () {
+            paint = null;
+        }
+    );
+
+    window.addEventListener(
+        "pointercancel",
+        function () {
+            paint = null;
+        }
+    );
+
+    /*
+     * 칠하기 / X 모드
+     */
+
+    document
+    .querySelectorAll(
+        "#mode-tabs .tab"
+    )
+    .forEach(
+        function (button) {
+
+            button.addEventListener(
+                "click",
+                function () {
+
+                    document
+                    .querySelectorAll(
+                        "#mode-tabs .tab"
+                    )
+                    .forEach(
+                        function (
+                            otherButton
+                        ) {
+
+                            otherButton
+                            .classList
+                            .remove(
+                                "active"
+                            );
+                        }
+                    );
+
+                    button.classList.add(
+                        "active"
+                    );
+
+                    mode =
+                        Number(
+                            button.dataset.mode
+                        );
+                }
+            );
+        }
+    );
+
+    /*
+     * 난이도
+     */
+
+    document
+    .querySelectorAll(
+        "#level-tabs .tab"
+    )
+    .forEach(
+        function (button) {
+
+            button.addEventListener(
+                "click",
+                function () {
+
+                    level =
+                        button.dataset.level;
+
+                    localStorage.setItem(
+                        LEVEL_KEY,
+                        level
+                    );
+
+                    newGame(false);
+                }
+            );
+        }
+    );
+
+    /*
+     * 새 퍼즐
+     */
+
+    $("new-game")
+    .addEventListener(
+        "click",
+        function () {
+
+            newGame(false);
+        }
+    );
+
+    /*
+     * 힌트
+     */
+
+    $("hint-btn")
+    .addEventListener(
+        "click",
+        useHint
+    );
+
+    /*
+     * 오늘의 퍼즐
+     */
+
+    $("daily-btn")
+    .addEventListener(
+        "click",
+        function () {
+
+            newGame(true);
+        }
+    );
+
+    /*
+     * 오늘의 퍼즐 공유
+     */
+
+    $("share-daily")
+    .addEventListener(
+        "click",
+        async function () {
+
+            let streakData = {};
+
+            try {
+
+                streakData =
+                    JSON.parse(
+                        localStorage.getItem(
+                            STREAK_KEY
+                        ) || "{}"
+                    );
+
+            } catch (error) {
+
+                streakData = {};
+            }
+
+            const shareText =
+                      "🧩 오늘의 네모로직 (" +
+                      todayKey() +
+                      ") " +
+                      formatTime(
+                          streakData.time ||
+                          0
+                      ) +
+                      " 클리어! 🔥 " +
+                      (
+                          streakData.streak ||
+                          0
+                      ) +
+                      "일 연속";
+
+            try {
+
+                if (
+                    navigator.share
+                ) {
+
+                    await navigator.share({
+                        text: shareText
+                    });
+
+                } else if (
+                    navigator.clipboard
+                ) {
+
+                    await navigator
+                    .clipboard
+                    .writeText(
+                        shareText
+                    );
+
+                    $("status")
+                        .textContent =
+                        "📋 결과가 복사되었습니다 — 붙여넣어 공유하세요!";
+
+                } else {
+
+                    $("status")
+                        .textContent =
+                        shareText;
+                }
+
+            } catch (error) {
+                /* 공유 취소 */
+            }
+        }
+    );
+
+    /*
+     * 초기화
+     *
+     * ?daily
+     * → 오늘의 퍼즐
+     *
+     * 아니면
+     * → 이어하기
+     * → 새 게임
+     */
+
+    function initializeGame() {
+
+        updateSfxButton();
+
+        const params =
+                  new URLSearchParams(
+                      location.search
+                  );
+
+        if (
+            params.has("daily")
+        ) {
+
+            newGame(true);
+
+            return;
+        }
+
+        if (
+            !tryRestore()
+        ) {
+
+            newGame(false);
+        }
+    }
+
+    initializeGame();
+</script>
+
+</body>
+</html>
