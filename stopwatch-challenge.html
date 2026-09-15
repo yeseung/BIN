@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>스톱워치 챌린지 - 정확히 10초 맞추기</title>
+
+    <meta
+            name="description"
+            content="숫자가 가려진 상태에서 정확히 10.00초를 맞추는 스톱워치 챌린지입니다. 시작 후 3초부터 시간을 볼 수 없습니다."
+    >
+    <meta
+            name="keywords"
+            content="스톱워치 챌린지, 10초 맞추기, 반응속도 게임, 시간 감각 테스트, 웹게임, 무료게임"
+    >
+
+    <meta property="og:title" content="⏱️ 스톱워치 챌린지">
+    <meta
+            property="og:description"
+            content="3초 뒤 숫자가 사라집니다. 몸속 시계만으로 정확히 10.00초를 맞춰보세요!"
+    >
+    <meta property="og:type" content="website">
+
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="manifest" href="/manifest.webmanifest">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+            href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap"
+            rel="stylesheet"
+    >
+
+    <style>
+        :root {
+            --background: #ffffff;
+            --surface: #ffffff;
+            --surface-soft: #f8fafc;
+
+            --text: #111827;
+            --text-soft: #6b7280;
+
+            --border: #e5e7eb;
+            --border-dark: #cbd5e1;
+
+            --accent: #2563eb;
+            --accent-weak: #eff6ff;
+
+            --running: #d94040;
+
+            --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+            --radius: 24px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+
+            background: var(--background);
+            color: var(--text);
+
+            font-family: "Noto Sans KR", sans-serif;
+            letter-spacing: -0.04em;
+            word-break: keep-all;
+        }
+
+        button {
+            font: inherit;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container {
+            width: min(100% - 32px, 800px);
+            margin: 0 auto;
+            padding: 60px 0;
+        }
+
+        .page-header {
+            margin-bottom: 28px;
+            text-align: center;
+        }
+
+        h1 {
+            margin: 0 0 12px;
+
+            font-size: clamp(2rem, 6vw, 3rem);
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .lead {
+            max-width: 700px;
+            margin: 0 auto;
+
+            color: var(--text-soft);
+
+            font-size: 1.05rem;
+            line-height: 1.8;
+        }
+
+        .lead strong {
+            color: var(--text);
+            font-weight: 800;
+        }
+
+        .card {
+            padding: 24px;
+
+            background: var(--surface);
+
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+
+            box-shadow: var(--shadow);
+        }
+
+        /* HUD */
+
+        .type-hud {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+
+            gap: 8px;
+
+            margin-bottom: 16px;
+        }
+
+        .hud-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+
+            min-height: 42px;
+            padding: 8px 14px;
+
+            background: var(--surface-soft);
+
+            border: 1px solid var(--border);
+            border-radius: 14px;
+
+            color: var(--text-soft);
+
+            font-size: 0.88rem;
+            white-space: nowrap;
+        }
+
+        .hud-item strong {
+            color: var(--text);
+
+            font-size: 1rem;
+            font-weight: 800;
+
+            font-variant-numeric: tabular-nums;
+        }
+
+        .hud-item small {
+            font-size: 0.78rem;
+        }
+
+        .secondary {
+            min-height: 42px;
+            padding: 8px 13px;
+
+            background: #ffffff;
+            color: var(--text);
+
+            border: 1px solid var(--border-dark);
+            border-radius: 14px;
+
+            cursor: pointer;
+
+            font-weight: 700;
+
+            transition:
+                    background 0.15s ease,
+                    border-color 0.15s ease,
+                    transform 0.15s ease;
+        }
+
+        .secondary:hover {
+            background: var(--surface-soft);
+            border-color: #94a3b8;
+        }
+
+        .secondary:active {
+            transform: scale(0.97);
+        }
+
+        .secondary:focus-visible {
+            outline: 3px solid rgba(37, 99, 235, 0.18);
+            outline-offset: 2px;
+        }
+
+        .sfx-button {
+            width: 44px;
+            padding: 7px;
+
+            font-size: 1rem;
+            line-height: 1;
+        }
+
+        /* 스톱워치 패드 */
+
+        .stopwatch-pad {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+
+            gap: 6px;
+
+            width: 100%;
+            height: 300px;
+            padding: 24px;
+
+            background: var(--accent-weak);
+            color: var(--text);
+
+            border: 0;
+            border-radius: 18px;
+
+            cursor: pointer;
+
+            text-align: center;
+
+            user-select: none;
+            -webkit-user-select: none;
+
+            touch-action: manipulation;
+
+            transition:
+                    background-color 0.15s ease,
+                    color 0.15s ease,
+                    transform 0.08s ease;
+        }
+
+        .stopwatch-pad.running {
+            background: var(--running);
+            color: #ffffff;
+        }
+
+        .stopwatch-pad:active {
+            transform: scale(0.997);
+        }
+
+        .stopwatch-pad:focus-visible {
+            outline: 4px solid rgba(37, 99, 235, 0.18);
+            outline-offset: 3px;
+        }
+
+        .pad-time {
+            font-size: clamp(3rem, 12vw, 4.5rem);
+            font-weight: 800;
+            line-height: 1.15;
+
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.03em;
+        }
+
+        .pad-text {
+            margin-top: 4px;
+
+            font-size: 1.1rem;
+            font-weight: 700;
+            line-height: 1.5;
+        }
+
+        .pad-sub {
+            color: var(--text-soft);
+
+            font-size: 0.88rem;
+            line-height: 1.6;
+        }
+
+        .stopwatch-pad.running .pad-sub {
+            color: rgba(255, 255, 255, 0.86);
+        }
+
+        /* 결과 */
+
+        .result {
+            margin-top: 18px;
+
+            overflow: hidden;
+
+            background: #ffffff;
+
+            border: 1px solid var(--border);
+            border-radius: 18px;
+        }
+
+        .result[hidden] {
+            display: none;
+        }
+
+        .result-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 20px;
+
+            min-height: 58px;
+            padding: 14px 18px;
+
+            border-bottom: 1px solid var(--border);
+
+            font-size: 0.95rem;
+        }
+
+        .result-row:last-child {
+            border-bottom: 0;
+        }
+
+        .result-row > :last-child {
+            text-align: right;
+        }
+
+        .result-row.muted {
+            color: var(--text-soft);
+        }
+
+        .result-row .big {
+            color: var(--text);
+
+            font-size: 1.5rem;
+            font-weight: 800;
+
+            font-variant-numeric: tabular-nums;
+        }
+
+        #error {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .game-help {
+            margin: 14px 0 0;
+
+            color: var(--text-soft);
+
+            font-size: 0.82rem;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                width: min(100% - 20px, 800px);
+                padding: 32px 0;
+            }
+
+            .card {
+                padding: 14px;
+                border-radius: 20px;
+            }
+
+            .type-hud {
+                display: grid;
+                grid-template-columns:
+          repeat(3, minmax(0, 1fr))
+          42px;
+
+                gap: 6px;
+            }
+
+            .hud-item {
+                flex-direction: column;
+                justify-content: center;
+
+                min-width: 0;
+                min-height: 50px;
+
+                padding: 5px 3px;
+
+                font-size: 0.72rem;
+            }
+
+            .hud-item strong {
+                font-size: 0.9rem;
+            }
+
+            .sfx-button {
+                width: 42px;
+                min-height: 50px;
+            }
+
+            .stopwatch-pad {
+                height: 280px;
+                padding: 18px;
+
+                border-radius: 16px;
+            }
+
+            .pad-text {
+                font-size: 1.02rem;
+            }
+
+            .result-row {
+                gap: 12px;
+                padding: 13px 14px;
+
+                font-size: 0.88rem;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .container {
+                width: min(100% - 12px, 800px);
+            }
+
+            .card {
+                padding: 10px;
+            }
+
+            .stopwatch-pad {
+                height: 260px;
+            }
+
+            .result-row {
+                align-items: flex-start;
+                flex-direction: column;
+
+                gap: 5px;
+            }
+
+            .result-row > :last-child {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<main class="container">
+
+    <header class="page-header">
+
+        <h1>⏱️ 스톱워치 챌린지</h1>
+
+        <p class="lead">
+            목표는 정확히 <strong>10.00초</strong>.
+            시작 3초 뒤 숫자가 가려집니다 —
+            남은 7초는 오로지 몸속 시계로.
+            누가 더 근접하는지 승부하세요!
+        </p>
+
+    </header>
+
+    <section
+            class="card typing-card"
+            aria-label="스톱워치 챌린지"
+    >
+
+        <div class="type-hud">
+
+        <span class="hud-item">
+          목표
+          <strong>10.00</strong>
+          <small>초</small>
+        </span>
+
+            <span class="hud-item">
+          이번 오차
+          <strong id="hud-last">-</strong>
+          <small>ms</small>
+        </span>
+
+            <span class="hud-item">
+          최소 오차
+          <strong id="hud-best">-</strong>
+          <small>ms</small>
+        </span>
+
+            <button
+                    id="sfx-btn"
+                    class="secondary sfx-button"
+                    type="button"
+                    aria-label="효과음 켜기"
+                    aria-pressed="false"
+            >
+                🔇
+            </button>
+
+        </div>
+
+        <div
+                id="pad"
+                class="stopwatch-pad"
+                role="button"
+                tabindex="0"
+                aria-label="스톱워치 시작"
+        >
+
+            <div
+                    id="pad-time"
+                    class="pad-time"
+            >
+                0.00
+            </div>
+
+            <div
+                    id="pad-text"
+                    class="pad-text"
+            >
+                터치해서 시작
+            </div>
+
+            <div
+                    id="pad-sub"
+                    class="pad-sub"
+            >
+                3초 뒤 숫자가 사라집니다
+            </div>
+
+        </div>
+
+        <div
+                class="result"
+                id="result"
+                hidden
+        >
+
+            <div class="result-row">
+                <span>멈춘 시각</span>
+                <span
+                        class="big"
+                        id="stopped"
+                >
+            —
+          </span>
+            </div>
+
+            <div class="result-row">
+                <span>오차</span>
+                <strong id="error">—</strong>
+            </div>
+
+            <div class="result-row muted">
+                <span>판정</span>
+                <span id="grade">—</span>
+            </div>
+
+        </div>
+
+        <p class="game-help">
+            💻 마우스 클릭 · 📱 화면 터치 · ⌨️ Space 또는 Enter
+        </p>
+
+    </section>
+
+</main>
+
+<script>
+    "use strict";
+
+    const $ = function (id) {
+        return document.getElementById(id);
+    };
+
+    /*
+     * 게임 설정
+     */
+
+    const TARGET_TIME = 10000;
+    const BLIND_TIME = 3000;
+
+    const BEST_KEY =
+              "stopwatch_best_v1";
+
+    const SFX_KEY =
+              "stopwatch_sfx_v1";
+
+    /*
+     * 상태
+     */
+
+    const pad =
+              $("pad");
+
+    let state =
+            "idle";
+
+    let startTime = 0;
+
+    let animationId = 0;
+
+    let blinded = false;
+
+    /*
+     * 효과음
+     */
+
+    let sfxEnabled =
+            localStorage.getItem(
+                SFX_KEY
+            ) === "1";
+
+    let audioContext = null;
+
+    function updateSfxButton() {
+
+        const button =
+                  $("sfx-btn");
+
+        button.textContent =
+            sfxEnabled
+                ? "🔊"
+                : "🔇";
+
+        button.setAttribute(
+            "aria-pressed",
+            String(sfxEnabled)
+        );
+
+        button.setAttribute(
+            "aria-label",
+            sfxEnabled
+                ? "효과음 끄기"
+                : "효과음 켜기"
+        );
+    }
+
+    function getAudioContext() {
+
+        if (!audioContext) {
+
+            const AudioContextClass =
+                      window.AudioContext ||
+                      window.webkitAudioContext;
+
+            if (!AudioContextClass) {
+                return null;
+            }
+
+            audioContext =
+                new AudioContextClass();
+        }
+
+        if (
+            audioContext.state ===
+            "suspended"
+        ) {
+
+            audioContext.resume();
+        }
+
+        return audioContext;
+    }
+
+    function playTone(
+        frequency,
+        duration,
+        volume,
+        type
+    ) {
+
+        if (!sfxEnabled) {
+            return;
+        }
+
+        const context =
+                  getAudioContext();
+
+        if (!context) {
+            return;
+        }
+
+        const oscillator =
+                  context.createOscillator();
+
+        const gain =
+                  context.createGain();
+
+        oscillator.type =
+            type || "sine";
+
+        oscillator.frequency
+        .setValueAtTime(
+            frequency,
+            context.currentTime
+        );
+
+        gain.gain
+        .setValueAtTime(
+            volume,
+            context.currentTime
+        );
+
+        gain.gain
+        .exponentialRampToValueAtTime(
+            0.001,
+            context.currentTime +
+            duration
+        );
+
+        oscillator.connect(
+            gain
+        );
+
+        gain.connect(
+            context.destination
+        );
+
+        oscillator.start();
+
+        oscillator.stop(
+            context.currentTime +
+            duration
+        );
+    }
+
+    function playStartSound() {
+
+        playTone(
+            440,
+            0.07,
+            0.025,
+            "sine"
+        );
+    }
+
+    function playBlindSound() {
+
+        playTone(
+            330,
+            0.12,
+            0.025,
+            "sine"
+        );
+    }
+
+    function playExcellentSound() {
+
+        playTone(
+            620,
+            0.08,
+            0.025,
+            "sine"
+        );
+
+        window.setTimeout(
+            function () {
+
+                playTone(
+                    880,
+                    0.13,
+                    0.025,
+                    "sine"
+                );
+
+            },
+            80
+        );
+    }
+
+    function playGoodSound() {
+
+        playTone(
+            660,
+            0.1,
+            0.025,
+            "sine"
+        );
+    }
+
+    function playBadSound() {
+
+        playTone(
+            180,
+            0.15,
+            0.035,
+            "square"
+        );
+    }
+
+    $("sfx-btn")
+    .addEventListener(
+        "click",
+        function (event) {
+
+            event.stopPropagation();
+
+            sfxEnabled =
+                !sfxEnabled;
+
+            localStorage.setItem(
+                SFX_KEY,
+                sfxEnabled
+                    ? "1"
+                    : "0"
+            );
+
+            updateSfxButton();
+
+            if (sfxEnabled) {
+
+                playTone(
+                    700,
+                    0.08,
+                    0.03,
+                    "sine"
+                );
+            }
+        }
+    );
+
+    /*
+     * 최소 오차
+     */
+
+    function getBestError() {
+
+        const value =
+                  parseInt(
+                      localStorage.getItem(
+                          BEST_KEY
+                      ),
+                      10
+                  );
+
+        return Number.isFinite(value)
+            ? value
+            : null;
+    }
+
+    function updateBestHud() {
+
+        const best =
+                  getBestError();
+
+        $("hud-best")
+            .textContent =
+            best === null
+                ? "-"
+                : String(best);
+    }
+
+    /*
+     * 판정
+     */
+
+    function getGrade(
+        error
+    ) {
+
+        if (
+            error <= 30
+        ) {
+
+            return "👑 인간 시계 — 상위 0.1%";
+        }
+
+        if (
+            error <= 80
+        ) {
+
+            return "⚡ 신의 감각";
+        }
+
+        if (
+            error <= 200
+        ) {
+
+            return "🥇 리듬 마스터";
+        }
+
+        if (
+            error <= 500
+        ) {
+
+            return "🥈 준수한 감각";
+        }
+
+        if (
+            error <= 1000
+        ) {
+
+            return "🥉 평범한 인간";
+        }
+
+        return "😅 시계를 봅시다";
+    }
+
+    /*
+     * 패드 상태
+     */
+
+    function setPad(
+        running,
+        text,
+        sub
+    ) {
+
+        pad.classList.toggle(
+            "running",
+            running
+        );
+
+        $("pad-text")
+            .textContent =
+            text;
+
+        $("pad-sub")
+            .textContent =
+            sub;
+    }
+
+    /*
+     * 시간 표시
+     */
+
+    function updateTimer() {
+
+        if (
+            state !== "running"
+        ) {
+            return;
+        }
+
+        const elapsed =
+                  performance.now() -
+                  startTime;
+
+        /*
+         * 처음 3초만 시간 표시
+         */
+
+        if (
+            elapsed <
+            BLIND_TIME
+        ) {
+
+            $("pad-time")
+                .textContent =
+                (
+                    elapsed /
+                    1000
+                ).toFixed(2);
+
+        } else {
+
+            $("pad-time")
+                .textContent =
+                "??.??";
+
+            /*
+             * 숫자가 가려지는 순간
+             * 효과음 1회
+             */
+
+            if (!blinded) {
+
+                blinded =
+                    true;
+
+                playBlindSound();
+            }
+        }
+
+        animationId =
+            requestAnimationFrame(
+                updateTimer
+            );
+    }
+
+    /*
+     * 시작
+     */
+
+    function startRun() {
+
+        if (
+            state === "running"
+        ) {
+            return;
+        }
+
+        state =
+            "running";
+
+        startTime =
+            performance.now();
+
+        blinded =
+            false;
+
+        $("result")
+            .hidden =
+            true;
+
+        $("hud-last")
+            .textContent =
+            "-";
+
+        $("pad-time")
+            .textContent =
+            "0.00";
+
+        setPad(
+            true,
+            "10.00초라고 생각되면 탭!",
+            "3초 뒤 숫자가 사라집니다"
+        );
+
+        playStartSound();
+
+        animationId =
+            requestAnimationFrame(
+                updateTimer
+            );
+    }
+
+    /*
+     * 정지
+     */
+
+    function stopRun() {
+
+        if (
+            state !== "running"
+        ) {
+            return;
+        }
+
+        /*
+         * 정지 입력 직후 시간을 먼저 측정
+         */
+
+        const elapsed =
+                  performance.now() -
+                  startTime;
+
+        cancelAnimationFrame(
+            animationId
+        );
+
+        state =
+            "done";
+
+        const error =
+                  Math.round(
+                      Math.abs(
+                          elapsed -
+                          TARGET_TIME
+                      )
+                  );
+
+        /*
+         * 실제 정지 시간
+         */
+
+        $("pad-time")
+            .textContent =
+            (
+                elapsed /
+                1000
+            ).toFixed(2);
+
+        /*
+         * HUD
+         */
+
+        $("hud-last")
+            .textContent =
+            String(error);
+
+        /*
+         * 개인 최소 오차 저장
+         */
+
+        const previousBest =
+                  getBestError();
+
+        const isBest =
+                  previousBest === null ||
+                  error <
+                  previousBest;
+
+        if (isBest) {
+
+            localStorage.setItem(
+                BEST_KEY,
+                String(error)
+            );
+        }
+
+        updateBestHud();
+
+        /*
+         * 결과
+         */
+
+        $("stopped")
+            .textContent =
+            (
+                elapsed /
+                1000
+            ).toFixed(3) +
+            "초";
+
+        /*
+         * 10초보다 늦으면 +
+         * 빠르면 -
+         */
+
+        let errorSign = "";
+
+        if (
+            elapsed >
+            TARGET_TIME
+        ) {
+
+            errorSign = "+";
+
+        } else if (
+            elapsed <
+            TARGET_TIME
+        ) {
+
+            errorSign = "-";
+        }
+
+        $("error")
+            .textContent =
+            errorSign +
+            error +
+            "ms";
+
+        $("grade")
+            .textContent =
+            getGrade(
+                error
+            );
+
+        $("result")
+            .hidden =
+            false;
+
+        /*
+         * 결과 효과음
+         */
+
+        if (
+            error <= 80
+        ) {
+
+            playExcellentSound();
+
+        } else if (
+            error <= 500
+        ) {
+
+            playGoodSound();
+
+        } else {
+
+            playBadSound();
+        }
+
+        /*
+         * 완료 화면
+         */
+
+        setPad(
+            false,
+
+            isBest
+                ? "🎉 신기록! 오차 " +
+                error +
+                "ms"
+                : "오차 " +
+                error +
+                "ms",
+
+            "터치해서 다시 도전"
+        );
+    }
+
+    /*
+     * 입력
+     */
+
+    function handleAction() {
+
+        if (
+            state === "running"
+        ) {
+
+            stopRun();
+
+        } else {
+
+            startRun();
+        }
+    }
+
+    /*
+     * 마우스 / 모바일
+     *
+     * click 대신 pointerdown 사용
+     * 입력 지연을 줄임
+     */
+
+    pad.addEventListener(
+        "pointerdown",
+        function (event) {
+
+            event.preventDefault();
+
+            handleAction();
+        }
+    );
+
+    /*
+     * 키보드
+     */
+
+    window.addEventListener(
+        "keydown",
+        function (event) {
+
+            if (
+                event.key !== " " &&
+                event.key !== "Enter"
+            ) {
+                return;
+            }
+
+            /*
+             * 키를 누르고 있을 때
+             * 자동 반복 방지
+             */
+
+            if (
+                event.repeat
+            ) {
+                return;
+            }
+
+            event.preventDefault();
+
+            handleAction();
+        }
+    );
+
+    /*
+     * 초기화
+     */
+
+    function initialize() {
+
+        updateSfxButton();
+
+        updateBestHud();
+
+        $("hud-last")
+            .textContent =
+            "-";
+
+        $("pad-time")
+            .textContent =
+            "0.00";
+
+        setPad(
+            false,
+            "터치해서 시작",
+            "3초 뒤 숫자가 사라집니다"
+        );
+    }
+
+    initialize();
+</script>
+
+</body>
+</html>
