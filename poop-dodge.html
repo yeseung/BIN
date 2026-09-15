@@ -1,0 +1,2696 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>똥 피하기 게임 - 무료 고전 미니게임</title>
+
+    <meta
+            name="description"
+            content="하늘에서 떨어지는 똥을 피해 최대한 오래 살아남는 무료 똥 피하기 게임입니다. PC 방향키와 모바일 드래그를 지원합니다."
+    >
+    <meta
+            name="keywords"
+            content="똥 피하기, 똥 피하기 게임, 고전게임, 미니게임, 피하기 게임, 무료게임, 웹게임"
+    >
+
+    <meta property="og:title" content="💩 똥 피하기 게임">
+    <meta
+            property="og:description"
+            content="하늘에서 떨어지는 똥을 피해 최대한 오래 버텨보세요!"
+    >
+    <meta property="og:type" content="website">
+
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="manifest" href="/manifest.webmanifest">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+            href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap"
+            rel="stylesheet"
+    >
+
+    <style>
+        :root {
+            --background: #ffffff;
+            --surface: #ffffff;
+            --surface-soft: #f8fafc;
+
+            --text: #111827;
+            --text-soft: #6b7280;
+
+            --border: #e5e7eb;
+            --border-dark: #cbd5e1;
+
+            --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+            --radius: 24px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+
+            background: var(--background);
+            color: var(--text);
+
+            font-family: "Noto Sans KR", sans-serif;
+            letter-spacing: -0.04em;
+            word-break: keep-all;
+        }
+
+        button {
+            font: inherit;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container {
+            width: min(100% - 32px, 800px);
+            margin: 0 auto;
+            padding: 60px 0;
+        }
+
+        .page-header {
+            margin-bottom: 28px;
+            text-align: center;
+        }
+
+        h1 {
+            margin: 0 0 12px;
+
+            font-size: clamp(2rem, 6vw, 3rem);
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .lead {
+            max-width: 680px;
+            margin: 0 auto;
+
+            color: var(--text-soft);
+
+            font-size: 1.05rem;
+            line-height: 1.8;
+        }
+
+        .card {
+            padding: 24px;
+
+            background: var(--surface);
+
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+
+            box-shadow: var(--shadow);
+        }
+
+        /* HUD */
+
+        .type-hud {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+
+            gap: 8px;
+
+            margin-bottom: 16px;
+        }
+
+        .hud-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+
+            min-height: 42px;
+            padding: 8px 14px;
+
+            background: var(--surface-soft);
+
+            border: 1px solid var(--border);
+            border-radius: 14px;
+
+            color: var(--text-soft);
+
+            font-size: 0.88rem;
+            white-space: nowrap;
+        }
+
+        .hud-item strong {
+            color: var(--text);
+
+            font-size: 1rem;
+            font-weight: 800;
+        }
+
+        .hud-item small {
+            font-size: 0.78rem;
+        }
+
+        .secondary {
+            min-height: 42px;
+            padding: 8px 13px;
+
+            background: #ffffff;
+            color: var(--text);
+
+            border: 1px solid var(--border-dark);
+            border-radius: 14px;
+
+            cursor: pointer;
+
+            font-weight: 700;
+
+            transition:
+                    background 0.15s ease,
+                    border-color 0.15s ease,
+                    transform 0.15s ease;
+        }
+
+        .secondary:hover {
+            background: var(--surface-soft);
+            border-color: #94a3b8;
+        }
+
+        .secondary:active {
+            transform: scale(0.97);
+        }
+
+        .secondary:focus-visible {
+            outline: 3px solid rgba(15, 23, 42, 0.12);
+            outline-offset: 2px;
+        }
+
+        .sfx-button {
+            width: 44px;
+            padding: 7px;
+
+            font-size: 1rem;
+            line-height: 1;
+        }
+
+        /* GAME */
+
+        .game-wrap {
+            width: 100%;
+
+            overflow: hidden;
+
+            background:
+                    linear-gradient(
+                            #87ceeb,
+                            #e8f6ff
+                    );
+
+            border-radius: 16px;
+        }
+
+        #game {
+            display: block;
+
+            width: 100%;
+
+            background:
+                    linear-gradient(
+                            #87ceeb,
+                            #e8f6ff
+                    );
+
+            border-radius: 16px;
+
+            cursor: ew-resize;
+
+            touch-action: none;
+
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .game-help {
+            margin: 12px 0 0;
+
+            color: var(--text-soft);
+
+            font-size: 0.85rem;
+            line-height: 1.7;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                width: min(100% - 20px, 800px);
+                padding: 32px 0;
+            }
+
+            .card {
+                padding: 14px;
+                border-radius: 20px;
+            }
+
+            .type-hud {
+                display: grid;
+
+                grid-template-columns:
+          repeat(3, minmax(0, 1fr))
+          42px;
+
+                gap: 6px;
+            }
+
+            .hud-item {
+                flex-direction: column;
+                justify-content: center;
+
+                min-width: 0;
+                min-height: 50px;
+
+                padding: 5px 3px;
+
+                font-size: 0.74rem;
+            }
+
+            .hud-item strong {
+                font-size: 0.88rem;
+            }
+
+            .sfx-button {
+                width: 42px;
+                min-height: 50px;
+            }
+
+            .game-help {
+                font-size: 0.78rem;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .container {
+                width: min(100% - 12px, 800px);
+            }
+
+            .card {
+                padding: 10px;
+            }
+
+            .hud-item {
+                font-size: 0.7rem;
+            }
+
+            .hud-item strong {
+                font-size: 0.82rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<main class="container">
+
+    <header class="page-header">
+
+        <h1>💩 똥 피하기 게임</h1>
+
+        <p class="lead">
+            추억의 고전 미니게임.
+            하늘에서 떨어지는 똥을 피해 최대한 오래 버텨보세요.
+            시간이 갈수록 점점 빨라집니다!
+        </p>
+
+    </header>
+
+    <section
+            class="card typing-card"
+            aria-label="똥 피하기 게임"
+    >
+
+        <div class="type-hud">
+
+        <span class="hud-item">
+          생존
+          <strong id="hud-time">0.0</strong>
+          <small>초</small>
+        </span>
+
+            <span class="hud-item">
+          피한 똥
+          <strong id="hud-dodged">0</strong>
+          <small>개</small>
+        </span>
+
+            <span class="hud-item">
+          최고 기록
+          <strong id="hud-best">0.0</strong>
+          <small>초</small>
+        </span>
+
+            <button
+                    id="sfx-btn"
+                    class="secondary sfx-button"
+                    type="button"
+                    aria-label="효과음 켜기"
+                    aria-pressed="false"
+            >
+                🔇
+            </button>
+
+        </div>
+
+        <div class="game-wrap">
+
+            <canvas
+                    id="game"
+                    aria-label="똥 피하기 게임 화면"
+            ></canvas>
+
+        </div>
+
+        <p class="game-help">
+            💻 PC: ← → 방향키 또는 A / D ·
+            📱 모바일: 드래그한 만큼 이동
+            (손가락 아래에 없어도 OK) ·
+            🛡️ 방패는 한 번 충돌을 막아줍니다
+        </p>
+
+    </section>
+
+</main>
+
+<script>
+    "use strict";
+
+    const $ = function (id) {
+        return document.getElementById(id);
+    };
+
+    const canvas = $("game");
+
+    const ctx =
+              canvas.getContext("2d");
+
+    /*
+     * 랭킹 제거
+     * 최고 기록 1개만 저장
+     */
+
+    const BEST_KEY =
+              "poop_best_v1";
+
+    const SFX_KEY =
+              "poop_sfx_v1";
+
+    /*
+     * Canvas
+     */
+
+    let width = 0;
+    let height = 0;
+    let dpr = 1;
+
+    function resizeCanvas() {
+
+        dpr =
+            Math.min(
+                2,
+                window.devicePixelRatio || 1
+            );
+
+        width =
+            canvas.clientWidth;
+
+        height =
+            Math.min(
+                520,
+                Math.max(
+                    380,
+                    Math.round(
+                        window.innerHeight * 0.55
+                    )
+                )
+            );
+
+        canvas.style.height =
+            height + "px";
+
+        canvas.width =
+            Math.round(
+                width * dpr
+            );
+
+        canvas.height =
+            Math.round(
+                height * dpr
+            );
+
+        ctx.setTransform(
+            dpr,
+            0,
+            0,
+            dpr,
+            0,
+            0
+        );
+
+        ctx.textAlign =
+            "center";
+
+        ctx.textBaseline =
+            "middle";
+    }
+
+    /*
+     * 상태
+     */
+
+    let state = "idle";
+
+    let player;
+
+    let poops = [];
+    let birds = [];
+    let items = [];
+    let warnings = [];
+
+    let particles = [];
+    let clouds = [];
+    let toasts = [];
+
+    let survivalTime = 0;
+    let dodged = 0;
+
+    let spawnAccumulator = 0;
+    let birdAccumulator = 0;
+    let itemAccumulator = 0;
+
+    let lastTimestamp = 0;
+
+    let shake = 0;
+
+    const keys = {};
+
+    /*
+     * 최고 기록
+     */
+
+    function getBestRecord() {
+
+        const value =
+                  Number(
+                      localStorage.getItem(
+                          BEST_KEY
+                      ) || 0
+                  );
+
+        return Number.isFinite(value)
+            ? value
+            : 0;
+    }
+
+    function saveBestRecord(
+        time
+    ) {
+
+        const currentBest =
+                  getBestRecord();
+
+        if (
+            time >
+            currentBest
+        ) {
+
+            const newBest =
+                      Math.round(
+                          time * 10
+                      ) / 10;
+
+            localStorage.setItem(
+                BEST_KEY,
+                String(newBest)
+            );
+
+            return true;
+        }
+
+        return false;
+    }
+
+    function updateBestHud() {
+
+        $("hud-best")
+            .textContent =
+            getBestRecord()
+            .toFixed(1);
+    }
+
+    /*
+     * 효과음
+     */
+
+    let sfxEnabled =
+            localStorage.getItem(
+                SFX_KEY
+            ) === "1";
+
+    let audioContext = null;
+
+    function updateSfxButton() {
+
+        $("sfx-btn")
+            .textContent =
+            sfxEnabled
+                ? "🔊"
+                : "🔇";
+
+        $("sfx-btn")
+        .setAttribute(
+            "aria-pressed",
+            String(sfxEnabled)
+        );
+
+        $("sfx-btn")
+        .setAttribute(
+            "aria-label",
+            sfxEnabled
+                ? "효과음 끄기"
+                : "효과음 켜기"
+        );
+    }
+
+    function getAudioContext() {
+
+        if (!audioContext) {
+
+            const AudioContextClass =
+                      window.AudioContext ||
+                      window.webkitAudioContext;
+
+            if (!AudioContextClass) {
+                return null;
+            }
+
+            audioContext =
+                new AudioContextClass();
+        }
+
+        if (
+            audioContext.state ===
+            "suspended"
+        ) {
+            audioContext.resume();
+        }
+
+        return audioContext;
+    }
+
+    function playTone(
+        frequency,
+        duration,
+        volume,
+        type
+    ) {
+
+        if (!sfxEnabled) {
+            return;
+        }
+
+        const context =
+                  getAudioContext();
+
+        if (!context) {
+            return;
+        }
+
+        const oscillator =
+                  context.createOscillator();
+
+        const gain =
+                  context.createGain();
+
+        oscillator.type =
+            type || "sine";
+
+        oscillator.frequency
+        .setValueAtTime(
+            frequency,
+            context.currentTime
+        );
+
+        gain.gain
+        .setValueAtTime(
+            volume,
+            context.currentTime
+        );
+
+        gain.gain
+        .exponentialRampToValueAtTime(
+            0.001,
+            context.currentTime +
+            duration
+        );
+
+        oscillator.connect(gain);
+
+        gain.connect(
+            context.destination
+        );
+
+        oscillator.start();
+
+        oscillator.stop(
+            context.currentTime +
+            duration
+        );
+    }
+
+    function playClickSound() {
+
+        playTone(
+            440,
+            0.06,
+            0.025,
+            "sine"
+        );
+    }
+
+    function playBadSound() {
+
+        playTone(
+            150,
+            0.18,
+            0.04,
+            "square"
+        );
+    }
+
+    function playItemSound() {
+
+        playTone(
+            650,
+            0.08,
+            0.03,
+            "sine"
+        );
+
+        window.setTimeout(
+            function () {
+
+                playTone(
+                    900,
+                    0.12,
+                    0.03,
+                    "sine"
+                );
+
+            },
+            70
+        );
+    }
+
+    function playBoomSound() {
+
+        playTone(
+            95,
+            0.4,
+            0.055,
+            "sawtooth"
+        );
+
+        window.setTimeout(
+            function () {
+
+                playTone(
+                    55,
+                    0.5,
+                    0.04,
+                    "square"
+                );
+
+            },
+            80
+        );
+    }
+
+    $("sfx-btn")
+    .addEventListener(
+        "click",
+        function () {
+
+            sfxEnabled =
+                !sfxEnabled;
+
+            localStorage.setItem(
+                SFX_KEY,
+                sfxEnabled
+                    ? "1"
+                    : "0"
+            );
+
+            updateSfxButton();
+
+            if (sfxEnabled) {
+
+                playTone(
+                    700,
+                    0.08,
+                    0.03,
+                    "sine"
+                );
+            }
+        }
+    );
+
+    /*
+     * 초기화
+     */
+
+    function resetGame() {
+
+        player = {
+            x:
+                width / 2,
+
+            y:
+                height - 34,
+
+            radius: 15,
+
+            targetX:
+                width / 2,
+
+            shield: false,
+
+            flash: 0
+        };
+
+        poops = [];
+        birds = [];
+        items = [];
+        warnings = [];
+
+        particles = [];
+        toasts = [];
+
+        survivalTime = 0;
+        dodged = 0;
+
+        spawnAccumulator = 0;
+        birdAccumulator = 0;
+        itemAccumulator = 0;
+
+        lastTimestamp = 0;
+
+        shake = 0;
+
+        clouds =
+            Array.from(
+                {
+                    length: 3
+                },
+                function () {
+
+                    return {
+                        x:
+                            Math.random() *
+                            width,
+
+                        y:
+                            24 +
+                            Math.random() *
+                            height *
+                            0.3,
+
+                        size:
+                            22 +
+                            Math.random() *
+                            16,
+
+                        speed:
+                            8 +
+                            Math.random() *
+                            14
+                    };
+                }
+            );
+
+        $("hud-time")
+            .textContent =
+            "0.0";
+
+        $("hud-dodged")
+            .textContent =
+            "0";
+    }
+
+    /*
+     * 파티클
+     */
+
+    function burst(
+        x,
+        y,
+        colors,
+        count,
+        speed
+    ) {
+
+        const particleCount =
+                  count === undefined
+                      ? 18
+                      : count;
+
+        const particleSpeed =
+                  speed === undefined
+                      ? 230
+                      : speed;
+
+        for (
+            let i = 0;
+            i < particleCount;
+            i++
+        ) {
+
+            const angle =
+                      Math.random() *
+                      Math.PI *
+                      2;
+
+            const velocity =
+                      particleSpeed *
+                      (
+                          0.3 +
+                          Math.random()
+                      );
+
+            particles.push({
+                x: x,
+                y: y,
+
+                vx:
+                    Math.cos(angle) *
+                    velocity,
+
+                vy:
+                    Math.sin(angle) *
+                    velocity -
+                    70,
+
+                life:
+                    0.5 +
+                    Math.random() *
+                    0.5,
+
+                size:
+                    2 +
+                    Math.random() *
+                    4,
+
+                color:
+                    colors[
+                        Math.floor(
+                            Math.random() *
+                            colors.length
+                        )
+                        ]
+            });
+        }
+    }
+
+    function updateEffects(
+        deltaTime
+    ) {
+
+        for (
+            let i =
+                    particles.length - 1;
+            i >= 0;
+            i--
+        ) {
+
+            const particle =
+                      particles[i];
+
+            particle.life -=
+                deltaTime;
+
+            if (
+                particle.life <= 0
+            ) {
+
+                particles.splice(
+                    i,
+                    1
+                );
+
+                continue;
+            }
+
+            particle.vy +=
+                520 *
+                deltaTime;
+
+            particle.x +=
+                particle.vx *
+                deltaTime;
+
+            particle.y +=
+                particle.vy *
+                deltaTime;
+        }
+
+        shake =
+            shake > 0.4
+                ? shake *
+                Math.pow(
+                    0.002,
+                    deltaTime
+                )
+                : 0;
+    }
+
+    /*
+     * 일반 게임 안내
+     *
+     * 랭킹 관련 알림은 없음
+     */
+
+    function showToast(
+        text
+    ) {
+
+        toasts.push({
+            text: text,
+            until:
+                survivalTime +
+                2.4
+        });
+    }
+
+    /*
+     * 난이도
+     */
+
+    function getSpawnInterval() {
+
+        return Math.max(
+            0.13,
+            0.62 -
+            survivalTime *
+            0.013
+        );
+    }
+
+    function getFallSpeed() {
+
+        return (
+            150 +
+            survivalTime *
+            7 +
+            Math.random() *
+            70
+        );
+    }
+
+    /*
+     * 똥 생성
+     */
+
+    function spawnPoop() {
+
+        const roll =
+                  Math.random();
+
+        const base = {
+            rotation:
+                Math.random() *
+                Math.PI *
+                2,
+
+            rotationSpeed:
+                (
+                    Math.random() -
+                    0.5
+                ) *
+                5,
+
+            sway: 0,
+            swaySpeed: 0
+        };
+
+        /*
+         * 40초 이후
+         * 대형 경고똥
+         */
+
+        if (
+            survivalTime > 40 &&
+            roll < 0.12
+        ) {
+
+            const radius = 26;
+
+            const x =
+                      radius +
+                      Math.random() *
+                      (
+                          width -
+                          radius * 2
+                      );
+
+            warnings.push({
+                x: x,
+                timer: 0.7,
+                radius: radius
+            });
+
+            return;
+        }
+
+        /*
+         * 25초 이후
+         * 지그재그똥
+         */
+
+        if (
+            survivalTime > 25 &&
+            roll < 0.30
+        ) {
+
+            const radius =
+                      13 +
+                      Math.random() *
+                      6;
+
+            poops.push({
+                ...base,
+
+                x:
+                    radius +
+                    Math.random() *
+                    (
+                        width -
+                        radius * 2
+                    ),
+
+                y:
+                    -radius * 2,
+
+                radius: radius,
+
+                velocityY:
+                    getFallSpeed() *
+                    0.85,
+
+                sway:
+                    60 +
+                    Math.random() *
+                    50,
+
+                swaySpeed:
+                    3 +
+                    Math.random() *
+                    3,
+
+                phase:
+                    Math.random() *
+                    Math.PI *
+                    2
+            });
+
+            return;
+        }
+
+        /*
+         * 12초 이후
+         * 쾌속똥
+         */
+
+        if (
+            survivalTime > 12 &&
+            roll < 0.45
+        ) {
+
+            const radius =
+                      9 +
+                      Math.random() *
+                      4;
+
+            poops.push({
+                ...base,
+
+                x:
+                    radius +
+                    Math.random() *
+                    (
+                        width -
+                        radius * 2
+                    ),
+
+                y:
+                    -radius * 2,
+
+                radius: radius,
+
+                velocityY:
+                    getFallSpeed() *
+                    1.6,
+
+                fast: true
+            });
+
+            return;
+        }
+
+        /*
+         * 일반똥
+         */
+
+        const radius =
+                  13 +
+                  Math.random() *
+                  8;
+
+        poops.push({
+            ...base,
+
+            x:
+                radius +
+                Math.random() *
+                (
+                    width -
+                    radius * 2
+                ),
+
+            y:
+                -radius * 2,
+
+            radius: radius,
+
+            velocityY:
+                getFallSpeed()
+        });
+    }
+
+    /*
+     * 비둘기
+     */
+
+    function spawnBird() {
+
+        const fromLeft =
+                  Math.random() < 0.5;
+
+        const y =
+                  height -
+                  34 -
+                  Math.random() *
+                  70;
+
+        birds.push({
+            x:
+                fromLeft
+                    ? -30
+                    : width + 30,
+
+            y: y,
+
+            velocityX:
+                (
+                    fromLeft
+                        ? 1
+                        : -1
+                ) *
+                (
+                    180 +
+                    survivalTime *
+                    3
+                ),
+
+            radius: 14
+        });
+    }
+
+    /*
+     * 충돌
+     *
+     * 방패가 있으면 한 번 방어
+     */
+
+    function hitPlayer() {
+
+        if (
+            player.shield
+        ) {
+
+            player.shield =
+                false;
+
+            player.flash =
+                0.8;
+
+            burst(
+                player.x,
+                player.y,
+
+                [
+                    "#5b8bff",
+                    "#9cc0ff",
+                    "#ffd76a"
+                ],
+
+                16,
+                200
+            );
+
+            shake = 7;
+
+            playBadSound();
+
+            showToast(
+                "🛡️ 방패가 충돌을 막았습니다!"
+            );
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /*
+     * 메인 루프
+     */
+
+    function frame(
+        timestamp
+    ) {
+
+        if (
+            state !== "playing"
+        ) {
+            return;
+        }
+
+        if (!lastTimestamp) {
+
+            lastTimestamp =
+                timestamp;
+        }
+
+        const deltaTime =
+                  Math.min(
+                      0.05,
+                      (
+                          timestamp -
+                          lastTimestamp
+                      ) / 1000
+                  );
+
+        lastTimestamp =
+            timestamp;
+
+        survivalTime +=
+            deltaTime;
+
+        if (
+            player.flash > 0
+        ) {
+
+            player.flash -=
+                deltaTime;
+        }
+
+        /*
+         * 이동
+         */
+
+        const speed = 360;
+
+        if (
+            keys.ArrowLeft ||
+            keys.a ||
+            keys.A
+        ) {
+
+            player.targetX =
+                player.x -
+                speed *
+                deltaTime *
+                1.6;
+        }
+
+        if (
+            keys.ArrowRight ||
+            keys.d ||
+            keys.D
+        ) {
+
+            player.targetX =
+                player.x +
+                speed *
+                deltaTime *
+                1.6;
+        }
+
+        const moveX =
+                  player.targetX -
+                  player.x;
+
+        player.x +=
+            Math.sign(
+                moveX
+            ) *
+            Math.min(
+                Math.abs(
+                    moveX
+                ),
+                speed *
+                deltaTime
+            );
+
+        player.x =
+            Math.max(
+                player.radius,
+                Math.min(
+                    width -
+                    player.radius,
+                    player.x
+                )
+            );
+
+        /*
+         * 똥 생성
+         */
+
+        spawnAccumulator +=
+            deltaTime;
+
+        const spawnInterval =
+                  getSpawnInterval();
+
+        while (
+            spawnAccumulator >=
+            spawnInterval
+            ) {
+
+            spawnAccumulator -=
+                spawnInterval;
+
+            spawnPoop();
+        }
+
+        /*
+         * 30초 이후 비둘기
+         */
+
+        if (
+            survivalTime > 30
+        ) {
+
+            birdAccumulator +=
+                deltaTime;
+
+            if (
+                birdAccumulator >
+                6 +
+                Math.random() *
+                4
+            ) {
+
+                birdAccumulator = 0;
+
+                spawnBird();
+            }
+        }
+
+        /*
+         * 약 14초마다 방패
+         *
+         * 이미 방패가 있으면
+         * 추가 생성하지 않음
+         */
+
+        itemAccumulator +=
+            deltaTime;
+
+        if (
+            itemAccumulator > 14 &&
+            !player.shield
+        ) {
+
+            itemAccumulator = 0;
+
+            items.push({
+                x:
+                    20 +
+                    Math.random() *
+                    (
+                        width -
+                        40
+                    ),
+
+                y: -20,
+
+                velocityY: 120,
+
+                radius: 12
+            });
+        }
+
+        /*
+         * 경고 후 대형똥
+         */
+
+        for (
+            let i =
+                    warnings.length - 1;
+            i >= 0;
+            i--
+        ) {
+
+            const warning =
+                      warnings[i];
+
+            warning.timer -=
+                deltaTime;
+
+            if (
+                warning.timer <= 0
+            ) {
+
+                poops.push({
+                    x:
+                    warning.x,
+
+                    y:
+                        -warning.radius *
+                        2,
+
+                    radius:
+                    warning.radius,
+
+                    velocityY:
+                        getFallSpeed() *
+                        2.2,
+
+                    rotation: 0,
+
+                    rotationSpeed: 1,
+
+                    big: true
+                });
+
+                warnings.splice(
+                    i,
+                    1
+                );
+            }
+        }
+
+        /*
+         * 똥 이동
+         */
+
+        for (
+            let i =
+                    poops.length - 1;
+            i >= 0;
+            i--
+        ) {
+
+            const poop =
+                      poops[i];
+
+            poop.y +=
+                poop.velocityY *
+                deltaTime;
+
+            poop.rotation +=
+                poop.rotationSpeed *
+                deltaTime;
+
+            /*
+             * 지그재그
+             */
+
+            if (
+                poop.sway
+            ) {
+
+                poop.x =
+                    Math.max(
+                        poop.radius,
+
+                        Math.min(
+                            width -
+                            poop.radius,
+
+                            poop.x +
+                            Math.cos(
+                                survivalTime *
+                                poop.swaySpeed +
+                                poop.phase
+                            ) *
+                            poop.sway *
+                            deltaTime
+                        )
+                    );
+            }
+
+            /*
+             * 화면 아래로 통과
+             */
+
+            if (
+                poop.y -
+                poop.radius >
+                height
+            ) {
+
+                poops.splice(
+                    i,
+                    1
+                );
+
+                dodged++;
+
+                continue;
+            }
+
+            /*
+             * 충돌
+             */
+
+            const dx =
+                      poop.x -
+                      player.x;
+
+            const dy =
+                      poop.y -
+                      player.y;
+
+            const collisionRadius =
+                      poop.radius +
+                      player.radius -
+                      6;
+
+            if (
+                dx * dx +
+                dy * dy <
+                collisionRadius *
+                collisionRadius
+            ) {
+
+                poops.splice(
+                    i,
+                    1
+                );
+
+                if (
+                    hitPlayer()
+                ) {
+
+                    gameOver();
+
+                    return;
+                }
+            }
+        }
+
+        /*
+         * 비둘기 이동
+         */
+
+        for (
+            let i =
+                    birds.length - 1;
+            i >= 0;
+            i--
+        ) {
+
+            const bird =
+                      birds[i];
+
+            bird.x +=
+                bird.velocityX *
+                deltaTime;
+
+            if (
+                bird.x < -40 ||
+                bird.x >
+                width + 40
+            ) {
+
+                birds.splice(
+                    i,
+                    1
+                );
+
+                continue;
+            }
+
+            const dx =
+                      bird.x -
+                      player.x;
+
+            const dy =
+                      bird.y -
+                      player.y;
+
+            const collisionRadius =
+                      bird.radius +
+                      player.radius -
+                      6;
+
+            if (
+                dx * dx +
+                dy * dy <
+                collisionRadius *
+                collisionRadius
+            ) {
+
+                birds.splice(
+                    i,
+                    1
+                );
+
+                if (
+                    hitPlayer()
+                ) {
+
+                    gameOver();
+
+                    return;
+                }
+            }
+        }
+
+        /*
+         * 방패 아이템
+         */
+
+        for (
+            let i =
+                    items.length - 1;
+            i >= 0;
+            i--
+        ) {
+
+            const item =
+                      items[i];
+
+            item.y +=
+                item.velocityY *
+                deltaTime;
+
+            if (
+                item.y -
+                item.radius >
+                height
+            ) {
+
+                items.splice(
+                    i,
+                    1
+                );
+
+                continue;
+            }
+
+            const dx =
+                      item.x -
+                      player.x;
+
+            const dy =
+                      item.y -
+                      player.y;
+
+            const collisionRadius =
+                      item.radius +
+                      player.radius;
+
+            if (
+                dx * dx +
+                dy * dy <
+                collisionRadius *
+                collisionRadius
+            ) {
+
+                items.splice(
+                    i,
+                    1
+                );
+
+                player.shield =
+                    true;
+
+                burst(
+                    player.x,
+                    player.y - 10,
+
+                    [
+                        "#5b8bff",
+                        "#c3d8ff",
+                        "#ffffff"
+                    ],
+
+                    12,
+                    150
+                );
+
+                playItemSound();
+
+                showToast(
+                    "🛡️ 방패 획득!"
+                );
+            }
+        }
+
+        /*
+         * 구름
+         */
+
+        for (
+            const cloud of clouds
+            ) {
+
+            cloud.x +=
+                cloud.speed *
+                deltaTime;
+
+            if (
+                cloud.x -
+                cloud.size >
+                width
+            ) {
+
+                cloud.x =
+                    -cloud.size;
+            }
+        }
+
+        updateEffects(
+            deltaTime
+        );
+
+        draw();
+
+        /*
+         * HUD
+         */
+
+        $("hud-time")
+            .textContent =
+            survivalTime
+            .toFixed(1);
+
+        $("hud-dodged")
+            .textContent =
+            String(dodged);
+
+        requestAnimationFrame(
+            frame
+        );
+    }
+
+    /*
+     * 화면 그리기
+     */
+
+    function draw() {
+
+        ctx.clearRect(
+            0,
+            0,
+            width,
+            height
+        );
+
+        /*
+         * 하늘 배경
+         */
+
+        const sky =
+                  ctx.createLinearGradient(
+                      0,
+                      0,
+                      0,
+                      height
+                  );
+
+        sky.addColorStop(
+            0,
+            "#87ceeb"
+        );
+
+        sky.addColorStop(
+            1,
+            "#e8f6ff"
+        );
+
+        ctx.fillStyle = sky;
+
+        ctx.fillRect(
+            0,
+            0,
+            width,
+            height
+        );
+
+        ctx.save();
+
+        /*
+         * 화면 흔들림
+         */
+
+        if (
+            shake > 0
+        ) {
+
+            ctx.translate(
+                (
+                    Math.random() -
+                    0.5
+                ) *
+                shake,
+
+                (
+                    Math.random() -
+                    0.5
+                ) *
+                shake
+            );
+        }
+
+        /*
+         * 구름
+         */
+
+        ctx.globalAlpha =
+            0.8;
+
+        for (
+            const cloud of clouds
+            ) {
+
+            ctx.font =
+                cloud.size +
+                "px serif";
+
+            ctx.fillText(
+                "☁️",
+                cloud.x,
+                cloud.y
+            );
+        }
+
+        ctx.globalAlpha = 1;
+
+        /*
+         * 바닥
+         */
+
+        ctx.fillStyle =
+            "rgba(120,180,90,0.55)";
+
+        ctx.fillRect(
+            0,
+            height - 14,
+            width,
+            14
+        );
+
+        /*
+         * 대형똥 경고
+         */
+
+        for (
+            const warning of
+            warnings
+            ) {
+
+            const alpha =
+                      0.25 +
+                      0.35 *
+                      Math.abs(
+                          Math.sin(
+                              warning.timer *
+                              12
+                          )
+                      );
+
+            ctx.fillStyle =
+                "rgba(220,60,40," +
+                alpha +
+                ")";
+
+            ctx.fillRect(
+                warning.x -
+                warning.radius,
+                0,
+                warning.radius * 2,
+                height
+            );
+
+            ctx.font =
+                "22px serif";
+
+            ctx.fillText(
+                "⚠️",
+                warning.x,
+                24
+            );
+        }
+
+        /*
+         * 방패 효과
+         */
+
+        if (
+            player.shield ||
+            player.flash > 0
+        ) {
+
+            ctx.strokeStyle =
+                player.shield
+                    ? "rgba(60,140,255,0.8)"
+                    : "rgba(255,210,60," +
+                    player.flash +
+                    ")";
+
+            ctx.lineWidth = 3;
+
+            ctx.beginPath();
+
+            ctx.arc(
+                player.x,
+                player.y,
+                player.radius + 9,
+                0,
+                Math.PI * 2
+            );
+
+            ctx.stroke();
+        }
+
+        /*
+         * 플레이어
+         */
+
+        ctx.font =
+            "30px serif";
+
+        ctx.fillText(
+            state === "over"
+                ? "😵"
+                : "🙂",
+
+            player.x,
+            player.y
+        );
+
+        /*
+         * 똥
+         */
+
+        for (
+            const poop of poops
+            ) {
+
+            ctx.save();
+
+            ctx.translate(
+                poop.x,
+                poop.y
+            );
+
+            ctx.rotate(
+                poop.rotation
+            );
+
+            ctx.font =
+                poop.radius * 2 +
+                "px serif";
+
+            ctx.fillText(
+                "💩",
+                0,
+                0
+            );
+
+            ctx.restore();
+        }
+
+        /*
+         * 비둘기
+         */
+
+        ctx.font =
+            "26px serif";
+
+        for (
+            const bird of birds
+            ) {
+
+            ctx.save();
+
+            ctx.translate(
+                bird.x,
+                bird.y
+            );
+
+            if (
+                bird.velocityX > 0
+            ) {
+
+                ctx.scale(
+                    -1,
+                    1
+                );
+            }
+
+            ctx.fillText(
+                "🐦",
+                0,
+                0
+            );
+
+            ctx.restore();
+        }
+
+        /*
+         * 방패
+         */
+
+        ctx.font =
+            "22px serif";
+
+        for (
+            const item of items
+            ) {
+
+            ctx.fillText(
+                "🛡️",
+                item.x,
+                item.y
+            );
+        }
+
+        /*
+         * 파티클
+         */
+
+        for (
+            const particle of
+            particles
+            ) {
+
+            ctx.globalAlpha =
+                Math.min(
+                    1,
+                    particle.life *
+                    2.2
+                );
+
+            ctx.fillStyle =
+                particle.color;
+
+            ctx.beginPath();
+
+            ctx.arc(
+                particle.x,
+                particle.y,
+                particle.size,
+                0,
+                Math.PI * 2
+            );
+
+            ctx.fill();
+        }
+
+        ctx.globalAlpha = 1;
+
+        ctx.restore();
+
+        /*
+         * 일반 게임 알림
+         */
+
+        toasts =
+            toasts.filter(
+                function (message) {
+
+                    return (
+                        message.until >
+                        survivalTime
+                    );
+                }
+            );
+
+        let toastY = 40;
+
+        for (
+            const message of
+            toasts
+            ) {
+
+            ctx.font =
+                "700 16px 'Noto Sans KR', sans-serif";
+
+            const toastWidth =
+                      ctx.measureText(
+                          message.text
+                      ).width +
+                      28;
+
+            ctx.fillStyle =
+                "rgba(20,26,48,0.78)";
+
+            ctx.beginPath();
+
+            if (
+                typeof ctx.roundRect ===
+                "function"
+            ) {
+
+                ctx.roundRect(
+                    width / 2 -
+                    toastWidth / 2,
+                    toastY - 16,
+                    toastWidth,
+                    32,
+                    16
+                );
+
+            } else {
+
+                ctx.rect(
+                    width / 2 -
+                    toastWidth / 2,
+                    toastY - 16,
+                    toastWidth,
+                    32
+                );
+            }
+
+            ctx.fill();
+
+            ctx.fillStyle =
+                "#ffd76a";
+
+            ctx.fillText(
+                message.text,
+                width / 2,
+                toastY
+            );
+
+            toastY += 40;
+        }
+    }
+
+    /*
+     * 오버레이
+     */
+
+    function drawOverlay(
+        lines
+    ) {
+
+        ctx.fillStyle =
+            "rgba(15,20,35,0.55)";
+
+        ctx.fillRect(
+            0,
+            0,
+            width,
+            height
+        );
+
+        ctx.fillStyle =
+            "#ffffff";
+
+        lines.forEach(
+            function (line) {
+
+                ctx.font =
+                    "700 " +
+                    line.size +
+                    "px 'Noto Sans KR', sans-serif";
+
+                ctx.fillText(
+                    line.text,
+                    width / 2,
+                    height / 2 +
+                    line.offset
+                );
+            }
+        );
+    }
+
+    /*
+     * 대기 화면
+     */
+
+    function drawIdle() {
+
+        resetGame();
+
+        draw();
+
+        drawOverlay([
+            {
+                text:
+                    "💩 똥 피하기",
+                size: 28,
+                offset: -42
+            },
+            {
+                text:
+                    "화면을 터치하면 시작!",
+                size: 16,
+                offset: -2
+            },
+            {
+                text:
+                    "드래그한 만큼 이동 · ← → 키",
+                size: 13,
+                offset: 24
+            },
+            {
+                text:
+                    "🛡️ 를 먹으면 한 번 버틸 수 있어요",
+                size: 13,
+                offset: 46
+            }
+        ]);
+    }
+
+    /*
+     * 게임 오버
+     */
+
+    function gameOver() {
+
+        if (
+            state !== "playing"
+        ) {
+            return;
+        }
+
+        state = "over";
+
+        playBoomSound();
+
+        burst(
+            player.x,
+            player.y,
+
+            [
+                "#8b5a2b",
+                "#6b4423",
+                "#a0522d",
+                "#4a2f18"
+            ],
+
+            28,
+            280
+        );
+
+        shake = 14;
+
+        const isBest =
+                  saveBestRecord(
+                      survivalTime
+                  );
+
+        updateBestHud();
+
+        /*
+         * 약 0.9초 사망 연출
+         */
+
+        const animationStart =
+                  performance.now();
+
+        let previousTime =
+                animationStart;
+
+        function deathLoop(
+            now
+        ) {
+
+            now =
+                now ||
+                performance.now();
+
+            const deltaTime =
+                      Math.min(
+                          0.05,
+                          (
+                              now -
+                              previousTime
+                          ) / 1000
+                      );
+
+            previousTime =
+                now;
+
+            updateEffects(
+                deltaTime
+            );
+
+            draw();
+
+            if (
+                now -
+                animationStart <
+                900 &&
+                state === "over"
+            ) {
+
+                requestAnimationFrame(
+                    deathLoop
+                );
+
+                return;
+            }
+
+            draw();
+
+            drawOverlay([
+                {
+                    text:
+                        "생존 " +
+                        survivalTime.toFixed(1) +
+                        "초",
+
+                    size: 30,
+                    offset: -34
+                },
+                {
+                    text:
+                        "피한 똥 " +
+                        dodged +
+                        "개",
+
+                    size: 16,
+                    offset: 2
+                },
+                {
+                    text:
+                        isBest
+                            ? "🎉 최고 기록 갱신!"
+                            : "터치해서 다시 도전",
+
+                    size: 15,
+                    offset: 32
+                }
+            ]);
+        }
+
+        requestAnimationFrame(
+            deathLoop
+        );
+    }
+
+    /*
+     * 게임 시작
+     */
+
+    function startGame() {
+
+        if (
+            state === "playing"
+        ) {
+            return;
+        }
+
+        resetGame();
+
+        state = "playing";
+
+        playClickSound();
+
+        requestAnimationFrame(
+            frame
+        );
+    }
+
+    /*
+     * 모바일 상대 드래그
+     */
+
+    let drag = null;
+
+    canvas.addEventListener(
+        "pointerdown",
+        function (event) {
+
+            event.preventDefault();
+
+            canvas.setPointerCapture(
+                event.pointerId
+            );
+
+            if (
+                state !== "playing"
+            ) {
+
+                startGame();
+            }
+
+            const rect =
+                      canvas.getBoundingClientRect();
+
+            const scaleX =
+                      width /
+                      rect.width;
+
+            drag = {
+                pointerX:
+                    (
+                        event.clientX -
+                        rect.left
+                    ) *
+                    scaleX,
+
+                targetX:
+                player.targetX
+            };
+        }
+    );
+
+    canvas.addEventListener(
+        "pointermove",
+        function (event) {
+
+            if (
+                state !== "playing" ||
+                !drag
+            ) {
+                return;
+            }
+
+            const rect =
+                      canvas.getBoundingClientRect();
+
+            const scaleX =
+                      width /
+                      rect.width;
+
+            const pointerX =
+                      (
+                          event.clientX -
+                          rect.left
+                      ) *
+                      scaleX;
+
+            /*
+             * 손가락 이동 거리의
+             * 1.2배만큼 캐릭터 이동
+             */
+
+            player.targetX =
+                drag.targetX +
+                (
+                    pointerX -
+                    drag.pointerX
+                ) *
+                1.2;
+        }
+    );
+
+    canvas.addEventListener(
+        "pointerup",
+        function () {
+
+            drag = null;
+        }
+    );
+
+    canvas.addEventListener(
+        "pointercancel",
+        function () {
+
+            drag = null;
+        }
+    );
+
+    /*
+     * 키보드
+     */
+
+    window.addEventListener(
+        "keydown",
+        function (event) {
+
+            const validKeys = [
+                "ArrowLeft",
+                "ArrowRight",
+                "a",
+                "d",
+                "A",
+                "D"
+            ];
+
+            if (
+                validKeys.includes(
+                    event.key
+                )
+            ) {
+
+                keys[
+                    event.key
+                    ] = true;
+
+                if (
+                    state !== "playing"
+                ) {
+
+                    startGame();
+                }
+
+                if (
+                    state === "playing"
+                ) {
+
+                    event.preventDefault();
+                }
+            }
+        }
+    );
+
+    window.addEventListener(
+        "keyup",
+        function (event) {
+
+            keys[
+                event.key
+                ] = false;
+        }
+    );
+
+    /*
+     * 창 크기 변경
+     */
+
+    window.addEventListener(
+        "resize",
+        function () {
+
+            resizeCanvas();
+
+            if (
+                state === "idle"
+            ) {
+
+                drawIdle();
+
+                return;
+            }
+
+            if (
+                player
+            ) {
+
+                player.y =
+                    height - 34;
+
+                player.x =
+                    Math.max(
+                        player.radius,
+                        Math.min(
+                            width -
+                            player.radius,
+                            player.x
+                        )
+                    );
+
+                player.targetX =
+                    player.x;
+            }
+
+            if (
+                state === "over"
+            ) {
+
+                draw();
+
+                drawOverlay([
+                    {
+                        text:
+                            "생존 " +
+                            survivalTime.toFixed(1) +
+                            "초",
+
+                        size: 30,
+                        offset: -34
+                    },
+                    {
+                        text:
+                            "피한 똥 " +
+                            dodged +
+                            "개",
+
+                        size: 16,
+                        offset: 2
+                    },
+                    {
+                        text:
+                            "터치해서 다시 도전",
+
+                        size: 15,
+                        offset: 32
+                    }
+                ]);
+            }
+        }
+    );
+
+    /*
+     * 초기화
+     */
+
+    function initializeGame() {
+
+        resizeCanvas();
+
+        updateSfxButton();
+
+        updateBestHud();
+
+        drawIdle();
+    }
+
+    initializeGame();
+</script>
+
+</body>
+</html>
