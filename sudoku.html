@@ -1,0 +1,3302 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>스도쿠 - 무료 숫자 퍼즐</title>
+
+    <meta
+            name="description"
+            content="가로, 세로, 3×3 박스에 1부터 9까지 숫자를 채우는 무료 스도쿠 퍼즐입니다. 초급, 중급, 고급 난이도와 오늘의 퍼즐을 제공합니다."
+    >
+    <meta
+            name="keywords"
+            content="스도쿠, Sudoku, 숫자 퍼즐, 스도쿠 게임, 무료 퍼즐, 두뇌 게임, 웹게임"
+    >
+
+    <meta property="og:title" content="🔢 스도쿠">
+    <meta
+            property="og:description"
+            content="매판 새롭게 생성되는 유일해 스도쿠 퍼즐에 도전하세요."
+    >
+    <meta property="og:type" content="website">
+
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="manifest" href="/manifest.webmanifest">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+            href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap"
+            rel="stylesheet"
+    >
+
+    <style>
+        :root {
+            --background: #ffffff;
+            --surface: #ffffff;
+            --surface-soft: #f8fafc;
+
+            --text: #111827;
+            --text-soft: #64748b;
+
+            --border: #e2e8f0;
+            --border-strong: #475569;
+
+            --accent: #2563eb;
+            --accent-weak: #eff6ff;
+            --accent-soft: #dbeafe;
+
+            --peer: #f8fafc;
+            --same: #dbeafe;
+
+            --wrong: #dc2626;
+            --wrong-bg: #fef2f2;
+
+            --success: #15803d;
+
+            --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+            --radius: 24px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+
+            background: var(--background);
+            color: var(--text);
+
+            font-family: "Noto Sans KR", sans-serif;
+            letter-spacing: -0.04em;
+            word-break: keep-all;
+        }
+
+        button {
+            font: inherit;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container {
+            width: min(100% - 32px, 720px);
+            margin: 0 auto;
+            padding: 60px 0;
+        }
+
+        .page-header {
+            margin-bottom: 28px;
+            text-align: center;
+        }
+
+        h1 {
+            margin: 0 0 12px;
+
+            font-size: clamp(2rem, 6vw, 3rem);
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .lead {
+            max-width: 680px;
+            margin: 0 auto;
+
+            color: var(--text-soft);
+
+            font-size: 1.05rem;
+            line-height: 1.8;
+        }
+
+        .card {
+            padding: 24px;
+
+            background: var(--surface);
+
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+
+            box-shadow: var(--shadow);
+        }
+
+        /* 난이도 */
+
+        .tabs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+
+            gap: 6px;
+
+            margin-bottom: 14px;
+            padding: 5px;
+
+            background: var(--surface-soft);
+
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+
+        .tab {
+            min-height: 42px;
+            padding: 8px 12px;
+
+            background: transparent;
+            color: var(--text-soft);
+
+            border: 0;
+            border-radius: 11px;
+
+            cursor: pointer;
+
+            font-weight: 700;
+
+            transition:
+                    background 0.15s ease,
+                    color 0.15s ease,
+                    box-shadow 0.15s ease;
+        }
+
+        .tab:hover {
+            color: var(--text);
+        }
+
+        .tab.active {
+            background: #ffffff;
+            color: var(--text);
+
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+        }
+
+        .tab:focus-visible {
+            outline: 3px solid rgba(37, 99, 235, 0.16);
+            outline-offset: 2px;
+        }
+
+        /* HUD */
+
+        .type-hud {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+
+            gap: 8px;
+
+            margin-bottom: 20px;
+        }
+
+        .hud-item {
+            display: inline-flex;
+            align-items: center;
+
+            gap: 5px;
+
+            min-height: 42px;
+            padding: 8px 14px;
+
+            background: var(--surface-soft);
+
+            border: 1px solid var(--border);
+            border-radius: 14px;
+
+            color: var(--text-soft);
+
+            font-size: 0.88rem;
+            white-space: nowrap;
+        }
+
+        .hud-item strong {
+            color: var(--text);
+
+            font-size: 1rem;
+            font-weight: 800;
+
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* 공통 버튼 */
+
+        .secondary {
+            min-height: 42px;
+            padding: 8px 14px;
+
+            background: #ffffff;
+            color: var(--text);
+
+            border: 1px solid #cbd5e1;
+            border-radius: 14px;
+
+            cursor: pointer;
+
+            font-weight: 700;
+
+            transition:
+                    background 0.15s ease,
+                    border-color 0.15s ease,
+                    transform 0.1s ease;
+        }
+
+        .secondary:hover {
+            background: var(--surface-soft);
+            border-color: #94a3b8;
+        }
+
+        .secondary:active {
+            transform: scale(0.97);
+        }
+
+        .secondary:focus-visible {
+            outline: 3px solid rgba(37, 99, 235, 0.16);
+            outline-offset: 2px;
+        }
+
+        .secondary.active {
+            background: var(--accent);
+            color: #ffffff;
+
+            border-color: var(--accent);
+        }
+
+        .sfx-button {
+            width: 44px;
+            padding: 7px;
+
+            font-size: 1rem;
+            line-height: 1;
+        }
+
+        /* 스도쿠 보드 */
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+
+            width: min(100%, 540px);
+            aspect-ratio: 1;
+
+            margin: 0 auto;
+
+            overflow: hidden;
+
+            background: #ffffff;
+
+            border: 2px solid var(--border-strong);
+            border-radius: 12px;
+
+            transition: opacity 0.15s ease;
+        }
+
+        #board.busy {
+            opacity: 0.45;
+            pointer-events: none;
+        }
+
+        .cell {
+            position: relative;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            min-width: 0;
+            min-height: 0;
+
+            background: #ffffff;
+            color: var(--accent);
+
+            border-right: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+
+            cursor: pointer;
+
+            font-size: clamp(1rem, 5vw, 1.65rem);
+            font-weight: 600;
+            line-height: 1;
+
+            font-variant-numeric: tabular-nums;
+
+            user-select: none;
+            -webkit-user-select: none;
+
+            touch-action: manipulation;
+        }
+
+        /*
+         * 3×3 박스 경계
+         */
+
+        .cell:nth-child(9n) {
+            border-right: 0;
+        }
+
+        .cell:nth-child(n+73) {
+            border-bottom: 0;
+        }
+
+        .cell:nth-child(9n+3),
+        .cell:nth-child(9n+6) {
+            border-right: 2px solid var(--border-strong);
+        }
+
+        .cell:nth-child(n+19):nth-child(-n+27),
+        .cell:nth-child(n+46):nth-child(-n+54) {
+            border-bottom: 2px solid var(--border-strong);
+        }
+
+        .cell.given {
+            color: var(--text);
+            font-weight: 800;
+        }
+
+        .cell.peer {
+            background: var(--peer);
+        }
+
+        .cell.same {
+            background: var(--same);
+        }
+
+        .cell.sel {
+            background: var(--accent-soft);
+
+            box-shadow:
+                    inset 0 0 0 2px var(--accent);
+        }
+
+        .cell.wrong {
+            background: var(--wrong-bg);
+            color: var(--wrong);
+        }
+
+        .note {
+            display: block;
+
+            width: 100%;
+            padding: 3px;
+
+            color: var(--text-soft);
+
+            font-family: "Noto Sans KR", sans-serif;
+            font-size: clamp(0.45rem, 1.7vw, 0.68rem);
+            font-weight: 600;
+            line-height: 1.15;
+
+            letter-spacing: 0.08em;
+            text-align: center;
+            white-space: normal;
+            word-break: break-all;
+        }
+
+        /* 숫자 패드 */
+
+        #pad {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+
+            gap: 6px;
+
+            width: min(100%, 540px);
+            margin: 18px auto 0;
+        }
+
+        .num {
+            min-width: 0;
+            height: 48px;
+            padding: 0;
+
+            background: var(--accent-weak);
+            color: var(--accent);
+
+            border: 1px solid #dbeafe;
+            border-radius: 12px;
+
+            cursor: pointer;
+
+            font-size: 1.1rem;
+            font-weight: 800;
+
+            font-variant-numeric: tabular-nums;
+
+            transition:
+                    background 0.12s ease,
+                    transform 0.08s ease,
+                    opacity 0.12s ease;
+        }
+
+        .num:hover {
+            background: #dbeafe;
+        }
+
+        .num:active {
+            transform: scale(0.94);
+        }
+
+        .num.done {
+            opacity: 0.28;
+        }
+
+        .num:focus-visible {
+            outline: 3px solid rgba(37, 99, 235, 0.16);
+            outline-offset: 2px;
+        }
+
+        /* 기능 버튼 */
+
+        #pad-ops {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+
+            gap: 7px;
+
+            margin-top: 12px;
+        }
+
+        /* 상태 */
+
+        #status {
+            min-height: 25px;
+            margin: 16px 0 0;
+
+            color: var(--text-soft);
+
+            font-size: 0.9rem;
+            font-weight: 600;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        .game-help {
+            margin: 8px 0 0;
+
+            color: var(--text-soft);
+
+            font-size: 0.8rem;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                width: min(100% - 16px, 720px);
+                padding: 32px 0;
+            }
+
+            .card {
+                padding: 12px;
+                border-radius: 20px;
+            }
+
+            .type-hud {
+                display: grid;
+                grid-template-columns:
+          repeat(3, minmax(0, 1fr))
+          42px;
+
+                gap: 5px;
+            }
+
+            .hud-item {
+                flex-direction: column;
+                justify-content: center;
+
+                min-width: 0;
+                min-height: 50px;
+                padding: 5px 2px;
+
+                font-size: 0.7rem;
+            }
+
+            .hud-item strong {
+                font-size: 0.87rem;
+            }
+
+            .sfx-button {
+                width: 42px;
+                min-height: 50px;
+            }
+
+            #board {
+                border-radius: 8px;
+            }
+
+            #pad {
+                gap: 4px;
+                margin-top: 14px;
+            }
+
+            .num {
+                height: 44px;
+                border-radius: 9px;
+            }
+
+            #pad-ops {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+
+                gap: 6px;
+            }
+
+            #pad-ops .secondary {
+                min-width: 0;
+                padding: 8px 5px;
+
+                font-size: 0.78rem;
+            }
+
+            #share-daily {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .container {
+                width: min(100% - 8px, 720px);
+            }
+
+            .card {
+                padding: 8px;
+            }
+
+            .num {
+                height: 40px;
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<main class="container">
+
+    <header class="page-header">
+
+        <h1>🔢 스도쿠</h1>
+
+        <p class="lead">
+            가로·세로·3×3 박스에 1~9를 겹치지 않게 채우는 숫자 퍼즐.
+            매판 새로 생성되는 유일해 퍼즐로 초급부터 고급까지
+            난이도별로 도전해 보세요.
+        </p>
+
+    </header>
+
+    <section
+            class="card typing-card"
+            aria-label="스도쿠 게임"
+    >
+
+        <div
+                class="tabs"
+                id="level-tabs"
+                aria-label="난이도 선택"
+        >
+
+            <button
+                    class="tab"
+                    data-level="easy"
+                    type="button"
+            >
+                초급
+            </button>
+
+            <button
+                    class="tab active"
+                    data-level="mid"
+                    type="button"
+            >
+                중급
+            </button>
+
+            <button
+                    class="tab"
+                    data-level="hard"
+                    type="button"
+            >
+                고급
+            </button>
+
+        </div>
+
+        <div class="type-hud">
+
+        <span class="hud-item">
+          시간
+          <strong id="hud-time">0:00</strong>
+        </span>
+
+            <span class="hud-item">
+          실수
+          <strong id="hud-miss">0/3</strong>
+        </span>
+
+            <span class="hud-item">
+          최고
+          <strong id="hud-best">—</strong>
+        </span>
+
+            <button
+                    id="sfx-btn"
+                    class="secondary sfx-button"
+                    type="button"
+                    aria-label="효과음 켜기"
+                    aria-pressed="false"
+            >
+                🔇
+            </button>
+
+        </div>
+
+        <div
+                id="board"
+                aria-label="스도쿠 보드"
+        ></div>
+
+        <div
+                id="pad"
+                aria-label="숫자 입력"
+        >
+
+            <button class="num" data-n="1" type="button">1</button>
+            <button class="num" data-n="2" type="button">2</button>
+            <button class="num" data-n="3" type="button">3</button>
+            <button class="num" data-n="4" type="button">4</button>
+            <button class="num" data-n="5" type="button">5</button>
+            <button class="num" data-n="6" type="button">6</button>
+            <button class="num" data-n="7" type="button">7</button>
+            <button class="num" data-n="8" type="button">8</button>
+            <button class="num" data-n="9" type="button">9</button>
+
+        </div>
+
+        <div id="pad-ops">
+
+            <button
+                    id="pencil"
+                    class="secondary"
+                    type="button"
+            >
+                ✏️ 메모
+            </button>
+
+            <button
+                    id="erase"
+                    class="secondary"
+                    type="button"
+            >
+                ⌫ 지우기
+            </button>
+
+            <button
+                    id="daily-btn"
+                    class="secondary"
+                    type="button"
+            >
+                📅 오늘의 퍼즐
+            </button>
+
+            <button
+                    id="new-game"
+                    class="secondary"
+                    type="button"
+            >
+                🔄 새 퍼즐
+            </button>
+
+            <button
+                    id="share-daily"
+                    class="secondary"
+                    type="button"
+                    hidden
+            >
+                📤 기록 공유
+            </button>
+
+        </div>
+
+        <p
+                id="status"
+                aria-live="polite"
+        ></p>
+
+        <p class="game-help">
+            💻 PC: 숫자 키 입력 · N = 메모 전환 · 방향키 이동
+        </p>
+
+    </section>
+
+</main>
+
+<script>
+    "use strict";
+
+    const $ = function (id) {
+        return document.getElementById(id);
+    };
+
+    /*
+     * 저장 키
+     */
+
+    const BEST_KEY =
+              "sudoku_best_v1";
+
+    const STREAK_KEY =
+              "sudoku_daily_v1";
+
+    const SAVE_KEY =
+              "sudoku_save_v1";
+
+    const SFX_KEY =
+              "sudoku_sfx_v1";
+
+    /*
+     * 난이도
+     *
+     * givens = 처음부터 표시되는 숫자 수
+     */
+
+    const LEVELS = {
+        easy: {
+            givens: 40,
+            label: "초급"
+        },
+
+        mid: {
+            givens: 32,
+            label: "중급"
+        },
+
+        hard: {
+            givens: 26,
+            label: "고급"
+        }
+    };
+
+    /*
+     * 문구
+     */
+
+    const TEXT = {
+        clear: function (time) {
+            return "🎉 클리어! " + time;
+        },
+
+        fail:
+            "😵 실수 3회 — 게임 오버",
+
+        newGame:
+            "새 퍼즐을 만드는 중…",
+
+        confirm:
+            "진행 중인 퍼즐을 버리고 새로 시작할까요?"
+    };
+
+    /*
+     * 게임 상태
+     */
+
+    let level =
+            "mid";
+
+    let board = null;
+    let given = null;
+    let solution = null;
+    let notes = null;
+
+    let selected = -1;
+
+    let pencilMode = false;
+
+    let mistakes = 0;
+
+    let done = false;
+
+    let daily = false;
+
+    let startTimestamp = 0;
+
+    let timerId = null;
+
+    let random =
+            Math.random;
+
+    /*
+     * 개인 최고 기록
+     */
+
+    let bestTimes = {};
+
+    try {
+
+        bestTimes =
+            JSON.parse(
+                localStorage.getItem(
+                    BEST_KEY
+                ) ||
+                "{}"
+            );
+
+    } catch (error) {
+
+        bestTimes = {};
+    }
+
+    /*
+     * 효과음
+     */
+
+    let sfxEnabled =
+            localStorage.getItem(
+                SFX_KEY
+            ) === "1";
+
+    let audioContext = null;
+
+    function updateSfxButton() {
+
+        const button =
+                  $("sfx-btn");
+
+        button.textContent =
+            sfxEnabled
+                ? "🔊"
+                : "🔇";
+
+        button.setAttribute(
+            "aria-pressed",
+            String(sfxEnabled)
+        );
+
+        button.setAttribute(
+            "aria-label",
+            sfxEnabled
+                ? "효과음 끄기"
+                : "효과음 켜기"
+        );
+    }
+
+    function getAudioContext() {
+
+        if (!audioContext) {
+
+            const AudioContextClass =
+                      window.AudioContext ||
+                      window.webkitAudioContext;
+
+            if (!AudioContextClass) {
+                return null;
+            }
+
+            audioContext =
+                new AudioContextClass();
+        }
+
+        if (
+            audioContext.state ===
+            "suspended"
+        ) {
+
+            audioContext.resume();
+        }
+
+        return audioContext;
+    }
+
+    function playTone(
+        frequency,
+        duration,
+        volume,
+        type
+    ) {
+
+        if (!sfxEnabled) {
+            return;
+        }
+
+        const context =
+                  getAudioContext();
+
+        if (!context) {
+            return;
+        }
+
+        const oscillator =
+                  context.createOscillator();
+
+        const gain =
+                  context.createGain();
+
+        oscillator.type =
+            type || "sine";
+
+        oscillator.frequency
+        .setValueAtTime(
+            frequency,
+            context.currentTime
+        );
+
+        gain.gain
+        .setValueAtTime(
+            volume,
+            context.currentTime
+        );
+
+        gain.gain
+        .exponentialRampToValueAtTime(
+            0.001,
+            context.currentTime +
+            duration
+        );
+
+        oscillator.connect(
+            gain
+        );
+
+        gain.connect(
+            context.destination
+        );
+
+        oscillator.start();
+
+        oscillator.stop(
+            context.currentTime +
+            duration
+        );
+    }
+
+    function playClickSound() {
+
+        playTone(
+            520,
+            0.04,
+            0.018,
+            "sine"
+        );
+    }
+
+    function playWrongSound() {
+
+        playTone(
+            180,
+            0.14,
+            0.03,
+            "square"
+        );
+    }
+
+    function playGameOverSound() {
+
+        playTone(
+            140,
+            0.15,
+            0.035,
+            "sawtooth"
+        );
+
+        window.setTimeout(
+            function () {
+
+                playTone(
+                    90,
+                    0.25,
+                    0.03,
+                    "sawtooth"
+                );
+
+            },
+            100
+        );
+    }
+
+    function playClearSound() {
+
+        playTone(
+            520,
+            0.08,
+            0.025,
+            "sine"
+        );
+
+        window.setTimeout(
+            function () {
+
+                playTone(
+                    700,
+                    0.08,
+                    0.025,
+                    "sine"
+                );
+
+            },
+            80
+        );
+
+        window.setTimeout(
+            function () {
+
+                playTone(
+                    920,
+                    0.15,
+                    0.025,
+                    "sine"
+                );
+
+            },
+            160
+        );
+    }
+
+    $("sfx-btn")
+    .addEventListener(
+        "click",
+        function () {
+
+            sfxEnabled =
+                !sfxEnabled;
+
+            localStorage.setItem(
+                SFX_KEY,
+                sfxEnabled
+                    ? "1"
+                    : "0"
+            );
+
+            updateSfxButton();
+
+            if (sfxEnabled) {
+
+                playTone(
+                    700,
+                    0.08,
+                    0.03,
+                    "sine"
+                );
+            }
+        }
+    );
+
+    /*
+     * 오늘 날짜
+     */
+
+    function getTodayKey() {
+
+        const date =
+                  new Date();
+
+        const year =
+                  date.getFullYear();
+
+        const month =
+                  String(
+                      date.getMonth() + 1
+                  ).padStart(
+                      2,
+                      "0"
+                  );
+
+        const day =
+                  String(
+                      date.getDate()
+                  ).padStart(
+                      2,
+                      "0"
+                  );
+
+        return (
+            year +
+            "-" +
+            month +
+            "-" +
+            day
+        );
+    }
+
+    /*
+     * 문자열 → 숫자 시드
+     */
+
+    function hashString(
+        value
+    ) {
+
+        let hash = 809;
+
+        for (
+            const character of value
+            ) {
+
+            hash =
+                Math.imul(
+                    hash ^
+                    character.charCodeAt(0),
+                    2654435761
+                ) >>> 0;
+        }
+
+        return hash;
+    }
+
+    /*
+     * 오늘의 퍼즐용
+     * 시드 난수
+     */
+
+    function createSeededRandom(
+        seed
+    ) {
+
+        return function () {
+
+            seed |= 0;
+
+            seed =
+                (
+                    seed +
+                    0x6D2B79F5
+                ) |
+                0;
+
+            let value =
+                    Math.imul(
+                        seed ^
+                        (
+                            seed >>>
+                            15
+                        ),
+                        1 |
+                        seed
+                    );
+
+            value =
+                (
+                    value +
+                    Math.imul(
+                        value ^
+                        (
+                            value >>>
+                            7
+                        ),
+                        61 |
+                        value
+                    )
+                ) ^
+                value;
+
+            return (
+                    (
+                        value ^
+                        (
+                            value >>>
+                            14
+                        )
+                    ) >>>
+                    0
+                ) /
+                4294967296;
+        };
+    }
+
+    /*
+     * 행/열
+     */
+
+    function getRowColumn(
+        index
+    ) {
+
+        return [
+            Math.floor(
+                index /
+                9
+            ),
+
+            index %
+            9
+        ];
+    }
+
+    /*
+     * 3×3 박스 시작 위치
+     */
+
+    function getBoxStart(
+        row,
+        column
+    ) {
+
+        return (
+            Math.floor(
+                row /
+                3
+            ) *
+            3 *
+            9 +
+
+            Math.floor(
+                column /
+                3
+            ) *
+            3
+        );
+    }
+
+    /*
+     * 입력 가능한 숫자
+     */
+
+    function getCandidates(
+        currentBoard,
+        index
+    ) {
+
+        const position =
+                  getRowColumn(
+                      index
+                  );
+
+        const row =
+                  position[0];
+
+        const column =
+                  position[1];
+
+        const used =
+                  new Set();
+
+        for (
+            let i = 0;
+            i < 9;
+            i++
+        ) {
+
+            used.add(
+                currentBoard[
+                row * 9 + i
+                    ]
+            );
+
+            used.add(
+                currentBoard[
+                i * 9 + column
+                    ]
+            );
+
+            used.add(
+                currentBoard[
+                getBoxStart(
+                    row,
+                    column
+                ) +
+                Math.floor(
+                    i /
+                    3
+                ) *
+                9 +
+                (
+                    i %
+                    3
+                )
+                    ]
+            );
+        }
+
+        const output = [];
+
+        for (
+            let value = 1;
+            value <= 9;
+            value++
+        ) {
+
+            if (
+                !used.has(
+                    value
+                )
+            ) {
+
+                output.push(
+                    value
+                );
+            }
+        }
+
+        return output;
+    }
+
+    /*
+     * 완성된 스도쿠 생성
+     */
+
+    function fillSolution(
+        currentBoard
+    ) {
+
+        const index =
+                  currentBoard.indexOf(
+                      0
+                  );
+
+        if (
+            index === -1
+        ) {
+
+            return true;
+        }
+
+        const candidates =
+                  getCandidates(
+                      currentBoard,
+                      index
+                  );
+
+        /*
+         * 후보 순서를 섞어
+         * 매번 다른 해답 생성
+         */
+
+        for (
+            let i =
+                    candidates.length - 1;
+            i > 0;
+            i--
+        ) {
+
+            const randomIndex =
+                      Math.floor(
+                          random() *
+                          (
+                              i + 1
+                          )
+                      );
+
+            const temp =
+                      candidates[i];
+
+            candidates[i] =
+                candidates[
+                    randomIndex
+                    ];
+
+            candidates[
+                randomIndex
+                ] =
+                temp;
+        }
+
+        for (
+            const value of
+            candidates
+            ) {
+
+            currentBoard[
+                index
+                ] =
+                value;
+
+            if (
+                fillSolution(
+                    currentBoard
+                )
+            ) {
+
+                return true;
+            }
+        }
+
+        currentBoard[
+            index
+            ] =
+            0;
+
+        return false;
+    }
+
+    /*
+     * 해답 개수 확인
+     *
+     * 2개 이상 발견하면
+     * 바로 종료
+     */
+
+    function countSolutions(
+        currentBoard,
+        limit
+    ) {
+
+        const solutionLimit =
+                  limit === undefined
+                      ? 2
+                      : limit;
+
+        const index =
+                  currentBoard.indexOf(
+                      0
+                  );
+
+        if (
+            index === -1
+        ) {
+
+            return 1;
+        }
+
+        let count = 0;
+
+        const candidates =
+                  getCandidates(
+                      currentBoard,
+                      index
+                  );
+
+        for (
+            const value of
+            candidates
+            ) {
+
+            currentBoard[
+                index
+                ] =
+                value;
+
+            count +=
+                countSolutions(
+                    currentBoard,
+                    solutionLimit -
+                    count
+                );
+
+            if (
+                count >=
+                solutionLimit
+            ) {
+                break;
+            }
+        }
+
+        currentBoard[
+            index
+            ] =
+            0;
+
+        return count;
+    }
+
+    /*
+     * 유일해 퍼즐 생성
+     */
+
+    function generatePuzzle(
+        givens
+    ) {
+
+        const solvedBoard =
+                  new Array(81)
+                  .fill(0);
+
+        fillSolution(
+            solvedBoard
+        );
+
+        const puzzle =
+                  solvedBoard.slice();
+
+        /*
+         * 중앙 대칭으로 숫자 제거
+         */
+
+        const order =
+                  Array.from(
+                      {
+                          length: 41
+                      },
+                      function (
+                          unused,
+                          index
+                      ) {
+
+                          return index;
+                      }
+                  );
+
+        for (
+            let i =
+                    order.length - 1;
+            i > 0;
+            i--
+        ) {
+
+            const randomIndex =
+                      Math.floor(
+                          random() *
+                          (
+                              i + 1
+                          )
+                      );
+
+            const temp =
+                      order[i];
+
+            order[i] =
+                order[
+                    randomIndex
+                    ];
+
+            order[
+                randomIndex
+                ] =
+                temp;
+        }
+
+        let remaining =
+                81;
+
+        for (
+            const index of
+            order
+            ) {
+
+            if (
+                remaining <=
+                givens
+            ) {
+                break;
+            }
+
+            const pairIndex =
+                      80 -
+                      index;
+
+            const first =
+                      puzzle[
+                          index
+                          ];
+
+            const second =
+                      puzzle[
+                          pairIndex
+                          ];
+
+            if (
+                !first &&
+                !second
+            ) {
+                continue;
+            }
+
+            puzzle[
+                index
+                ] =
+                0;
+
+            puzzle[
+                pairIndex
+                ] =
+                0;
+
+            const removed =
+                      index ===
+                      pairIndex
+                          ? 1
+                          : 2;
+
+            /*
+             * 해답이 하나가 아니면
+             * 원상복구
+             */
+
+            if (
+                countSolutions(
+                    puzzle.slice()
+                ) !== 1
+            ) {
+
+                puzzle[
+                    index
+                    ] =
+                    first;
+
+                puzzle[
+                    pairIndex
+                    ] =
+                    second;
+
+            } else {
+
+                remaining -=
+                    removed;
+            }
+        }
+
+        return {
+            puzzle: puzzle,
+            solution: solvedBoard
+        };
+    }
+
+    /*
+     * 시간 표시
+     */
+
+    function formatTime(
+        seconds
+    ) {
+
+        const minutes =
+                  Math.floor(
+                      seconds /
+                      60
+                  );
+
+        const remaining =
+                  Math.floor(
+                      seconds %
+                      60
+                  );
+
+        return (
+            minutes +
+            ":" +
+            String(
+                remaining
+            ).padStart(
+                2,
+                "0"
+            )
+        );
+    }
+
+    /*
+     * 게임 상태 저장
+     */
+
+    function saveGameState() {
+
+        if (
+            done ||
+            !board
+        ) {
+
+            localStorage.removeItem(
+                SAVE_KEY
+            );
+
+            return;
+        }
+
+        localStorage.setItem(
+            SAVE_KEY,
+            JSON.stringify({
+                level: level,
+
+                daily: daily,
+
+                day:
+                    getTodayKey(),
+
+                board: board,
+
+                given: given,
+
+                solution:
+                solution,
+
+                notes:
+                    notes.map(
+                        function (set) {
+                            return Array.from(
+                                set
+                            );
+                        }
+                    ),
+
+                mistakes:
+                mistakes,
+
+                elapsed:
+                    Date.now() -
+                    startTimestamp
+            })
+        );
+    }
+
+    /*
+     * HUD
+     */
+
+    function updateHud() {
+
+        $("hud-miss")
+            .textContent =
+            mistakes +
+            "/3";
+
+        $("hud-best")
+            .textContent =
+            bestTimes[
+                level
+                ]
+                ? formatTime(
+                    bestTimes[
+                        level
+                        ]
+                )
+                : "—";
+    }
+
+    /*
+     * 타이머
+     */
+
+    function startTimer() {
+
+        clearInterval(
+            timerId
+        );
+
+        timerId =
+            setInterval(
+                function () {
+
+                    if (!done) {
+
+                        $("hud-time")
+                            .textContent =
+                            formatTime(
+                                (
+                                    Date.now() -
+                                    startTimestamp
+                                ) /
+                                1000
+                            );
+                    }
+                },
+                500
+            );
+    }
+
+    /*
+     * 새 게임
+     */
+
+    function newGame(
+        useDaily
+    ) {
+
+        daily =
+            Boolean(
+                useDaily
+            );
+
+        /*
+         * 오늘의 퍼즐은 중급 고정
+         */
+
+        if (daily) {
+
+            level =
+                "mid";
+
+            updateLevelTabs();
+        }
+
+        /*
+         * 오늘의 퍼즐은
+         * 날짜 기반 고정 시드
+         */
+
+        if (daily) {
+
+            random =
+                createSeededRandom(
+                    hashString(
+                        "sudoku:" +
+                        getTodayKey()
+                    )
+                );
+
+        } else {
+
+            random =
+                Math.random;
+        }
+
+        $("board")
+        .classList.add(
+            "busy"
+        );
+
+        $("status")
+            .textContent =
+            TEXT.newGame;
+
+        window.setTimeout(
+            function () {
+
+                const generated =
+                          generatePuzzle(
+                              LEVELS[
+                                  level
+                                  ].givens
+                          );
+
+                board =
+                    generated.puzzle;
+
+                solution =
+                    generated.solution;
+
+                given =
+                    board.map(
+                        function (value) {
+
+                            return (
+                                value !== 0
+                            );
+                        }
+                    );
+
+                notes =
+                    Array.from(
+                        {
+                            length: 81
+                        },
+                        function () {
+
+                            return new Set();
+                        }
+                    );
+
+                selected = -1;
+
+                pencilMode =
+                    false;
+
+                mistakes = 0;
+
+                done =
+                    false;
+
+                $("pencil")
+                .classList.remove(
+                    "active"
+                );
+
+                if (daily) {
+
+                    $("status")
+                        .textContent =
+                        "📅 " +
+                        getTodayKey() +
+                        " — 오늘의 퍼즐에 도전 중!";
+
+                } else {
+
+                    $("status")
+                        .textContent =
+                        "";
+                }
+
+                $("share-daily")
+                    .hidden =
+                    true;
+
+                startTimestamp =
+                    Date.now();
+
+                $("hud-time")
+                    .textContent =
+                    "0:00";
+
+                startTimer();
+
+                updateHud();
+
+                renderBoard();
+
+                $("board")
+                .classList.remove(
+                    "busy"
+                );
+
+                saveGameState();
+
+            },
+            30
+        );
+    }
+
+    /*
+     * 이어하기
+     */
+
+    function restoreGame() {
+
+        try {
+
+            const saved =
+                      JSON.parse(
+                          localStorage.getItem(
+                              SAVE_KEY
+                          ) ||
+                          "null"
+                      );
+
+            if (
+                !saved ||
+                !saved.board
+            ) {
+
+                return false;
+            }
+
+            /*
+             * 지난 날짜의
+             * 오늘의 퍼즐은 폐기
+             */
+
+            if (
+                saved.daily &&
+                saved.day !==
+                getTodayKey()
+            ) {
+
+                localStorage.removeItem(
+                    SAVE_KEY
+                );
+
+                return false;
+            }
+
+            level =
+                saved.level;
+
+            daily =
+                saved.daily;
+
+            board =
+                saved.board;
+
+            given =
+                saved.given;
+
+            solution =
+                saved.solution;
+
+            mistakes =
+                saved.mistakes;
+
+            notes =
+                saved.notes.map(
+                    function (items) {
+
+                        return new Set(
+                            items
+                        );
+                    }
+                );
+
+            selected =
+                -1;
+
+            pencilMode =
+                false;
+
+            done =
+                false;
+
+            updateLevelTabs();
+
+            $("pencil")
+            .classList.remove(
+                "active"
+            );
+
+            $("share-daily")
+                .hidden =
+                true;
+
+            startTimestamp =
+                Date.now() -
+                saved.elapsed;
+
+            startTimer();
+
+            $("hud-time")
+                .textContent =
+                formatTime(
+                    saved.elapsed /
+                    1000
+                );
+
+            updateHud();
+
+            renderBoard();
+
+            $("status")
+                .textContent =
+                "▶ 진행 중이던 퍼즐을 이어합니다";
+
+            return true;
+
+        } catch (error) {
+
+            return false;
+        }
+    }
+
+    /*
+     * 보드 렌더링
+     */
+
+    function renderBoard() {
+
+        if (
+            !board ||
+            !notes
+        ) {
+            return;
+        }
+
+        const selectedValue =
+                  selected >= 0
+                      ? board[
+                          selected
+                          ]
+                      : 0;
+
+        const selectedPosition =
+                  selected >= 0
+                      ? getRowColumn(
+                          selected
+                      )
+                      : [-1, -1];
+
+        const selectedRow =
+                  selectedPosition[0];
+
+        const selectedColumn =
+                  selectedPosition[1];
+
+        const cells =
+                  $("board").children;
+
+        for (
+            let index = 0;
+            index < 81;
+            index++
+        ) {
+
+            const cell =
+                      cells[
+                          index
+                          ];
+
+            const position =
+                      getRowColumn(
+                          index
+                      );
+
+            const row =
+                      position[0];
+
+            const column =
+                      position[1];
+
+            const value =
+                      board[
+                          index
+                          ];
+
+            let className =
+                    "cell";
+
+            if (
+                given[
+                    index
+                    ]
+            ) {
+
+                className +=
+                    " given";
+            }
+
+            if (
+                index ===
+                selected
+            ) {
+
+                className +=
+                    " sel";
+
+            } else if (
+                selected >= 0 &&
+                (
+                    row ===
+                    selectedRow ||
+                    column ===
+                    selectedColumn ||
+                    getBoxStart(
+                        row,
+                        column
+                    ) ===
+                    getBoxStart(
+                        selectedRow,
+                        selectedColumn
+                    )
+                )
+            ) {
+
+                className +=
+                    " peer";
+            }
+
+            if (
+                value &&
+                selectedValue &&
+                value ===
+                selectedValue
+            ) {
+
+                className +=
+                    " same";
+            }
+
+            if (
+                value &&
+                !given[
+                    index
+                    ] &&
+                value !==
+                solution[
+                    index
+                    ]
+            ) {
+
+                className +=
+                    " wrong";
+            }
+
+            cell.className =
+                className;
+
+            /*
+             * 숫자
+             */
+
+            if (value) {
+
+                cell.textContent =
+                    String(value);
+
+                continue;
+            }
+
+            /*
+             * 메모
+             */
+
+            if (
+                notes[
+                    index
+                    ].size
+            ) {
+
+                const note =
+                          document.createElement(
+                              "span"
+                          );
+
+                note.className =
+                    "note";
+
+                let noteText =
+                        "";
+
+                for (
+                    let number = 1;
+                    number <= 9;
+                    number++
+                ) {
+
+                    noteText +=
+                        notes[
+                            index
+                            ].has(
+                            number
+                        )
+                            ? String(number)
+                            : "·";
+                }
+
+                note.textContent =
+                    noteText;
+
+                cell.replaceChildren(
+                    note
+                );
+
+            } else {
+
+                cell.textContent =
+                    "";
+            }
+        }
+
+        /*
+         * 9개가 모두 채워진 숫자는
+         * 패드에서 흐리게 표시
+         */
+
+        const counts =
+                  new Array(10)
+                  .fill(0);
+
+        board.forEach(
+            function (value) {
+
+                if (value) {
+
+                    counts[
+                        value
+                        ]++;
+                }
+            }
+        );
+
+        document
+        .querySelectorAll(
+            "#pad .num"
+        )
+        .forEach(
+            function (button) {
+
+                const number =
+                          Number(
+                              button.dataset.n
+                          );
+
+                button.classList.toggle(
+                    "done",
+                    counts[
+                        number
+                        ] >= 9
+                );
+            }
+        );
+    }
+
+    /*
+     * 숫자 입력
+     */
+
+    function inputNumber(
+        number
+    ) {
+
+        if (
+            done ||
+            selected < 0 ||
+            given[
+                selected
+                ]
+        ) {
+            return;
+        }
+
+        /*
+         * 메모 모드
+         */
+
+        if (
+            pencilMode &&
+            number
+        ) {
+
+            if (
+                board[
+                    selected
+                    ]
+            ) {
+                return;
+            }
+
+            if (
+                notes[
+                    selected
+                    ].has(
+                    number
+                )
+            ) {
+
+                notes[
+                    selected
+                    ].delete(
+                    number
+                );
+
+            } else {
+
+                notes[
+                    selected
+                    ].add(
+                    number
+                );
+            }
+
+            playClickSound();
+
+            renderBoard();
+
+            saveGameState();
+
+            return;
+        }
+
+        /*
+         * 지우기
+         */
+
+        if (!number) {
+
+            board[
+                selected
+                ] =
+                0;
+
+            notes[
+                selected
+                ].clear();
+
+            renderBoard();
+
+            saveGameState();
+
+            return;
+        }
+
+        /*
+         * 같은 숫자를 다시 누르면 지우기
+         */
+
+        if (
+            board[
+                selected
+                ] ===
+            number
+        ) {
+
+            board[
+                selected
+                ] =
+                0;
+
+            renderBoard();
+
+            saveGameState();
+
+            return;
+        }
+
+        board[
+            selected
+            ] =
+            number;
+
+        notes[
+            selected
+            ].clear();
+
+        /*
+         * 오답
+         */
+
+        if (
+            number !==
+            solution[
+                selected
+                ]
+        ) {
+
+            mistakes++;
+
+            playWrongSound();
+
+            updateHud();
+
+            if (
+                mistakes >= 3
+            ) {
+
+                done =
+                    true;
+
+                clearInterval(
+                    timerId
+                );
+
+                $("status")
+                    .textContent =
+                    TEXT.fail;
+
+                playGameOverSound();
+
+                saveGameState();
+            }
+
+        } else {
+
+            playClickSound();
+
+            /*
+             * 정답 입력 시
+             * 같은 행/열/박스 메모에서
+             * 해당 숫자 자동 제거
+             */
+
+            const position =
+                      getRowColumn(
+                          selected
+                      );
+
+            const row =
+                      position[0];
+
+            const column =
+                      position[1];
+
+            for (
+                let index = 0;
+                index < 81;
+                index++
+            ) {
+
+                const targetPosition =
+                          getRowColumn(
+                              index
+                          );
+
+                const targetRow =
+                          targetPosition[0];
+
+                const targetColumn =
+                          targetPosition[1];
+
+                if (
+                    targetRow ===
+                    row ||
+                    targetColumn ===
+                    column ||
+                    getBoxStart(
+                        targetRow,
+                        targetColumn
+                    ) ===
+                    getBoxStart(
+                        row,
+                        column
+                    )
+                ) {
+
+                    notes[
+                        index
+                        ].delete(
+                        number
+                    );
+                }
+            }
+
+            /*
+             * 완성 확인
+             */
+
+            const completed =
+                      board.every(
+                          function (
+                              value,
+                              index
+                          ) {
+
+                              return (
+                                  value ===
+                                  solution[
+                                      index
+                                      ]
+                              );
+                          }
+                      );
+
+            if (completed) {
+
+                winGame();
+
+                return;
+            }
+        }
+
+        renderBoard();
+
+        saveGameState();
+    }
+
+    /*
+     * 클리어
+     */
+
+    function winGame() {
+
+        done =
+            true;
+
+        clearInterval(
+            timerId
+        );
+
+        const clearTime =
+                  Math.round(
+                      (
+                          Date.now() -
+                          startTimestamp
+                      ) /
+                      100
+                  ) /
+                  10;
+
+        $("hud-time")
+            .textContent =
+            formatTime(
+                clearTime
+            );
+
+        let message =
+                TEXT.clear(
+                    formatTime(
+                        clearTime
+                    )
+                );
+
+        playClearSound();
+
+        /*
+         * 난이도별 개인 최고 기록
+         */
+
+        if (
+            !bestTimes[
+                level
+                ] ||
+            clearTime <
+            bestTimes[
+                level
+                ]
+        ) {
+
+            bestTimes[
+                level
+                ] =
+                clearTime;
+
+            localStorage.setItem(
+                BEST_KEY,
+                JSON.stringify(
+                    bestTimes
+                )
+            );
+
+            message +=
+                " · 🏆 개인 최고 기록!";
+        }
+
+        /*
+         * 오늘의 퍼즐 연속 기록
+         */
+
+        if (daily) {
+
+            let streak = {};
+
+            try {
+
+                streak =
+                    JSON.parse(
+                        localStorage.getItem(
+                            STREAK_KEY
+                        ) ||
+                        "{}"
+                    );
+
+            } catch (error) {
+
+                streak = {};
+            }
+
+            if (
+                streak.last !==
+                getTodayKey()
+            ) {
+
+                const yesterday =
+                          new Date(
+                              Date.now() -
+                              86400000
+                          );
+
+                const yesterdayKey =
+                          yesterday.getFullYear() +
+                          "-" +
+                          String(
+                              yesterday.getMonth() +
+                              1
+                          ).padStart(
+                              2,
+                              "0"
+                          ) +
+                          "-" +
+                          String(
+                              yesterday.getDate()
+                          ).padStart(
+                              2,
+                              "0"
+                          );
+
+                streak.streak =
+                    streak.last ===
+                    yesterdayKey
+                        ? (
+                            streak.streak ||
+                            0
+                        ) +
+                        1
+                        : 1;
+
+                streak.last =
+                    getTodayKey();
+
+                streak.time =
+                    clearTime;
+
+                localStorage.setItem(
+                    STREAK_KEY,
+                    JSON.stringify(
+                        streak
+                    )
+                );
+            }
+
+            message +=
+                " · 🔥 " +
+                (
+                    streak.streak ||
+                    1
+                ) +
+                "일 연속";
+
+            $("share-daily")
+                .hidden =
+                false;
+        }
+
+        $("status")
+            .textContent =
+            message;
+
+        updateHud();
+
+        renderBoard();
+
+        /*
+         * 완료했으므로
+         * 이어하기 데이터 삭제
+         */
+
+        saveGameState();
+    }
+
+    /*
+     * 보드 생성
+     */
+
+    function buildBoard() {
+
+        const boardElement =
+                  $("board");
+
+        for (
+            let index = 0;
+            index < 81;
+            index++
+        ) {
+
+            const cell =
+                      document.createElement(
+                          "div"
+                      );
+
+            cell.className =
+                "cell";
+
+            cell.dataset.index =
+                String(index);
+
+            cell.setAttribute(
+                "role",
+                "button"
+            );
+
+            cell.setAttribute(
+                "aria-label",
+                "스도쿠 " +
+                (
+                    Math.floor(
+                        index /
+                        9
+                    ) +
+                    1
+                ) +
+                "행 " +
+                (
+                    index %
+                    9 +
+                    1
+                ) +
+                "열"
+            );
+
+            boardElement.appendChild(
+                cell
+            );
+        }
+
+        boardElement.addEventListener(
+            "pointerdown",
+            function (event) {
+
+                const target =
+                          event.target.closest(
+                              ".cell"
+                          );
+
+                if (!target) {
+                    return;
+                }
+
+                selected =
+                    Number(
+                        target.dataset.index
+                    );
+
+                renderBoard();
+            }
+        );
+    }
+
+    /*
+     * 숫자 패드
+     */
+
+    document
+    .querySelectorAll(
+        "#pad .num"
+    )
+    .forEach(
+        function (button) {
+
+            button.addEventListener(
+                "pointerdown",
+                function (event) {
+
+                    event.preventDefault();
+
+                    inputNumber(
+                        Number(
+                            button.dataset.n
+                        )
+                    );
+                }
+            );
+        }
+    );
+
+    /*
+     * 지우기
+     */
+
+    $("erase")
+    .addEventListener(
+        "pointerdown",
+        function (event) {
+
+            event.preventDefault();
+
+            inputNumber(0);
+        }
+    );
+
+    /*
+     * 메모
+     */
+
+    $("pencil")
+    .addEventListener(
+        "pointerdown",
+        function (event) {
+
+            event.preventDefault();
+
+            pencilMode =
+                !pencilMode;
+
+            $("pencil")
+            .classList.toggle(
+                "active",
+                pencilMode
+            );
+        }
+    );
+
+    /*
+     * 난이도 표시
+     */
+
+    function updateLevelTabs() {
+
+        document
+        .querySelectorAll(
+            "#level-tabs .tab"
+        )
+        .forEach(
+            function (button) {
+
+                button.classList.toggle(
+                    "active",
+                    button.dataset.level ===
+                    level
+                );
+            }
+        );
+    }
+
+    /*
+     * 진행 중인지 확인
+     */
+
+    function hasProgress() {
+
+        if (
+            !board ||
+            !given ||
+            done
+        ) {
+
+            return false;
+        }
+
+        return board.some(
+            function (
+                value,
+                index
+            ) {
+
+                return (
+                    value &&
+                    !given[
+                        index
+                        ]
+                );
+            }
+        );
+    }
+
+    /*
+     * 새 퍼즐
+     */
+
+    $("new-game")
+    .addEventListener(
+        "click",
+        function () {
+
+            if (
+                hasProgress() &&
+                !window.confirm(
+                    TEXT.confirm
+                )
+            ) {
+
+                return;
+            }
+
+            newGame(
+                false
+            );
+        }
+    );
+
+    /*
+     * 오늘의 퍼즐
+     */
+
+    $("daily-btn")
+    .addEventListener(
+        "click",
+        function () {
+
+            if (
+                hasProgress() &&
+                !window.confirm(
+                    TEXT.confirm
+                )
+            ) {
+
+                return;
+            }
+
+            level =
+                "mid";
+
+            updateLevelTabs();
+
+            newGame(
+                true
+            );
+        }
+    );
+
+    /*
+     * 오늘의 퍼즐 공유
+     */
+
+    $("share-daily")
+    .addEventListener(
+        "click",
+        async function () {
+
+            let streak = {};
+
+            try {
+
+                streak =
+                    JSON.parse(
+                        localStorage.getItem(
+                            STREAK_KEY
+                        ) ||
+                        "{}"
+                    );
+
+            } catch (error) {
+
+                streak = {};
+            }
+
+            const shareText =
+                      "🔢 오늘의 스도쿠 (" +
+                      getTodayKey() +
+                      ") " +
+                      formatTime(
+                          streak.time ||
+                          0
+                      ) +
+                      " 클리어! 🔥 " +
+                      (
+                          streak.streak ||
+                          1
+                      ) +
+                      "일 연속";
+
+            try {
+
+                if (
+                    navigator.share
+                ) {
+
+                    await navigator.share({
+                        text:
+                        shareText
+                    });
+
+                } else if (
+                    navigator.clipboard
+                ) {
+
+                    await navigator.clipboard.writeText(
+                        shareText
+                    );
+
+                    $("status")
+                        .textContent =
+                        "📋 결과가 복사되었습니다 — 붙여넣어 공유하세요!";
+                }
+
+            } catch (error) {
+                /*
+                 * 공유 취소
+                 */
+            }
+        }
+    );
+
+    /*
+     * 키보드
+     */
+
+    window.addEventListener(
+        "keydown",
+        function (event) {
+
+            if (
+                event.key >= "1" &&
+                event.key <= "9"
+            ) {
+
+                inputNumber(
+                    Number(
+                        event.key
+                    )
+                );
+
+                return;
+            }
+
+            if (
+                event.key ===
+                "Backspace" ||
+                event.key ===
+                "Delete" ||
+                event.key === "0"
+            ) {
+
+                inputNumber(0);
+
+                return;
+            }
+
+            if (
+                event.key.toLowerCase() ===
+                "n"
+            ) {
+
+                pencilMode =
+                    !pencilMode;
+
+                $("pencil")
+                .classList.toggle(
+                    "active",
+                    pencilMode
+                );
+
+                return;
+            }
+
+            /*
+             * 방향키 이동
+             */
+
+            if (
+                event.key.startsWith(
+                    "Arrow"
+                ) &&
+                selected >= 0
+            ) {
+
+                event.preventDefault();
+
+                let next =
+                        selected;
+
+                if (
+                    event.key ===
+                    "ArrowLeft"
+                ) {
+
+                    if (
+                        selected % 9 >
+                        0
+                    ) {
+
+                        next =
+                            selected -
+                            1;
+                    }
+
+                } else if (
+                    event.key ===
+                    "ArrowRight"
+                ) {
+
+                    if (
+                        selected % 9 <
+                        8
+                    ) {
+
+                        next =
+                            selected +
+                            1;
+                    }
+
+                } else if (
+                    event.key ===
+                    "ArrowUp"
+                ) {
+
+                    if (
+                        selected >= 9
+                    ) {
+
+                        next =
+                            selected -
+                            9;
+                    }
+
+                } else if (
+                    event.key ===
+                    "ArrowDown"
+                ) {
+
+                    if (
+                        selected < 72
+                    ) {
+
+                        next =
+                            selected +
+                            9;
+                    }
+                }
+
+                if (
+                    next !==
+                    selected
+                ) {
+
+                    selected =
+                        next;
+
+                    renderBoard();
+                }
+            }
+        }
+    );
+
+    /*
+     * 난이도 변경
+     */
+
+    document
+    .querySelectorAll(
+        "#level-tabs .tab"
+    )
+    .forEach(
+        function (button) {
+
+            button.addEventListener(
+                "click",
+                function () {
+
+                    const nextLevel =
+                              button.dataset.level;
+
+                    if (
+                        nextLevel ===
+                        level &&
+                        !daily
+                    ) {
+
+                        return;
+                    }
+
+                    if (
+                        hasProgress() &&
+                        !window.confirm(
+                            TEXT.confirm
+                        )
+                    ) {
+
+                        return;
+                    }
+
+                    level =
+                        nextLevel;
+
+                    daily =
+                        false;
+
+                    updateLevelTabs();
+
+                    updateHud();
+
+                    newGame(
+                        false
+                    );
+                }
+            );
+        }
+    );
+
+    /*
+     * 페이지 종료 전 저장
+     */
+
+    window.addEventListener(
+        "pagehide",
+        function () {
+
+            saveGameState();
+        }
+    );
+
+    /*
+     * 초기화
+     */
+
+    function initialize() {
+
+        buildBoard();
+
+        updateSfxButton();
+
+        updateLevelTabs();
+
+        /*
+         * ?daily
+         * → 오늘의 퍼즐
+         * → 이어하기
+         * → 새 게임
+         */
+
+        const parameters =
+                  new URLSearchParams(
+                      window.location.search
+                  );
+
+        if (
+            parameters.has(
+                "daily"
+            )
+        ) {
+
+            newGame(
+                true
+            );
+
+        } else if (
+            !restoreGame()
+        ) {
+
+            newGame(
+                false
+            );
+        }
+    }
+
+    initialize();
+</script>
+
+</body>
+</html>
