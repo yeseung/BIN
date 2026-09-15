@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>반응속도 테스트 - 5회 평균 반응시간 측정</title>
+
+    <meta
+            name="description"
+            content="화면이 초록색으로 바뀌는 순간 빠르게 클릭하여 반응속도를 측정하는 무료 웹 테스트입니다. 5회 평균 반응시간을 측정합니다."
+    >
+    <meta
+            name="keywords"
+            content="반응속도 테스트, 반응속도 측정, 반응시간 테스트, reaction test, 클릭 테스트, 무료 테스트"
+    >
+
+    <meta property="og:title" content="⚡ 반응속도 테스트">
+    <meta
+            property="og:description"
+            content="초록색으로 바뀌는 순간 클릭하세요. 5회 평균으로 반응속도를 측정합니다."
+    >
+    <meta property="og:type" content="website">
+
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="manifest" href="/manifest.webmanifest">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+            href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap"
+            rel="stylesheet"
+    >
+
+    <style>
+        :root {
+            --background: #ffffff;
+            --surface: #ffffff;
+            --surface-soft: #f8fafc;
+
+            --text: #111827;
+            --text-soft: #6b7280;
+
+            --border: #e5e7eb;
+            --border-dark: #cbd5e1;
+
+            --accent: #2563eb;
+            --accent-weak: #eff6ff;
+
+            --waiting: #d94040;
+            --ready: #2eb85c;
+            --early: #e6a23c;
+
+            --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+            --radius: 24px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+
+            background: var(--background);
+            color: var(--text);
+
+            font-family: "Noto Sans KR", sans-serif;
+            letter-spacing: -0.04em;
+            word-break: keep-all;
+        }
+
+        button {
+            font: inherit;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container {
+            width: min(100% - 32px, 800px);
+            margin: 0 auto;
+            padding: 60px 0;
+        }
+
+        .page-header {
+            margin-bottom: 28px;
+            text-align: center;
+        }
+
+        h1 {
+            margin: 0 0 12px;
+
+            font-size: clamp(2rem, 6vw, 3rem);
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .lead {
+            max-width: 680px;
+            margin: 0 auto;
+
+            color: var(--text-soft);
+
+            font-size: 1.05rem;
+            line-height: 1.8;
+        }
+
+        .lead strong {
+            color: var(--text);
+            font-weight: 800;
+        }
+
+        .card {
+            padding: 24px;
+
+            background: var(--surface);
+
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+
+            box-shadow: var(--shadow);
+        }
+
+        /* HUD */
+
+        .type-hud {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+
+            gap: 8px;
+
+            margin-bottom: 16px;
+        }
+
+        .hud-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+
+            min-height: 42px;
+            padding: 8px 14px;
+
+            background: var(--surface-soft);
+
+            border: 1px solid var(--border);
+            border-radius: 14px;
+
+            color: var(--text-soft);
+
+            font-size: 0.88rem;
+            white-space: nowrap;
+        }
+
+        .hud-item strong {
+            color: var(--text);
+
+            font-size: 1rem;
+            font-weight: 800;
+        }
+
+        .hud-item small {
+            font-size: 0.78rem;
+        }
+
+        .secondary {
+            min-height: 42px;
+            padding: 8px 13px;
+
+            background: #ffffff;
+            color: var(--text);
+
+            border: 1px solid var(--border-dark);
+            border-radius: 14px;
+
+            cursor: pointer;
+
+            font-weight: 700;
+
+            transition:
+                    background 0.15s ease,
+                    border-color 0.15s ease,
+                    transform 0.15s ease;
+        }
+
+        .secondary:hover {
+            background: var(--surface-soft);
+            border-color: #94a3b8;
+        }
+
+        .secondary:active {
+            transform: scale(0.97);
+        }
+
+        .secondary:focus-visible {
+            outline: 3px solid rgba(37, 99, 235, 0.18);
+            outline-offset: 2px;
+        }
+
+        .sfx-button {
+            width: 44px;
+            padding: 7px;
+
+            font-size: 1rem;
+            line-height: 1;
+        }
+
+        /* 반응속도 패드 */
+
+        .reaction-pad {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+
+            gap: 8px;
+
+            width: 100%;
+            height: 340px;
+            padding: 24px;
+
+            background: var(--accent-weak);
+            color: var(--text);
+
+            border: 0;
+            border-radius: 18px;
+
+            cursor: pointer;
+
+            text-align: center;
+
+            user-select: none;
+            -webkit-user-select: none;
+
+            touch-action: manipulation;
+
+            transition:
+                    background-color 0.12s ease,
+                    color 0.12s ease,
+                    transform 0.08s ease;
+        }
+
+        .reaction-pad:active {
+            transform: scale(0.997);
+        }
+
+        .reaction-pad:focus-visible {
+            outline: 4px solid rgba(37, 99, 235, 0.2);
+            outline-offset: 3px;
+        }
+
+        .reaction-pad.waiting {
+            background: var(--waiting);
+            color: #ffffff;
+        }
+
+        .reaction-pad.ready {
+            background: var(--ready);
+            color: #ffffff;
+        }
+
+        .reaction-pad.early {
+            background: var(--early);
+            color: #ffffff;
+        }
+
+        .pad-emoji {
+            font-size: 44px;
+            line-height: 1.2;
+        }
+
+        .pad-text {
+            font-size: 1.15rem;
+            font-weight: 800;
+            line-height: 1.5;
+        }
+
+        .pad-sub {
+            color: var(--text-soft);
+
+            font-size: 0.88rem;
+            line-height: 1.6;
+        }
+
+        .reaction-pad.waiting .pad-sub,
+        .reaction-pad.ready .pad-sub,
+        .reaction-pad.early .pad-sub {
+            color: rgba(255, 255, 255, 0.88);
+        }
+
+        /* 결과 */
+
+        .result {
+            margin-top: 18px;
+
+            overflow: hidden;
+
+            background: #ffffff;
+
+            border: 1px solid var(--border);
+            border-radius: 18px;
+        }
+
+        .result[hidden] {
+            display: none;
+        }
+
+        .result-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 20px;
+
+            min-height: 58px;
+            padding: 14px 18px;
+
+            border-bottom: 1px solid var(--border);
+
+            font-size: 0.95rem;
+        }
+
+        .result-row:last-child {
+            border-bottom: 0;
+        }
+
+        .result-row > :last-child {
+            text-align: right;
+        }
+
+        .result-row.muted {
+            color: var(--text-soft);
+        }
+
+        .result-row .big {
+            color: var(--text);
+
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        #grade {
+            max-width: 70%;
+
+            line-height: 1.6;
+        }
+
+        #rounds {
+            line-height: 1.6;
+        }
+
+        .keyboard-help {
+            margin: 14px 0 0;
+
+            color: var(--text-soft);
+
+            font-size: 0.82rem;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                width: min(100% - 20px, 800px);
+                padding: 32px 0;
+            }
+
+            .card {
+                padding: 14px;
+                border-radius: 20px;
+            }
+
+            .type-hud {
+                display: grid;
+
+                grid-template-columns:
+          repeat(3, minmax(0, 1fr))
+          42px;
+
+                gap: 6px;
+            }
+
+            .hud-item {
+                flex-direction: column;
+                justify-content: center;
+
+                min-width: 0;
+                min-height: 50px;
+
+                padding: 5px 3px;
+
+                font-size: 0.74rem;
+            }
+
+            .hud-item strong {
+                font-size: 0.88rem;
+            }
+
+            .sfx-button {
+                width: 42px;
+                min-height: 50px;
+            }
+
+            .reaction-pad {
+                height: 300px;
+                padding: 20px;
+
+                border-radius: 16px;
+            }
+
+            .pad-emoji {
+                font-size: 40px;
+            }
+
+            .pad-text {
+                font-size: 1.05rem;
+            }
+
+            .result-row {
+                gap: 12px;
+                padding: 13px 14px;
+
+                font-size: 0.88rem;
+            }
+
+            #grade {
+                max-width: 65%;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .container {
+                width: min(100% - 12px, 800px);
+            }
+
+            .card {
+                padding: 10px;
+            }
+
+            .hud-item {
+                font-size: 0.7rem;
+            }
+
+            .hud-item strong {
+                font-size: 0.82rem;
+            }
+
+            .reaction-pad {
+                height: 280px;
+            }
+
+            .result-row {
+                align-items: flex-start;
+                flex-direction: column;
+
+                gap: 5px;
+            }
+
+            .result-row > :last-child,
+            #grade {
+                max-width: 100%;
+                text-align: left;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<main class="container">
+
+    <header class="page-header">
+
+        <h1>⚡ 반응속도 테스트</h1>
+
+        <p class="lead">
+            빨간 화면이
+            <strong>초록색으로 바뀌는 순간</strong>
+            최대한 빨리 탭(클릭)하세요.
+            5회 평균으로 정확한 반응속도를 측정합니다.
+        </p>
+
+    </header>
+
+    <section
+            class="card typing-card"
+            aria-label="반응속도 테스트"
+    >
+
+        <div class="type-hud">
+
+        <span class="hud-item">
+          라운드
+          <strong id="hud-round">-</strong>
+          <small>/5</small>
+        </span>
+
+            <span class="hud-item">
+          이번 기록
+          <strong id="hud-last">-</strong>
+          <small>ms</small>
+        </span>
+
+            <span class="hud-item">
+          최고 평균
+          <strong id="hud-best">-</strong>
+          <small>ms</small>
+        </span>
+
+            <button
+                    id="sfx-btn"
+                    class="secondary sfx-button"
+                    type="button"
+                    aria-label="효과음 켜기"
+                    aria-pressed="false"
+                    title="효과음 켜기 또는 끄기"
+            >
+                🔇
+            </button>
+
+        </div>
+
+        <div
+                id="pad"
+                class="reaction-pad"
+                role="button"
+                tabindex="0"
+                aria-label="반응속도 테스트 시작"
+        >
+
+            <div
+                    id="pad-emoji"
+                    class="pad-emoji"
+                    aria-hidden="true"
+            >
+                ⚡
+            </div>
+
+            <div
+                    id="pad-text"
+                    class="pad-text"
+            >
+                터치해서 시작
+            </div>
+
+            <div
+                    id="pad-sub"
+                    class="pad-sub"
+            >
+                초록색이 되면 최대한 빨리!
+            </div>
+
+        </div>
+
+        <div
+                class="result"
+                id="result"
+                hidden
+        >
+
+            <div class="result-row">
+                <span>평균 반응속도</span>
+                <span
+                        class="big"
+                        id="avg"
+                >
+            —
+          </span>
+            </div>
+
+            <div class="result-row">
+                <span>등급</span>
+                <strong id="grade">—</strong>
+            </div>
+
+            <div class="result-row muted">
+                <span>5회 기록</span>
+                <span id="rounds">—</span>
+            </div>
+
+            <div class="result-row muted">
+                <span>가장 빠른 기록</span>
+                <span id="best-round">—</span>
+            </div>
+
+        </div>
+
+        <p class="keyboard-help">
+            💻 마우스 클릭 · 📱 화면 터치 · ⌨️ Space 또는 Enter
+        </p>
+
+    </section>
+
+</main>
+
+<script>
+    "use strict";
+
+    const $ = function (id) {
+        return document.getElementById(id);
+    };
+
+    /*
+     * 설정
+     */
+
+    const TOTAL_ROUNDS = 5;
+
+    const BEST_KEY =
+              "reaction_best_v1";
+
+    const SFX_KEY =
+              "reaction_sfx_v1";
+
+    /*
+     * 문구
+     */
+
+    const TEXT = {
+        wait:
+            "기다리세요…",
+
+        waitSub:
+            "초록색이 되면 탭!",
+
+        go:
+            "지금 탭!",
+
+        early:
+            "너무 빨라요!",
+
+        earlySub:
+            "초록색이 된 다음에 탭하세요. 터치하면 재시도.",
+
+        bestSub:
+            "신기록! 터치해서 다시 도전",
+
+        retrySub:
+            "터치해서 다시 도전"
+    };
+
+    /*
+     * 등급
+     */
+
+    const GRADES = [
+        {
+            max: 170,
+            grade: "⚡ S",
+            description:
+                "프로게이머급! 상위 1% 반응속도입니다."
+        },
+        {
+            max: 210,
+            grade: "🥇 A",
+            description:
+                "매우 빠릅니다. 상위 10% 수준."
+        },
+        {
+            max: 250,
+            grade: "🥈 B",
+            description:
+                "평균보다 빠른 편입니다 (상위 30%)."
+        },
+        {
+            max: 300,
+            grade: "🥉 C",
+            description:
+                "일반 성인 평균 범위(250~270ms)입니다."
+        },
+        {
+            max: 380,
+            grade: "D",
+            description:
+                "평균보다 조금 느려요. 피곤하신가요?"
+        },
+        {
+            max: Infinity,
+            grade: "E",
+            description:
+                "느긋한 편이네요. 커피 한잔 후 재도전!"
+        }
+    ];
+
+    /*
+     * 상태
+     *
+     * idle    시작 전
+     * waiting 빨간 화면
+     * ready   초록 화면
+     * between 라운드 사이
+     * done    테스트 완료
+     */
+
+    let state = "idle";
+
+    let waitTimer = null;
+
+    let readyAt = 0;
+
+    let round = 0;
+
+    let records = [];
+
+    const pad = $("pad");
+
+    /*
+     * 효과음
+     */
+
+    let sfxEnabled =
+            localStorage.getItem(
+                SFX_KEY
+            ) === "1";
+
+    let audioContext = null;
+
+    function updateSfxButton() {
+
+        const button =
+                  $("sfx-btn");
+
+        button.textContent =
+            sfxEnabled
+                ? "🔊"
+                : "🔇";
+
+        button.setAttribute(
+            "aria-pressed",
+            String(sfxEnabled)
+        );
+
+        button.setAttribute(
+            "aria-label",
+            sfxEnabled
+                ? "효과음 끄기"
+                : "효과음 켜기"
+        );
+    }
+
+    function getAudioContext() {
+
+        if (!audioContext) {
+
+            const AudioContextClass =
+                      window.AudioContext ||
+                      window.webkitAudioContext;
+
+            if (!AudioContextClass) {
+                return null;
+            }
+
+            audioContext =
+                new AudioContextClass();
+        }
+
+        if (
+            audioContext.state ===
+            "suspended"
+        ) {
+            audioContext.resume();
+        }
+
+        return audioContext;
+    }
+
+    function playTone(
+        frequency,
+        duration,
+        volume,
+        type
+    ) {
+
+        if (!sfxEnabled) {
+            return;
+        }
+
+        const context =
+                  getAudioContext();
+
+        if (!context) {
+            return;
+        }
+
+        const oscillator =
+                  context.createOscillator();
+
+        const gain =
+                  context.createGain();
+
+        oscillator.type =
+            type || "sine";
+
+        oscillator.frequency
+        .setValueAtTime(
+            frequency,
+            context.currentTime
+        );
+
+        gain.gain
+        .setValueAtTime(
+            volume,
+            context.currentTime
+        );
+
+        gain.gain
+        .exponentialRampToValueAtTime(
+            0.001,
+            context.currentTime +
+            duration
+        );
+
+        oscillator.connect(gain);
+
+        gain.connect(
+            context.destination
+        );
+
+        oscillator.start();
+
+        oscillator.stop(
+            context.currentTime +
+            duration
+        );
+    }
+
+    function playStartSound() {
+
+        playTone(
+            430,
+            0.06,
+            0.025,
+            "sine"
+        );
+    }
+
+    function playReadySound() {
+
+        playTone(
+            850,
+            0.07,
+            0.025,
+            "sine"
+        );
+    }
+
+    function playRecordSound() {
+
+        playTone(
+            660,
+            0.06,
+            0.025,
+            "sine"
+        );
+    }
+
+    function playBadSound() {
+
+        playTone(
+            150,
+            0.16,
+            0.035,
+            "square"
+        );
+    }
+
+    function playFinishSound() {
+
+        playTone(
+            520,
+            0.08,
+            0.025,
+            "sine"
+        );
+
+        window.setTimeout(
+            function () {
+
+                playTone(
+                    700,
+                    0.08,
+                    0.025,
+                    "sine"
+                );
+
+            },
+            80
+        );
+
+        window.setTimeout(
+            function () {
+
+                playTone(
+                    920,
+                    0.14,
+                    0.025,
+                    "sine"
+                );
+
+            },
+            160
+        );
+    }
+
+    $("sfx-btn")
+    .addEventListener(
+        "click",
+        function (event) {
+
+            event.stopPropagation();
+
+            sfxEnabled =
+                !sfxEnabled;
+
+            localStorage.setItem(
+                SFX_KEY,
+                sfxEnabled
+                    ? "1"
+                    : "0"
+            );
+
+            updateSfxButton();
+
+            if (sfxEnabled) {
+
+                playTone(
+                    700,
+                    0.08,
+                    0.03,
+                    "sine"
+                );
+            }
+        }
+    );
+
+    /*
+     * 패드 화면
+     */
+
+    function setPad(
+        mode,
+        emoji,
+        text,
+        sub
+    ) {
+
+        pad.classList.remove(
+            "waiting",
+            "ready",
+            "early"
+        );
+
+        if (
+            mode &&
+            mode !== "idle"
+        ) {
+
+            pad.classList.add(
+                mode
+            );
+        }
+
+        $("pad-emoji")
+            .textContent =
+            emoji;
+
+        $("pad-text")
+            .textContent =
+            text;
+
+        $("pad-sub")
+            .textContent =
+            sub || "";
+    }
+
+    /*
+     * 최고 평균
+     */
+
+    function getBestAverage() {
+
+        const value =
+                  parseInt(
+                      localStorage.getItem(
+                          BEST_KEY
+                      ),
+                      10
+                  );
+
+        return Number.isFinite(value)
+            ? value
+            : null;
+    }
+
+    function updateBestHud() {
+
+        const best =
+                  getBestAverage();
+
+        $("hud-best")
+            .textContent =
+            best === null
+                ? "-"
+                : String(best);
+    }
+
+    /*
+     * 등급 판정
+     */
+
+    function getGrade(
+        average
+    ) {
+
+        for (
+            const item of GRADES
+            ) {
+
+            if (
+                average <
+                item.max
+            ) {
+
+                return item;
+            }
+        }
+
+        return GRADES[
+        GRADES.length - 1
+            ];
+    }
+
+    /*
+     * 라운드 시작
+     */
+
+    function startRound() {
+
+        state =
+            "waiting";
+
+        setPad(
+            "waiting",
+            "🔴",
+            TEXT.wait,
+            TEXT.waitSub
+        );
+
+        /*
+         * 1.5 ~ 4초 랜덤 대기
+         */
+
+        const delay =
+                  1500 +
+                  Math.random() *
+                  2500;
+
+        waitTimer =
+            window.setTimeout(
+                function () {
+
+                    state =
+                        "ready";
+
+                    /*
+                     * 초록색으로 바꾼 시점
+                     * 직후에 시간을 기록
+                     */
+
+                    setPad(
+                        "ready",
+                        "🟢",
+                        TEXT.go,
+                        ""
+                    );
+
+                    readyAt =
+                        performance.now();
+
+                    playReadySound();
+
+                },
+                delay
+            );
+    }
+
+    /*
+     * 테스트 완료
+     */
+
+    function finishTest() {
+
+        state =
+            "done";
+
+        const sum =
+                  records.reduce(
+                      function (
+                          total,
+                          value
+                      ) {
+
+                          return (
+                              total +
+                              value
+                          );
+                      },
+                      0
+                  );
+
+        const average =
+                  Math.round(
+                      sum /
+                      records.length
+                  );
+
+        const grade =
+                  getGrade(
+                      average
+                  );
+
+        $("avg")
+            .textContent =
+            average +
+            "ms";
+
+        $("grade")
+            .textContent =
+            grade.grade +
+            " — " +
+            grade.description;
+
+        $("rounds")
+            .textContent =
+            records
+            .map(
+                function (record) {
+
+                    return (
+                        record +
+                        "ms"
+                    );
+                }
+            )
+            .join(" · ");
+
+        $("best-round")
+            .textContent =
+            Math.min(
+                ...records
+            ) +
+            "ms";
+
+        $("result")
+            .hidden =
+            false;
+
+        /*
+         * 최고 평균 기록
+         *
+         * 낮을수록 좋은 기록
+         */
+
+        const previousBest =
+                  getBestAverage();
+
+        const isBest =
+                  previousBest === null ||
+                  average <
+                  previousBest;
+
+        if (isBest) {
+
+            localStorage.setItem(
+                BEST_KEY,
+                String(average)
+            );
+        }
+
+        updateBestHud();
+
+        setPad(
+            "idle",
+            isBest
+                ? "🎉"
+                : "⚡",
+
+            "평균 " +
+            average +
+            "ms (" +
+            grade.grade +
+            ")",
+
+            isBest
+                ? TEXT.bestSub
+                : TEXT.retrySub
+        );
+
+        $("hud-round")
+            .textContent =
+            "5";
+
+        playFinishSound();
+    }
+
+    /*
+     * 패드 입력
+     */
+
+    function handlePress() {
+
+        /*
+         * 시작 또는 재시작
+         */
+
+        if (
+            state === "idle" ||
+            state === "done"
+        ) {
+
+            if (waitTimer) {
+
+                clearTimeout(
+                    waitTimer
+                );
+            }
+
+            round = 0;
+
+            records = [];
+
+            $("result")
+                .hidden =
+                true;
+
+            $("hud-round")
+                .textContent =
+                "1";
+
+            $("hud-last")
+                .textContent =
+                "-";
+
+            playStartSound();
+
+            startRound();
+
+            return;
+        }
+
+        /*
+         * 너무 빨리 누름
+         */
+
+        if (
+            state === "waiting"
+        ) {
+
+            clearTimeout(
+                waitTimer
+            );
+
+            state =
+                "between";
+
+            playBadSound();
+
+            setPad(
+                "early",
+                "😅",
+                TEXT.early,
+                TEXT.earlySub
+            );
+
+            return;
+        }
+
+        /*
+         * 부정 출발 후 재시도
+         *
+         * 라운드 횟수에는 포함하지 않음
+         */
+
+        if (
+            state === "between"
+        ) {
+
+            startRound();
+
+            return;
+        }
+
+        /*
+         * 정상 반응
+         */
+
+        if (
+            state === "ready"
+        ) {
+
+            const reactionTime =
+                      Math.round(
+                          performance.now() -
+                          readyAt
+                      );
+
+            playRecordSound();
+
+            records.push(
+                reactionTime
+            );
+
+            round++;
+
+            $("hud-last")
+                .textContent =
+                String(
+                    reactionTime
+                );
+
+            /*
+             * 5회 완료
+             */
+
+            if (
+                round >=
+                TOTAL_ROUNDS
+            ) {
+
+                finishTest();
+
+                return;
+            }
+
+            /*
+             * 다음 라운드
+             */
+
+            $("hud-round")
+                .textContent =
+                String(
+                    round + 1
+                );
+
+            state =
+                "between";
+
+            setPad(
+                "idle",
+                "👍",
+                reactionTime +
+                "ms!",
+
+                "터치해서 " +
+                (round + 1) +
+                "번째 라운드 진행 (" +
+                TOTAL_ROUNDS +
+                "회 중)"
+            );
+        }
+    }
+
+    /*
+     * pointerdown 사용
+     *
+     * click보다 빠르게 입력을 받아
+     * 반응시간 측정에 유리
+     */
+
+    pad.addEventListener(
+        "pointerdown",
+        function (event) {
+
+            event.preventDefault();
+
+            handlePress();
+        }
+    );
+
+    /*
+     * 키보드
+     */
+
+    window.addEventListener(
+        "keydown",
+        function (event) {
+
+            if (
+                event.key === " " ||
+                event.key === "Enter"
+            ) {
+
+                /*
+                 * 키 반복 입력 방지
+                 */
+
+                if (
+                    event.repeat
+                ) {
+                    return;
+                }
+
+                event.preventDefault();
+
+                handlePress();
+            }
+        }
+    );
+
+    /*
+     * 초기화
+     */
+
+    function initialize() {
+
+        updateBestHud();
+
+        updateSfxButton();
+
+        $("hud-round")
+            .textContent =
+            "-";
+
+        $("hud-last")
+            .textContent =
+            "-";
+
+        setPad(
+            "idle",
+            "⚡",
+            "터치해서 시작",
+            "초록색이 되면 최대한 빨리!"
+        );
+    }
+
+    initialize();
+</script>
+
+</body>
+</html>
