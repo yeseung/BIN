@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>2048 퍼즐 - 무료 숫자 퍼즐 게임</title>
+
+    <meta
+            name="description"
+            content="같은 숫자 타일을 밀어서 합치고 2048을 만드는 무료 숫자 퍼즐 게임입니다. PC 방향키와 모바일 스와이프를 지원합니다."
+    >
+    <meta
+            name="keywords"
+            content="2048, 2048 퍼즐, 숫자 퍼즐, 퍼즐 게임, 무료 게임, 웹 게임"
+    >
+
+    <meta property="og:title" content="2048 퍼즐">
+    <meta
+            property="og:description"
+            content="같은 숫자 타일을 밀어서 합치고 2048을 만들어 보세요."
+    >
+    <meta property="og:type" content="website">
+
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="manifest" href="/manifest.webmanifest">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+            href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap"
+            rel="stylesheet"
+    >
+
+    <style>
+        :root {
+            --background: #ffffff;
+            --surface: #ffffff;
+            --surface-soft: #f8fafc;
+
+            --text: #111827;
+            --text-soft: #6b7280;
+
+            --border: #e5e7eb;
+            --border-dark: #d1d5db;
+
+            --primary: #111827;
+            --primary-hover: #374151;
+
+            --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+            --radius: 24px;
+
+            --board-bg: #e5e7eb;
+            --cell-bg: #f8fafc;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: var(--background);
+            color: var(--text);
+            font-family: "Noto Sans KR", sans-serif;
+            letter-spacing: -0.04em;
+            word-break: keep-all;
+        }
+
+        button {
+            font: inherit;
+        }
+
+        button,
+        .board {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container {
+            width: min(100% - 32px, 720px);
+            margin: 0 auto;
+            padding: 60px 0;
+        }
+
+        .page-header {
+            margin-bottom: 28px;
+            text-align: center;
+        }
+
+        h1 {
+            margin: 0 0 12px;
+            font-size: clamp(2rem, 6vw, 3rem);
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .lead {
+            max-width: 600px;
+            margin: 0 auto;
+            color: var(--text-soft);
+            font-size: 1.05rem;
+            line-height: 1.8;
+        }
+
+        .lead strong {
+            color: var(--text);
+        }
+
+        .card {
+            padding: 24px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .type-hud {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 22px;
+        }
+
+        .hud-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 40px;
+            padding: 8px 14px;
+            background: var(--surface-soft);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            color: var(--text-soft);
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        .hud-item strong {
+            color: var(--text);
+            font-size: 1rem;
+            font-weight: 800;
+        }
+
+        button {
+            min-height: 42px;
+            padding: 9px 16px;
+            border: 0;
+            border-radius: 14px;
+            cursor: pointer;
+            transition:
+                    background 0.15s ease,
+                    border-color 0.15s ease,
+                    transform 0.15s ease;
+        }
+
+        button:active {
+            transform: scale(0.97);
+        }
+
+        button:focus-visible {
+            outline: 3px solid rgba(17, 24, 39, 0.16);
+            outline-offset: 2px;
+        }
+
+        .secondary {
+            background: #ffffff;
+            color: var(--text);
+            border: 1px solid var(--border-dark);
+            font-weight: 700;
+        }
+
+        .secondary:hover {
+            background: var(--surface-soft);
+            border-color: #9ca3af;
+        }
+
+        .hud-button {
+            min-height: 40px;
+            padding: 7px 13px;
+            font-size: 0.86rem;
+        }
+
+        .sfx-button {
+            width: 42px;
+            padding: 7px;
+            font-size: 1rem;
+            line-height: 1;
+        }
+
+        .board-wrap {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .board {
+            position: relative;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+
+            width: min(100%, 500px);
+            aspect-ratio: 1 / 1;
+
+            padding: 10px;
+            overflow: hidden;
+
+            background: var(--board-bg);
+            border-radius: 20px;
+
+            touch-action: none;
+            user-select: none;
+        }
+
+        .cell,
+        .tile {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            min-width: 0;
+            aspect-ratio: 1 / 1;
+
+            border-radius: 15px;
+        }
+
+        .cell {
+            background: var(--cell-bg);
+            border: 1px solid rgba(209, 213, 219, 0.7);
+        }
+
+        .tile {
+            background: #ffffff;
+            border: 1px solid var(--border-dark);
+            color: var(--text);
+
+            font-size: clamp(1.3rem, 7vw, 2.3rem);
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .tile[data-v="2"] {
+            background: #ffffff;
+        }
+
+        .tile[data-v="4"] {
+            background: #f9fafb;
+        }
+
+        .tile[data-v="8"] {
+            background: #f3f4f6;
+        }
+
+        .tile[data-v="16"] {
+            background: #e5e7eb;
+        }
+
+        .tile[data-v="32"] {
+            background: #d1d5db;
+        }
+
+        .tile[data-v="64"] {
+            background: #9ca3af;
+            color: #ffffff;
+        }
+
+        .tile[data-v="128"] {
+            background: #6b7280;
+            color: #ffffff;
+        }
+
+        .tile[data-v="256"] {
+            background: #4b5563;
+            color: #ffffff;
+        }
+
+        .tile[data-v="512"] {
+            background: #374151;
+            color: #ffffff;
+        }
+
+        .tile[data-v="1024"] {
+            background: #1f2937;
+            color: #ffffff;
+            font-size: clamp(1.05rem, 6vw, 1.9rem);
+        }
+
+        .tile[data-v="2048"] {
+            background: #111827;
+            color: #ffffff;
+            font-size: clamp(1.05rem, 6vw, 1.9rem);
+        }
+
+        .tile[data-v="4096"],
+        .tile[data-v="8192"],
+        .tile[data-v="16384"] {
+            background: #030712;
+            color: #ffffff;
+            font-size: clamp(0.9rem, 5vw, 1.6rem);
+        }
+
+        .pop {
+            animation: tile-pop 0.18s ease;
+        }
+
+        .merge {
+            animation: tile-merge 0.22s ease;
+        }
+
+        @keyframes tile-pop {
+            0% {
+                transform: scale(0.6);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes tile-merge {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.12);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .board-over {
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+
+            padding: 24px;
+
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(4px);
+
+            color: var(--text);
+            text-align: center;
+
+            font-size: clamp(1.8rem, 7vw, 2.8rem);
+            font-weight: 800;
+        }
+
+        .board-over span {
+            color: var(--text-soft);
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .btn-row {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .new-button {
+            min-width: 140px;
+        }
+
+        .small {
+            font-size: 0.88rem;
+            line-height: 1.7;
+        }
+
+        .muted {
+            color: var(--text-soft);
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .game-help {
+            margin: 12px 0 0;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                width: min(100% - 20px, 720px);
+                padding: 32px 0;
+            }
+
+            .card {
+                padding: 16px;
+                border-radius: 20px;
+            }
+
+            .type-hud {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 8px;
+                margin-bottom: 16px;
+            }
+
+            .hud-item {
+                justify-content: center;
+                padding: 8px 10px;
+            }
+
+            .hud-button {
+                width: 100%;
+            }
+
+            .sfx-button {
+                width: 100%;
+            }
+
+            .board {
+                gap: 7px;
+                padding: 7px;
+                border-radius: 16px;
+            }
+
+            .cell,
+            .tile {
+                border-radius: 12px;
+            }
+
+            .tile {
+                font-size: clamp(1.2rem, 8vw, 2rem);
+            }
+        }
+
+        @media (max-width: 380px) {
+            .card {
+                padding: 12px;
+            }
+
+            .board {
+                gap: 5px;
+                padding: 5px;
+            }
+
+            .cell,
+            .tile {
+                border-radius: 10px;
+            }
+
+            .hud-item,
+            .hud-button {
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<main class="container">
+
+    <header class="page-header">
+        <h1>🔢 2048 퍼즐</h1>
+
+        <p class="lead">
+            같은 숫자 타일을 밀어서 합치고,
+            <strong>2048</strong>을 만들어 보세요.
+            단순해 보여도 한 수 한 수가 전략입니다.
+        </p>
+    </header>
+
+    <section class="card typing-card" aria-label="2048 퍼즐 게임">
+
+        <div class="type-hud">
+
+        <span class="hud-item">
+          점수
+          <strong id="hud-score">0</strong>
+        </span>
+
+            <span class="hud-item">
+          최고 점수
+          <strong id="hud-best">0</strong>
+        </span>
+
+            <button
+                    id="undo-btn"
+                    class="secondary hud-button"
+                    type="button"
+                    aria-label="이전 상태로 되돌리기"
+            >
+                ↩ 되돌리기
+            </button>
+
+            <button
+                    id="sfx-btn"
+                    class="secondary hud-button sfx-button"
+                    type="button"
+                    aria-label="효과음 켜기 또는 끄기"
+                    aria-pressed="false"
+            >
+                🔇
+            </button>
+
+        </div>
+
+        <div class="board-wrap">
+            <div
+                    class="board"
+                    id="board"
+                    role="grid"
+                    aria-label="2048 게임판"
+            ></div>
+        </div>
+
+        <div class="btn-row">
+            <button
+                    id="new-btn"
+                    class="secondary new-button"
+                    type="button"
+            >
+                🔄 새 게임
+            </button>
+        </div>
+
+        <p class="small muted center game-help">
+            💻 PC: 방향키 · 📱 모바일: 보드를 원하는 방향으로 스와이프
+        </p>
+
+    </section>
+
+</main>
+
+<script>
+    "use strict";
+
+    /*
+     * 2048 Puzzle
+     * Vanilla JavaScript
+     * 모든 게임 데이터는 브라우저 localStorage에만 저장됩니다.
+     */
+
+    const GAME_TEXT = {
+        over: "게임 오버",
+        overSub(score) {
+            return score + "점 — 새 게임으로 재도전!";
+        }
+    };
+
+    const BEST_KEY = "g2048_best_v1";
+    const SAVE_KEY = "g2048_save_v1";
+    const SFX_KEY = "g2048_sfx_v1";
+
+    const boardEl = document.getElementById("board");
+    const scoreEl = document.getElementById("hud-score");
+    const bestEl = document.getElementById("hud-best");
+
+    const newButton = document.getElementById("new-btn");
+    const undoButton = document.getElementById("undo-btn");
+    const sfxButton = document.getElementById("sfx-btn");
+
+    let grid;
+    let score;
+    let gameIsOver;
+
+    let previousState = null;
+
+    let newCells = [];
+    let mergedCells = [];
+
+    let pointerStart = null;
+
+    /*
+     * 효과음
+     * 외부 오디오 파일 없이 Web Audio API 사용
+     */
+
+    let sfxEnabled = localStorage.getItem(SFX_KEY) === "1";
+    let audioContext = null;
+
+    function updateSfxButton() {
+        sfxButton.textContent = sfxEnabled ? "🔊" : "🔇";
+        sfxButton.setAttribute("aria-pressed", String(sfxEnabled));
+        sfxButton.setAttribute(
+            "aria-label",
+            sfxEnabled ? "효과음 끄기" : "효과음 켜기"
+        );
+    }
+
+    function getAudioContext() {
+        if (!audioContext) {
+            const AudioContextClass =
+                      window.AudioContext || window.webkitAudioContext;
+
+            if (!AudioContextClass) {
+                return null;
+            }
+
+            audioContext = new AudioContextClass();
+        }
+
+        if (audioContext.state === "suspended") {
+            audioContext.resume();
+        }
+
+        return audioContext;
+    }
+
+    function playTone(frequency, duration, volume) {
+        if (!sfxEnabled) {
+            return;
+        }
+
+        const context = getAudioContext();
+
+        if (!context) {
+            return;
+        }
+
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+
+        oscillator.type = "sine";
+        oscillator.frequency.value = frequency;
+
+        gain.gain.setValueAtTime(volume, context.currentTime);
+        gain.gain.exponentialRampToValueAtTime(
+            0.001,
+            context.currentTime + duration
+        );
+
+        oscillator.connect(gain);
+        gain.connect(context.destination);
+
+        oscillator.start();
+        oscillator.stop(context.currentTime + duration);
+    }
+
+    function playMoveSound() {
+        playTone(220, 0.05, 0.025);
+    }
+
+    function playMergeSound() {
+        playTone(440, 0.08, 0.04);
+    }
+
+    function playGoodSound() {
+        playTone(660, 0.1, 0.04);
+
+        window.setTimeout(function () {
+            playTone(880, 0.12, 0.035);
+        }, 70);
+    }
+
+    function playBadSound() {
+        playTone(150, 0.25, 0.04);
+    }
+
+    sfxButton.addEventListener("click", function () {
+        sfxEnabled = !sfxEnabled;
+
+        localStorage.setItem(
+            SFX_KEY,
+            sfxEnabled ? "1" : "0"
+        );
+
+        updateSfxButton();
+
+        if (sfxEnabled) {
+            playTone(520, 0.08, 0.035);
+        }
+    });
+
+    /*
+     * 게임판 생성
+     */
+
+    function createEmptyGrid() {
+        return Array.from(
+            { length: 4 },
+            function () {
+                return [0, 0, 0, 0];
+            }
+        );
+    }
+
+    /*
+     * 빈 공간에 2 또는 4 추가
+     * 90% 확률: 2
+     * 10% 확률: 4
+     */
+
+    function addTile(targetGrid) {
+        const emptyCells = [];
+
+        for (let row = 0; row < 4; row++) {
+            for (let col = 0; col < 4; col++) {
+                if (!targetGrid[row][col]) {
+                    emptyCells.push([row, col]);
+                }
+            }
+        }
+
+        if (!emptyCells.length) {
+            return null;
+        }
+
+        const randomIndex =
+                  Math.floor(Math.random() * emptyCells.length);
+
+        const position = emptyCells[randomIndex];
+
+        const row = position[0];
+        const col = position[1];
+
+        targetGrid[row][col] =
+            Math.random() < 0.9 ? 2 : 4;
+
+        return [row, col];
+    }
+
+    /*
+     * 한 행을 왼쪽 방향으로 이동 및 합치기
+     */
+
+    function slideRow(row) {
+        const values = row.filter(function (value) {
+            return value !== 0;
+        });
+
+        const output = [];
+        const merged = [];
+
+        let gainedScore = 0;
+
+        for (let i = 0; i < values.length; i++) {
+
+            if (values[i] === values[i + 1]) {
+
+                const mergedValue = values[i] * 2;
+
+                output.push(mergedValue);
+
+                gainedScore += mergedValue;
+
+                merged.push(output.length - 1);
+
+                i++;
+
+            } else {
+
+                output.push(values[i]);
+
+            }
+        }
+
+        while (output.length < 4) {
+            output.push(0);
+        }
+
+        return {
+            output: output,
+            gainedScore: gainedScore,
+            merged: merged
+        };
+    }
+
+    /*
+     * 게임판을 시계 방향으로 90도 회전
+     */
+
+    function rotateGrid(targetGrid) {
+        return targetGrid[0].map(
+            function (_, column) {
+                return targetGrid
+                .map(function (row) {
+                    return row[column];
+                })
+                .reverse();
+            }
+        );
+    }
+
+    function rotateGridTimes(targetGrid, count) {
+        let result = targetGrid;
+
+        for (let i = 0; i < count; i++) {
+            result = rotateGrid(result);
+        }
+
+        return result;
+    }
+
+    /*
+     * 방향
+     *
+     * 0 = 왼쪽
+     * 1 = 오른쪽
+     * 2 = 위
+     * 3 = 아래
+     *
+     * 모든 이동을 왼쪽 이동으로 변환해서 처리합니다.
+     */
+
+    const ROTATION_MAP = {
+        0: 0,
+        3: 1,
+        1: 2,
+        2: 3
+    };
+
+    function move(direction) {
+
+        if (gameIsOver) {
+            return;
+        }
+
+        const rotationCount =
+                  ROTATION_MAP[direction];
+
+        let rotatedGrid =
+                rotateGridTimes(grid, rotationCount);
+
+        let moved = false;
+        let gainedScore = 0;
+
+        const mergedPositions = [];
+
+        rotatedGrid = rotatedGrid.map(
+            function (row, rowIndex) {
+
+                const result = slideRow(row);
+
+                if (
+                    result.output.join(",") !==
+                    row.join(",")
+                ) {
+                    moved = true;
+                }
+
+                gainedScore += result.gainedScore;
+
+                result.merged.forEach(
+                    function (columnIndex) {
+                        mergedPositions.push([
+                            rowIndex,
+                            columnIndex
+                        ]);
+                    }
+                );
+
+                return result.output;
+            }
+        );
+
+        /*
+         * 실제로 움직이지 않았다면
+         * 새 타일도 생성하지 않습니다.
+         */
+
+        if (!moved) {
+            return;
+        }
+
+        /*
+         * 되돌리기용 상태 저장
+         */
+
+        previousState = {
+            grid: grid.map(function (row) {
+                return row.slice();
+            }),
+            score: score
+        };
+
+        /*
+         * 원래 방향으로 복원
+         */
+
+        grid = rotateGridTimes(
+            rotatedGrid,
+            (4 - rotationCount) % 4
+        );
+
+        score += gainedScore;
+
+        /*
+         * 합쳐진 타일 좌표 변환
+         */
+
+        mergedCells = mergedPositions.map(
+            function (position) {
+
+                let row = position[0];
+                let col = position[1];
+
+                for (
+                    let i = 0;
+                    i < (4 - rotationCount) % 4;
+                    i++
+                ) {
+                    const oldRow = row;
+
+                    row = col;
+                    col = 3 - oldRow;
+                }
+
+                return row * 4 + col;
+            }
+        );
+
+        /*
+         * 새 타일 생성
+         */
+
+        const addedPosition = addTile(grid);
+
+        newCells = addedPosition
+            ? [
+                addedPosition[0] * 4 +
+                addedPosition[1]
+            ]
+            : [];
+
+        /*
+         * 효과음
+         */
+
+        if (gainedScore > 0) {
+            playMergeSound();
+        } else {
+            playMoveSound();
+        }
+
+        if (mergedCells.length >= 2) {
+            playGoodSound();
+        }
+
+        render();
+        saveGame();
+
+        if (isGameOver()) {
+            showGameOver();
+        }
+    }
+
+    /*
+     * 게임 종료 여부
+     */
+
+    function isGameOver() {
+
+        return isGameOverGrid(grid);
+    }
+
+    function isGameOverGrid(targetGrid) {
+
+        for (let row = 0; row < 4; row++) {
+
+            for (let col = 0; col < 4; col++) {
+
+                if (!targetGrid[row][col]) {
+                    return false;
+                }
+
+                if (
+                    col < 3 &&
+                    targetGrid[row][col] ===
+                    targetGrid[row][col + 1]
+                ) {
+                    return false;
+                }
+
+                if (
+                    row < 3 &&
+                    targetGrid[row][col] ===
+                    targetGrid[row + 1][col]
+                ) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    function showGameOver() {
+
+        gameIsOver = true;
+
+        playBadSound();
+
+        render();
+        saveGame();
+    }
+
+    /*
+     * 되돌리기
+     */
+
+    function undoMove() {
+
+        if (!previousState || gameIsOver) {
+            return;
+        }
+
+        grid = previousState.grid.map(
+            function (row) {
+                return row.slice();
+            }
+        );
+
+        score = previousState.score;
+
+        previousState = null;
+
+        newCells = [];
+        mergedCells = [];
+
+        playMoveSound();
+
+        render();
+        saveGame();
+    }
+
+    /*
+     * 새 게임
+     */
+
+    function startNewGame() {
+
+        grid = createEmptyGrid();
+
+        score = 0;
+        gameIsOver = false;
+
+        previousState = null;
+
+        newCells = [];
+        mergedCells = [];
+
+        const firstTile = addTile(grid);
+        const secondTile = addTile(grid);
+
+        if (firstTile) {
+            newCells.push(
+                firstTile[0] * 4 +
+                firstTile[1]
+            );
+        }
+
+        if (secondTile) {
+            newCells.push(
+                secondTile[0] * 4 +
+                secondTile[1]
+            );
+        }
+
+        playMoveSound();
+
+        render();
+        saveGame();
+    }
+
+    /*
+     * localStorage 저장
+     */
+
+    function saveGame() {
+
+        try {
+
+            localStorage.setItem(
+                SAVE_KEY,
+                JSON.stringify({
+                    grid: grid,
+                    score: score
+                })
+            );
+
+            const savedBest =
+                      parseInt(
+                          localStorage.getItem(BEST_KEY),
+                          10
+                      ) || 0;
+
+            if (score > savedBest) {
+
+                localStorage.setItem(
+                    BEST_KEY,
+                    String(score)
+                );
+            }
+
+            bestEl.textContent =
+                Math.max(score, savedBest)
+                .toLocaleString("ko-KR");
+
+        } catch (error) {
+
+            console.warn(
+                "게임 저장에 실패했습니다.",
+                error
+            );
+        }
+    }
+
+    /*
+     * 저장된 게임 불러오기
+     */
+
+    function loadGame() {
+
+        try {
+
+            const savedData =
+                      localStorage.getItem(SAVE_KEY);
+
+            if (!savedData) {
+                return false;
+            }
+
+            const savedGame =
+                      JSON.parse(savedData);
+
+            if (
+                savedGame &&
+                Array.isArray(savedGame.grid) &&
+                savedGame.grid.length === 4 &&
+                !isGameOverGrid(savedGame.grid)
+            ) {
+
+                grid = savedGame.grid;
+
+                score =
+                    Number(savedGame.score) || 0;
+
+                gameIsOver = false;
+
+                return true;
+            }
+
+        } catch (error) {
+
+            console.warn(
+                "저장된 게임을 불러오지 못했습니다.",
+                error
+            );
+        }
+
+        return false;
+    }
+
+    /*
+     * 렌더링
+     */
+
+    function render() {
+
+        const cells = [];
+
+        for (let index = 0; index < 16; index++) {
+
+            const row =
+                      Math.floor(index / 4);
+
+            const col =
+                      index % 4;
+
+            const value =
+                      grid[row][col];
+
+            if (!value) {
+
+                cells.push(
+                    '<div class="cell" role="gridcell"></div>'
+                );
+
+                continue;
+            }
+
+            const classes = ["tile"];
+
+            if (newCells.includes(index)) {
+                classes.push("pop");
+            }
+
+            if (mergedCells.includes(index)) {
+                classes.push("merge");
+            }
+
+            cells.push(
+                '<div class="' +
+                classes.join(" ") +
+                '" data-v="' +
+                value +
+                '" role="gridcell" aria-label="' +
+                value +
+                '">' +
+                value +
+                '</div>'
+            );
+        }
+
+        if (gameIsOver) {
+
+            cells.push(
+                '<div class="board-over">' +
+                GAME_TEXT.over +
+                "<span>" +
+                GAME_TEXT.overSub(
+                    score.toLocaleString("ko-KR")
+                ) +
+                "</span>" +
+                "</div>"
+            );
+        }
+
+        boardEl.innerHTML =
+            cells.join("");
+
+        scoreEl.textContent =
+            score.toLocaleString("ko-KR");
+
+        const savedBest =
+                  parseInt(
+                      localStorage.getItem(BEST_KEY),
+                      10
+                  ) || 0;
+
+        bestEl.textContent =
+            Math.max(score, savedBest)
+            .toLocaleString("ko-KR");
+
+        undoButton.disabled =
+            !previousState || gameIsOver;
+    }
+
+    /*
+     * 키보드 입력
+     */
+
+    window.addEventListener(
+        "keydown",
+        function (event) {
+
+            const keyMap = {
+                ArrowLeft: 0,
+                ArrowRight: 1,
+                ArrowUp: 2,
+                ArrowDown: 3
+            };
+
+            if (
+                keyMap[event.key] !== undefined
+            ) {
+
+                event.preventDefault();
+
+                move(keyMap[event.key]);
+            }
+        }
+    );
+
+    /*
+     * 모바일 / 터치 / 펜 스와이프
+     */
+
+    boardEl.addEventListener(
+        "pointerdown",
+        function (event) {
+
+            pointerStart = {
+                x: event.clientX,
+                y: event.clientY
+            };
+        }
+    );
+
+    boardEl.addEventListener(
+        "pointerup",
+        function (event) {
+
+            if (!pointerStart) {
+                return;
+            }
+
+            const deltaX =
+                      event.clientX - pointerStart.x;
+
+            const deltaY =
+                      event.clientY - pointerStart.y;
+
+            pointerStart = null;
+
+            /*
+             * 짧은 탭은 이동으로 처리하지 않음
+             */
+
+            if (
+                Math.max(
+                    Math.abs(deltaX),
+                    Math.abs(deltaY)
+                ) < 24
+            ) {
+                return;
+            }
+
+            if (
+                Math.abs(deltaX) >
+                Math.abs(deltaY)
+            ) {
+
+                move(deltaX > 0 ? 1 : 0);
+
+            } else {
+
+                move(deltaY > 0 ? 3 : 2);
+            }
+        }
+    );
+
+    boardEl.addEventListener(
+        "pointercancel",
+        function () {
+            pointerStart = null;
+        }
+    );
+
+    /*
+     * 버튼
+     */
+
+    newButton.addEventListener(
+        "click",
+        function () {
+
+            if (
+                score > 0 &&
+                !window.confirm(
+                    "현재 게임을 종료하고 새 게임을 시작할까요?"
+                )
+            ) {
+                return;
+            }
+
+            startNewGame();
+        }
+    );
+
+    undoButton.addEventListener(
+        "click",
+        undoMove
+    );
+
+    /*
+     * 초기화
+     */
+
+    function initializeGame() {
+
+        updateSfxButton();
+
+        if (!loadGame()) {
+
+            grid = createEmptyGrid();
+            score = 0;
+            gameIsOver = false;
+
+            const firstTile =
+                      addTile(grid);
+
+            const secondTile =
+                      addTile(grid);
+
+            if (firstTile) {
+                newCells.push(
+                    firstTile[0] * 4 +
+                    firstTile[1]
+                );
+            }
+
+            if (secondTile) {
+                newCells.push(
+                    secondTile[0] * 4 +
+                    secondTile[1]
+                );
+            }
+        }
+
+        render();
+        saveGame();
+    }
+
+    initializeGame();
+</script>
+
+</body>
+</html>
