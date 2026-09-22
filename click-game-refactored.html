@@ -1,0 +1,3767 @@
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <!-- This site is hosted on Netlify. Anyone can build and deploy a site
+         like this one for free: https://netlify.new/?utm_campaign=ai-legible&utm_source=comment&utm_medium=referral&utm_id=fc66771d-2d5e-4856-a30b-35e4285dcf26
+         Netlify hosting facts for this site: static/SSR served via Netlify Edge. -->
+    <meta name="hosting-provider" content="Netlify">
+    <meta name="netlify-deploy" content="https://netlify.new/?utm_campaign=ai-legible&amp;utm_source=meta&amp;utm_medium=referral&amp;utm_id=fc66771d-2d5e-4856-a30b-35e4285dcf26">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>두근두근 클릭게임 | 특수교육 수업 연구소 by램프의 요정</title>
+
+    <!-- https://clickgame-medovik-e62b8b.netlify.app -->
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        img {
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-user-drag: none;
+            draggable: false;
+        }
+
+        :root {
+            --purple: #667eea;
+            --purple2: #764ba2;
+            --gold: #FFD700;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background 0.4s ease;
+        }
+
+        body.shake {
+            animation: bodyShake 0.4s;
+        }
+
+        @keyframes bodyShake {
+            0%, 100% {
+                transform: translate(0, 0)
+            }
+            20% {
+                transform: translate(-12px, 8px)
+            }
+            40% {
+                transform: translate(12px, -8px)
+            }
+            60% {
+                transform: translate(-8px, -12px)
+            }
+            80% {
+                transform: translate(8px, 12px)
+            }
+        }
+
+        body.flash {
+            animation: bodyFlash 0.5s;
+        }
+
+        @keyframes bodyFlash {
+            0%, 100% {
+                filter: brightness(1)
+            }
+            50% {
+                filter: brightness(1.8)
+            }
+        }
+
+        body.red-pulse {
+            animation: redPulse 0.6s infinite;
+        }
+
+        @keyframes redPulse {
+            0%, 100% {
+                filter: brightness(1)
+            }
+            50% {
+                filter: brightness(1.2) sepia(0.3) hue-rotate(-20deg)
+            }
+        }
+
+        /* SCREENS */
+        .screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            gap: 20px;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .screen.hidden {
+            display: none;
+        }
+
+        /* MAIN MENU */
+        #mainMenu {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .main-title {
+            font-size: clamp(36px, 6vw, 70px);
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .menu-card {
+            background: rgba(255, 255, 255, 0.15);
+            border: 3px solid rgba(255, 255, 255, 0.4);
+            border-radius: 20px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            color: white;
+        }
+
+        .menu-card:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-5px) scale(1.02);
+        }
+
+        .menu-card-icon {
+            font-size: 50px;
+            margin-bottom: 12px;
+        }
+
+        .menu-card-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .menu-card-desc {
+            font-size: 15px;
+            opacity: 0.85;
+            line-height: 1.5;
+        }
+
+        /* SUB MENU */
+        #subMenu {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .sub-title {
+            font-size: clamp(24px, 4vw, 48px);
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .sub-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .sub-card {
+            background: rgba(255, 255, 255, 0.15);
+            border: 3px solid rgba(255, 255, 255, 0.4);
+            border-radius: 18px;
+            padding: 20px 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            color: white;
+            min-width: 180px;
+            flex: 1;
+            max-width: 250px;
+        }
+
+        .sub-card:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-4px) scale(1.02);
+        }
+
+        .sub-card-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .sub-card-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        .sub-card-desc {
+            font-size: 13px;
+            opacity: 0.85;
+            line-height: 1.4;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            border-radius: 12px;
+            padding: 12px 30px;
+            font-size: 18px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.35);
+        }
+
+        /* SETTINGS */
+        #settingsScreen {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .settings-title {
+            font-size: clamp(22px, 3.5vw, 40px);
+            font-weight: bold;
+            color: white;
+            text-align: center;
+        }
+
+        .settings-box {
+            background: rgba(255, 255, 255, 0.12);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 25px;
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .setting-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .setting-label {
+            font-size: 18px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .slider-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .setting-slider {
+            flex: 1;
+            height: 10px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            outline: none;
+        }
+
+        /* [버그 수정/개선-접근성] 기존에는 슬라이더에 outline:none이 적용되어 있고
+           카드/버튼류 요소들에도 별도의 포커스 스타일이 없어서, 키보드(Tab)로 이동할 때
+           지금 초점이 어디에 있는지 전혀 보이지 않았음. 키보드 사용자를 위한 포커스 표시 추가. */
+        .setting-slider:focus-visible {
+            outline: 3px solid var(--gold);
+            outline-offset: 3px;
+        }
+
+        .menu-card:focus-visible, .sub-card:focus-visible, .radio-btn:focus-visible,
+        .color-checkbox:focus-visible, .slot-box:focus-visible, .hud-btn:focus-visible,
+        .back-btn:focus-visible, .start-btn:focus-visible, .result-btn:focus-visible {
+            outline: 3px solid var(--gold);
+            outline-offset: 2px;
+        }
+
+        .setting-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 26px;
+            height: 26px;
+            background: var(--gold);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .setting-val {
+            font-size: 22px;
+            color: var(--gold);
+            font-weight: bold;
+            min-width: 45px;
+            text-align: center;
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .color-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 10px;
+            padding: 8px 14px;
+            cursor: pointer;
+            color: white;
+            font-size: 16px;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .color-checkbox.checked {
+            background: rgba(255, 255, 255, 0.35);
+            border-color: var(--gold);
+        }
+
+        .color-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .radio-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 10px;
+            padding: 8px 16px;
+            cursor: pointer;
+            color: white;
+            font-size: 15px;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .radio-btn.selected {
+            background: var(--gold);
+            color: #444;
+            border-color: var(--gold);
+            font-weight: bold;
+        }
+
+        .start-btn {
+            padding: 18px 50px;
+            font-size: 26px;
+            font-weight: bold;
+            background: var(--gold);
+            color: #555;
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+            transition: all 0.3s;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.07);
+        }
+
+        /* GAME HUD */
+        .game-hud {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            z-index: 500;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(6px);
+        }
+
+        .game-hud.hidden {
+            display: none;
+        }
+
+        .hud-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 10px;
+            padding: 8px 16px;
+            font-size: 17px;
+            font-weight: bold;
+            color: #555;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .hud-btn:hover {
+            background: white;
+            transform: scale(1.04);
+        }
+
+        .hud-btn.hidden {
+            display: none;
+        }
+
+        .hud-counter {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 8px 16px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #555;
+            white-space: nowrap;
+        }
+
+        .hud-spacer {
+            flex: 1;
+        }
+
+        .hud-mode-btn {
+            background: rgba(255, 215, 0, 0.9);
+            border: none;
+            border-radius: 10px;
+            padding: 8px 14px;
+            font-size: 15px;
+            font-weight: bold;
+            color: #555;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .hud-mode-btn:hover {
+            background: var(--gold);
+        }
+
+        /* TIMER BAR */
+        .timer-bar-wrap {
+            position: fixed;
+            top: 60px;
+            left: 0;
+            right: 0;
+            height: 12px;
+            z-index: 499;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .timer-bar-wrap.hidden {
+            display: none;
+        }
+
+        .timer-bar {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #2ed573, #ffa502);
+            transition: width 0.1s linear, background 0.5s;
+        }
+
+        .timer-bar.urgent {
+            background: linear-gradient(90deg, #ff4757, #ff6b81) !important;
+        }
+
+        /* GAME CONTAINER */
+        .game-container {
+            position: fixed;
+            top: 60px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+        }
+
+        .game-container.with-timer {
+            top: 72px;
+        }
+
+        .game-container.with-problem {
+            top: 150px;
+        }
+
+        .game-container.with-problem.with-timer {
+            top: 162px;
+        }
+
+        .game-container.hidden {
+            display: none;
+        }
+
+        /* CHARACTER (original style) */
+        .character {
+            position: absolute;
+            z-index: 10;
+            cursor: pointer;
+        }
+
+        .smile-face {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            border-radius: inherit;
+            transition: border-radius 0.3s ease, background 0.3s ease;
+        }
+
+        .eyes {
+            display: flex;
+            gap: 25px;
+            margin-bottom: 10px;
+        }
+
+        .eye {
+            width: 15px;
+            height: 15px;
+            background: #000;
+            border-radius: 50%;
+            animation: eyeBlink 3s infinite;
+        }
+
+        .eye:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+
+        @keyframes eyeBlink {
+            0%, 48%, 52%, 100% {
+                height: 15px
+            }
+            50% {
+                height: 2px
+            }
+        }
+
+        .mouth {
+            width: 50px;
+            height: 25px;
+            border: 4px solid #000;
+            border-top: none;
+            border-radius: 0 0 50px 50px;
+        }
+
+        /* CHARACTER ANIMATIONS */
+        .character.clicked {
+            animation: clickEffect 0.3s ease-out forwards;
+        }
+
+        @keyframes clickEffect {
+            0% {
+                transform: scale(1)
+            }
+            50% {
+                transform: scale(1.3);
+                filter: brightness(2)
+            }
+            100% {
+                transform: scale(0);
+                opacity: 0
+            }
+        }
+
+        .character.highlight {
+            animation: neonGlow 0.5s infinite;
+        }
+
+        @keyframes neonGlow {
+            0%, 100% {
+                filter: drop-shadow(0 0 20px #FFD700) drop-shadow(0 0 40px #FFD700)
+            }
+            50% {
+                filter: drop-shadow(0 0 30px #FF1493) drop-shadow(0 0 60px #FF1493)
+            }
+        }
+
+        .character.jumping {
+            animation: charJump 0.4s ease-in-out;
+        }
+
+        @keyframes charJump {
+            0%, 100% {
+                transform: translateY(0) scale(1)
+            }
+            50% {
+                transform: translateY(-30px) scale(1.1)
+            }
+        }
+
+        .character.spinning {
+            animation: charSpin 0.6s ease-in-out;
+        }
+
+        @keyframes charSpin {
+            0% {
+                transform: rotate(0)
+            }
+            100% {
+                transform: rotate(360deg)
+            }
+        }
+
+        .character.super-big {
+            transform: scale(1.6);
+        }
+
+        .character.wrong-shake {
+            animation: wrongShake 0.3s;
+        }
+
+        @keyframes wrongShake {
+            /* [개선] 기존에는 transform:translate(...)로 흔들림을 구현했는데, 이 경우
+               벌칙모드(피하기 게임)에서 인라인으로 걸어둔 transform:scale(...)을 애니메이션이
+               재생되는 0.3초 동안 완전히 덮어써서 커진 도형이 잠깐 원래 크기로 보이는
+               시각적 충돌이 있었음. transform 대신 독립적인 translate 속성을 사용하면
+               기존 scale과 서로 간섭하지 않고 함께 적용됨. */
+            0%, 100% {
+                translate: 0 0
+            }
+            25% {
+                translate: -8px 5px
+            }
+            75% {
+                translate: 8px -5px
+            }
+        }
+
+        /* SPARKLE */
+        .sparkle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: sparkleAnim 0.9s ease-out forwards;
+            z-index: 300;
+        }
+
+        @keyframes sparkleAnim {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1
+            }
+            100% {
+                transform: translate(var(--tx), var(--ty)) scale(0);
+                opacity: 0
+            }
+        }
+
+        /* PROBLEM BOX */
+        .problem-box {
+            position: fixed;
+            top: 60px;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.97);
+            padding: 10px 20px;
+            z-index: 200;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .problem-box.hidden {
+            display: none;
+        }
+
+        .problem-title {
+            font-size: 13px;
+            color: #888;
+            white-space: nowrap;
+        }
+
+        .problem-target {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .target-dot {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: inline-block;
+            border: 2px solid rgba(0, 0, 0, 0.15);
+            flex-shrink: 0;
+        }
+
+        .progress-dots {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .prog-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid #ccc;
+            background: transparent;
+            transition: all 0.2s;
+        }
+
+        .prog-dot.filled {
+            border-color: transparent;
+        }
+
+        .stats-row {
+            font-size: 13px;
+            color: #666;
+            white-space: nowrap;
+        }
+
+        /* RESULT SCREEN */
+        #resultScreen {
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+        }
+
+        .result-title {
+            font-size: clamp(28px, 5vw, 56px);
+            font-weight: bold;
+            color: var(--gold);
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+            text-align: center;
+        }
+
+        .result-box {
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 30px;
+            min-width: 300px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 18px;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            opacity: 0.7;
+        }
+
+        .result-value {
+            font-weight: bold;
+            font-size: 22px;
+            color: var(--gold);
+        }
+
+        .result-btns {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .result-btn {
+            padding: 14px 30px;
+            font-size: 20px;
+            font-weight: bold;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .result-btn.primary {
+            background: var(--gold);
+            color: #444;
+        }
+
+        .result-btn.secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .result-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .result-banner {
+            font-size: clamp(20px, 3vw, 36px);
+            font-weight: bold;
+            text-align: center;
+            padding: 12px 24px;
+            border-radius: 14px;
+        }
+
+        .result-banner.success {
+            background: rgba(46, 213, 115, 0.2);
+            color: #2ed573;
+            border: 2px solid #2ed573;
+        }
+
+        .result-banner.fail {
+            background: rgba(255, 71, 87, 0.2);
+            color: #ff4757;
+            border: 2px solid #ff4757;
+        }
+
+        /* URGENCY */
+        .urgency-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 490;
+            pointer-events: none;
+            border: 8px solid transparent;
+            transition: border-color 0.3s;
+        }
+
+        .urgency-overlay.active {
+            border-color: rgba(255, 71, 87, 0.7);
+            animation: urgencyPulse 0.6s infinite;
+        }
+
+        @keyframes urgencyPulse {
+            0%, 100% {
+                border-color: rgba(255, 71, 87, 0.4)
+            }
+            50% {
+                border-color: rgba(255, 71, 87, 0.9)
+            }
+        }
+
+
+        /* COPYRIGHT BAR */
+        #copyrightBar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            gap: 30px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            white-space: nowrap;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        #copyrightBar a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+        }
+
+        #copyrightBar a:hover {
+            color: white;
+            text-decoration: underline;
+        }
+
+        /* game-container와 스크린들이 저작권 바에 가리지 않도록 */
+        .game-container {
+            bottom: 30px !important;
+        }
+
+        .screen {
+            padding-bottom: 40px;
+        }
+
+        /* ── 전역 설정 버튼 ── */
+        #globalSettingsBtn {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.92);
+            border: none;
+            border-radius: 12px;
+            padding: 9px 16px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #555;
+            cursor: pointer;
+            z-index: 1100;
+            transition: all 0.2s;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        #globalSettingsBtn:hover {
+            background: white;
+            transform: scale(1.04);
+        }
+
+        #globalSettingsBtn.hidden {
+            display: none;
+        }
+
+        /* ── 설정 패널 오버레이 ── */
+        #gsBg {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1199;
+            display: none;
+        }
+
+        #gsBg.open {
+            display: block;
+        }
+
+        /* ── 설정 패널 본체 ── */
+        #gsPanel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 360px;
+            max-height: 88vh;
+            overflow-y: auto;
+            background: linear-gradient(160deg, #1e1240, #2a185a);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 22px;
+            z-index: 1200;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.7);
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        #gsPanel.open {
+            display: flex;
+        }
+
+        .gs-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            margin-bottom: 4px;
+        }
+
+        .gs-sub {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.65);
+            text-align: center;
+        }
+
+        /* ── 슬롯 그리드 ── */
+        .slot-grid {
+            display: grid;
+            grid-template-columns:repeat(5, 1fr);
+            gap: 8px;
+        }
+
+        .slot-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .slot-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.7);
+            text-align: center;
+        }
+
+        .slot-box {
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            border: 3px dashed rgba(255, 255, 255, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            background: rgba(255, 255, 255, 0.08);
+            font-size: 22px;
+        }
+
+        .slot-box img {
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            object-fit: cover;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-user-drag: none;
+            draggable: false;
+            pointer-events: none;
+        }
+
+        .slot-box:hover {
+            border-color: var(--gold);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .slot-box.filled {
+            border-style: solid;
+            border-color: #2ed573;
+        }
+
+        .slot-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .slot-del {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #ff4757;
+            color: white;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+            line-height: 1;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            border: 2px solid white;
+            z-index: 10;
+        }
+
+        /* ── 색상 뱃지 (슬롯 아래) ── */
+        .slot-color-badge {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+
+        /* ── 적용 버튼 ── */
+        .gs-apply-btn {
+            padding: 13px;
+            font-size: 17px;
+            font-weight: bold;
+            background: var(--gold);
+            color: #444;
+            border: none;
+            border-radius: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .gs-apply-btn:hover {
+            transform: scale(1.04);
+        }
+
+        .gs-apply-btn.active {
+            background: #2ed573;
+            color: white;
+        }
+
+        .gs-reset-btn {
+            padding: 9px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .gs-reset-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+
+        .gs-status {
+            font-size: 13px;
+            text-align: center;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .gs-status.on {
+            background: rgba(46, 213, 115, 0.2);
+            color: #2ed573;
+        }
+
+        .gs-status.off {
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* ── 인게임 이미지 캐릭터 ── */
+        .img-char {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        /* ── 이미지 편집 모달 ── */
+        #editModalBg {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.92);
+            z-index: 2100;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #editModalBg.open {
+            display: flex;
+        }
+
+        #editBox {
+            background: #1a1040;
+            border-radius: 22px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            max-width: 420px;
+            width: 95%;
+        }
+
+        #editTitle {
+            font-size: 17px;
+            font-weight: bold;
+            color: white;
+        }
+
+        /* 원형 뷰포트 */
+        #editViewport {
+            position: relative;
+            width: 260px;
+            height: 260px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 4px solid #FFD700;
+            background: #000;
+            cursor: grab;
+            touch-action: none;
+        }
+
+        #editViewport:active {
+            cursor: grabbing;
+        }
+
+        #editImg {
+            position: absolute;
+            transform-origin: 0 0;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-user-drag: none;
+            pointer-events: none;
+        }
+
+        /* 줌 슬라이더 */
+        #editZoomSlider {
+            width: 220px;
+            height: 8px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 4px;
+            outline: none;
+        }
+
+        #editZoomSlider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            background: #FFD700;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .edit-btns {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .edit-btn-ok {
+            padding: 12px 28px;
+            font-size: 16px;
+            font-weight: bold;
+            background: #2ed573;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+
+        .edit-btn-cancel {
+            padding: 12px 20px;
+            font-size: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<!-- MAIN MENU -->
+<div class="screen" id="mainMenu">
+    <div style="position:relative;width:100%;max-width:900px;">
+        <div class="main-title">🎮 두근두근 클릭게임</div>
+    </div>
+    <div class="menu-grid">
+        <div class="menu-card" tabindex="0" role="button" onclick="openSubMenu('basic')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openSubMenu('basic');}">
+            <div class="menu-card-icon">🖱️</div>
+            <div class="menu-card-title">기본 클릭 능력</div>
+            <div class="menu-card-desc">천천히 따라하는<br>기초 클릭 연습</div>
+        </div>
+        <div class="menu-card" tabindex="0" role="button" onclick="openAdvanced()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openAdvanced();}">
+            <div class="menu-card-icon">⚡</div>
+            <div class="menu-card-title">심화 클릭 능력</div>
+            <div class="menu-card-desc">움직이는 도형을<br>정확하게 클릭!</div>
+        </div>
+        <div class="menu-card" tabindex="0" role="button" onclick="openSubMenu('game')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openSubMenu('game');}">
+            <div class="menu-card-icon">🎯</div>
+            <div class="menu-card-title">게임하기</div>
+            <div class="menu-card-desc">재미있는 게임으로<br>클릭 실력 UP!</div>
+        </div>
+    </div>
+</div>
+
+<!-- SUB MENU -->
+<div class="screen hidden" id="subMenu">
+    <div class="sub-title" id="subMenuTitle"></div>
+    <div class="sub-grid" id="subMenuGrid"></div>
+    <button class="back-btn" onclick="goMainMenu()">← 뒤로</button>
+</div>
+
+<!-- SETTINGS SCREEN -->
+<div class="screen hidden" id="settingsScreen">
+    <div class="settings-title" id="settingsTitle"></div>
+    <div class="settings-box" id="settingsBox"></div>
+    <div style="display:flex;gap:15px;flex-wrap:wrap;justify-content:center;">
+        <button class="back-btn" id="settingsBackBtn" onclick="goBackFromSettings()">← 뒤로</button>
+        <button class="start-btn" onclick="launchGame()">게임 시작! 🚀</button>
+    </div>
+</div>
+
+<!-- RESULT SCREEN -->
+<div class="screen hidden" id="resultScreen">
+    <div class="result-title">🏆 결과</div>
+    <div class="result-banner" id="resultBanner"></div>
+    <div class="result-box" id="resultBox"></div>
+    <div class="result-btns">
+        <button class="result-btn primary" onclick="restartGame()">다시 하기 🔄</button>
+        <button class="result-btn secondary" onclick="goMainMenu()">🏠 홈</button>
+    </div>
+</div>
+
+<!-- GAME HUD -->
+<div class="game-hud hidden" id="gameHud">
+    <button class="hud-btn" onclick="goBackInGame()">← 뒤로</button>
+    <button class="hud-btn" onclick="goMainMenu()">🏠 홈</button>
+    <button class="hud-mode-btn" id="modeToggleBtn" onclick="toggleClickMode()">🖱️ 싱글클릭</button>
+    <div class="hud-spacer"></div>
+    <div class="hud-counter" id="hudCounter">0</div>
+    <div class="hud-counter" id="hudAccuracy" style="display:none;">정확도: -</div>
+    <div class="hud-counter" id="hudTimer" style="display:none;">⏱️ -</div>
+    <!-- [버그 수정] 풍선 게임/피하기 게임은 인수인계 문서에 "게임 결과 화면 제공"이라고
+         명시되어 있었지만, 실제 코드에는 두 게임 모두 showResult()를 호출하는 지점이
+         전혀 없어 결과 화면을 볼 방법이 없었음(무한 반복만 가능). 학생이 스스로 그만두고
+         싶을 때 결과를 확인할 수 있도록 "결과보기" 버튼을 추가. -->
+    <button class="hud-btn hidden" id="finishHudBtn" onclick="finishOpenGame()">🏁 결과보기</button>
+    <button class="hud-btn" id="fullscreenHudBtn" onclick="toggleFullscreen()">🖥️ 전체화면</button>
+</div>
+
+<!-- Timer Bar -->
+<div class="timer-bar-wrap hidden" id="timerBarWrap">
+    <div class="timer-bar" id="timerBar"></div>
+</div>
+
+<!-- Urgency Overlay -->
+<div class="urgency-overlay" id="urgencyOverlay"></div>
+
+<!-- GAME CONTAINER -->
+<div class="game-container hidden" id="gameContainer"></div>
+
+<!-- Problem Box -->
+<div class="problem-box hidden" id="problemBox">
+    <div class="problem-title">클릭할 도형:</div>
+    <div class="problem-target" id="problemTarget"></div>
+    <div class="progress-dots" id="progressDots"></div>
+    <div class="stats-row" id="statsRow"></div>
+</div>
+
+
+<!-- 이미지 편집(크롭/줌) 모달 -->
+<div id="editModalBg">
+    <div id="editBox">
+        <div id="editTitle">✂️ 편집 — 슬롯 <span id="editSlotNum">1</span></div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.55);text-align:center;">
+            드래그로 위치 조정 · 슬라이더로 크기 조절
+        </div>
+        <div id="editViewport">
+            <img id="editImg" src="" draggable="false">
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:18px;">🔍</span>
+            <input type="range" id="editZoomSlider" min="50" max="300" value="100">
+            <span style="font-size:18px;">🔎</span>
+        </div>
+        <div class="edit-btns">
+            <button class="edit-btn-ok" onclick="editConfirm()">✅ 이걸로 등록!</button>
+            <button class="edit-btn-cancel" onclick="editCancel()">✕ 취소</button>
+        </div>
+    </div>
+</div>
+
+<!-- 숨겨진 파일 input (갤러리) -->
+<input type="file" id="gsFileInput" accept="image/png,image/jpeg,image/webp" style="display:none">
+<!-- 카메라 직접 촬영 input (태블릿/모바일) -->
+<input type="file" id="gsCameraInput" accept="image/*" capture="user" style="display:none">
+
+<!-- 카메라/갤러리 선택 모달 -->
+<div id="camModalBg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:2000;align-items:center;justify-content:center;">
+    <div style="background:#1a1040;border-radius:22px;padding:24px;display:flex;flex-direction:column;align-items:center;gap:18px;max-width:380px;width:92%;">
+        <div style="font-size:19px;font-weight:bold;color:white;">슬롯 <span id="camSlotNum">1</span> 이미지 등록</div>
+
+        <!-- 선택 화면 -->
+        <div id="camChooseWrap" style="display:flex;flex-direction:column;gap:12px;width:100%;">
+            <button onclick="camNativeShoot()" style="padding:16px;font-size:17px;font-weight:bold;background:#FFD700;color:#444;border:none;border-radius:14px;cursor:pointer;width:100%;">
+                📷 카메라로 바로 찍기
+            </button>
+            <!-- [개선] capture="user"(전면 카메라)는 기기·브라우저에 따라 무시되고 후면 카메라가
+                 열리거나 갤러리가 열릴 수 있음(특히 iOS Safari). 코드로 완전히 통일할 수 없는
+                 브라우저 차이이므로, 미리 안내 문구를 넣어 당황하지 않도록 함. -->
+            <div style="font-size:12px;color:rgba(255,255,255,0.55);text-align:center;margin-top:-6px;">
+                * 기기/브라우저에 따라 후면 카메라가 열릴 수 있어요
+            </div>
+            <button onclick="camLiveOpen()" style="padding:14px;font-size:15px;font-weight:bold;background:rgba(255,255,255,0.15);color:white;border:2px solid rgba(255,255,255,0.3);border-radius:14px;cursor:pointer;width:100%;">
+                🎥 실시간 카메라 (HTTPS 환경)
+            </button>
+            <button onclick="camGallery()" style="padding:14px;font-size:15px;font-weight:bold;background:rgba(255,255,255,0.1);color:white;border:2px solid rgba(255,255,255,0.2);border-radius:14px;cursor:pointer;width:100%;">
+                🖼️ 갤러리에서 선택
+            </button>
+            <button onclick="camClose()" style="padding:10px;font-size:14px;background:rgba(255,71,87,0.2);color:#ff6b81;border:1px solid #ff4757;border-radius:12px;cursor:pointer;">
+                ✕ 닫기
+            </button>
+        </div>
+
+        <!-- 실시간 카메라 화면 -->
+        <div id="camLiveWrap" style="display:none;flex-direction:column;align-items:center;gap:14px;width:100%;">
+            <div style="position:relative;width:230px;height:230px;">
+                <video id="camVideo" autoplay playsinline muted
+                       style="width:230px;height:230px;border-radius:50%;object-fit:cover;border:4px solid #FFD700;background:#000;"></video>
+                <canvas id="camCanvas" width="400" height="400" style="display:none;"></canvas>
+            </div>
+            <div style="display:flex;gap:10px;">
+                <button onclick="camShoot()" style="padding:13px 28px;font-size:16px;font-weight:bold;background:#FFD700;color:#444;border:none;border-radius:12px;cursor:pointer;">📷 찍기</button>
+                <button onclick="camLiveClose()" style="padding:13px 20px;font-size:15px;background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.3);border-radius:12px;cursor:pointer;">← 뒤로</button>
+            </div>
+            <div id="camMsg" style="font-size:13px;color:rgba(255,255,255,0.6);text-align:center;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- 전역 설정 버튼 (첫 화면 왼쪽 상단) -->
+<button id="globalSettingsBtn" onclick="openGsPanel()">⚙️ 이미지 설정</button>
+
+<!-- 설정 패널 오버레이 -->
+<div id="gsBg" onclick="closeGsPanel()"></div>
+
+<!-- 설정 패널 -->
+<div id="gsPanel">
+    <div class="gs-title">👤 학생 이미지 설정</div>
+    <div class="gs-sub">슬롯을 클릭 → 📷 카메라 촬영 또는 🖼️ 갤러리 선택<br><small style="opacity:0.7">태블릿: 바로 찍기 가능 · PNG 누끼 파일 권장</small></div>
+
+    <div class="slot-grid" id="slotGrid"></div>
+
+    <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.6;">
+        🔴 슬롯1 = 빨강 도형 대체<br>
+        🟡 슬롯2 = 노랑 도형 대체<br>
+        🟢 슬롯3 = 초록 도형 대체<br>
+        🔵 슬롯4 = 파랑 도형 대체<br>
+        ⭐ 슬롯5 = 특수 이미지 (게임별 정답)
+    </div>
+
+    <div class="gs-status off" id="gsStatus">이미지 모드 꺼짐</div>
+
+    <button class="gs-apply-btn" id="gsApplyBtn" onclick="toggleImageMode()">
+        ✨ 타겟 변경 (이미지 모드 ON)
+    </button>
+    <button class="gs-reset-btn" onclick="resetImageMode()">🔄 초기화 (스마일 모드로 돌아가기)</button>
+</div>
+
+<!-- COPYRIGHT BAR -->
+<div id="copyrightBar">
+    <span>© 2026 특수교육 수업 연구소 by램프의 요정 — 두근두근 클릭게임 &nbsp;|&nbsp; 무단 복제·수정·재배포를 금합니다.</span>
+    <span>📝 <a href="https://blog.naver.com/sue3565" target="_blank">blog.naver.com/sue3565</a></span>
+</div>
+
+<script>
+    // ===== COLORS =====
+    // 파랑/초록 명확히 구분: 파랑=진파랑, 초록=밝은초록
+    const COLORS = {
+        red   : {hex: '#ff5252', name: '빨강'},
+        yellow: {hex: '#ffd600', name: '노랑'},
+        green : {hex: '#00e676', name: '초록'},   // 밝고 선명한 초록
+        blue  : {hex: '#2979ff', name: '파랑'},   // 진한 파랑
+    };
+    const COLOR_KEYS = ['red', 'yellow', 'green', 'blue'];
+
+    // 원본 10가지 스마일 색상 (original smileColors)
+    const SMILE_COLORS_LIST = [
+        {bg: 'linear-gradient(145deg,#ffeb3b,#ffc107)', shadow: 'rgba(255,193,7,0.5)', shape: '50%', bodyBg: 'linear-gradient(135deg,#e3f2fd,#bbdefb)'},
+        {bg: 'linear-gradient(145deg,#ff6b6b,#ee5a6f)', shadow: 'rgba(255,107,107,0.5)', shape: '10%', bodyBg: 'linear-gradient(135deg,#fff9c4,#fff59d)'},
+        {bg: 'linear-gradient(145deg,#4ecdc4,#44a6a0)', shadow: 'rgba(78,205,196,0.5)', shape: '50%', bodyBg: 'linear-gradient(135deg,#ffe0f7,#ffc1e3)'},
+        {bg: 'linear-gradient(145deg,#a8e6cf,#7cc6a5)', shadow: 'rgba(168,230,207,0.5)', shape: '20%', bodyBg: 'linear-gradient(135deg,#fff3e0,#ffe0b2)'},
+        {bg: 'linear-gradient(145deg,#ff9ff3,#f368e0)', shadow: 'rgba(255,159,243,0.5)', shape: '50%', bodyBg: 'linear-gradient(135deg,#e1f5fe,#b3e5fc)'},
+        {bg: 'linear-gradient(145deg,#ffd93d,#ffb700)', shadow: 'rgba(255,217,61,0.5)', shape: '15%', bodyBg: 'linear-gradient(135deg,#f3e5f5,#e1bee7)'},
+        {bg: 'linear-gradient(145deg,#a8dadc,#457b9d)', shadow: 'rgba(168,218,220,0.5)', shape: '50%', bodyBg: 'linear-gradient(135deg,#fff8e1,#ffecb3)'},
+        {bg: 'linear-gradient(145deg,#dda15e,#bc6c25)', shadow: 'rgba(221,161,94,0.5)', shape: '25%', bodyBg: 'linear-gradient(135deg,#e8f5e9,#c8e6c9)'},
+        {bg: 'linear-gradient(145deg,#b8b8ff,#8a8aff)', shadow: 'rgba(184,184,255,0.5)', shape: '50%', bodyBg: 'linear-gradient(135deg,#fff9e6,#fff4cc)'},
+        {bg: 'linear-gradient(145deg,#fca5a5,#f87171)', shadow: 'rgba(252,165,165,0.5)', shape: '30%', bodyBg: 'linear-gradient(135deg,#e0f7fa,#b2ebf2)'},
+    ];
+
+    // 색상별 스마일 (타겟/피하기 게임용) - 명확히 구분되는 색상
+    const SMILE_BY_COLOR = {
+        red   : {bg: 'linear-gradient(145deg,#ff5252,#d32f2f)', shadow: 'rgba(255,82,82,0.6)', shape: '50%'},
+        yellow: {bg: 'linear-gradient(145deg,#ffd600,#ffc107)', shadow: 'rgba(255,214,0,0.6)', shape: '50%'},
+        green : {bg: 'linear-gradient(145deg,#00e676,#00c853)', shadow: 'rgba(0,230,118,0.6)', shape: '50%'},
+        blue  : {bg: 'linear-gradient(145deg,#2979ff,#1565c0)', shadow: 'rgba(41,121,255,0.6)', shape: '50%'},
+    };
+
+    // ===== STATE =====
+    let currentGame = null;
+    let currentSubMenu = null;
+    let gameSettings = {};
+    let isDoubleClickMode = false;
+    let pressCount = 0;
+    let correctCount = 0;
+    let wrongCount = 0;
+    let gameStartTime = 0;
+    let animationFrames = [];
+    let timers = [];
+    let audioCtx = null;
+
+    function getAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        return audioCtx;
+    }
+
+    let globalColorIdx = 0; // cycles through SMILE_COLORS_LIST
+    // ── 이미지 모드 전역 상태 ──
+    const SLOT_COLORS = ['#ff5252', '#ffd600', '#00e676', '#2979ff', null]; // 슬롯1~4=색상, 5=특수
+    const SLOT_NAMES = ['빨강', '노랑', '초록', '파랑', '⭐특수'];
+    let slotImages = [null, null, null, null, null]; // 슬롯0~4 (인덱스 0=슬롯1)
+    let useImageMode = false;
+    let currentUploadSlot = -1;
+
+    // ── 설정 패널 열기/닫기 ──
+    function openGsPanel() {
+        renderSlotGrid();
+        document.getElementById('gsPanel').classList.add('open');
+        document.getElementById('gsBg').classList.add('open');
+    }
+
+    function closeGsPanel() {
+        document.getElementById('gsPanel').classList.remove('open');
+        document.getElementById('gsBg').classList.remove('open');
+        updateTAColorsNote();
+        refreshAllColorPickers();
+    }
+
+    // 타임어택 설정 화면이 열려있는 동안 이미지 모드 on/off에 따라 안내문구를 갱신
+    // [업데이트] 이전에는 이미지 모드에서 색상 선택이 게임에 반영되지 않는 버그가 있어
+    // "반영되지 않는다"는 경고 문구를 보여줬었는데, 슬롯1~4를 실제로 사용하도록 버그를
+    // 고친 뒤에는 반대로 "선택한 색상마다 등록된 사진이 표시된다"는 안내로 바꿈.
+    function updateTAColorsNote() {
+        const wrap = document.getElementById('taColorsWrap');
+        if (!wrap) return; // 타임어택 설정 화면이 아니면 아무것도 안 함
+        const note = document.getElementById('taColorsNote');
+        if (useImageMode) {
+            note.textContent = '💡 이미지 모드가 켜져 있어요. 아래에서 선택한 색상 중 슬롯1~4에 사진이 등록된 색상은 사진으로, 등록되지 않은 색상은 기존 얼굴 도형으로 표시돼요.';
+        } else {
+            note.textContent = '';
+        }
+    }
+
+    // ── 슬롯 그리드 렌더링 ──
+    function renderSlotGrid() {
+        const grid = document.getElementById('slotGrid');
+        grid.innerHTML = '';
+        slotImages.forEach((src, i) => {
+            const item = document.createElement('div');
+            item.className = 'slot-item';
+
+            const box = document.createElement('div');
+            box.className = 'slot-box' + (src ? ' filled' : '');
+            box.title = '클릭하여 이미지 등록';
+
+            if (src) {
+                const img = document.createElement('img');
+                img.src = src;
+                img.draggable = false;
+                img.setAttribute('draggable', 'false');
+                box.appendChild(img);
+                const del = document.createElement('div');
+                del.className = 'slot-del';
+                del.textContent = '×';
+                // [개선] 개별 슬롯 삭제도 실수로 눌러 사진이 즉시 사라지는 걸 막기 위해 짧은 확인 추가
+                del.onclick = (e) => {
+                    e.stopPropagation();
+                    if (!confirm((i + 1) + '번 사진을 삭제할까요?')) return;
+                    slotImages[i] = null;
+                    if (!slotImages.some(Boolean)) useImageMode = false;
+                    updateGsStatus();
+                    renderSlotGrid();
+                };
+                makeFocusable(del);
+                box.appendChild(del);
+            } else {
+                box.textContent = '+';
+            }
+            box.onclick = () => {
+                currentUploadSlot = i;
+                openSlotMenu(i);
+            };
+            makeFocusable(box);
+            item.appendChild(box);
+
+            // 색상 뱃지 또는 별
+            const badge = document.createElement('div');
+            if (i < 4) {
+                badge.className = 'slot-color-badge';
+                badge.style.background = SLOT_COLORS[i];
+            } else {
+                badge.style.cssText = 'font-size:14px;';
+                badge.textContent = '⭐';
+            }
+            item.appendChild(badge);
+
+            const lbl = document.createElement('div');
+            lbl.className = 'slot-label';
+            // [버그 수정] SLOT_NAMES 배열이 정의만 되어있고 실제로는 어디에도 쓰이지 않아서
+            // 슬롯이 어떤 색상을 대체하는지 라벨만 보고는 알 수 없었음("슬롯1"이라고만 표시됨).
+            lbl.textContent = '슬롯' + (i + 1) + ' (' + SLOT_NAMES[i] + ')';
+            item.appendChild(lbl);
+
+            grid.appendChild(item);
+        });
+    }
+
+    // ── 파일 선택 ──
+    // ── 슬롯 클릭 → 카메라/갤러리 선택 모달 ──
+    function openSlotMenu(slotIdx) {
+        currentUploadSlot = slotIdx;
+        document.getElementById('camSlotNum').textContent = (slotIdx + 1) + ' (' + SLOT_NAMES[slotIdx] + ')';
+        document.getElementById('camModalBg').style.display = 'flex';
+        document.getElementById('camLiveWrap').style.display = 'none';
+        document.getElementById('camMsg').textContent = '';
+    }
+
+    // ── 갤러리 파일 선택 ──
+    document.getElementById('gsFileInput').addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        if (!file || currentUploadSlot < 0) return;
+        loadFileToSlot(file, currentUploadSlot);
+        this.value = '';
+    });
+
+    // ── gsCameraInput (native fallback) ──
+    document.getElementById('gsCameraInput').addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        if (!file || currentUploadSlot < 0) return;
+        loadFileToSlot(file, currentUploadSlot);
+        this.value = '';
+    });
+
+    function loadFileToSlot(file, slot) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            // 바로 등록하지 않고 편집 모달 열기
+            openEditModal(ev.target.result, slot);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // ── 편집 모달 ──
+    // [코드 정리] 이전 버전에서 쓰이던 cropToCircle() 함수는 editConfirm()의 인라인 캔버스 로직으로
+    // 대체되어 더 이상 어디서도 호출되지 않는 죽은 코드였음(파일 용량만 차지). 제거.
+    let editSrc = '';
+    let editSlot = 0;
+    let editScale = 1.0;
+    let editOffsetX = 0, editOffsetY = 0;
+    let editDragging = false;
+    let editDragStartX = 0, editDragStartY = 0;
+    let editDragOriginX = 0, editDragOriginY = 0;
+
+    function openEditModal(src, slot) {
+        editSrc = src;
+        editSlot = slot;
+        document.getElementById('editSlotNum').textContent = slot + 1;
+        document.getElementById('editModalBg').classList.add('open');
+        document.getElementById('editZoomSlider').value = 100;
+
+        const img = document.getElementById('editImg');
+        img.src = src;
+        img.onload = () => {
+            // 초기: 이미지가 260px 원 안에 꽉 차도록 스케일 설정
+            const vp = 260;
+            const initScale = vp / Math.min(img.naturalWidth, img.naturalHeight);
+            editScale = initScale;
+            editOffsetX = (vp - img.naturalWidth * editScale) / 2;
+            editOffsetY = (vp - img.naturalHeight * editScale) / 2;
+            applyEditTransform();
+            // 슬라이더 범위: 초기 스케일 기준 50%~300%
+            document.getElementById('editZoomSlider').min = 50;
+            document.getElementById('editZoomSlider').max = 300;
+            document.getElementById('editZoomSlider').value = 100;
+        };
+
+        // 슬라이더 이벤트
+        document.getElementById('editZoomSlider').oninput = function () {
+            const img2 = document.getElementById('editImg');
+            const vp = 260;
+            const baseScale = vp / Math.min(img2.naturalWidth, img2.naturalHeight);
+            const prevScale = editScale;
+            editScale = baseScale * (this.value / 100);
+            // 중심 기준으로 줌
+            const cx = vp / 2, cy = vp / 2;
+            editOffsetX = cx - (cx - editOffsetX) * (editScale / prevScale);
+            editOffsetY = cy - (cy - editOffsetY) * (editScale / prevScale);
+            applyEditTransform();
+        };
+
+        setupEditDrag();
+    }
+
+    // [버그 수정/개선] 기존에는 드래그나 줌 조작 시 이미지 위치에 아무 제한이 없어서,
+    // 이미지를 원형 뷰포트 밖으로 완전히 끌어낼 수 있었음(등록 시 빈 화면/검은 원이 저장될 위험).
+    // 이미지가 항상 뷰포트(260x260 원)를 완전히 덮도록 오프셋을 보정하는 함수 추가.
+    function clampEditOffsets() {
+        const img = document.getElementById('editImg');
+        if (!img.naturalWidth) return;
+        const vp = 260;
+        const dispW = img.naturalWidth * editScale;
+        const dispH = img.naturalHeight * editScale;
+        const minX = Math.min(0, vp - dispW), maxX = 0;
+        const minY = Math.min(0, vp - dispH), maxY = 0;
+        editOffsetX = Math.max(minX, Math.min(maxX, editOffsetX));
+        editOffsetY = Math.max(minY, Math.min(maxY, editOffsetY));
+    }
+
+    function applyEditTransform() {
+        clampEditOffsets();
+        const img = document.getElementById('editImg');
+        img.style.transform = 'translate(' + editOffsetX + 'px,' + editOffsetY + 'px) scale(' + editScale + ')';
+        img.style.transformOrigin = '0 0';
+        img.style.width = document.getElementById('editImg').naturalWidth + 'px';
+    }
+
+    function setupEditDrag() {
+        const vp = document.getElementById('editViewport');
+        vp.onmousedown = vp.ontouchstart = (e) => {
+            editDragging = true;
+            const pt = e.touches ? e.touches[0] : e;
+            editDragStartX = pt.clientX;
+            editDragStartY = pt.clientY;
+            editDragOriginX = editOffsetX;
+            editDragOriginY = editOffsetY;
+            e.preventDefault();
+        };
+        window.onmousemove = window.ontouchmove = (e) => {
+            if (!editDragging) return;
+            const pt = e.touches ? e.touches[0] : e;
+            editOffsetX = editDragOriginX + (pt.clientX - editDragStartX);
+            editOffsetY = editDragOriginY + (pt.clientY - editDragStartY);
+            applyEditTransform();
+            e.preventDefault();
+        };
+        window.onmouseup = window.ontouchend = () => {
+            editDragging = false;
+        };
+    }
+
+    function editConfirm() {
+        // 현재 편집 상태를 원형으로 캔버스에 그리기
+        const img = document.getElementById('editImg');
+        const cv = document.createElement('canvas');
+        cv.width = 400;
+        cv.height = 400;
+        const ctx = cv.getContext('2d');
+        ctx.beginPath();
+        ctx.arc(200, 200, 200, 0, Math.PI * 2);
+        ctx.clip();
+        // 260px 뷰포트 → 400px 캔버스 비율
+        const ratio = 400 / 260;
+        ctx.drawImage(
+            img,
+            editOffsetX * ratio,
+            editOffsetY * ratio,
+            img.naturalWidth * editScale * ratio,
+            img.naturalHeight * editScale * ratio
+        );
+        slotImages[editSlot] = cv.toDataURL('image/png');
+        updateGsStatus();
+        renderSlotGrid();
+        editCancel();
+    }
+
+    function editCancel() {
+        document.getElementById('editModalBg').classList.remove('open');
+        document.getElementById('editImg').src = '';
+        editDragging = false;
+        window.onmousemove = null;
+        window.ontouchmove = null;
+        window.onmouseup = null;
+        window.ontouchend = null;
+    }
+
+    // ── 카메라 모달 ──
+    let camStream = null;
+
+    // 모달 닫기
+    function camClose() {
+        camLiveClose();
+        document.getElementById('camModalBg').style.display = 'none';
+        document.getElementById('camChooseWrap').style.display = 'flex';
+    }
+
+    // 1) 네이티브 카메라 (file://에서도 작동, 태블릿 기본 카메라 앱 열림)
+    function camNativeShoot() {
+        camClose();
+        document.getElementById('gsCameraInput').click();
+    }
+
+    // 2) 갤러리에서 선택
+    function camGallery() {
+        camClose();
+        document.getElementById('gsFileInput').click();
+    }
+
+    // 3) 실시간 카메라 (HTTPS 환경에서만 작동)
+    async function camLiveOpen() {
+        if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
+            document.getElementById('camMsg').textContent = '';
+            document.getElementById('camChooseWrap').style.display = 'none';
+            document.getElementById('camLiveWrap').style.display = 'flex';
+            document.getElementById('camMsg').textContent = '⚠️ 이 환경에서는 실시간 카메라를 사용할 수 없어요.\n"카메라로 바로 찍기"를 이용해주세요!';
+            return;
+        }
+        document.getElementById('camChooseWrap').style.display = 'none';
+        document.getElementById('camLiveWrap').style.display = 'flex';
+        document.getElementById('camMsg').textContent = '카메라 준비 중...';
+        try {
+            camStream = await navigator.mediaDevices.getUserMedia({
+                video: {facingMode: 'user', width: {ideal: 640}, height: {ideal: 640}}
+            });
+            document.getElementById('camVideo').srcObject = camStream;
+            document.getElementById('camMsg').textContent = '얼굴을 원 안에 맞춰주세요 😊';
+        } catch (err) {
+            document.getElementById('camMsg').textContent = '⚠️ 카메라 접근 불가 (HTTPS 필요)\n"카메라로 바로 찍기"를 이용해주세요!';
+        }
+    }
+
+    function camLiveClose() {
+        if (camStream) {
+            camStream.getTracks().forEach(t => t.stop());
+            camStream = null;
+        }
+        const v = document.getElementById('camVideo');
+        if (v) v.srcObject = null;
+        document.getElementById('camLiveWrap').style.display = 'none';
+        document.getElementById('camChooseWrap').style.display = 'flex';
+    }
+
+    // 실시간 카메라에서 찍기
+    function camShoot() {
+        const video = document.getElementById('camVideo');
+        if (!video.srcObject) {
+            document.getElementById('camMsg').textContent = '카메라가 준비되지 않았어요!';
+            return;
+        }
+        const cv = document.getElementById('camCanvas');
+        const ctx = cv.getContext('2d');
+        ctx.clearRect(0, 0, 400, 400);
+        ctx.beginPath();
+        ctx.arc(200, 200, 200, 0, Math.PI * 2);
+        ctx.clip();
+        ctx.save();
+        ctx.translate(400, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, 0, 0, 400, 400);
+        ctx.restore();
+        const dataURL = cv.toDataURL('image/png');
+        camClose();
+        // 찍은 사진을 편집 모달로 넘기기
+        openEditModal(dataURL, currentUploadSlot);
+    }
+
+    // ── 이미지 모드 ON/OFF ──
+    function toggleImageMode() {
+        if (!slotImages.some(Boolean)) {
+            alert('먼저 슬롯에 이미지를 등록해주세요!');
+            return;
+        }
+        useImageMode = !useImageMode;
+        updateGsStatus();
+    }
+
+    function resetImageMode() {
+        // [버그 수정/개선] 기존에는 확인 절차 없이 버튼 한 번 클릭으로 등록된 학생 사진 5장이
+        // 전부 즉시 삭제되었음. 되돌릴 수 없는 파괴적인 동작이므로 실수로 인한 데이터 손실을
+        // 막기 위해 확인창을 추가.
+        if (slotImages.some(Boolean)) {
+            if (!confirm('등록된 모든 슬롯 이미지를 삭제할까요? 이 작업은 되돌릴 수 없습니다.')) return;
+        }
+        slotImages = [null, null, null, null, null];
+        useImageMode = false;
+        updateGsStatus();
+        renderSlotGrid();
+    }
+
+    function updateGsStatus() {
+        const st = document.getElementById('gsStatus');
+        const btn = document.getElementById('gsApplyBtn');
+        if (useImageMode) {
+            st.className = 'gs-status on';
+            st.textContent = '✅ 이미지 모드 켜짐 — 게임에 반영됩니다';
+            btn.className = 'gs-apply-btn active';
+            btn.textContent = '✅ 이미지 모드 ON (클릭하여 끄기)';
+        } else {
+            st.className = 'gs-status off';
+            st.textContent = '이미지 모드 꺼짐';
+            btn.className = 'gs-apply-btn';
+            btn.textContent = '✨ 타겟 변경 (이미지 모드 ON)';
+        }
+    }
+
+    // ── 이미지 캐릭터 생성 헬퍼 ──
+    // slotIdx: 0~3 = 색상슬롯, 4 = 특수슬롯
+    function createImgEl(slotIdx, x, y, size) {
+        const src = slotImages[slotIdx];
+        const el = document.createElement('div');
+        el.className = 'character';
+        el.style.cssText = 'width:' + size + 'px;height:' + size + 'px;left:' + x + 'px;top:' + y + 'px;border-radius:50%;background:transparent;';
+        if (src) {
+            const img = document.createElement('img');
+            img.className = 'img-char';
+            img.src = src;
+            img.draggable = false;
+            img.setAttribute('draggable', 'false');
+            el.appendChild(img);
+        } else {
+            // 슬롯 비어있으면 색상 도형으로 폴백
+            const sc = slotIdx < 4
+                ? SMILE_BY_COLOR[COLOR_KEYS[slotIdx]]
+                : {bg: 'linear-gradient(145deg,#ffeb3b,#ffc107)', shadow: 'rgba(255,193,7,0.5)', shape: '50%'};
+            el.style.background = sc.bg;
+            el.style.boxShadow = '0 10px 30px ' + sc.shadow;
+            el.style.borderRadius = sc.shape;
+            el.innerHTML = '<div class="smile-face" style="background:' + sc.bg + ';box-shadow:0 10px 30px ' + sc.shadow + ';border-radius:' + sc.shape + ';"><div class="eyes"><div class="eye"></div><div class="eye" style="animation-delay:0.15s;"></div></div><div class="mouth"></div></div>';
+        }
+        return el;
+    }
+
+    // [버그 수정 - 핵심] 슬롯1~4(빨강/노랑/초록/파랑 대체 이미지)가 실제 게임 어디에서도
+    // 전혀 사용되지 않던 심각한 버그. createImgEl(slotIdx,...)는 항상 slotIdx=4(슬롯5)로만
+    // 호출되고 있었고, 색상 기반 도형(빨강/노랑/초록/파랑)은 어느 게임에서도 createCharacter로만
+    // 그려져서 slotImages[0..3]을 조회하는 코드가 아예 없었음(설정 화면의 슬롯 업로드 UI에만
+    // 존재). 그 결과 슬롯1~4에 사진을 등록해도 실제 게임에는 절대 반영되지 않았음.
+    // 색상 기반 도형을 만드는 모든 곳(타겟 클릭 기본/심화, 피하기, 타임어택, 풍선)에서
+    // createCharacter 대신 이 헬퍼를 거치도록 통일. 이미지 모드가 켜져 있고 해당 색상의
+    // 슬롯에 사진이 등록되어 있으면 사진을, 없으면 기존처럼 색깔 스마일 도형을 그대로 보여준다.
+    function createColorEl(colorKey, x, y, size, shape) {
+        const idx = COLOR_KEYS.indexOf(colorKey);
+        if (useImageMode && idx >= 0 && slotImages[idx]) {
+            return createImgEl(idx, x, y, size);
+        }
+        const sc = SMILE_BY_COLOR[colorKey];
+        return createCharacter({bg: sc.bg, shadow: sc.shadow, shape: shape || sc.shape || '50%'}, x, y, size);
+    }
+
+
+    // [버그 수정/개선-접근성] 메인 메뉴 카드, 서브 메뉴 카드, 라디오 버튼, 색상 체크박스,
+    // 슬롯 박스 등 클릭으로만 조작 가능한 요소들이 전부 <div>로 만들어져 있어서 tabindex가 없으면
+    // 키보드(Tab)로 전혀 접근할 수 없었음. 스위치/키보드 접근성이 중요한 대상 학생들을 위해
+    // 포커스 가능하도록 만들고 Enter/Space로도 클릭과 동일하게 동작하도록 만드는 헬퍼.
+    function makeFocusable(el) {
+        if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0');
+        el.setAttribute('role', 'button');
+        el.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                e.preventDefault();
+                el.click();
+            }
+        });
+        return el;
+    }
+
+    // ===== NAVIGATION =====
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+    }
+
+    function openSubMenu(type) {
+        currentSubMenu = type;
+        const title = document.getElementById('subMenuTitle');
+        const grid = document.getElementById('subMenuGrid');
+        grid.innerHTML = '';
+
+        if (type === 'basic') {
+            title.textContent = '🖱️ 기본 클릭 능력';
+            [
+                {icon: '😊', title: '난이도 1 - 쉬움', desc: '아무 곳이나 클릭해도\n화면이 변해요!', game: 'basic1'},
+                {icon: '🎯', title: '난이도 2 - 보통', desc: '도형을 정확히\n클릭해야 해요!', game: 'basic2'},
+                {icon: '🔴', title: '난이도 3 - 타겟 (기본)', desc: '지시된 색상 도형을\n목표 횟수만큼 클릭!', game: 'target_basic'},
+                {icon: '🌈', title: '난이도 3 - 타겟 (심화)', desc: '계속 바뀌는 색상 도형을\n정확하게 클릭!', game: 'target_adv'},
+            ].forEach(it => grid.appendChild(makeSubCard(it)));
+        } else {
+            title.textContent = '🎯 게임하기';
+            [
+                {icon: '🎈', title: '풍선 게임', desc: '튀어다니는 풍선들을\n최대한 많이 클릭!', game: 'balloon'},
+                {icon: '🟢', title: '피하기 게임', desc: '정답 도형만 클릭하고\n오답은 피해요!', game: 'dodge'},
+                {icon: '⏱️', title: '타임 어택', desc: '제한 시간 안에\n목표 횟수 달성!', game: 'timeattack'},
+            ].forEach(it => grid.appendChild(makeSubCard(it)));
+        }
+        showScreen('subMenu');
+    }
+
+    // 심화클릭: 서브메뉴 없이 바로 설정 화면으로
+    function openAdvanced() {
+        currentSubMenu = 'advanced';
+        openSettings('advanced');
+    }
+
+    function makeSubCard(it) {
+        const card = document.createElement('div');
+        card.className = 'sub-card';
+        card.innerHTML = `<div class="sub-card-icon">${it.icon}</div>
+        <div class="sub-card-title">${it.title}</div>
+        <div class="sub-card-desc">${it.desc.replace(/\n/g, '<br>')}</div>`;
+        card.onclick = () => openSettings(it.game);
+        makeFocusable(card);
+        return card;
+    }
+
+    function goMainMenu() {
+        stopGame();
+        showScreen('mainMenu');
+        document.getElementById('globalSettingsBtn').classList.remove('hidden');
+        document.getElementById('gameHud').classList.add('hidden');
+        document.getElementById('gameContainer').classList.add('hidden');
+        document.getElementById('gameContainer').classList.remove('with-problem');
+        document.getElementById('timerBarWrap').classList.add('hidden');
+        document.getElementById('timerBarWrap').style.top = '';
+        document.getElementById('problemBox').classList.add('hidden');
+        document.getElementById('urgencyOverlay').classList.remove('active');
+        document.body.style.background = 'linear-gradient(135deg,#667eea,#764ba2)';
+        document.body.classList.remove('red-pulse');
+
+    }
+
+    function goBackFromSettings() {
+        if (currentSubMenu === 'advanced') {
+            goMainMenu();
+        } else {
+            showScreen('subMenu');
+        }
+    }
+
+    function goBackInGame() {
+        stopGame();
+        document.getElementById('globalSettingsBtn').classList.remove('hidden');
+        document.getElementById('gameHud').classList.add('hidden');
+        document.getElementById('gameContainer').classList.add('hidden');
+        document.getElementById('gameContainer').classList.remove('with-problem');
+        document.getElementById('timerBarWrap').classList.add('hidden');
+        document.getElementById('timerBarWrap').style.top = '';
+        document.getElementById('problemBox').classList.add('hidden');
+        document.getElementById('urgencyOverlay').classList.remove('active');
+        document.body.classList.remove('red-pulse');
+        document.body.style.background = 'linear-gradient(135deg,#667eea,#764ba2)';
+        openSettings(currentGame);
+    }
+
+    // ===== SETTINGS =====
+    const defaultSettings = {
+        speed          : 5, size: 3, count: 5,
+        colors         : ['red', 'yellow', 'green', 'blue'],
+        targetColor    : 'red', targetCount: 15,
+        distractorCount: 2, shapes: 'circle',
+        nextDelay      : 1, penaltyMode: false,
+        timeLimit      : 60, goalClicks: 30,
+        taMode         : false,
+    };
+
+    function openSettings(gameType) {
+        currentGame = gameType;
+        gameSettings = {...defaultSettings, colors: [...defaultSettings.colors]};
+        const title = document.getElementById('settingsTitle');
+        const box = document.getElementById('settingsBox');
+        box.innerHTML = '';
+        const names = {
+            basic1      : '😊 난이도 1 - 쉬움', basic2: '🎯 난이도 2 - 보통',
+            target_basic: '🔴 타겟 클릭 (기본)', target_adv: '🌈 타겟 클릭 (심화)',
+            advanced    : '⚡ 심화 클릭', balloon: '🎈 풍선 게임',
+            dodge       : '🟢 피하기 게임', timeattack: '⏱️ 타임 어택',
+        };
+        title.textContent = names[gameType] || '설정';
+        box.appendChild(makeSliderRow('도형 크기', 'size', 1, 10, 3, v => v));
+        const note = document.createElement('div');
+        note.style.cssText = 'color:rgba(255,255,255,0.7);font-size:14px;text-align:center;';
+        note.textContent = '💡 게임 중 HUD에서 싱글/더블클릭 전환 가능';
+        box.appendChild(note);
+
+
+        if (gameType === 'target_basic') {
+            if (!useImageMode) {
+                box.appendChild(makeColorPicker('정답 색상 선택', 'targetColor'));
+            } else {
+                const n = document.createElement('div');
+                n.style.cssText = 'background:rgba(46,213,115,0.15);border:1px solid #2ed573;border-radius:10px;padding:10px;color:#2ed573;font-size:13px;text-align:center;';
+                n.innerHTML = '👤 이미지 모드 ON — 슬롯5 얼굴이 정답!<br><small style="opacity:0.8">방해 색상 도형 개수를 선택하세요</small>';
+                box.appendChild(n);
+                box.appendChild(makeRadioRow('방해 색상 개수', 'distractorCount', [{val: 1, label: '1가지'}, {val: 2, label: '2가지'}, {val: 3, label: '3가지'}, {val: 4, label: '4가지'}], 2));
+            }
+            box.appendChild(makeSliderRow('목표 클릭 횟수', 'targetCount', 5, 50, 15, v => v + '번'));
+            box.appendChild(makeSliderRow('화면 도형 개수', 'count', 3, 15, 7, v => v + '개'));
+            box.appendChild(makeRadioRow('도형 모양', 'shapes', [{val: 'circle', label: '원형 ◯'}, {val: 'rect', label: '사각형 ■'}, {val: 'mixed', label: '섞음 ◯■'}]));
+            box.appendChild(makeRadioRow('다음 문제 전환', 'nextDelay', [{val: 0, label: '즉시'}, {val: 1, label: '1초 후'}, {val: 2, label: '2초 후'}], 1));
+        } else if (gameType === 'target_adv') {
+            if (useImageMode) {
+                const imgNote2 = document.createElement('div');
+                imgNote2.style.cssText = 'background:rgba(46,213,115,0.15);border:1px solid #2ed573;border-radius:10px;padding:10px;color:#2ed573;font-size:13px;text-align:center;';
+                imgNote2.innerHTML = '👤 이미지 모드 ON<br><small style="opacity:0.8">슬롯5 얼굴(⭐)이 목표 풀에 자동 추가됩니다</small>';
+                box.appendChild(imgNote2);
+            }
+            box.appendChild(makeColorCheckboxes('사용할 색상 (2개 이상)', 'colors', 2));
+            box.appendChild(makeSliderRow('화면 도형 개수', 'count', 3, 15, 7, v => v + '개'));
+            box.appendChild(makeRadioRow('도형 모양', 'shapes', [{val: 'circle', label: '원형 ◯'}, {val: 'rect', label: '사각형 ■'}, {val: 'mixed', label: '섞음 ◯■'}]));
+            box.appendChild(makeToggleRow('타임어택 모드', 'taMode', '제한 시간 내 최대한 많이 클릭!'));
+            box.appendChild(makeRadioRow('제한 시간 (타임어택)', 'timeLimit', [
+                {val: 30, label: '30초'}, {val: 60, label: '1분'}, {val: 90, label: '1분30초'}, {val: 120, label: '2분'},
+            ], 60));
+        } else if (gameType === 'advanced') {
+            box.appendChild(makeSliderRow('이동 속도', 'speed', 1, 10, 5, v => v));
+        } else if (gameType === 'balloon') {
+            box.appendChild(makeSliderRow('이동 속도', 'speed', 1, 10, 5, v => v));
+            box.appendChild(makeSliderRow('풍선 개수', 'count', 1, 20, 5, v => v + '개'));
+            box.appendChild(makeColorCheckboxesWithImage('사용할 색상', 'colors'));
+        } else if (gameType === 'dodge') {
+            box.appendChild(makeSliderRow('이동 속도', 'speed', 1, 10, 5, v => v));
+            box.appendChild(makeColorOrImagePicker('정답 (클릭할 것)', 'targetColor'));
+            box.appendChild(makeRadioRow('방해 색상 개수', 'distractorCount', [{val: 1, label: '1개'}, {val: 2, label: '2개'}, {val: 3, label: '3개'}, {val: 4, label: '4개'}], 2));
+            box.appendChild(makeSliderRow('도형 개수', 'count', 3, 15, 8, v => v + '개'));
+            box.appendChild(makeToggleRow('패널티 모드', 'penaltyMode', '오답 클릭 시 방해 도형 커짐'));
+        } else if (gameType === 'timeattack') {
+            box.appendChild(makeRadioRow('제한 시간', 'timeLimit', [
+                {val: 60, label: '1분'}, {val: 90, label: '1분30초'}, {val: 120, label: '2분'},
+                {val: 150, label: '2분30초'}, {val: 180, label: '3분'},
+            ]));
+            box.appendChild(makeSliderRow('목표 클릭 수', 'goalClicks', 10, 100, 30, v => v + '번'));
+            box.appendChild(makeSliderRow('이동 속도', 'speed', 1, 10, 5, v => v));
+            box.appendChild(makeSliderRow('도형 개수', 'count', 1, 10, 5, v => v + '개'));
+            // [개선] 이미지 모드가 켜져 있으면 이 색상 설정은 실제 게임에 아무 영향을 주지 않는데도
+            // (항상 등록된 사진만 표시되므로) 안내 없이 체크박스만 노출되어 혼란스러웠음.
+            // 항상 보이는 안내 문구를 추가하고, 설정 화면이 열려 있는 동안 이미지 모드를
+            // 켜고 끄면(전역 설정 패널) 문구도 즉시 갱신되도록 처리.
+            const colorsWrap = document.createElement('div');
+            colorsWrap.id = 'taColorsWrap';
+            const note = document.createElement('div');
+            note.id = 'taColorsNote';
+            note.style.cssText = 'font-size:13px;color:#ffe08a;margin:-6px 0 8px 2px;';
+            colorsWrap.appendChild(note);
+            colorsWrap.appendChild(makeColorCheckboxes('사용할 색상', 'colors'));
+            box.appendChild(colorsWrap);
+            updateTAColorsNote();
+        }
+        showScreen('settingsScreen');
+    }
+
+    function makeSliderRow(label, key, min, max, def, fmt) {
+        gameSettings[key] = def;
+        const id = 'sv_' + key;
+        // [버그 수정] 기존에는 fmt(def)에서 def 숫자를 문자열 치환으로 제거해 접미사를 추출했는데,
+        // def 값이 결과 문자열 안에 여러 번 나타나거나 다른 숫자와 우연히 겹치면 접미사가 잘못 계산될 수 있었음.
+        // 실제 값으로 나타나지 않을 고유한 숫자(999999)로 fmt를 호출해 안전하게 접미사만 추출하도록 수정.
+        const suffix = String(fmt(999999)).replace('999999', '');
+        const row = document.createElement('div');
+        row.className = 'setting-row';
+        row.innerHTML = `<div class="setting-label">${label}</div>
+        <div class="slider-wrap">
+            <input type="range" class="setting-slider" min="${min}" max="${max}" value="${def}"
+                oninput="gameSettings['${key}']=parseFloat(this.value);document.getElementById('${id}').textContent=this.value+'${suffix}'" >
+            <div class="setting-val" id="${id}">${fmt(def)}</div>
+        </div>`;
+        return row;
+    }
+
+    function makeRadioRow(label, key, options, defaultVal) {
+        // [버그 수정] 기존에는 항상 options[0]을 기본값으로 선택했는데, 이는 실제로
+        // 문서에 명시된 각 설정의 기본값(예: 방해 색상 2가지, 다음 문제 전환 1초, 제한시간 1분)과
+        // 어긋나는 경우가 있었음. defaultVal 인자를 받아 해당 값을 기본 선택하도록 수정.
+        const defIdx = (defaultVal !== undefined) ? options.findIndex(o => o.val === defaultVal) : 0;
+        const selIdx = defIdx >= 0 ? defIdx : 0;
+        gameSettings[key] = options[selIdx].val;
+        const row = document.createElement('div');
+        row.className = 'setting-row';
+        const group = document.createElement('div');
+        group.className = 'radio-group';
+        options.forEach((o, i) => {
+            const btn = document.createElement('div');
+            btn.className = 'radio-btn' + (i === selIdx ? ' selected' : '');
+            btn.textContent = o.label;
+            btn.dataset.val = o.val;
+            btn.addEventListener('click', function () {
+                group.querySelectorAll('.radio-btn').forEach(b => b.classList.remove('selected'));
+                this.classList.add('selected');
+                gameSettings[key] = this.dataset.val;
+                // convert to number if numeric
+                if (!isNaN(this.dataset.val) && this.dataset.val !== '') {
+                    gameSettings[key] = parseFloat(this.dataset.val);
+                }
+            });
+            makeFocusable(btn);
+            group.appendChild(btn);
+        });
+        const labelEl = document.createElement('div');
+        labelEl.className = 'setting-label';
+        labelEl.textContent = label;
+        row.appendChild(labelEl);
+        row.appendChild(group);
+        return row;
+    }
+
+    // [코드 정리] selectRadio()는 이전 버전에서 인라인 onclick 문자열 속성으로 라디오 버튼을
+    // 처리하던 방식의 잔재로, 지금은 makeRadioRow() 내부의 addEventListener 클로저로 대체되어
+    // 실제로 호출되는 곳이 없는 죽은 코드였음. 제거.
+
+    // [개선] 설정 화면의 색상 선택 버튼(정답 색상, 사용할 색상 등)이 항상 단순 색깔 점만 보여줘서,
+    // 슬롯1~4에 사진을 등록해도 "내가 어떤 색에 어떤 사진을 넣었는지" 설정 화면만 보고는 알 수 없었음.
+    // 이미지 모드가 켜져 있고 해당 색상 슬롯에 사진이 등록되어 있으면, 점 대신 그 사진 썸네일을
+    // 보여주도록 통일. box에는 data-color 속성을 남겨서, 전역 이미지 설정 패널에서 사진을 바꾼 뒤
+    // (refreshAllColorPickers) 화면에 이미 떠 있는 설정 화면의 썸네일도 즉시 갱신할 수 있게 함.
+    function makeColorDot(colorKey) {
+        const idx = COLOR_KEYS.indexOf(colorKey);
+        if (useImageMode && idx >= 0 && slotImages[idx]) {
+            const thumb = document.createElement('img');
+            thumb.src = slotImages[idx];
+            thumb.draggable = false;
+            thumb.className = 'color-dot color-dot-slot';
+            thumb.style.cssText = 'width:20px;height:20px;border-radius:50%;object-fit:cover;vertical-align:middle;';
+            return thumb;
+        }
+        const dot = document.createElement('div');
+        dot.className = 'color-dot color-dot-slot';
+        dot.style.background = COLORS[colorKey].hex;
+        return dot;
+    }
+
+    // 슬롯5(특수 이미지) 썸네일 - 등록돼 있으면 사진, 없으면 별 아이콘
+    function makeImg5Thumb() {
+        const src5 = slotImages[4];
+        if (src5) {
+            const thumb = document.createElement('img');
+            thumb.src = src5;
+            thumb.draggable = false;
+            thumb.className = 'color-dot color-dot-slot';
+            thumb.style.cssText = 'width:20px;height:20px;border-radius:50%;object-fit:cover;vertical-align:middle;';
+            return thumb;
+        }
+        const span = document.createElement('span');
+        span.className = 'color-dot-slot';
+        span.textContent = '⭐';
+        return span;
+    }
+
+    // 전역 이미지 설정 패널을 닫을 때, 이미 그려져 있는 색상 선택 UI의 썸네일을 최신 상태로 갱신
+    function refreshAllColorPickers() {
+        document.querySelectorAll('.color-checkbox[data-color]').forEach(box => {
+            const key = box.dataset.color;
+            const oldDot = box.querySelector('.color-dot-slot');
+            if (!oldDot) return;
+            oldDot.replaceWith(key === 'img5' ? makeImg5Thumb() : makeColorDot(key));
+        });
+    }
+
+    function makeColorCheckboxes(label, key, minSelected) {
+        // [버그 수정] 기존에는 항상 최소 1개까지만 선택 해제를 허용했음.
+        // 타겟 클릭(심화)처럼 안내 문구에 "2개 이상"이라고 명시된 설정에는
+        // minSelected 인자로 실제 최소 선택 개수를 강제할 수 있도록 수정.
+        // (색상이 1개만 남으면 방해 도형과 정답 도형을 구분할 수 없어 게임 난이도가 깨짐)
+        const min = minSelected || 1;
+        gameSettings[key] = [...COLOR_KEYS];
+        const row = document.createElement('div');
+        row.className = 'setting-row';
+        const labelEl = document.createElement('div');
+        labelEl.className = 'setting-label';
+        labelEl.textContent = label;
+        const group = document.createElement('div');
+        group.className = 'checkbox-group';
+        COLOR_KEYS.forEach(c => {
+            const col = COLORS[c];
+            const box = document.createElement('div');
+            box.className = 'color-checkbox checked';
+            box.dataset.color = c;
+            box.appendChild(makeColorDot(c));
+            box.appendChild(document.createTextNode(col.name));
+            box.addEventListener('click', function () {
+                const checked = this.classList.toggle('checked');
+                if (!gameSettings[key]) gameSettings[key] = [...COLOR_KEYS];
+                if (checked) {
+                    if (!gameSettings[key].includes(c)) gameSettings[key].push(c);
+                } else {
+                    if (gameSettings[key].length <= min) {
+                        this.classList.add('checked');
+                        return;
+                    }
+                    gameSettings[key] = gameSettings[key].filter(x => x !== c);
+                }
+            });
+            makeFocusable(box);
+            group.appendChild(box);
+        });
+        row.appendChild(labelEl);
+        row.appendChild(group);
+        return row;
+    }
+
+    function makeColorPicker(label, key) {
+        gameSettings[key] = 'red';
+        const row = document.createElement('div');
+        row.className = 'setting-row';
+        const labelEl = document.createElement('div');
+        labelEl.className = 'setting-label';
+        labelEl.textContent = label;
+        const group = document.createElement('div');
+        group.className = 'checkbox-group';
+        COLOR_KEYS.forEach((c, i) => {
+            const col = COLORS[c];
+            const box = document.createElement('div');
+            box.className = 'color-checkbox' + (i === 0 ? ' checked' : '');
+            box.dataset.color = c;
+            box.appendChild(makeColorDot(c));
+            box.appendChild(document.createTextNode(col.name));
+            box.addEventListener('click', function () {
+                group.querySelectorAll('.color-checkbox').forEach(b => b.classList.remove('checked'));
+                this.classList.add('checked');
+                gameSettings[key] = c;
+            });
+            makeFocusable(box);
+            group.appendChild(box);
+        });
+        row.appendChild(labelEl);
+        row.appendChild(group);
+        return row;
+    }
+
+    // [코드 정리] pickColor()도 더 이상 호출되지 않는 죽은 코드였음. 제거.
+
+    // 색상 + 이미지5 중 하나 선택 (피하기 게임 정답용)
+    function makeColorOrImagePicker(label, key) {
+        gameSettings[key] = 'red';
+        const row = document.createElement('div');
+        row.className = 'setting-row';
+        const labelEl = document.createElement('div');
+        labelEl.className = 'setting-label';
+        labelEl.textContent = label;
+        const group = document.createElement('div');
+        group.className = 'checkbox-group';
+
+        // 색상 버튼들
+        COLOR_KEYS.forEach((c, i) => {
+            const col = COLORS[c];
+            const box = document.createElement('div');
+            box.className = 'color-checkbox' + (i === 0 ? ' checked' : '');
+            box.dataset.color = c;
+            box.appendChild(makeColorDot(c));
+            box.appendChild(document.createTextNode(col.name));
+            box.addEventListener('click', function () {
+                group.querySelectorAll('.color-checkbox').forEach(b => b.classList.remove('checked'));
+                this.classList.add('checked');
+                gameSettings[key] = c;
+            });
+            makeFocusable(box);
+            group.appendChild(box);
+        });
+
+        // 이미지5 버튼
+        const imgBox = document.createElement('div');
+        imgBox.className = 'color-checkbox';
+        imgBox.dataset.color = 'img5';
+        imgBox.style.cssText = 'border-color:rgba(255,215,0,0.5);';
+        imgBox.appendChild(makeImg5Thumb());
+        imgBox.appendChild(document.createTextNode(' 이미지'));
+        imgBox.addEventListener('click', function () {
+            group.querySelectorAll('.color-checkbox').forEach(b => b.classList.remove('checked'));
+            this.classList.add('checked');
+            gameSettings[key] = 'img5';
+        });
+        makeFocusable(imgBox);
+        group.appendChild(imgBox);
+
+        row.appendChild(labelEl);
+        row.appendChild(group);
+        return row;
+    }
+
+    // 색상 체크박스 + 이미지5 포함 버전 (풍선 게임용)
+    function makeColorCheckboxesWithImage(label, key) {
+        gameSettings[key] = [...COLOR_KEYS];
+        const row = document.createElement('div');
+        row.className = 'setting-row';
+        const labelEl = document.createElement('div');
+        labelEl.className = 'setting-label';
+        labelEl.textContent = label;
+        const group = document.createElement('div');
+        group.className = 'checkbox-group';
+
+        COLOR_KEYS.forEach(c => {
+            const col = COLORS[c];
+            const box = document.createElement('div');
+            box.className = 'color-checkbox checked';
+            box.dataset.color = c;
+            box.appendChild(makeColorDot(c));
+            box.appendChild(document.createTextNode(col.name));
+            box.addEventListener('click', function () {
+                const checked = this.classList.toggle('checked');
+                if (!gameSettings[key]) gameSettings[key] = [...COLOR_KEYS];
+                const val = this.dataset.color || 'img5';
+                if (checked) {
+                    if (!gameSettings[key].includes(val)) gameSettings[key].push(val);
+                } else {
+                    if (gameSettings[key].length <= 1) {
+                        this.classList.add('checked');
+                        return;
+                    }
+                    gameSettings[key] = gameSettings[key].filter(x => x !== val);
+                }
+            });
+            makeFocusable(box);
+            group.appendChild(box);
+        });
+
+        // 이미지5 체크박스
+        const imgBox = document.createElement('div');
+        imgBox.className = 'color-checkbox';
+        imgBox.dataset.color = 'img5';
+        imgBox.style.cssText = 'border-color:rgba(255,215,0,0.4);';
+        imgBox.appendChild(makeImg5Thumb());
+        imgBox.appendChild(document.createTextNode(' 이미지'));
+        imgBox.addEventListener('click', function () {
+            const checked = this.classList.toggle('checked');
+            if (!gameSettings[key]) gameSettings[key] = [...COLOR_KEYS];
+            if (checked) {
+                if (!gameSettings[key].includes('img5')) gameSettings[key].push('img5');
+            } else {
+                if (gameSettings[key].length <= 1) {
+                    this.classList.add('checked');
+                    return;
+                }
+                gameSettings[key] = gameSettings[key].filter(x => x !== 'img5');
+            }
+        });
+        makeFocusable(imgBox);
+        group.appendChild(imgBox);
+
+        row.appendChild(labelEl);
+        row.appendChild(group);
+        return row;
+    }
+
+    function makeToggleRow(label, key, desc) {
+        gameSettings[key] = false;
+        const row = document.createElement('div');
+        row.className = 'setting-row';
+        const labelEl = document.createElement('div');
+        labelEl.className = 'setting-label';
+        labelEl.textContent = label;
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'display:flex;align-items:center;gap:12px;';
+        const btn = document.createElement('div');
+        btn.className = 'radio-btn';
+        btn.textContent = 'OFF';
+        btn.addEventListener('click', function () {
+            gameSettings[key] = !gameSettings[key];
+            this.textContent = gameSettings[key] ? 'ON' : 'OFF';
+            this.classList.toggle('selected', gameSettings[key]);
+        });
+        const descEl = document.createElement('div');
+        descEl.style.cssText = 'color:rgba(255,255,255,0.7);font-size:14px;';
+        descEl.textContent = desc;
+        makeFocusable(btn);
+        wrap.appendChild(btn);
+        wrap.appendChild(descEl);
+        row.appendChild(labelEl);
+        row.appendChild(wrap);
+        return row;
+    }
+
+    // [코드 정리] toggleSetting()도 더 이상 호출되지 않는 죽은 코드였음. 제거.
+
+    // ===== GAME LAUNCH =====
+    function launchGame() {
+        pressCount = 0;
+        correctCount = 0;
+        wrongCount = 0;
+        gameStartTime = Date.now();
+        globalColorIdx = 0;
+        stopGame();
+        document.getElementById('globalSettingsBtn').classList.add('hidden');
+        document.getElementById('hudCounter').textContent = '0';
+        document.getElementById('hudAccuracy').style.display = 'none';
+        document.getElementById('hudTimer').style.display = 'none';
+        document.getElementById('timerBarWrap').classList.add('hidden');
+        document.getElementById('timerBarWrap').style.top = '';
+        document.getElementById('gameContainer').classList.remove('with-timer');
+        document.getElementById('problemBox').classList.add('hidden');
+        document.getElementById('urgencyOverlay').classList.remove('active');
+        document.body.classList.remove('red-pulse');
+        document.getElementById('modeToggleBtn').textContent = isDoubleClickMode ? '👆 더블클릭' : '🖱️ 싱글클릭';
+        // 무한 반복형 게임(풍선/피하기)에만 "결과보기" 버튼 표시
+        document.getElementById('finishHudBtn').classList.toggle('hidden', !(currentGame === 'balloon' || currentGame === 'dodge'));
+        document.getElementById('gameHud').classList.remove('hidden');
+        document.getElementById('gameContainer').classList.remove('hidden');
+        document.getElementById('gameContainer').innerHTML = '';
+        document.body.style.background = SMILE_COLORS_LIST[0].bodyBg;
+        // 게임 중 설정 패널 닫기
+        closeGsPanel();
+        showScreen('settingsScreen');
+        document.getElementById('settingsScreen').classList.add('hidden');
+        const g = currentGame;
+        if (g === 'basic1') startBasic1();
+        else if (g === 'basic2') startBasic2();
+        else if (g === 'target_basic') startTargetBasic();
+        else if (g === 'target_adv') startTargetAdv();
+        else if (g === 'advanced') startAdvanced();
+        else if (g === 'balloon') startBalloon();
+        else if (g === 'dodge') startDodge();
+        else if (g === 'timeattack') startTimeAttack();
+    }
+
+    function restartGame() {
+        openSettings(currentGame);
+    }
+
+    function stopGame() {
+        animationFrames.forEach(id => cancelAnimationFrame(id));
+        animationFrames = [];
+        timers.forEach(id => {
+            clearTimeout(id);
+            clearInterval(id);
+        });
+        timers = [];
+        if (window._taInterval) {
+            clearInterval(window._taInterval);
+            window._taInterval = null;
+        }
+        if (window._taAdvInterval) {
+            clearInterval(window._taAdvInterval);
+            window._taAdvInterval = null;
+        }
+        taAdvRunning = false;
+        document.getElementById('gameContainer').innerHTML = '';
+    }
+
+    function toggleClickMode() {
+        isDoubleClickMode = !isDoubleClickMode;
+        document.getElementById('modeToggleBtn').textContent = isDoubleClickMode ? '👆 더블클릭' : '🖱️ 싱글클릭';
+    }
+
+    // Dynamically adjust game container top based on problem-box actual height
+    // [버그 수정 1] 문제 박스(#problemBox)와 타이머 바(#timerBarWrap)가 둘 다 CSS에서 top:60px로
+    // 고정되어 있어서, 타겟 심화의 "타임어택 모드"처럼 두 요소가 동시에 표시될 때 서로 겹쳐 보이는
+    // 문제가 있었음. 문제 박스가 보이면 타이머 바를 문제 박스 아래로 밀어내도록 수정.
+    // [버그 수정 2] 기존 계산은 문제 박스 높이만 반영하고 타이머 바(12px) 높이를 반영하지 않아
+    // 두 요소가 동시에 표시될 때 게임 컨테이너 상단이 타이머 바와 겹치는 문제가 있었음.
+    function adjustContainerTop() {
+        const pb = document.getElementById('problemBox');
+        const gc = document.getElementById('gameContainer');
+        const tw = document.getElementById('timerBarWrap');
+        const timerVisible = tw && !tw.classList.contains('hidden');
+        if (!pb.classList.contains('hidden')) {
+            const h = pb.getBoundingClientRect().height;
+            let top = 60 + h; // HUD height + problem box height
+            if (timerVisible) {
+                tw.style.top = top + 'px';
+                top += 12; // 타이머 바 높이만큼 추가
+            }
+            gc.style.top = top + 'px';
+        } else if (timerVisible) {
+            tw.style.top = '60px';
+        }
+    }
+
+    // [버그 수정] 창 크기 변경/화면 회전 시 문제 박스의 줄바꿈 여부가 달라질 수 있는데,
+    // 기존에는 게임 시작 시 딱 한 번(setTimeout 50ms)만 위치를 보정하고 이후에는 갱신하지 않았음.
+    // 리사이즈/회전 이벤트에도 재보정하도록 리스너 추가.
+    window.addEventListener('resize', () => {
+        if (!document.getElementById('problemBox').classList.contains('hidden')) {
+            adjustContainerTop();
+        }
+    });
+
+    // ===== HELPERS =====
+    function getSize() {
+        const sizes = [60, 85, 110, 140, 170, 200, 230, 260, 290, 320];
+        let s = sizes[(gameSettings.size || 3) - 1];
+        // [버그 수정] 기존에는 화면(컨테이너) 크기와 무관하게 도형 크기를 그대로 사용했음.
+        // 작은 화면(휴대폰 세로모드 등)에서 도형 크기를 크게(예: 320px) 설정하면
+        // 컨테이너보다 도형이 커져 랜덤 위치 계산이 음수가 되어 도형이 화면 밖으로
+        // 배치되거나 전혀 클릭할 수 없게 되는 문제가 있었음. 컨테이너 크기에 비례해 상한을 둠.
+        const c = document.getElementById('gameContainer');
+        if (c) {
+            const cw = c.offsetWidth, ch = c.offsetHeight;
+            if (cw > 0 && ch > 0) {
+                const maxSize = Math.max(30, Math.min(cw, ch) * 0.85);
+                s = Math.min(s, maxSize);
+            }
+        }
+        return s;
+    }
+
+    function getSpeed() {
+        const s = gameSettings.speed || 5;
+        return 0.3 + (s - 1) * (2.2 / 9);
+    }
+
+    function getShapeBr(colorKey) {
+        const s = gameSettings.shapes || 'circle';
+        if (s === 'circle') return '50%';
+        if (s === 'rect') return '12%';
+        return COLOR_KEYS.indexOf(colorKey) % 2 === 0 ? '50%' : '12%';
+    }
+
+    function containerSize() {
+        const c = document.getElementById('gameContainer');
+        return {w: c.offsetWidth, h: c.offsetHeight};
+    }
+
+    // Non-overlapping random positions
+    function randomPosNoOverlap(size, existing = []) {
+        const {w, h} = containerSize();
+        const margin = 10;
+        // [버그 수정] w-size-margin*2 또는 w-size 가 음수가 되면(도형이 컨테이너보다 큰 극단적 경우)
+        // Math.random()에 음수를 곱해 예상치 못한 좌표가 나오거나 도형이 화면 밖으로 배치될 수 있었음.
+        // Math.max(0, ...)로 방어.
+        const rangeX = Math.max(0, w - size - margin * 2);
+        const rangeY = Math.max(0, h - size - margin * 2);
+        for (let attempt = 0; attempt < 80; attempt++) {
+            const x = margin + Math.random() * rangeX;
+            const y = margin + Math.random() * rangeY;
+            let ok = true;
+            for (const p of existing) {
+                const dx = p.x - x, dy = p.y - y;
+                if (Math.sqrt(dx * dx + dy * dy) < size + margin) {
+                    ok = false;
+                    break;
+                }
+            }
+            if (ok) return {x, y};
+        }
+        return {x: Math.random() * Math.max(0, w - size), y: Math.random() * Math.max(0, h - size)};
+    }
+
+    function randomPos(size) {
+        const {w, h} = containerSize();
+        return {x: Math.random() * Math.max(0, w - size), y: Math.random() * Math.max(0, h - size)};
+    }
+
+    // 이전 위치와 충분히 멀리 떨어진 새 위치 반환 (기본/심화 클릭용)
+    function randomPosFar(size, prevX, prevY) {
+        const {w, h} = containerSize();
+        const minDist = Math.max(w, h) * 0.35; // 화면 대각선의 35% 이상 떨어지도록
+        const rangeX = Math.max(0, w - size), rangeY = Math.max(0, h - size);
+        for (let i = 0; i < 30; i++) {
+            const x = Math.random() * rangeX, y = Math.random() * rangeY;
+            const dx = x - prevX, dy = y - prevY;
+            if (Math.sqrt(dx * dx + dy * dy) >= minDist) return {x, y};
+        }
+        // 30번 시도해도 못 찾으면 반대쪽 코너 근처로 강제 배치
+        const cx = prevX < (w - size) / 2 ? (w - size) * 0.8 : (w - size) * 0.1;
+        const cy = prevY < (h - size) / 2 ? (h - size) * 0.8 : (h - size) * 0.1;
+        return {
+            x: Math.max(0, Math.min(cx + (Math.random() - 0.5) * 40, w - size)),
+            y: Math.max(0, Math.min(cy + (Math.random() - 0.5) * 40, h - size))
+        };
+    }
+
+    // ===== CREATE CHARACTER (original smile face style) =====
+    function createCharacter(sc, x, y, size) {
+        // sc: {bg, shadow, shape}
+        const el = document.createElement('div');
+        el.className = 'character';
+        el.style.width = size + 'px';
+        el.style.height = size + 'px';
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+        el.style.borderRadius = sc.shape;
+        el.innerHTML = `
+        <div class="smile-face" style="background:${sc.bg};box-shadow:0 10px 30px ${sc.shadow};border-radius:${sc.shape};">
+            <div class="eyes">
+                <div class="eye"></div>
+                <div class="eye" style="animation-delay:0.15s;"></div>
+            </div>
+            <div class="mouth"></div>
+        </div>`;
+        return el;
+    }
+
+    function nextSmileColor() {
+        const sc = SMILE_COLORS_LIST[globalColorIdx % SMILE_COLORS_LIST.length];
+        globalColorIdx++;
+        return sc;
+    }
+
+    function applySmileColor(el, sc) {
+        // 이미지 모드여도 색상은 유지 (이미지가 위에 씌워짐)
+        el.style.borderRadius = sc.shape;
+        const face = el.querySelector('.smile-face');
+        if (face) {
+            face.style.background = sc.bg;
+            face.style.boxShadow = '0 10px 30px ' + sc.shadow;
+            face.style.borderRadius = sc.shape;
+        }
+    }
+
+    function createSparkles(el) {
+        const c = document.getElementById('gameContainer');
+        const rect = el.getBoundingClientRect();
+        const cr = c.getBoundingClientRect();
+        for (let i = 0; i < 20; i++) {
+            const sp = document.createElement('div');
+            sp.className = 'sparkle';
+            const cols = ['#fff', '#FFD700', '#ff6b81', '#00e676', '#2979ff'];
+            sp.style.background = cols[Math.floor(Math.random() * cols.length)];
+            sp.style.left = (rect.left - cr.left + rect.width / 2) + 'px';
+            sp.style.top = (rect.top - cr.top + rect.height / 2) + 'px';
+            sp.style.setProperty('--tx', (Math.random() - 0.5) * 200 + 'px');
+            sp.style.setProperty('--ty', (Math.random() - 0.5) * 200 + 'px');
+            c.appendChild(sp);
+            setTimeout(() => sp.remove(), 900);
+        }
+    }
+
+    function randomSurprise(el) {
+        if (Math.random() < 0.12) {
+            const r = Math.floor(Math.random() * 3);
+            if (r === 0) {
+                document.body.classList.add('flash');
+                playSound('cheer');
+                setTimeout(() => document.body.classList.remove('flash'), 500);
+            } else if (r === 1) {
+                el.classList.add('super-big');
+                setTimeout(() => el.classList.remove('super-big'), 2000);
+            } else {
+                document.body.classList.add('shake');
+                setTimeout(() => document.body.classList.remove('shake'), 400);
+            }
+        }
+    }
+
+    // ===== SOUNDS =====
+    const SOUND_PATTERNS = [
+        {freqs: [659, 1047], d: 0.15}, {freqs: [988, 1319], d: 0.12}, {freqs: [523, 784, 1047], d: 0.18},
+        {freqs: [659, 784, 1047, 1319], d: 0.1}, {freqs: [196], d: 0.1}, {freqs: [523, 392], d: 0.12},
+        {freqs: [392, 330], d: 0.1}, {freqs: [659, 988, 1319, 1760, 2093, 1760], d: 0.08},
+        {freqs: [1047, 880, 659, 523], d: 0.08}, {freqs: [1319, 988], d: 0.1},
+    ];
+    let soundIdx = 0;
+
+    function playSound(type) {
+        const ctx = getAudio();
+        let freqs, d;
+        if (type === 'click') {
+            const p = SOUND_PATTERNS[soundIdx % SOUND_PATTERNS.length];
+            freqs = p.freqs;
+            d = p.d;
+            soundIdx++;
+        } else if (type === 'correct') {
+            freqs = [523, 659, 784, 1047];
+            d = 0.08;
+        } else if (type === 'wrong') {
+            freqs = [220, 180];
+            d = 0.15;
+        } else if (type === 'cheer') {
+            freqs = [523, 659, 784, 1047, 1319];
+            d = 0.08;
+        } else if (type === 'urgent') {
+            freqs = [880, 660];
+            d = 0.08;
+        } else if (type === 'alarm') {
+            freqs = [1047, 880, 1047, 880];
+            d = 0.05;
+        } else {
+            freqs = [659, 1047];
+            d = 0.12;
+        }
+        freqs.forEach((f, i) => {
+            const osc = ctx.createOscillator(), gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.frequency.value = f;
+            osc.type = 'square';
+            const t = ctx.currentTime + i * d;
+            gain.gain.setValueAtTime(0, t);
+            gain.gain.linearRampToValueAtTime(0.4, t + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.01, t + d);
+            osc.start(t);
+            osc.stop(t + d + 0.01);
+        });
+    }
+
+    // ===== BASIC 1 =====
+    // [버그 수정] 기존에는 startBasic1()이 호출될 때마다 #gameContainer(재생성되지 않고 계속 재사용되는 요소)에
+    // click/dblclick 리스너를 addEventListener로 계속 "추가"만 하고 있었음. stopGame()은 innerHTML만 비울 뿐
+    // 컨테이너 자체의 리스너는 제거하지 않으므로, 난이도1을 반복 플레이(다시하기/뒤로가기 후 재입장)할 때마다
+    // 리스너가 누적되어 클릭 한 번에 카운트가 여러 번 오르고 효과음이 중첩 재생되는 문제가 있었음.
+    // 리스너를 한 번만 바인딩하도록 플래그로 가드 처리.
+    let _basic1Bound = false;
+
+    function startBasic1() {
+        const size = getSize(), {x, y} = randomPos(size);
+        const el = useImageMode ? createImgEl(4, x, y, size) : createCharacter(nextSmileColor(), x, y, size);
+        el.id = 'b1char';
+        document.getElementById('gameContainer').appendChild(el);
+        if (!_basic1Bound) {
+            document.getElementById('gameContainer').addEventListener('click', () => {
+                if (!isDoubleClickMode && currentGame === 'basic1') handleBasic1Click();
+            });
+            document.getElementById('gameContainer').addEventListener('dblclick', () => {
+                if (isDoubleClickMode && currentGame === 'basic1') handleBasic1Click();
+            });
+            _basic1Bound = true;
+        }
+    }
+
+    function handleBasic1Click() {
+        pressCount++;
+        document.getElementById('hudCounter').textContent = pressCount;
+        const el = document.getElementById('b1char');
+        if (!el) return;
+        playSound('click');
+        createSparkles(el);
+        randomSurprise(el);
+        const size = getSize();
+        const prevX = parseFloat(el.style.left) || 0, prevY = parseFloat(el.style.top) || 0;
+        const {x, y} = randomPosFar(size, prevX, prevY);
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+        if (!useImageMode) {
+            const sc = nextSmileColor();
+            document.body.style.background = sc.bodyBg;
+            applySmileColor(el, sc);
+            el.classList.remove('jumping', 'spinning');
+            void el.offsetWidth;
+            el.classList.add(Math.random() < 0.4 ? 'spinning' : 'jumping');
+            setTimeout(() => el.classList.remove('jumping', 'spinning'), 600);
+        }
+    }
+
+    // ===== BASIC 2 =====
+    let b2LastClick = 0;
+
+    function startBasic2() {
+        const size = getSize(), {x, y} = randomPos(size);
+        const el = useImageMode ? createImgEl(4, x, y, size) : createCharacter(nextSmileColor(), x, y, size);
+        el.id = 'b2char';
+        document.getElementById('gameContainer').appendChild(el);
+        el.addEventListener('click', e => {
+            e.stopPropagation();
+            if (!isDoubleClickMode) handleBasic2Click(el);
+        });
+        el.addEventListener('dblclick', e => {
+            e.stopPropagation();
+            if (isDoubleClickMode) handleBasic2Click(el);
+        });
+    }
+
+    function handleBasic2Click(el) {
+        const now = Date.now();
+        if (now - b2LastClick < 80) return;
+        b2LastClick = now;
+        pressCount++;
+        document.getElementById('hudCounter').textContent = pressCount;
+        playSound('click');
+        createSparkles(el);
+        randomSurprise(el);
+        const size = getSize();
+        const prevX = parseFloat(el.style.left) || 0, prevY = parseFloat(el.style.top) || 0;
+        const {x, y} = randomPosFar(size, prevX, prevY);
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+        if (!useImageMode) {
+            const sc = nextSmileColor();
+            document.body.style.background = sc.bodyBg;
+            applySmileColor(el, sc);
+            el.classList.remove('jumping', 'spinning');
+            void el.offsetWidth;
+            el.classList.add(Math.random() < 0.4 ? 'spinning' : 'jumping');
+            setTimeout(() => el.classList.remove('jumping', 'spinning'), 600);
+        }
+    }
+
+    // ===== TARGET BASIC =====
+    // 이미지 모드: 정답=이미지5(슬롯4), 방해=색상도형들
+    // 일반 모드: 정답=선택색상, 방해=나머지색상
+    let tb_target = 'red', tb_clicked = 0, tb_wrong = 0, tb_total = 0;
+
+    function startTargetBasic() {
+        tb_target = gameSettings.targetColor || 'red';
+        tb_clicked = 0;
+        tb_wrong = 0;
+        tb_total = 0;
+        document.getElementById('hudAccuracy').style.display = '';
+        document.getElementById('problemBox').classList.remove('hidden');
+        document.getElementById('gameContainer').classList.add('with-problem');
+        renderTBProblem();
+        spawnTBShapes();
+        setTimeout(adjustContainerTop, 50);
+    }
+
+    function renderTBProblem() {
+        const isImg = useImageMode;
+        if (isImg) {
+            const src = slotImages[4];
+            document.getElementById('problemTarget').innerHTML =
+                (src ? '<img src="' + src + '" style="width:30px;height:30px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:6px;">' : '⭐') +
+                '<span>이 얼굴을 ' + gameSettings.targetCount + '번 클릭!</span>';
+        } else {
+            const col = COLORS[tb_target];
+            document.getElementById('problemTarget').innerHTML =
+                '<div class="target-dot" style="background:' + col.hex + '"></div><span>' + col.name + ' 도형 ' + gameSettings.targetCount + '번</span>';
+        }
+        const dots = document.getElementById('progressDots');
+        dots.innerHTML = '';
+        const dotColor = isImg ? '#FFD700' : COLORS[tb_target].hex;
+        for (let i = 0; i < gameSettings.targetCount; i++) {
+            const d = document.createElement('div');
+            d.className = 'prog-dot' + (i < tb_clicked ? ' filled' : '');
+            if (i < tb_clicked) d.style.background = dotColor;
+            dots.appendChild(d);
+        }
+        const acc = tb_total > 0 ? Math.round((tb_clicked / (tb_clicked + tb_wrong)) * 100) : '-';
+        document.getElementById('statsRow').textContent = tb_clicked + '/' + gameSettings.targetCount + ' | 정확도: ' + acc + '%';
+        document.getElementById('hudCounter').textContent = tb_clicked;
+        document.getElementById('hudAccuracy').textContent = '정확도: ' + acc + '%';
+    }
+
+    function spawnTBShapes() {
+        const c = document.getElementById('gameContainer');
+        c.innerHTML = '';
+        const size = getSize(), count = gameSettings.count || 7;
+        const positions = [];
+        if (useImageMode) {
+            // 이미지 모드: 정답=이미지5, 방해=색상도형(방해개수 설정 따름)
+            const dc = Math.min(gameSettings.distractorCount || 2, 4);
+            const distColors = COLOR_KEYS.slice(0, dc);
+            // 정답 1개 이상 보장
+            const p0 = randomPosNoOverlap(size, positions);
+            positions.push(p0);
+            const el0 = createImgEl(4, p0.x, p0.y, size);
+            el0.dataset.isTarget = '1';
+            el0.addEventListener('click', e => {
+                e.stopPropagation();
+                if (!isDoubleClickMode) handleTBClick(el0, true);
+            });
+            el0.addEventListener('dblclick', e => {
+                e.stopPropagation();
+                if (isDoubleClickMode) handleTBClick(el0, true);
+            });
+            c.appendChild(el0);
+            for (let i = 1; i < count; i++) {
+                const ck = distColors[Math.floor(Math.random() * distColors.length)];
+                const p = randomPosNoOverlap(size, positions);
+                positions.push(p);
+                const el = createColorEl(ck, p.x, p.y, size, getShapeBr(ck));
+                el.dataset.color = ck;
+                el.dataset.isTarget = '0';
+                el.addEventListener('click', e => {
+                    e.stopPropagation();
+                    if (!isDoubleClickMode) handleTBClick(el, false);
+                });
+                el.addEventListener('dblclick', e => {
+                    e.stopPropagation();
+                    if (isDoubleClickMode) handleTBClick(el, false);
+                });
+                c.appendChild(el);
+            }
+        } else {
+            // 일반 모드: 기존 로직
+            const others = COLOR_KEYS.filter(k => k !== tb_target);
+            const p0 = randomPosNoOverlap(size, positions);
+            positions.push(p0);
+            c.appendChild(createTBShape(tb_target, p0.x, p0.y, size));
+            for (let i = 1; i < count; i++) {
+                const ck = others[Math.floor(Math.random() * others.length)];
+                const p = randomPosNoOverlap(size, positions);
+                positions.push(p);
+                c.appendChild(createTBShape(ck, p.x, p.y, size));
+            }
+        }
+    }
+
+    function createTBShape(colorKey, x, y, size) {
+        const el = createColorEl(colorKey, x, y, size, getShapeBr(colorKey));
+        el.dataset.color = colorKey;
+        const isCorrect = (colorKey === tb_target);
+        el.addEventListener('click', e => {
+            e.stopPropagation();
+            if (!isDoubleClickMode) handleTBClick(el, isCorrect);
+        });
+        el.addEventListener('dblclick', e => {
+            e.stopPropagation();
+            if (isDoubleClickMode) handleTBClick(el, isCorrect);
+        });
+        return el;
+    }
+
+    function handleTBClick(el, isCorrect) {
+        tb_total++;
+        if (isCorrect) {
+            tb_clicked++;
+            pressCount++;
+            playSound('correct');
+            createSparkles(el);
+            changeBg();
+            el.classList.add('clicked');
+            setTimeout(() => {
+                if (tb_clicked >= gameSettings.targetCount) {
+                    tb_clicked = 0;
+                    if (!useImageMode) {
+                        const others = COLOR_KEYS.filter(k => k !== tb_target);
+                        tb_target = others[Math.floor(Math.random() * others.length)];
+                    }
+                    // [버그 수정] "즉시"(0초) 옵션이 (gameSettings.nextDelay||1) 때문에 0이 falsy로 취급되어
+                    // 항상 1초 지연으로 동작하던 문제 수정. null/undefined일 때만 기본값 1을 사용하도록 변경.
+                    const nd = (gameSettings.nextDelay != null) ? gameSettings.nextDelay : 1;
+                    timers.push(setTimeout(() => {
+                        spawnTBShapes();
+                        renderTBProblem();
+                    }, nd * 1000));
+                } else {
+                    spawnTBShapes();
+                }
+                renderTBProblem();
+            }, 300);
+        } else {
+            tb_wrong++;
+            playSound('wrong');
+            document.body.classList.add('shake');
+            setTimeout(() => document.body.classList.remove('shake'), 400);
+            el.classList.add('wrong-shake');
+            setTimeout(() => el.classList.remove('wrong-shake'), 300);
+            renderTBProblem();
+        }
+    }
+
+    function changeBg() {
+        // [코드 정리] 기존 코드는 globalColorIdx를 증가시켰다가 바로 다시 감소시켜서
+        // 실질적으로 아무 효과가 없는 혼란스러운 코드였음(다음에 읽는 사람이 버그로 오인하기 쉬움).
+        // 의도(전역 색상 순환 인덱스를 건드리지 않고 현재 색상으로 배경만 갱신)를 명확히 드러내도록 정리.
+        const sc = SMILE_COLORS_LIST[globalColorIdx % SMILE_COLORS_LIST.length];
+        document.body.style.background = sc.bodyBg;
+    }
+
+    // ===== TARGET ADV =====
+    // 이미지 모드: 목표가 색상1~4 + 이미지5 중 랜덤
+    // 일반 모드: 목표가 선택한 색상들 중 랜덤
+    let ta_target = 'red', ta_clicks = 0, ta_wrongs = 0;
+    let taAdvRunning = false, taAdvTimeLeft = 60;
+    // [버그 수정] 정답 클릭 후 다음 도형들이 다시 그려지기 전(300ms) 사이에 화면에 남아있는
+    // 이전 도형을 빠르게 연속 클릭하면, 이미 바뀐 ta_target 기준으로 판정되어 잘못된 정답/오답
+    // 처리가 되는 레이스 컨디션이 있었음. 전환 중에는 클릭을 잠그는 플래그 추가.
+    let ta_locked = false;
+
+    function startTargetAdv() {
+        const colors = gameSettings.colors || COLOR_KEYS;
+        // 이미지 모드면 colors + 'img5' 풀에서 선택
+        ta_target = pickNextTATarget();
+        ta_clicks = 0;
+        ta_wrongs = 0;
+        taAdvRunning = false;
+        ta_locked = false;
+        document.getElementById('hudAccuracy').style.display = '';
+        document.getElementById('problemBox').classList.remove('hidden');
+        document.getElementById('progressDots').innerHTML = '';
+        document.getElementById('gameContainer').classList.add('with-problem');
+        if (gameSettings.taMode) {
+            taAdvTimeLeft = gameSettings.timeLimit || 60;
+            taAdvRunning = true;
+            document.getElementById('timerBarWrap').classList.remove('hidden');
+            document.getElementById('gameContainer').classList.add('with-timer');
+            document.getElementById('hudTimer').style.display = '';
+            document.getElementById('hudTimer').textContent = '⏱️ ' + taAdvTimeLeft + '초';
+            startTAAdvTimer();
+        }
+        renderTAProblem();
+        spawnTAShapes();
+        setTimeout(adjustContainerTop, 50);
+    }
+
+    function pickNextTATarget() {
+        const colors = gameSettings.colors || COLOR_KEYS;
+        const pool = useImageMode ? [...colors, 'img5'] : colors;
+        return pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    function renderTAProblem() {
+        document.getElementById('problemTarget').innerHTML = targetHintHtml(ta_target, '도형 클릭!', '이 사진 클릭!');
+        const acc = (ta_clicks + ta_wrongs) > 0 ? Math.round((ta_clicks / (ta_clicks + ta_wrongs)) * 100) : '-';
+        document.getElementById('statsRow').textContent = '클릭: ' + ta_clicks + '번 | 정확도: ' + acc + '%';
+        document.getElementById('hudCounter').textContent = ta_clicks;
+        document.getElementById('hudAccuracy').textContent = '정확도: ' + acc + '%';
+    }
+
+    function spawnTAShapes() {
+        const c = document.getElementById('gameContainer');
+        c.innerHTML = '';
+        const size = getSize(), count = gameSettings.count || 7;
+        const colors = gameSettings.colors || COLOR_KEYS;
+        const positions = [];
+
+        // 방해 후보 풀: 색상 중 목표(ta_target)와 다른 것들만 (+이미지모드면 img5도 목표가 아닐 때만)
+        let distractPool = colors.filter(c2 => c2 !== ta_target);
+        if (useImageMode && ta_target !== 'img5') distractPool.push('img5');
+        if (distractPool.length === 0) distractPool = colors.filter(c2 => c2 !== ta_target); // 안전망
+
+        // 목표 도형 1개 보장 (key는 항상 실제 키값 그대로 사용 — 별도 isTarget 플래그 불필요)
+        const p0 = randomPosNoOverlap(size, positions);
+        positions.push(p0);
+        c.appendChild(createTAShape(ta_target, p0.x, p0.y, size));
+
+        for (let i = 1; i < count; i++) {
+            const pick = distractPool.length > 0
+                ? distractPool[Math.floor(Math.random() * distractPool.length)]
+                : colors[Math.floor(Math.random() * colors.length)]; // 폴백
+            const p = randomPosNoOverlap(size, positions);
+            positions.push(p);
+            c.appendChild(createTAShape(pick, p.x, p.y, size));
+        }
+    }
+
+    function createTAShape(key, x, y, size) {
+        let el;
+        if (key === 'img5') {
+            el = createImgEl(4, x, y, size);
+        } else {
+            el = createColorEl(key, x, y, size, getShapeBr(key));
+        }
+        el.dataset.key = key; // 클릭 시점에 실제 키값으로 정답 판정
+        el.addEventListener('click', e => {
+            e.stopPropagation();
+            if (!isDoubleClickMode) handleTAClick2(el);
+        });
+        el.addEventListener('dblclick', e => {
+            e.stopPropagation();
+            if (isDoubleClickMode) handleTAClick2(el);
+        });
+        return el;
+    }
+
+    function handleTAClick2(el) {
+        if (!taAdvRunning && gameSettings.taMode) return;
+        if (ta_locked) return; // 전환 중 클릭 무시 (레이스 컨디션 방지)
+        const key = el.dataset.key;
+        // 클릭 시점의 ta_target과 실제 비교 (생성 당시 플래그가 아닌 현재 상태 기준)
+        const correct = (key === ta_target);
+        if (correct) {
+            ta_clicks++;
+            pressCount++;
+            playSound('correct');
+            createSparkles(el);
+            el.classList.add('clicked');
+            ta_target = pickNextTATarget();
+            ta_locked = true;
+            setTimeout(() => {
+                spawnTAShapes();
+                renderTAProblem();
+                ta_locked = false;
+            }, 300);
+        } else {
+            ta_wrongs++;
+            playSound('wrong');
+            document.body.classList.add('shake');
+            setTimeout(() => document.body.classList.remove('shake'), 400);
+            el.classList.add('wrong-shake');
+            setTimeout(() => el.classList.remove('wrong-shake'), 300);
+            renderTAProblem();
+        }
+    }
+
+    function startTAAdvTimer() {
+        const total = taAdvTimeLeft;
+        window._taAdvInterval = setInterval(() => {
+            taAdvTimeLeft--;
+            document.getElementById('hudTimer').textContent = '⏱️ ' + taAdvTimeLeft + '초';
+            const bar = document.getElementById('timerBar');
+            bar.style.width = (taAdvTimeLeft / total * 100) + '%';
+            if (taAdvTimeLeft <= 10) {
+                bar.classList.add('urgent');
+                document.getElementById('urgencyOverlay').classList.add('active');
+                document.body.classList.add('red-pulse');
+                // [버그 수정] 기존에는 10초 이하일 때 2초마다 'urgent' 사운드를 재생하는 조건과
+                // 3초 이하일 때 매초 'alarm' 사운드를 재생하는 조건이 겹쳐서, 남은 시간이 2초일 때
+                // 두 사운드가 동시에 재생되어 소리가 뒤섞이는 문제가 있었음. 3초 이하 구간에서는
+                // urgent 사운드를 재생하지 않도록 상호 배타 처리.
+                if (taAdvTimeLeft % 2 === 0 && taAdvTimeLeft > 3) playSound('urgent');
+            }
+            if (taAdvTimeLeft <= 3) playSound('alarm');
+            if (taAdvTimeLeft <= 0) {
+                clearInterval(window._taAdvInterval);
+                taAdvRunning = false;
+                document.body.classList.remove('red-pulse');
+                document.getElementById('urgencyOverlay').classList.remove('active');
+                showResult(false);
+            }
+        }, 1000);
+    }
+
+    // ===== ADVANCED =====
+    let adv_data = null;
+
+    function startAdvanced() {
+        const size = getSize(), pos = randomPos(size);
+        const el = useImageMode ? createImgEl(4, pos.x, pos.y, size) : createCharacter(SMILE_COLORS_LIST[0], pos.x, pos.y, size);
+        el.id = 'advChar';
+        document.getElementById('gameContainer').appendChild(el);
+        adv_data = {
+            x : pos.x, y: pos.y, colorIdx: 0, lastFrame: null,
+            vx: getSpeed() * (Math.random() < 0.5 ? 1 : -1) * 60,
+            vy: getSpeed() * (Math.random() < 0.5 ? 1 : -1) * 60
+        };
+        el.addEventListener('click', e => {
+            e.stopPropagation();
+            if (!isDoubleClickMode) handleAdvClick(el);
+        });
+        el.addEventListener('dblclick', e => {
+            e.stopPropagation();
+            if (isDoubleClickMode) handleAdvClick(el);
+        });
+
+        function loop(ts) {
+            if (!adv_data) return;
+            if (!adv_data.lastFrame) adv_data.lastFrame = ts;
+            const dt = Math.min((ts - adv_data.lastFrame) / 1000, 0.1);
+            adv_data.lastFrame = ts;
+            const {w, h} = containerSize();
+            adv_data.x += adv_data.vx * dt;
+            adv_data.y += adv_data.vy * dt;
+            if (adv_data.x < 0) {
+                adv_data.x = 0;
+                adv_data.vx *= -1;
+            }
+            if (adv_data.x > w - size) {
+                adv_data.x = w - size;
+                adv_data.vx *= -1;
+            }
+            if (adv_data.y < 0) {
+                adv_data.y = 0;
+                adv_data.vy *= -1;
+            }
+            if (adv_data.y > h - size) {
+                adv_data.y = h - size;
+                adv_data.vy *= -1;
+            }
+            const ch = document.getElementById('advChar');
+            if (ch) {
+                ch.style.left = adv_data.x + 'px';
+                ch.style.top = adv_data.y + 'px';
+            }
+            animationFrames.push(requestAnimationFrame(loop));
+        }
+
+        animationFrames.push(requestAnimationFrame(loop));
+    }
+
+    function handleAdvClick(el) {
+        pressCount++;
+        document.getElementById('hudCounter').textContent = pressCount;
+        playSound('click');
+        createSparkles(el);
+        randomSurprise(el);
+        if (!useImageMode) {
+            const sc = SMILE_COLORS_LIST[adv_data.colorIdx % SMILE_COLORS_LIST.length];
+            adv_data.colorIdx++;
+            document.body.style.background = sc.bodyBg;
+            applySmileColor(el, sc);
+        }
+        // 클릭 즉시 새로운 위치로 순간이동 (멀리 떨어진 곳으로)
+        // [버그 수정] 기존에는 getSize()를 다시 호출했는데, 화면 회전 등으로 컨테이너 크기가 바뀌면
+        // 최초 생성 시 크기와 다른 값이 나와 이동 루프의 경계 계산(원래 size 기준)과 어긋날 수 있었음.
+        // 실제 렌더링된 요소의 크기를 그대로 사용하도록 수정.
+        const size = el.offsetWidth || getSize();
+        const {x, y} = randomPosFar(size, adv_data.x, adv_data.y);
+        adv_data.x = x;
+        adv_data.y = y;
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+    }
+
+    // ===== BALLOON =====
+    let balloonList = [];
+
+    function startBalloon() {
+        // [버그 수정] lastBallFrame이 전역 변수라 게임을 재시작해도 초기화되지 않아,
+        // 재플레이 시 아주 오래된 타임스탬프를 기준으로 dt가 계산되는 문제가 있었음
+        // (dt 클램프 덕에 큰 문제는 없었지만 첫 프레임에서 도형이 살짝 튀는 원인이 될 수 있었음).
+        lastBallFrame = null;
+        balloonList = [];
+        for (let i = 0; i < (gameSettings.count || 5); i++) spawnBalloon();
+        animateBalloons();
+    }
+
+    function spawnBalloon() {
+        const size = getSize();
+        const colors = gameSettings.colors || COLOR_KEYS;
+        const colorKey = colors[Math.floor(Math.random() * colors.length)];
+        const pos = randomPos(size), speed = getSpeed() * 60;
+        const b = {
+            x : pos.x, y: pos.y, colorKey, size, el: null,
+            vx: speed * (Math.random() < 0.5 ? 1 : -1), vy: speed * (Math.random() < 0.5 ? 1 : -1)
+        };
+        let el;
+        if (colorKey === 'img5') {
+            el = createImgEl(4, pos.x, pos.y, size);
+        } else {
+            el = createColorEl(colorKey, pos.x, pos.y, size, '50%');
+        }
+        el.addEventListener('click', e => {
+            e.stopPropagation();
+            if (!isDoubleClickMode) handleBalloonClick(b);
+        });
+        el.addEventListener('dblclick', e => {
+            e.stopPropagation();
+            if (isDoubleClickMode) handleBalloonClick(b);
+        });
+        b.el = el;
+        document.getElementById('gameContainer').appendChild(el);
+        balloonList.push(b);
+    }
+
+    function handleBalloonClick(b) {
+        pressCount++;
+        document.getElementById('hudCounter').textContent = pressCount;
+        playSound('click');
+        createSparkles(b.el);
+        randomSurprise(b.el);
+        if (!useImageMode) {
+            const sc = nextSmileColor();
+            document.body.style.background = sc.bodyBg;
+        }
+        b.el.classList.add('clicked');
+        setTimeout(() => {
+            b.el.remove();
+            balloonList = balloonList.filter(x => x !== b);
+            spawnBalloon();
+        }, 300);
+    }
+
+    let lastBallFrame = null;
+
+    function animateBalloons() {
+        function loop(ts) {
+            if (!lastBallFrame) lastBallFrame = ts;
+            const dt = Math.min((ts - lastBallFrame) / 1000, 0.05);
+            lastBallFrame = ts;
+            const {w, h} = containerSize();
+            balloonList.forEach(b => {
+                b.x += b.vx * dt;
+                b.y += b.vy * dt;
+                if (b.x < 0) {
+                    b.x = 0;
+                    b.vx = Math.abs(b.vx);
+                }
+                if (b.x > w - b.size) {
+                    b.x = w - b.size;
+                    b.vx = -Math.abs(b.vx);
+                }
+                if (b.y < 0) {
+                    b.y = 0;
+                    b.vy = Math.abs(b.vy);
+                }
+                if (b.y > h - b.size) {
+                    b.y = h - b.size;
+                    b.vy = -Math.abs(b.vy);
+                }
+                if (b.el) {
+                    b.el.style.left = b.x + 'px';
+                    b.el.style.top = b.y + 'px';
+                }
+            });
+            animationFrames.push(requestAnimationFrame(loop));
+        }
+
+        animationFrames.push(requestAnimationFrame(loop));
+    }
+
+    // ===== DODGE =====
+    let dodgeList = [], dodgeTarget = 'green', dodgeDistractors = [];
+
+    function startDodge() {
+        // [버그 수정] lastDodgeFrame도 balloon과 동일하게 재시작 시 초기화되지 않던 문제 수정.
+        lastDodgeFrame = null;
+        dodgeList = [];
+        dodgeTarget = gameSettings.targetColor || 'green';
+        // 방해: 정답이 img5면 색상들, 정답이 색상이면 나머지 색상들
+        const all = dodgeTarget === 'img5'
+            ? [...COLOR_KEYS]
+            : COLOR_KEYS.filter(k => k !== dodgeTarget);
+        const dc = Math.min(gameSettings.distractorCount || 2, all.length);
+        dodgeDistractors = all.slice(0, dc);
+        document.getElementById('hudAccuracy').style.display = '';
+        document.getElementById('problemBox').classList.remove('hidden');
+        document.getElementById('gameContainer').classList.add('with-problem');
+        renderDodgeHint();
+        const count = gameSettings.count || 8;
+        for (let i = 0; i < count; i++) spawnDodgeShape(i < 3);
+        animateDodge();
+        setTimeout(adjustContainerTop, 50);
+    }
+
+    // [버그 수정 - 핵심] 지난번 수정으로 슬롯1~4 사진이 실제 도형(빨강/노랑/초록/파랑)에는
+    // 반영되도록 고쳤지만, "문제 제시" 문구(예: "파랑 도형 클릭!")를 그리는 renderDodgeHint(),
+    // renderTAProblem() 두 곳은 여전히 색상 이름/점만 보여주고 있어서, 실제 화면에는 학생 사진이
+    // 나오는데 문제 문구는 "파랑 도형"이라고만 나와 학생이 무엇을 클릭해야 할지 헷갈리는
+    // 문제가 있었음. 대상 색상에 실제로 등록된 사진이 있으면 그 사진 썸네일을 문제 문구에도
+    // 함께 보여주도록 통일된 헬퍼 추가.
+    function targetHintHtml(key, dotActionText, photoActionText) {
+        if (key === 'img5') {
+            const src = slotImages[4];
+            return (src ? '<img src="' + src + '" style="width:28px;height:28px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:6px;">' : '⭐') + '<span>' + photoActionText + '</span>';
+        }
+        const idx = COLOR_KEYS.indexOf(key);
+        const col = COLORS[key];
+        if (useImageMode && idx >= 0 && slotImages[idx]) {
+            return '<img src="' + slotImages[idx] + '" style="width:28px;height:28px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:6px;">' +
+                '<span>' + photoActionText + '</span>';
+        }
+        return '<div class="target-dot" style="background:' + col.hex + '"></div><span>' + col.name + ' ' + dotActionText + '</span>';
+    }
+
+    function renderDodgeHint() {
+        document.getElementById('problemTarget').innerHTML = targetHintHtml(dodgeTarget, '도형을 클릭!', '이 사진을 클릭!');
+        document.getElementById('progressDots').innerHTML = '';
+        const acc = (correctCount + wrongCount) > 0 ? Math.round(correctCount / (correctCount + wrongCount) * 100) : '-';
+        document.getElementById('statsRow').textContent = '클릭: ' + pressCount + '번 | 정확도: ' + acc + '%';
+    }
+
+    function spawnDodgeShape(forceTarget) {
+        const size = getSize();
+        const targetCount = dodgeList.filter(x => x.isTarget).length;
+        const isTarget = (forceTarget || targetCount < 2);
+        let el, colorKey = null;
+        if (isTarget) {
+            // 정답 도형 생성
+            if (dodgeTarget === 'img5') {
+                el = createImgEl(4, 0, 0, size);
+            } else {
+                el = createColorEl(dodgeTarget, 0, 0, size, '50%');
+                el.dataset.color = dodgeTarget;
+                colorKey = dodgeTarget;
+            }
+        } else {
+            // 방해 도형 생성
+            colorKey = dodgeDistractors.length > 0
+                ? dodgeDistractors[Math.floor(Math.random() * dodgeDistractors.length)]
+                : COLOR_KEYS[Math.floor(Math.random() * COLOR_KEYS.length)];
+            el = createColorEl(colorKey, 0, 0, size, '50%');
+            el.dataset.color = colorKey;
+        }
+        const pos = randomPos(size);
+        el.style.left = pos.x + 'px';
+        el.style.top = pos.y + 'px';
+        const speed = getSpeed() * 60;
+        const d = {
+            x : pos.x, y: pos.y, colorKey, size, el, scale: 1, isTarget,
+            vx: speed * (Math.random() < 0.5 ? 1 : -1), vy: speed * (Math.random() < 0.5 ? 1 : -1)
+        };
+        el.addEventListener('click', e => {
+            e.stopPropagation();
+            if (!isDoubleClickMode) handleDodgeClick(d);
+        });
+        el.addEventListener('dblclick', e => {
+            e.stopPropagation();
+            if (isDoubleClickMode) handleDodgeClick(d);
+        });
+        document.getElementById('gameContainer').appendChild(el);
+        dodgeList.push(d);
+    }
+
+    function handleDodgeClick(d) {
+        if (d.isTarget) {
+            correctCount++;
+            pressCount++;
+            document.getElementById('hudCounter').textContent = pressCount;
+            const acc = Math.round((correctCount / (correctCount + wrongCount || 1)) * 100);
+            document.getElementById('hudAccuracy').textContent = '정확도: ' + acc + '%';
+            playSound('correct');
+            createSparkles(d.el);
+            d.el.classList.add('clicked');
+            setTimeout(() => {
+                d.el.remove();
+                dodgeList = dodgeList.filter(x => x !== d);
+                spawnDodgeShape(false);
+                renderDodgeHint();
+            }, 300);
+        } else {
+            wrongCount++;
+            const acc = Math.round((correctCount / (correctCount + wrongCount || 1)) * 100);
+            document.getElementById('hudAccuracy').textContent = '정확도: ' + acc + '%';
+            playSound('wrong');
+            document.body.classList.add('shake');
+            setTimeout(() => document.body.classList.remove('shake'), 400);
+            // [버그 수정/개선] 다른 게임(타겟 클릭 등)은 오답 클릭 시 화면 전체 흔들림뿐 아니라
+            // 클릭한 도형 자체도 흔들려서 "이게 오답이었다"는 피드백이 명확했는데,
+            // 피하기 게임은 화면 전체만 흔들리고 도형 자체는 흔들리지 않아 일관성이 없었음.
+            // 인지적 어려움이 있는 학생들에게는 어떤 도형이 오답이었는지 명확한 피드백이 중요하므로 추가.
+            d.el.classList.add('wrong-shake');
+            setTimeout(() => d.el.classList.remove('wrong-shake'), 300);
+            renderDodgeHint();
+            if (gameSettings.penaltyMode) {
+                d.scale = Math.min(d.scale * 1.25, 3);
+                d.el.style.transform = 'scale(' + d.scale + ')';
+            }
+        }
+    }
+
+    let lastDodgeFrame = null;
+
+    function animateDodge() {
+        function loop(ts) {
+            if (!lastDodgeFrame) lastDodgeFrame = ts;
+            const dt = Math.min((ts - lastDodgeFrame) / 1000, 0.05);
+            lastDodgeFrame = ts;
+            const {w, h} = containerSize();
+            dodgeList.forEach(d => {
+                d.x += d.vx * dt;
+                d.y += d.vy * dt;
+                if (d.x < 0) {
+                    d.x = 0;
+                    d.vx = Math.abs(d.vx);
+                }
+                if (d.x > w - d.size) {
+                    d.x = w - d.size;
+                    d.vx = -Math.abs(d.vx);
+                }
+                if (d.y < 0) {
+                    d.y = 0;
+                    d.vy = Math.abs(d.vy);
+                }
+                if (d.y > h - d.size) {
+                    d.y = h - d.size;
+                    d.vy = -Math.abs(d.vy);
+                }
+                if (d.el) {
+                    d.el.style.left = d.x + 'px';
+                    d.el.style.top = d.y + 'px';
+                }
+            });
+            animationFrames.push(requestAnimationFrame(loop));
+        }
+
+        animationFrames.push(requestAnimationFrame(loop));
+    }
+
+    // ===== TIME ATTACK =====
+    let taTimeLeft = 60, taGoal = 30, taShapes = [], taRunning = false;
+
+    function startTimeAttack() {
+        // [버그 수정] lastTAFrame도 동일하게 재시작 시 초기화되지 않던 문제 수정.
+        lastTAFrame = null;
+        taTimeLeft = gameSettings.timeLimit || 60;
+        taGoal = gameSettings.goalClicks || 30;
+        taShapes = [];
+        taRunning = true;
+        pressCount = 0;
+        document.getElementById('timerBarWrap').classList.remove('hidden');
+        document.getElementById('gameContainer').classList.add('with-timer');
+        document.getElementById('hudTimer').style.display = '';
+        document.getElementById('hudTimer').textContent = '⏱️ ' + taTimeLeft + '초';
+        document.getElementById('hudCounter').textContent = '0/' + taGoal;
+        for (let i = 0; i < (gameSettings.count || 5); i++) spawnTAShape2();
+        animateTA();
+        startTATimer();
+    }
+
+    function spawnTAShape2() {
+        const size = getSize();
+        const colors = gameSettings.colors || COLOR_KEYS;
+        const colorKey = colors[Math.floor(Math.random() * colors.length)];
+        const pos = randomPos(size), speed = getSpeed() * 60;
+        const s = {
+            x : pos.x, y: pos.y, colorKey, size, el: null,
+            vx: speed * (Math.random() < 0.5 ? 1 : -1), vy: speed * (Math.random() < 0.5 ? 1 : -1)
+        };
+        let el;
+        // [버그 수정] 기존에는 이미지 모드가 켜지면 색상(colorKey)과 무관하게 무조건 슬롯5만
+        // 표시해서, "사용할 색상" 체크박스를 아무리 바꿔도 게임에 반영되지 않았음.
+        // 이제 색상별로 등록된 슬롯(1~4) 이미지를 실제로 사용하도록 수정.
+        el = createColorEl(colorKey, pos.x, pos.y, size, '50%');
+        el.addEventListener('click', e => {
+            e.stopPropagation();
+            if (!isDoubleClickMode) handleTAShape(s);
+        });
+        el.addEventListener('dblclick', e => {
+            e.stopPropagation();
+            if (isDoubleClickMode) handleTAShape(s);
+        });
+        s.el = el;
+        document.getElementById('gameContainer').appendChild(el);
+        taShapes.push(s);
+    }
+
+    function handleTAShape(s) {
+        if (!taRunning) return;
+        pressCount++;
+        document.getElementById('hudCounter').textContent = pressCount + '/' + taGoal;
+        playSound('click');
+        createSparkles(s.el);
+        s.el.classList.add('clicked');
+        setTimeout(() => {
+            s.el.remove();
+            taShapes = taShapes.filter(x => x !== s);
+            if (taRunning) spawnTAShape2();
+        }, 300);
+        if (pressCount >= taGoal) {
+            taRunning = false;
+            clearInterval(window._taInterval);
+            document.body.classList.remove('red-pulse');
+            document.getElementById('urgencyOverlay').classList.remove('active');
+            playSound('cheer');
+            setTimeout(() => showResult(true), 400);
+        }
+    }
+
+    function startTATimer() {
+        const total = taTimeLeft;
+        window._taInterval = setInterval(() => {
+            taTimeLeft--;
+            document.getElementById('hudTimer').textContent = '⏱️ ' + taTimeLeft + '초';
+            const bar = document.getElementById('timerBar');
+            bar.style.width = (taTimeLeft / total * 100) + '%';
+            if (taTimeLeft <= 10) {
+                bar.classList.add('urgent');
+                document.getElementById('urgencyOverlay').classList.add('active');
+                document.body.classList.add('red-pulse');
+                // [버그 수정] target_adv 타이머와 동일한 사운드 중첩 문제 수정.
+                if (taTimeLeft % 2 === 0 && taTimeLeft > 3) playSound('urgent');
+            }
+            if (taTimeLeft <= 3) playSound('alarm');
+            if (taTimeLeft <= 0) {
+                clearInterval(window._taInterval);
+                taRunning = false;
+                document.body.classList.remove('red-pulse');
+                document.getElementById('urgencyOverlay').classList.remove('active');
+                showResult(false);
+            }
+        }, 1000);
+    }
+
+    let lastTAFrame = null;
+
+    function animateTA() {
+        function loop(ts) {
+            if (!lastTAFrame) lastTAFrame = ts;
+            const dt = Math.min((ts - lastTAFrame) / 1000, 0.05);
+            lastTAFrame = ts;
+            const {w, h} = containerSize();
+            taShapes.forEach(s => {
+                s.x += s.vx * dt;
+                s.y += s.vy * dt;
+                if (s.x < 0) {
+                    s.x = 0;
+                    s.vx = Math.abs(s.vx);
+                }
+                if (s.x > w - s.size) {
+                    s.x = w - s.size;
+                    s.vx = -Math.abs(s.vx);
+                }
+                if (s.y < 0) {
+                    s.y = 0;
+                    s.vy = Math.abs(s.vy);
+                }
+                if (s.y > h - s.size) {
+                    s.y = h - s.size;
+                    s.vy = -Math.abs(s.vy);
+                }
+                if (s.el) {
+                    s.el.style.left = s.x + 'px';
+                    s.el.style.top = s.y + 'px';
+                }
+            });
+            if (taRunning) animationFrames.push(requestAnimationFrame(loop));
+        }
+
+        animationFrames.push(requestAnimationFrame(loop));
+    }
+
+    // 풍선/피하기 게임처럼 "무한 반복" 방식이라 자동 종료 조건이 없는 게임에서
+    // 학생/교사가 원할 때 직접 결과 화면으로 넘어갈 수 있게 해주는 함수
+    function finishOpenGame() {
+        if (currentGame === 'balloon' || currentGame === 'dodge') showResult(true);
+    }
+
+    // ===== RESULT =====
+    function showResult(success) {
+        stopGame();
+        document.getElementById('globalSettingsBtn').classList.remove('hidden');
+        document.getElementById('gameHud').classList.add('hidden');
+        document.getElementById('gameContainer').classList.add('hidden');
+        document.getElementById('gameContainer').classList.remove('with-problem');
+        document.getElementById('timerBarWrap').classList.add('hidden');
+        document.getElementById('timerBarWrap').style.top = '';
+        document.getElementById('problemBox').classList.add('hidden');
+        const elapsed = Math.round((Date.now() - gameStartTime) / 1000);
+        const banner = document.getElementById('resultBanner');
+        banner.className = 'result-banner ' + (success ? 'success' : 'fail');
+        banner.textContent = success ? '🎉 성공!' : '⏱️ 시간 초과!';
+        const box = document.getElementById('resultBox');
+        box.innerHTML = '';
+        const add = (l, v) => box.innerHTML += '<div class="result-item"><span class="result-label">' + l + '</span><span class="result-value">' + v + '</span></div>';
+        add('총 클릭 수', pressCount + '번');
+        if (currentGame === 'timeattack') {
+            add('목표', taGoal + '번');
+            add('남은 시간', taTimeLeft + '초');
+            add('달성률', Math.round(Math.min(pressCount / taGoal * 100, 100)) + '%');
+        }
+        if (currentGame === 'target_adv' && gameSettings.taMode) {
+            add('정답 클릭', ta_clicks + '번');
+            const acc = (ta_clicks + ta_wrongs) > 0 ? Math.round(ta_clicks / (ta_clicks + ta_wrongs) * 100) : '-';
+            add('정확도', acc + '%');
+        }
+        if (currentGame === 'dodge') {
+            const acc = (correctCount + wrongCount) > 0 ? Math.round(correctCount / (correctCount + wrongCount) * 100) : '-';
+            add('정확도', acc + '%');
+            add('정답', correctCount + '번');
+            add('오답', wrongCount + '번');
+        }
+        if (currentGame === 'balloon') {
+            add('터뜨린 풍선', pressCount + '개');
+        }
+        add('플레이 시간', elapsed + '초');
+        showScreen('resultScreen');
+    }
+
+    // ===== FULLSCREEN =====
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {
+        });
+        else document.exitFullscreen();
+    }
+
+    document.addEventListener('fullscreenchange', () => {
+        const label = document.fullscreenElement ? '🖥️ 나가기' : '🖥️ 전체화면';
+        const hb = document.getElementById('fullscreenHudBtn');
+        if (hb) hb.textContent = label;
+    });
+
+    // ===== KEYBOARD =====
+    // [개선] 기존에는 Enter(스위치) 클릭 지원이 "기본1"에만 있었음. 화면에 도형이 하나만 있어서
+    // Enter=클릭이 명확하게 대응되는 게임(기본1, 기본2, 심화 클릭)까지 지원 범위를 넓힘.
+    // 타겟 클릭/피하기/풍선/타임어택처럼 화면에 여러 도형(정답+방해)이 동시에 있는 게임은
+    // "Enter로 무엇을 클릭할지"가 모호해서(스캐닝 방식의 별도 UI 없이는) 안전하게 확장하기 어려워
+    // 이번 범위에서는 제외함.
+    document.addEventListener('keydown', e => {
+        if (e.key === 'F11') {
+            e.preventDefault();
+            toggleFullscreen();
+        }
+        const isEnter = (e.key === 'Enter' || e.keyCode === 13);
+        // HUD 버튼(뒤로/홈 등) 같은 실제 <button>/입력 요소에 포커스가 가 있을 때는
+        // 브라우저가 Enter를 이미 그 요소의 클릭으로 처리하므로, 여기서 캐릭터 클릭까지
+        // 중복 실행되지 않도록 활성 요소를 확인.
+        const activeTag = document.activeElement && document.activeElement.tagName;
+        const isRealControl = activeTag === 'BUTTON' || activeTag === 'INPUT' || activeTag === 'A' || activeTag === 'TEXTAREA' || activeTag === 'SELECT';
+        if (isEnter && !isRealControl && !document.getElementById('gameContainer').classList.contains('hidden')) {
+            if (currentGame === 'basic1') {
+                e.preventDefault();
+                handleBasic1Click();
+            } else if (currentGame === 'basic2') {
+                const el = document.getElementById('b2char');
+                if (el) {
+                    e.preventDefault();
+                    handleBasic2Click(el);
+                }
+            } else if (currentGame === 'advanced') {
+                const el = document.getElementById('advChar');
+                if (el) {
+                    e.preventDefault();
+                    handleAdvClick(el);
+                }
+            }
+        }
+        getAudio();
+    });
+    document.addEventListener('click', () => getAudio(), {once: true});
+
+    // 초기화 완료
+</script>
+</body>
+</html>
