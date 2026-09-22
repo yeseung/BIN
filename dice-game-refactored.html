@@ -1,0 +1,2393 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주사위 게임 | 램프의 요정</title>
+
+    <!-- https://m.blog.naver.com/sue3565/224322039456 -->
+
+    <style>*, ::before, ::after {
+        box-sizing: border-box
+    }
+
+    .flex {
+        display: flex
+    }
+
+    .flex-col {
+        flex-direction: column
+    }
+
+    .flex-1 {
+        flex: 1 1 0%
+    }
+
+    .flex-shrink-0 {
+        flex-shrink: 0
+    }
+
+    .flex-wrap {
+        flex-wrap: wrap
+    }
+
+    .grid {
+        display: grid
+    }
+
+    .grid-cols-2 {
+        grid-template-columns:repeat(2, minmax(0, 1fr))
+    }
+
+    .grid-cols-3 {
+        grid-template-columns:repeat(3, minmax(0, 1fr))
+    }
+
+    .items-center {
+        align-items: center
+    }
+
+    .justify-center {
+        justify-content: center
+    }
+
+    .justify-between {
+        justify-content: space-between
+    }
+
+    .justify-end {
+        justify-content: flex-end
+    }
+
+    .justify-around {
+        justify-content: space-around
+    }
+
+    .min-h-0 {
+        min-height: 0
+    }
+
+    .relative {
+        position: relative
+    }
+
+    .absolute {
+        position: absolute
+    }
+
+    .fixed {
+        position: fixed
+    }
+
+    .inset-0 {
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0
+    }
+
+    .top-4 {
+        top: 1rem
+    }
+
+    .top-8 {
+        top: 2rem
+    }
+
+    .top-1\/3 {
+        top: 33.333%
+    }
+
+    .bottom-8 {
+        bottom: 2rem
+    }
+
+    .bottom-1\/4 {
+        bottom: 25%
+    }
+
+    .left-4 {
+        left: 1rem
+    }
+
+    .left-16 {
+        left: 4rem
+    }
+
+    .left-1\/2 {
+        left: 50%
+    }
+
+    .right-4 {
+        right: 1rem
+    }
+
+    .right-8 {
+        right: 2rem
+    }
+
+    .-top-20 {
+        top: -5rem
+    }
+
+    .-bottom-20 {
+        bottom: -5rem
+    }
+
+    .-left-20 {
+        left: -5rem
+    }
+
+    .-right-10 {
+        right: -2.5rem
+    }
+
+    .z-10 {
+        z-index: 10
+    }
+
+    .z-20 {
+        z-index: 20
+    }
+
+    .z-30 {
+        z-index: 30
+    }
+
+    .z-50 {
+        z-index: 50
+    }
+
+    .w-full {
+        width: 100%
+    }
+
+    .h-full {
+        height: 100%
+    }
+
+    .h-screen {
+        height: 100vh
+    }
+
+    .w-16 {
+        width: 4rem
+    }
+
+    .w-36 {
+        width: 9rem
+    }
+
+    .h-36 {
+        height: 9rem
+    }
+
+    .w-48 {
+        width: 12rem
+    }
+
+    .h-48 {
+        height: 12rem
+    }
+
+    .w-72 {
+        width: 18rem
+    }
+
+    .h-72 {
+        height: 18rem
+    }
+
+    .w-80 {
+        width: 20rem
+    }
+
+    .h-80 {
+        height: 20rem
+    }
+
+    .max-w-2xl {
+        max-width: 42rem
+    }
+
+    .gap-1 {
+        gap: .25rem
+    }
+
+    .gap-2 {
+        gap: .5rem
+    }
+
+    .gap-3 {
+        gap: .75rem
+    }
+
+    .gap-4 {
+        gap: 1rem
+    }
+
+    .gap-5 {
+        gap: 1.25rem
+    }
+
+    .gap-6 {
+        gap: 1.5rem
+    }
+
+    .gap-8 {
+        gap: 2rem
+    }
+
+    .gap-10 {
+        gap: 2.5rem
+    }
+
+    .p-5 {
+        padding: 1.25rem
+    }
+
+    .p-6 {
+        padding: 1.5rem
+    }
+
+    .p-10 {
+        padding: 2.5rem
+    }
+
+    .px-4 {
+        padding-left: 1rem;
+        padding-right: 1rem
+    }
+
+    .px-5 {
+        padding-left: 1.25rem;
+        padding-right: 1.25rem
+    }
+
+    .px-6 {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem
+    }
+
+    .px-7 {
+        padding-left: 1.75rem;
+        padding-right: 1.75rem
+    }
+
+    .px-8 {
+        padding-left: 2rem;
+        padding-right: 2rem
+    }
+
+    .px-10 {
+        padding-left: 2.5rem;
+        padding-right: 2.5rem
+    }
+
+    .px-12 {
+        padding-left: 3rem;
+        padding-right: 3rem
+    }
+
+    .px-14 {
+        padding-left: 3.5rem;
+        padding-right: 3.5rem
+    }
+
+    .py-2 {
+        padding-top: .5rem;
+        padding-bottom: .5rem
+    }
+
+    .py-3 {
+        padding-top: .75rem;
+        padding-bottom: .75rem
+    }
+
+    .py-4 {
+        padding-top: 1rem;
+        padding-bottom: 1rem
+    }
+
+    .py-5 {
+        padding-top: 1.25rem;
+        padding-bottom: 1.25rem
+    }
+
+    .py-6 {
+        padding-top: 1.5rem;
+        padding-bottom: 1.5rem
+    }
+
+    .py-7 {
+        padding-top: 1.75rem;
+        padding-bottom: 1.75rem
+    }
+
+    .py-8 {
+        padding-top: 2rem;
+        padding-bottom: 2rem
+    }
+
+    .py-10 {
+        padding-top: 2.5rem;
+        padding-bottom: 2.5rem
+    }
+
+    .mb-2 {
+        margin-bottom: .5rem
+    }
+
+    .mb-3 {
+        margin-bottom: .75rem
+    }
+
+    .mb-4 {
+        margin-bottom: 1rem
+    }
+
+    .mb-6 {
+        margin-bottom: 1.5rem
+    }
+
+    .mb-7 {
+        margin-bottom: 1.75rem
+    }
+
+    .mb-8 {
+        margin-bottom: 2rem
+    }
+
+    .ml-auto {
+        margin-left: auto
+    }
+
+    .mt-8 {
+        margin-top: 2rem
+    }
+
+    .mt-12 {
+        margin-top: 3rem
+    }
+
+    .mx-2 {
+        margin-left: .5rem;
+        margin-right: .5rem
+    }
+
+    .mx-4 {
+        margin-left: 1rem;
+        margin-right: 1rem
+    }
+
+    .text-center {
+        text-align: center
+    }
+
+    .text-base {
+        font-size: 1rem
+    }
+
+    .text-lg {
+        font-size: 1.125rem
+    }
+
+    .text-xl {
+        font-size: 1.25rem
+    }
+
+    .text-2xl {
+        font-size: 1.5rem
+    }
+
+    .text-3xl {
+        font-size: 1.875rem
+    }
+
+    .text-4xl {
+        font-size: 2.25rem
+    }
+
+    .text-5xl {
+        font-size: 3rem
+    }
+
+    .font-bold {
+        font-weight: 700
+    }
+
+    .font-extrabold {
+        font-weight: 800
+    }
+
+    .text-blue-600 {
+        color: #2563eb
+    }
+
+    .text-green-600 {
+        color: #16a34a
+    }
+
+    .text-gray-300 {
+        color: #d1d5db
+    }
+
+    .text-gray-400 {
+        color: #9ca3af
+    }
+
+    .text-gray-500 {
+        color: #6b7280
+    }
+
+    .text-gray-600 {
+        color: #4b5563
+    }
+
+    .text-orange-600 {
+        color: #ea580c
+    }
+
+    .text-pink-600 {
+        color: #db2777
+    }
+
+    .text-purple-700 {
+        color: #7e22ce
+    }
+
+    .text-rose-600 {
+        color: #e11d48
+    }
+
+    .bg-white {
+        background-color: #fff
+    }
+
+    .bg-black {
+        background-color: #000
+    }
+
+    .bg-gray-800 {
+        background-color: #1f2937
+    }
+
+    .border-4 {
+        border-width: 4px
+    }
+
+    .rounded-full {
+        border-radius: 9999px
+    }
+
+    .rounded-xl {
+        border-radius: .75rem
+    }
+
+    .rounded-2xl {
+        border-radius: 1rem
+    }
+
+    .rounded-3xl {
+        border-radius: 1.5rem
+    }
+
+    .shadow-md {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, .1)
+    }
+
+    .shadow-lg {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, .1), 0 4px 6px -4px rgba(0, 0, 0, .1)
+    }
+
+    .shadow-xl {
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, .1)
+    }
+
+    .shadow-2xl {
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, .25)
+    }
+
+    .space-y-4 > * + * {
+        margin-top: 1rem
+    }
+
+    .space-y-5 > * + * {
+        margin-top: 1.25rem
+    }
+
+    .overflow-hidden {
+        overflow: hidden
+    }
+
+    .overflow-y-auto {
+        overflow-y: auto
+    }
+
+    .pointer-events-none {
+        pointer-events: none
+    }
+
+    .cursor-pointer {
+        cursor: pointer
+    }
+
+    .transition-all {
+        transition: all .15s cubic-bezier(.4, 0, .2, 1)
+    }
+
+    .transition-opacity {
+        transition: opacity .15s cubic-bezier(.4, 0, .2, 1)
+    }
+
+    .hover\:-translate-y-0\.5:hover {
+        transform: translateY(-2px)
+    }
+
+    .hover\:-translate-y-1:hover {
+        transform: translateY(-4px)
+    }
+
+    .hover\:-translate-y-2:hover {
+        transform: translateY(-8px)
+    }
+
+    .hover\:scale-110:hover {
+        transform: scale(1.1)
+    }
+
+    .hover\:opacity-70:hover {
+        opacity: .7
+    }
+
+    .active\:scale-90:active {
+        transform: scale(.9)
+    }
+
+    .active\:scale-95:active {
+        transform: scale(.95)
+    }
+
+    .-translate-x-1\/2 {
+        transform: translateX(-50%)
+    }
+
+    html, body, #root {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden
+    }</style>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- 라이브러리: 모두 production 빌드, Babel 없음 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<!-- 미리 컴파일된 게임 코드 (Babel 불필요) -->
+<script>
+    /*
+     * Copyright (c) 2026 램프의 요정. All rights reserved.
+     * 본 소스 코드 및 프로그램은 저작권법의 보호를 받습니다.
+     * 저작권자의 명시적인 서면 허가 없이 무단 도용, 복제, 수정,
+     * 배포, 리버스 엔지니어링 및 상업적 이용을 엄격히 금지합니다.
+     * 이를 위반할 경우 민·형사상의 법적 책임을 질 수 있습니다.
+     */
+
+    const {
+              useState,
+              useEffect,
+              useRef,
+              useCallback
+          } = React;
+
+    function DiceGame() {
+        const [gameState, setGameState] = useState('menu');
+        const [cantStopMode, setCantStopMode] = useState(null); // null | 'roll' | 'select'
+        const [diceCount, setDiceCount] = useState(4);
+        const [diceMethod, setDiceMethod] = useState(null);
+        const [mode, setMode] = useState(null);
+        const [showResults, setShowResults] = useState(false);
+        const [showCombinations, setShowCombinations] = useState(false);
+        const [isRolling, setIsRolling] = useState(false);
+        const [rolledDice, setRolledDice] = useState([]);
+        const [diceValues, setDiceValues] = useState({});
+        const [selectedDice, setSelectedDice] = useState(new Set());
+        const mountRef = useRef(null);
+        const sceneRef = useRef(null);
+        const diceRef = useRef([]);
+        const rendererRef = useRef(null);
+        const cameraRef = useRef(null);
+        const raycasterRef = useRef(new THREE.Raycaster());
+        const mouseRef = useRef(new THREE.Vector2());
+        const isRollingRef = useRef(false);
+        const diceMethodRef = useRef(diceMethod);
+        const rolledDiceRef = useRef(rolledDice);
+        const selectedDiceRef = useRef(selectedDice);
+        const diceColors = ['#FF9999', '#FFFF99', '#99FF99', '#99CCFF'];
+        useEffect(() => {
+            isRollingRef.current = isRolling;
+        }, [isRolling]);
+        useEffect(() => {
+            diceMethodRef.current = diceMethod;
+        }, [diceMethod]);
+        useEffect(() => {
+            rolledDiceRef.current = rolledDice;
+        }, [rolledDice]);
+        useEffect(() => {
+            selectedDiceRef.current = selectedDice;
+        }, [selectedDice]);
+
+        // ② 브라우저 탭 제목
+        useEffect(() => {
+            document.title = '퍼즐게임 | 램프의 요정';
+        }, []);
+        const playSound = useCallback(() => {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            for (let i = 0; i < 8; i++) {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.connect(gain);
+                gain.connect(audioContext.destination);
+                const startTime = audioContext.currentTime + i * 0.15;
+                const duration = 0.08;
+                osc.frequency.setValueAtTime(150 - i * 10, startTime);
+                osc.type = 'triangle';
+                gain.gain.setValueAtTime(0, startTime);
+                gain.gain.linearRampToValueAtTime(0.2 - i * 0.02, startTime + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+                osc.start(startTime);
+                osc.stop(startTime + duration);
+            }
+        }, []);
+        const rollDiceAll = useCallback(() => {
+            if (isRollingRef.current) return;
+            playSound();
+            setIsRolling(true);
+            setShowResults(false);
+            setShowCombinations(false);
+            setDiceValues({});
+            diceRef.current.forEach(dice => {
+                dice.userData.settled = false;
+                dice.position.y = 5 + Math.random() * 2;
+                dice.position.x = (Math.random() - 0.5) * 3;
+                dice.position.z = (Math.random() - 0.5) * 3;
+                dice.userData.velocity = new THREE.Vector3((Math.random() - 0.5) * 0.15, -0.1, (Math.random() - 0.5) * 0.15);
+                dice.userData.angularVelocity = new THREE.Vector3((Math.random() - 0.5) * 0.4, (Math.random() - 0.5) * 0.4, (Math.random() - 0.5) * 0.4);
+            });
+            // fallback: 모든 주사위 착지 감지로 먼저 해제되지만, 최대 1200ms 보장
+            setTimeout(() => setIsRolling(false), 1200);
+        }, [playSound]);
+        const rollDiceOne = useCallback(index => {
+            if (isRollingRef.current || rolledDiceRef.current.includes(index)) return;
+            playSound();
+            setIsRolling(true);
+            setShowResults(false);
+            setShowCombinations(false);
+            setRolledDice(prev => [...prev, index]);
+            const dice = diceRef.current[index];
+            if (dice) {
+                dice.userData.settled = false;
+                dice.position.y = 5 + Math.random() * 2;
+                dice.position.x = (Math.random() - 0.5) * 8;
+                dice.position.z = 2;
+                dice.userData.velocity = new THREE.Vector3((Math.random() - 0.5) * 0.15, -0.1, (Math.random() - 0.5) * 0.15);
+                dice.userData.angularVelocity = new THREE.Vector3((Math.random() - 0.5) * 0.4, (Math.random() - 0.5) * 0.4, (Math.random() - 0.5) * 0.4);
+            }
+            // fallback: 최대 1200ms
+            setTimeout(() => setIsRolling(false), 1200);
+        }, [playSound]);
+        const toggleSelectDice = useCallback(index => {
+            setSelectedDice(prev => {
+                const s = new Set(prev);
+                if (s.has(index)) s.delete(index); else s.add(index);
+                return s;
+            });
+        }, []);
+        const rollDiceSelect = useCallback(() => {
+            if (isRollingRef.current || selectedDiceRef.current.size === 0) return;
+            playSound();
+            setIsRolling(true);
+            setShowResults(false);
+            setShowCombinations(false);
+            setDiceValues(prev => {
+                const next = {
+                    ...prev
+                };
+                selectedDiceRef.current.forEach(idx => delete next[idx]);
+                return next;
+            });
+            selectedDiceRef.current.forEach(index => {
+                const dice = diceRef.current[index];
+                if (dice) {
+                    dice.userData.settled = false;
+                    dice.position.y = 5 + Math.random() * 2;
+                    dice.position.x = (Math.random() - 0.5) * 3;
+                    dice.position.z = (Math.random() - 0.5) * 3;
+                    dice.userData.velocity = new THREE.Vector3((Math.random() - 0.5) * 0.15, -0.1, (Math.random() - 0.5) * 0.15);
+                    dice.userData.angularVelocity = new THREE.Vector3((Math.random() - 0.5) * 0.4, (Math.random() - 0.5) * 0.4, (Math.random() - 0.5) * 0.4);
+                }
+            });
+            // fallback: 최대 1200ms
+            setTimeout(() => {
+                setIsRolling(false);
+                setSelectedDice(new Set());
+            }, 1200);
+        }, [playSound]);
+
+        // ── 3D 씬 (gamePlay 또는 cantStop+roll 모드에서만) ──
+        const needsThreeJS = gameState === 'gamePlay' || gameState === 'cantStop' && cantStopMode === 'roll';
+        useEffect(() => {
+            if (!needsThreeJS || !mountRef.current) return;
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xE6F2FF);
+            sceneRef.current = scene;
+
+            // ★ 캔버스 실제 크기 기준으로 초기화 (헤더·푸터 제외)
+            const containerW = mountRef.current.clientWidth;
+            const containerH = mountRef.current.clientHeight;
+            const camera = new THREE.PerspectiveCamera(45, containerW / containerH, 0.1, 1000);
+            camera.position.set(0, 18, 0);
+            camera.lookAt(0, 0, 0);
+            cameraRef.current = camera;
+            const renderer = new THREE.WebGLRenderer({
+                antialias: true
+            });
+            renderer.setSize(containerW, containerH);
+            renderer.shadowMap.enabled = true;
+            mountRef.current.appendChild(renderer.domElement);
+            rendererRef.current = renderer;
+            scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(5, 10, 5);
+            dirLight.castShadow = true;
+            scene.add(dirLight);
+            const ground = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), new THREE.MeshStandardMaterial({
+                color    : 0xD4F0D4,
+                roughness: 0.8
+            }));
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = -2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+            diceRef.current = [];
+            const count = gameState === 'cantStop' && cantStopMode === 'roll' ? 4 : diceCount;
+            for (let i = 0; i < count; i++) {
+                const materials = [createDiceFace(3, i), createDiceFace(4, i), createDiceFace(1, i), createDiceFace(6, i), createDiceFace(2, i), createDiceFace(5, i)];
+                const dice = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), materials);
+                if (diceMethod === 'one') {
+                    dice.position.set((i - diceCount / 2 + 0.5) * 2.5, 1, -7);
+                } else {
+                    dice.position.set((Math.random() - 0.5) * 3, 5 + Math.random() * 2, (Math.random() - 0.5) * 3);
+                }
+                dice.castShadow = true;
+                dice.userData = {
+                    velocity       : new THREE.Vector3(),
+                    angularVelocity: new THREE.Vector3(),
+                    index          : i,
+                    settled        : false
+                };
+                scene.add(dice);
+                diceRef.current.push(dice);
+            }
+            const calcTopFace = dice => {
+                const faces = [{
+                    n: new THREE.Vector3(1, 0, 0),
+                    v: 3
+                }, {
+                    n: new THREE.Vector3(-1, 0, 0),
+                    v: 4
+                }, {
+                    n: new THREE.Vector3(0, 1, 0),
+                    v: 1
+                }, {
+                    n: new THREE.Vector3(0, -1, 0),
+                    v: 6
+                }, {
+                    n: new THREE.Vector3(0, 0, 1),
+                    v: 2
+                }, {
+                    n: new THREE.Vector3(0, 0, -1),
+                    v: 5
+                }];
+                let maxY = -Infinity,
+                    top  = 1;
+                faces.forEach(({
+                                   n,
+                                   v
+                               }) => {
+                    const wy = n.clone().applyQuaternion(dice.quaternion).y;
+                    if (wy > maxY) {
+                        maxY = wy;
+                        top = v;
+                    }
+                });
+                return top;
+            };
+            let animId;
+            const animate = () => {
+                animId = requestAnimationFrame(animate);
+                diceRef.current.forEach((dice, index) => {
+                    if (dice.userData.settled) return;
+                    dice.position.add(dice.userData.velocity);
+                    dice.rotation.x += dice.userData.angularVelocity.x;
+                    dice.rotation.y += dice.userData.angularVelocity.y;
+                    dice.rotation.z += dice.userData.angularVelocity.z;
+                    dice.userData.velocity.y -= 0.01;
+                    if (dice.position.y < -0.5) {
+                        dice.position.y = -0.5;
+                        dice.userData.velocity.y *= -0.5;
+                        dice.userData.velocity.x *= 0.95;
+                        dice.userData.velocity.z *= 0.95;
+                        dice.userData.angularVelocity.multiplyScalar(0.95);
+                    }
+                    const mb = 5.5;
+                    if (Math.abs(dice.position.x) > mb) {
+                        dice.position.x = Math.sign(dice.position.x) * mb;
+                        dice.userData.velocity.x *= -0.8;
+                    }
+                    if (Math.abs(dice.position.z) > mb) {
+                        dice.position.z = Math.sign(dice.position.z) * mb;
+                        dice.userData.velocity.z *= -0.8;
+                    }
+                    diceRef.current.forEach((other, oi) => {
+                        if (index === oi) return;
+                        const dist = dice.position.distanceTo(other.position);
+                        if (dist < 2.5) {
+                            const pd = new THREE.Vector3().subVectors(dice.position, other.position).normalize();
+                            dice.position.add(pd.clone().multiplyScalar((2.5 - dist) * 0.5));
+                            const rv = new THREE.Vector3().subVectors(dice.userData.velocity, other.userData.velocity);
+                            if (rv.dot(pd) < 0) dice.userData.velocity.add(pd.multiplyScalar(-rv.dot(pd) * 0.8));
+                        }
+                    });
+                    if (Math.abs(dice.userData.velocity.y) < 0.01 && dice.position.y <= -0.4) {
+                        dice.userData.velocity.set(0, 0, 0);
+                        dice.userData.angularVelocity.set(0, 0, 0);
+                        const snap = a => Math.round(a / (Math.PI / 2)) * (Math.PI / 2);
+                        dice.rotation.x = snap(dice.rotation.x);
+                        dice.rotation.y = snap(dice.rotation.y);
+                        dice.rotation.z = snap(dice.rotation.z);
+                        dice.quaternion.setFromEuler(dice.rotation);
+                        dice.userData.settled = true;
+                        setDiceValues(prev => ({
+                            ...prev,
+                            [index]: calcTopFace(dice)
+                        }));
+                        const sb = 5;
+                        if (Math.abs(dice.position.x) > sb) dice.position.x = Math.sign(dice.position.x) * sb;
+                        if (Math.abs(dice.position.z) > sb) dice.position.z = Math.sign(dice.position.z) * sb;
+                    }
+                });
+
+                // ★ 모든 주사위가 착지하면 즉시 잠금 해제 (타이머 기다릴 필요 없음)
+                if (isRollingRef.current && diceRef.current.length > 0 && diceRef.current.every(d => d.userData.settled)) {
+                    setIsRolling(false);
+                }
+                renderer.render(scene, camera);
+            };
+            animate();
+            const handleResize = () => {
+                if (!mountRef.current) return;
+                const w = mountRef.current.clientWidth;
+                const h = mountRef.current.clientHeight;
+                camera.aspect = w / h;
+                camera.updateProjectionMatrix();
+                renderer.setSize(w, h);
+            };
+            window.addEventListener('resize', handleResize);
+            return () => {
+                window.removeEventListener('resize', handleResize);
+                cancelAnimationFrame(animId);
+                if (mountRef.current && renderer.domElement.parentNode === mountRef.current) {
+                    mountRef.current.removeChild(renderer.domElement);
+                }
+            };
+        }, [needsThreeJS, diceMethod, diceCount]);
+        useEffect(() => {
+            if (!rendererRef.current) return;
+            const handleClick = e => {
+                if (isRollingRef.current || !diceRef.current.length) return;
+                if (diceMethodRef.current === 'all' || gameState === 'cantStop' && cantStopMode === 'roll') {
+                    rollDiceAll();
+                    return;
+                }
+                // ★ 캔버스 영역 기준 마우스 좌표 계산 (헤더·푸터 오프셋 보정)
+                const rect = rendererRef.current.domElement.getBoundingClientRect();
+                mouseRef.current.x = (e.clientX - rect.left) / rect.width * 2 - 1;
+                mouseRef.current.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+                raycasterRef.current.setFromCamera(mouseRef.current, cameraRef.current);
+                const hits = raycasterRef.current.intersectObjects(diceRef.current);
+                if (hits.length > 0) {
+                    const idx = hits[0].object.userData.index;
+                    if (diceMethodRef.current === 'one') rollDiceOne(idx); else if (diceMethodRef.current === 'select') toggleSelectDice(idx);
+                }
+            };
+            rendererRef.current.domElement.addEventListener('click', handleClick);
+            return () => {
+                if (rendererRef.current) rendererRef.current.domElement.removeEventListener('click', handleClick);
+            };
+        }, [rollDiceAll, rollDiceOne, toggleSelectDice, gameState, cantStopMode]);
+        useEffect(() => {
+            if (diceMethod !== 'select' || !diceRef.current.length) return;
+            diceRef.current.forEach((dice, index) => {
+                if (!dice.material) return;
+                const mats = Array.isArray(dice.material) ? dice.material : [dice.material];
+                mats.forEach(mat => {
+                    mat.emissive.setHex(selectedDice.has(index) ? 0xffff00 : 0x000000);
+                    mat.emissiveIntensity = selectedDice.has(index) ? 0.6 : 0;
+                });
+            });
+        }, [selectedDice, diceMethod]);
+
+        function createDiceFace(number, diceIndex) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = diceColors[diceIndex % 4];
+            ctx.fillRect(0, 0, 256, 256);
+            ctx.strokeStyle = '#888888';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(0, 0, 256, 256);
+            ctx.fillStyle = '#333333';
+            const pts = {
+                1: [[128, 128]],
+                2: [[64, 64], [192, 192]],
+                3: [[64, 64], [128, 128], [192, 192]],
+                4: [[64, 64], [192, 64], [64, 192], [192, 192]],
+                5: [[64, 64], [192, 64], [128, 128], [64, 192], [192, 192]],
+                6: [[64, 64], [192, 64], [64, 128], [192, 128], [64, 192], [192, 192]]
+            };
+            pts[number].forEach(([x, y]) => {
+                ctx.beginPath();
+                ctx.arc(x, y, 20, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            return new THREE.MeshStandardMaterial({
+                map: new THREE.CanvasTexture(canvas)
+            });
+        }
+
+        const renderDots = number => {
+            const pts = {
+                1: [[50, 50]],
+                2: [[25, 25], [75, 75]],
+                3: [[25, 25], [50, 50], [75, 75]],
+                4: [[25, 25], [75, 25], [25, 75], [75, 75]],
+                5: [[25, 25], [75, 25], [50, 50], [25, 75], [75, 75]],
+                6: [[25, 25], [75, 25], [25, 50], [75, 50], [25, 75], [75, 75]]
+            };
+            return pts[number] || [];
+        };
+
+        // 주사위 face 렌더링 컴포넌트
+        const DiceFace = ({
+                              value,
+                              size = 64,
+                              colorIdx = null,
+                              highlight = false
+                          }) => {
+            const dots = value ? renderDots(value) : [];
+            const bg = colorIdx !== null ? diceColors[colorIdx] : 'white';
+            const dotSize = Math.round(size * 0.18);
+            return /*#__PURE__*/React.createElement("div", {
+                style    : {
+                    background: bg,
+                    width     : size,
+                    height    : size,
+                    flexShrink: 0
+                },
+                className: `rounded-xl relative border-2 ${highlight ? 'border-blue-500 shadow-lg shadow-blue-300' : 'border-gray-300'}`
+            }, value ? dots.map((pos, j) => /*#__PURE__*/React.createElement("div", {
+                key      : j,
+                className: "absolute bg-gray-800 rounded-full",
+                style    : {
+                    width    : dotSize,
+                    height   : dotSize,
+                    left     : `${pos[0]}%`,
+                    top      : `${pos[1]}%`,
+                    transform: 'translate(-50%,-50%)'
+                }
+            })) : /*#__PURE__*/React.createElement("div", {
+                className: "absolute inset-0 flex items-center justify-center text-gray-400 font-bold text-3xl"
+            }, "?"));
+        };
+
+        // 미니 주사위 (묶음확인 오버레이용)
+        const MiniDice = ({
+                              value,
+                              colorIdx
+                          }) => /*#__PURE__*/React.createElement(DiceFace, {
+            value   : value,
+            size    : 56,
+            colorIdx: colorIdx
+        });
+
+        // ── 첫 화면용 카와이 주사위 마스코트 (눈+볼터치) ──
+        const DiceMascot = ({
+                                color,
+                                size = 96,
+                                tilt = -8,
+                                blink = false,
+                                style = {}
+                            }) => /*#__PURE__*/React.createElement("svg", {
+            viewBox: "0 0 100 100",
+            width  : size,
+            height : size,
+            style  : {
+                transform: `rotate(${tilt}deg)`,
+                ...style
+            }
+        }, /*#__PURE__*/React.createElement("rect", {
+            x          : "6",
+            y          : "6",
+            width      : "88",
+            height     : "88",
+            rx         : "22",
+            fill       : color,
+            stroke     : "#ffffff",
+            strokeWidth: "3"
+        }), /*#__PURE__*/React.createElement("rect", {
+            x          : "6",
+            y          : "6",
+            width      : "88",
+            height     : "88",
+            rx         : "22",
+            fill       : "none",
+            stroke     : "rgba(0,0,0,0.06)",
+            strokeWidth: "2"
+        }), /*#__PURE__*/React.createElement("ellipse", {
+            cx     : "27",
+            cy     : "62",
+            rx     : "8",
+            ry     : "5",
+            fill   : "#FF9EB3",
+            opacity: "0.7"
+        }), /*#__PURE__*/React.createElement("ellipse", {
+            cx     : "73",
+            cy     : "62",
+            rx     : "8",
+            ry     : "5",
+            fill   : "#FF9EB3",
+            opacity: "0.7"
+        }), blink ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+            d            : "M30 46 Q36 50 42 46",
+            stroke       : "#5B4444",
+            strokeWidth  : "4",
+            strokeLinecap: "round",
+            fill         : "none"
+        }), /*#__PURE__*/React.createElement("path", {
+            d            : "M58 46 Q64 50 70 46",
+            stroke       : "#5B4444",
+            strokeWidth  : "4",
+            strokeLinecap: "round",
+            fill         : "none"
+        })) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
+            cx  : "36",
+            cy  : "46",
+            r   : "5.5",
+            fill: "#5B4444"
+        }), /*#__PURE__*/React.createElement("circle", {
+            cx  : "64",
+            cy  : "46",
+            r   : "5.5",
+            fill: "#5B4444"
+        }), /*#__PURE__*/React.createElement("circle", {
+            cx  : "38",
+            cy  : "44",
+            r   : "1.6",
+            fill: "#fff"
+        }), /*#__PURE__*/React.createElement("circle", {
+            cx  : "66",
+            cy  : "44",
+            r   : "1.6",
+            fill: "#fff"
+        })), /*#__PURE__*/React.createElement("path", {
+            d            : "M40 64 Q50 71 60 64",
+            stroke       : "#5B4444",
+            strokeWidth  : "4",
+            strokeLinecap: "round",
+            fill         : "none"
+        }));
+        const resetRoll = useCallback(() => {
+            setRolledDice([]);
+            setDiceValues({});
+            setSelectedDice(new Set());
+            setIsRolling(false);
+            setShowResults(false);
+            setShowCombinations(false);
+            diceRef.current.forEach(d => {
+                if (d.userData) d.userData.settled = false;
+            });
+            if (diceMethod === 'all') setTimeout(() => rollDiceAll(), 100);
+        }, [diceMethod, rollDiceAll]);
+        const goBack = () => {
+            setShowResults(false);
+            setShowCombinations(false);
+            if (gameState === 'gamePlay') {
+                setGameState('diceMethod');
+                setDiceMethod(null);
+                setRolledDice([]);
+                setDiceValues({});
+                setSelectedDice(new Set());
+            } else if (gameState === 'cantStop') {
+                if (cantStopMode !== null) {
+                    setCantStopMode(null);
+                    setDiceValues({});
+                } else {
+                    setGameState('menu');
+                }
+            } else if (gameState === 'diceMethod') {
+                setGameState('diceCount');
+            } else if (gameState === 'diceCount') {
+                setGameState('menu');
+                setMode(null);
+            }
+        };
+        const goHome = () => {
+            setGameState('menu');
+            setMode(null);
+            setDiceMethod(null);
+            setDiceCount(4);
+            setCantStopMode(null);
+            setRolledDice([]);
+            setDiceValues({});
+            setSelectedDice(new Set());
+            setIsRolling(false);
+            setShowResults(false);
+            setShowCombinations(false);
+        };
+        const toggleFullscreen = () => {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen();
+        };
+
+        // 4개 주사위 → 3가지 2+2 조합
+        const dicePairCombinations = [{
+            pairs: [[0, 1], [2, 3]],
+            label: '조합 1',
+            bg   : 'from-pink-100 to-orange-50'
+        }, {
+            pairs: [[0, 2], [1, 3]],
+            label: '조합 2',
+            bg   : 'from-yellow-100 to-green-50'
+        }, {
+            pairs: [[0, 3], [1, 2]],
+            label: '조합 3',
+            bg   : 'from-blue-100 to-purple-50'
+        }];
+        const allDiceReady = [0, 1, 2, 3].every(i => diceValues[i] !== undefined);
+
+        // 공통 오른쪽 상단 버튼
+        const TopRightButtons = () => /*#__PURE__*/React.createElement("div", {
+            className: "absolute top-4 right-4 flex gap-2 z-20"
+        }, /*#__PURE__*/React.createElement("button", {
+            onClick  : goHome,
+            className: "px-4 py-2 bg-white bg-opacity-70 hover:bg-opacity-90 text-pink-600 rounded-full font-bold text-xl shadow-md transition-all"
+        }, "🏠"), /*#__PURE__*/React.createElement("button", {
+            onClick  : toggleFullscreen,
+            className: "px-4 py-2 bg-white bg-opacity-70 hover:bg-opacity-90 text-green-600 rounded-full font-bold text-xl shadow-md transition-all"
+        }, "⛶"));
+
+        // 숫자 확인 오버레이
+        const ResultsOverlay = ({
+                                    count
+                                }) => /*#__PURE__*/React.createElement("div", {
+            className: "fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50",
+            onClick  : () => setShowResults(false)
+        }, /*#__PURE__*/React.createElement("div", {
+            className: "bg-gradient-to-br from-blue-100 to-yellow-100 rounded-3xl p-10 shadow-2xl max-w-2xl w-full mx-4",
+            onClick  : e => e.stopPropagation()
+        }, /*#__PURE__*/React.createElement("h3", {
+            className: "text-4xl font-bold text-center text-orange-600 mb-8"
+        }, "📊 숫자 확인"), /*#__PURE__*/React.createElement("div", {
+            className: "space-y-4"
+        }, [...Array(count)].map((_, i) => {
+            const value = diceValues[i];
+            return /*#__PURE__*/React.createElement("div", {
+                key      : i,
+                className: "flex items-center gap-6 p-6 rounded-2xl bg-white shadow-lg"
+            }, /*#__PURE__*/React.createElement(DiceFace, {
+                value   : value,
+                size    : 80,
+                colorIdx: i
+            }), /*#__PURE__*/React.createElement("div", {
+                className: "text-5xl font-bold text-orange-600"
+            }, value || '?'));
+        })), /*#__PURE__*/React.createElement("p", {
+            className: "text-center text-gray-500 mt-8 text-lg"
+        }, "화면을 눌러 닫기")));
+
+        // 묶음 확인 오버레이
+        const CombinationsOverlay = () => /*#__PURE__*/React.createElement("div", {
+            className: "fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50",
+            onClick  : () => setShowCombinations(false)
+        }, /*#__PURE__*/React.createElement("div", {
+            className: "bg-gradient-to-br from-purple-100 to-green-100 rounded-3xl p-10 shadow-2xl max-w-2xl w-full mx-4",
+            onClick  : e => e.stopPropagation()
+        }, /*#__PURE__*/React.createElement("h3", {
+            className: "text-4xl font-bold text-center text-purple-700 mb-8"
+        }, "🧩 묶음 확인"), !allDiceReady ? /*#__PURE__*/React.createElement("p", {
+            className: "text-center text-gray-500 text-2xl py-8"
+        }, "주사위를 먼저 설정해주세요!") : /*#__PURE__*/React.createElement("div", {
+            className: "space-y-5"
+        }, dicePairCombinations.map(({
+                                         pairs,
+                                         label,
+                                         bg
+                                     }, pi) => {
+            const [[a, b], [c, d]] = pairs;
+            const sum1 = diceValues[a] + diceValues[b];
+            const sum2 = diceValues[c] + diceValues[d];
+            return /*#__PURE__*/React.createElement("div", {
+                key      : pi,
+                className: `bg-gradient-to-r ${bg} rounded-2xl p-5 shadow-md`
+            }, /*#__PURE__*/React.createElement("p", {
+                className: "text-base font-bold text-gray-400 mb-3"
+            }, label), /*#__PURE__*/React.createElement("div", {
+                className: "flex items-center justify-around"
+            }, /*#__PURE__*/React.createElement("div", {
+                className: "flex items-center gap-2"
+            }, /*#__PURE__*/React.createElement(MiniDice, {
+                value   : diceValues[a],
+                colorIdx: a
+            }), /*#__PURE__*/React.createElement("span", {
+                className: "text-3xl font-bold text-gray-400"
+            }, "+"), /*#__PURE__*/React.createElement(MiniDice, {
+                value   : diceValues[b],
+                colorIdx: b
+            }), /*#__PURE__*/React.createElement("span", {
+                className: "text-3xl font-bold text-gray-400"
+            }, "="), /*#__PURE__*/React.createElement("span", {
+                className: "text-5xl font-extrabold text-orange-600 w-16 text-center"
+            }, sum1)), /*#__PURE__*/React.createElement("div", {
+                className: "text-3xl text-gray-300 font-bold mx-2"
+            }, "|"), /*#__PURE__*/React.createElement("div", {
+                className: "flex items-center gap-2"
+            }, /*#__PURE__*/React.createElement(MiniDice, {
+                value   : diceValues[c],
+                colorIdx: c
+            }), /*#__PURE__*/React.createElement("span", {
+                className: "text-3xl font-bold text-gray-400"
+            }, "+"), /*#__PURE__*/React.createElement(MiniDice, {
+                value   : diceValues[d],
+                colorIdx: d
+            }), /*#__PURE__*/React.createElement("span", {
+                className: "text-3xl font-bold text-gray-400"
+            }, "="), /*#__PURE__*/React.createElement("span", {
+                className: "text-5xl font-extrabold text-orange-600 w-16 text-center"
+            }, sum2))));
+        })), /*#__PURE__*/React.createElement("p", {
+            className: "text-center text-gray-500 mt-8 text-lg"
+        }, "화면을 눌러 닫기")));
+
+        // ── 캔트스탑 주사위 선택하기 화면 ──
+        const CantStopSelectScreen = () => /*#__PURE__*/React.createElement("div", {
+            className: "w-full h-full flex flex-col items-center justify-center px-6 py-4 overflow-y-auto"
+        }, /*#__PURE__*/React.createElement("p", {
+            className: "text-2xl text-gray-500 font-bold mb-6"
+        }, "실제 주사위와 같은 모양을 선택하세요"), /*#__PURE__*/React.createElement("div", {
+            className: "grid grid-cols-2 gap-5 mb-8 w-full max-w-2xl"
+        }, [0, 1, 2, 3].map(i => /*#__PURE__*/React.createElement("div", {
+            key      : i,
+            style    : {
+                background : diceColors[i] + '55',
+                borderColor: diceColors[i]
+            },
+            className: "rounded-3xl p-5 shadow-lg border-4"
+        }, /*#__PURE__*/React.createElement("div", {
+            className: "flex items-center gap-4 mb-4"
+        }, /*#__PURE__*/React.createElement("span", {
+            className: "text-xl font-extrabold text-gray-600"
+        }, "주사위 ", i + 1), /*#__PURE__*/React.createElement("div", {
+            className: "ml-auto"
+        }, /*#__PURE__*/React.createElement(DiceFace, {
+            value   : diceValues[i],
+            size    : 72,
+            colorIdx: i
+        }))), /*#__PURE__*/React.createElement("div", {
+            className: "grid grid-cols-3 gap-2"
+        }, [1, 2, 3, 4, 5, 6].map(val => /*#__PURE__*/React.createElement("button", {
+            key      : val,
+            onClick  : () => setDiceValues(prev => ({
+                ...prev,
+                [i]: val
+            })),
+            className: `flex items-center justify-center rounded-xl transition-all active:scale-90 ${diceValues[i] === val ? 'ring-4 ring-blue-500 scale-110 shadow-xl bg-white' : 'bg-white bg-opacity-70 hover:bg-opacity-100 shadow'}`,
+            style    : {
+                width : 60,
+                height: 60
+            }
+        }, /*#__PURE__*/React.createElement(DiceFace, {
+            value: val,
+            size : 52
+        }))))))), /*#__PURE__*/React.createElement("button", {
+            onClick  : () => {
+                if (allDiceReady) setShowCombinations(true);
+            },
+            className: `px-16 py-6 font-bold text-3xl rounded-full shadow-2xl transition-all ${allDiceReady ? 'bg-gradient-to-br from-purple-400 to-blue-400 text-white hover:scale-105 active:scale-95' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`
+        }, "🧩 묶음확인 ", !allDiceReady && `(${Object.keys(diceValues).length}/4)`));
+
+        // ── 헤더 결정 ──
+        const showGameHeader = gameState === 'gamePlay' || gameState === 'cantStop' && cantStopMode !== null;
+        return /*#__PURE__*/React.createElement("div", {
+            className: "w-full h-screen flex flex-col relative",
+            style    : {
+                fontFamily: "'Gaegu', sans-serif",
+                background: 'linear-gradient(135deg, #FFF4E8 0%, #FFE3EE 40%, #ECE3FF 75%, #DFF7EA 100%)'
+            }
+        }, /*#__PURE__*/React.createElement("style", null, `
+        @import url('https://fonts.googleapis.com/css2?family=Hi+Melody&family=Gaegu:wght@400;700&display=swap');
+        @keyframes kwFloat  { 0%,100%{transform:translateY(0)}  50%{transform:translateY(-14px)} }
+        @keyframes kwPop    { 0%{opacity:0;transform:scale(.75) translateY(20px)} 100%{opacity:1;transform:scale(1) translateY(0)} }
+        @keyframes kwTwinkle{ 0%,100%{opacity:.2;transform:scale(.8)} 50%{opacity:1;transform:scale(1.25)} }
+        @keyframes kwSlide  { 0%{opacity:0;transform:translateY(-12px)} 100%{opacity:1;transform:translateY(0)} }
+      `), (gameState === 'menu' || gameState === 'diceCount' || gameState === 'diceMethod' || gameState === 'cantStop' && cantStopMode === null || gameState === 'cantStop' && cantStopMode === 'select') && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+            className: "fixed -top-20 -left-20 w-72 h-72 rounded-full pointer-events-none",
+            style    : {
+                background: '#FFD3E0',
+                filter    : 'blur(48px)',
+                opacity   : .5,
+                zIndex    : 0
+            }
+        }), /*#__PURE__*/React.createElement("div", {
+            className: "fixed -bottom-20 -right-10 w-80 h-80 rounded-full pointer-events-none",
+            style    : {
+                background: '#C9E9FF',
+                filter    : 'blur(52px)',
+                opacity   : .5,
+                zIndex    : 0
+            }
+        }), /*#__PURE__*/React.createElement("div", {
+            className: "fixed top-1/3 right-8 w-48 h-48 rounded-full pointer-events-none",
+            style    : {
+                background: '#FFF0B0',
+                filter    : 'blur(44px)',
+                opacity   : .4,
+                zIndex    : 0
+            }
+        }), /*#__PURE__*/React.createElement("div", {
+            className: "fixed bottom-1/4 left-16 w-36 h-36 rounded-full pointer-events-none",
+            style    : {
+                background: '#CEFFE4',
+                filter    : 'blur(36px)',
+                opacity   : .45,
+                zIndex    : 0
+            }
+        })), showGameHeader && /*#__PURE__*/React.createElement("div", {
+            className: "flex-shrink-0 flex justify-between items-center px-5 py-3 relative z-30",
+            style    : {
+                background    : 'rgba(255,255,255,0.65)',
+                backdropFilter: 'blur(16px)',
+                borderBottom  : '2px solid rgba(255,255,255,0.85)',
+                boxShadow     : '0 4px 20px rgba(255,150,185,0.18)'
+            }
+        }, /*#__PURE__*/React.createElement("button", {
+            onClick  : goBack,
+            className: "flex items-center gap-1 px-5 py-2 transition-all hover:-translate-y-0.5 active:scale-95",
+            style    : {
+                fontFamily  : "'Gaegu',sans-serif",
+                fontWeight  : 700,
+                fontSize    : '1.1rem',
+                color       : '#FF7FA0',
+                background  : 'linear-gradient(135deg,#FFF0F4,#FFE0EB)',
+                border      : '2.5px solid white',
+                borderRadius: '2rem',
+                boxShadow   : '0 5px 0 rgba(255,160,190,.35)'
+            }
+        }, "← 뒤로"), /*#__PURE__*/React.createElement("div", {
+            className: "flex items-center gap-2"
+        }, /*#__PURE__*/React.createElement(DiceMascot, {
+            color: diceColors[0],
+            size : 34,
+            tilt : -8
+        }), /*#__PURE__*/React.createElement("span", {
+            style: {
+                fontFamily: "'Hi Melody',cursive",
+                fontSize  : '1.6rem',
+                color     : '#FF7FA0',
+                textShadow: '2px 2px 0 white'
+            }
+        }, "주사위 게임"), /*#__PURE__*/React.createElement(DiceMascot, {
+            color: diceColors[3],
+            size : 34,
+            tilt : 8,
+            blink: true
+        })), /*#__PURE__*/React.createElement("div", {
+            className: "flex gap-2 flex-wrap justify-end"
+        }, (gameState === 'gamePlay' || cantStopMode === 'roll') && /*#__PURE__*/React.createElement("button", {
+            onClick  : () => {
+                setShowCombinations(false);
+                setShowResults(v => !v);
+            },
+            className: "px-4 py-2 transition-all hover:-translate-y-0.5 active:scale-95",
+            style    : {
+                fontFamily  : "'Gaegu',sans-serif",
+                fontWeight  : 700,
+                fontSize    : '1rem',
+                color       : '#5C8DFF',
+                background  : 'linear-gradient(135deg,#EBF2FF,#D8E9FF)',
+                border      : '2.5px solid white',
+                borderRadius: '2rem',
+                boxShadow   : '0 5px 0 rgba(150,190,255,.35)'
+            }
+        }, "🔍 숫자확인"), gameState === 'cantStop' && cantStopMode === 'roll' && /*#__PURE__*/React.createElement("button", {
+            onClick  : () => {
+                setShowResults(false);
+                setShowCombinations(v => !v);
+            },
+            className: "px-4 py-2 transition-all hover:-translate-y-0.5 active:scale-95",
+            style    : {
+                fontFamily  : "'Gaegu',sans-serif",
+                fontWeight  : 700,
+                fontSize    : '1rem',
+                color       : '#9B62CC',
+                background  : 'linear-gradient(135deg,#F3EEFF,#E5D8FF)',
+                border      : '2.5px solid white',
+                borderRadius: '2rem',
+                boxShadow   : '0 5px 0 rgba(180,150,255,.35)'
+            }
+        }, "🧩 묶음확인"), cantStopMode === 'select' && /*#__PURE__*/React.createElement("button", {
+            onClick  : () => {
+                setDiceValues({});
+                setShowCombinations(false);
+            },
+            className: "px-4 py-2 transition-all hover:-translate-y-0.5 active:scale-95",
+            style    : {
+                fontFamily  : "'Gaegu',sans-serif",
+                fontWeight  : 700,
+                fontSize    : '1rem',
+                color       : '#B08000',
+                background  : 'linear-gradient(135deg,#FFFBE0,#FFF3A0)',
+                border      : '2.5px solid white',
+                borderRadius: '2rem',
+                boxShadow   : '0 5px 0 rgba(255,220,80,.4)'
+            }
+        }, "🔄 초기화"), (gameState === 'gamePlay' || cantStopMode === 'roll') && /*#__PURE__*/React.createElement("button", {
+            onClick  : resetRoll,
+            className: "px-4 py-2 transition-all hover:-translate-y-0.5 active:scale-95",
+            style    : {
+                fontFamily  : "'Gaegu',sans-serif",
+                fontWeight  : 700,
+                fontSize    : '1rem',
+                color       : '#B08000',
+                background  : 'linear-gradient(135deg,#FFFBE0,#FFF3A0)',
+                border      : '2.5px solid white',
+                borderRadius: '2rem',
+                boxShadow   : '0 5px 0 rgba(255,220,80,.4)'
+            }
+        }, "🔄 다시던지기"), /*#__PURE__*/React.createElement("button", {
+            onClick  : goHome,
+            className: "px-4 py-2 transition-all hover:-translate-y-0.5 active:scale-95",
+            style    : {
+                fontFamily  : "'Gaegu',sans-serif",
+                fontWeight  : 700,
+                fontSize    : '1rem',
+                color       : '#FF7FA0',
+                background  : 'linear-gradient(135deg,#FFF0F4,#FFE0EB)',
+                border      : '2.5px solid white',
+                borderRadius: '2rem',
+                boxShadow   : '0 5px 0 rgba(255,160,190,.35)'
+            }
+        }, "🏠"), /*#__PURE__*/React.createElement("button", {
+            onClick  : toggleFullscreen,
+            className: "px-4 py-2 transition-all hover:-translate-y-0.5 active:scale-95",
+            style    : {
+                fontFamily  : "'Gaegu',sans-serif",
+                fontWeight  : 700,
+                fontSize    : '1rem',
+                color       : '#3DB87A',
+                background  : 'linear-gradient(135deg,#E8FFF3,#CDF5E2)',
+                border      : '2.5px solid white',
+                borderRadius: '2rem',
+                boxShadow   : '0 5px 0 rgba(100,220,160,.35)'
+            }
+        }, "⛶"))), /*#__PURE__*/React.createElement("div", {
+            className: "flex-1 flex items-center justify-center relative min-h-0 z-10"
+        }, gameState === 'menu' && /*#__PURE__*/React.createElement("div", {
+            className: "relative w-full h-full flex flex-col items-center justify-center overflow-hidden"
+        }, /*#__PURE__*/React.createElement(TopRightButtons, null), /*#__PURE__*/React.createElement("span", {
+            className: "absolute text-2xl pointer-events-none",
+            style    : {
+                top      : '12%',
+                left     : '22%',
+                color    : '#FFC2D8',
+                animation: 'kwTwinkle 2.4s ease-in-out infinite'
+            }
+        }, "✦"), /*#__PURE__*/React.createElement("span", {
+            className: "absolute text-xl pointer-events-none",
+            style    : {
+                top      : '70%',
+                left     : '8%',
+                color    : '#C7B8FF',
+                animation: 'kwTwinkle 3s ease-in-out infinite .4s'
+            }
+        }, "✦"), /*#__PURE__*/React.createElement("span", {
+            className: "absolute text-2xl pointer-events-none",
+            style    : {
+                top      : '65%',
+                right    : '9%',
+                color    : '#AEE6CB',
+                animation: 'kwTwinkle 2.7s ease-in-out infinite .8s'
+            }
+        }, "✦"), /*#__PURE__*/React.createElement("div", {
+            className: "absolute pointer-events-none",
+            style    : {
+                top      : '13%',
+                left     : '9%',
+                animation: 'kwFloat 4.6s ease-in-out infinite'
+            }
+        }, /*#__PURE__*/React.createElement(DiceMascot, {
+            color: diceColors[2],
+            size : 62,
+            tilt : -10
+        })), /*#__PURE__*/React.createElement("div", {
+            className: "absolute pointer-events-none",
+            style    : {
+                top      : '17%',
+                right    : '11%',
+                animation: 'kwFloat 5.2s ease-in-out infinite .6s'
+            }
+        }, /*#__PURE__*/React.createElement(DiceMascot, {
+            color: diceColors[3],
+            size : 54,
+            tilt : 12,
+            blink: true
+        })), /*#__PURE__*/React.createElement("div", {
+            className: "absolute pointer-events-none",
+            style    : {
+                bottom   : '15%',
+                left     : '13%',
+                animation: 'kwFloat 5s ease-in-out infinite .3s'
+            }
+        }, /*#__PURE__*/React.createElement(DiceMascot, {
+            color: diceColors[1],
+            size : 46,
+            tilt : 6
+        })), /*#__PURE__*/React.createElement("div", {
+            className: "relative z-10 text-center px-6",
+            style    : {
+                animation: 'kwPop .6s ease-out'
+            }
+        }, /*#__PURE__*/React.createElement("div", {
+            className: "flex items-center justify-center gap-3 mb-3"
+        }, /*#__PURE__*/React.createElement(DiceMascot, {
+            color: diceColors[1],
+            size : 60,
+            tilt : -12
+        }), /*#__PURE__*/React.createElement("h1", {
+            style: {
+                fontFamily: "'Hi Melody',cursive",
+                fontSize  : '5rem',
+                color     : '#FF7FA0',
+                textShadow: '4px 4px 0 #FFFFFF,4px 4px 0 rgba(255,143,171,.25)',
+                lineHeight: 1
+            }
+        }, "주사위 게임"), /*#__PURE__*/React.createElement(DiceMascot, {
+            color: diceColors[0],
+            size : 60,
+            tilt : 12,
+            blink: true
+        })), /*#__PURE__*/React.createElement("p", {
+            style: {
+                fontFamily: "'Gaegu',sans-serif",
+                fontWeight: 700,
+                fontSize  : '1.6rem',
+                color     : '#9B7AA8'
+            }
+        }, "굴려라 굴려~ 신나는 주사위 놀이! 🎉")), /*#__PURE__*/React.createElement("div", {
+            className: "relative z-10 flex gap-10 mt-12 flex-wrap justify-center px-6",
+            style    : {
+                animation: 'kwPop .7s ease-out .1s both'
+            }
+        }, /*#__PURE__*/React.createElement("button", {
+            onClick  : () => {
+                setMode('dice');
+                setGameState('diceCount');
+            },
+            className: "flex flex-col items-center gap-3 px-12 py-8 transition-all hover:-translate-y-2 active:scale-95",
+            style    : {
+                borderRadius: '2.5rem',
+                background  : 'linear-gradient(160deg,#FFE1EC,#FFC9DD)',
+                border      : '3px solid white',
+                boxShadow   : '0 10px 0 -2px rgba(255,160,190,.45), 0 18px 28px rgba(255,160,190,.35)'
+            }
+        }, /*#__PURE__*/React.createElement(DiceMascot, {
+            color: "#FF8FAB",
+            size : 54,
+            tilt : 0
+        }), /*#__PURE__*/React.createElement("span", {
+            style    : {
+                fontFamily: "'Gaegu',sans-serif",
+                fontWeight: 700
+            },
+            className: "text-3xl text-rose-600"
+        }, "주사위 던지기")), /*#__PURE__*/React.createElement("button", {
+            onClick  : () => {
+                setMode('cantstop');
+                setGameState('cantStop');
+            },
+            className: "flex flex-col items-center gap-3 px-12 py-8 transition-all hover:-translate-y-2 active:scale-95",
+            style    : {
+                borderRadius: '2.5rem',
+                background  : 'linear-gradient(160deg,#DCEBFF,#C7E6FF)',
+                border      : '3px solid white',
+                boxShadow   : '0 10px 0 -2px rgba(150,190,255,.45), 0 18px 28px rgba(150,190,255,.35)'
+            }
+        }, /*#__PURE__*/React.createElement(DiceMascot, {
+            color: "#7FB8FF",
+            size : 54,
+            tilt : 0
+        }), /*#__PURE__*/React.createElement("span", {
+            style    : {
+                fontFamily: "'Gaegu',sans-serif",
+                fontWeight: 700
+            },
+            className: "text-3xl text-blue-600"
+        }, "캔트스탑")))), gameState === 'diceCount' && /*#__PURE__*/React.createElement("div", {
+            className: "relative w-full h-full flex flex-col items-center justify-center",
+            style    : {
+                animation: 'kwPop .5s ease-out'
+            }
+        }, /*#__PURE__*/React.createElement(TopRightButtons, null), /*#__PURE__*/React.createElement("button", {
+            onClick  : goBack,
+            className: "absolute top-4 left-4 px-5 py-2 transition-all hover:-translate-y-0.5 active:scale-95",
+            style    : {
+                fontFamily  : "'Gaegu',sans-serif",
+                fontWeight  : 700,
+                fontSize    : '1.1rem',
+                color       : '#FF7FA0',
+                background  : 'linear-gradient(135deg,#FFF0F4,#FFE0EB)',
+                border      : '2.5px solid white',
+                borderRadius: '2rem',
+                boxShadow   : '0 5px 0 rgba(255,160,190,.35)',
+                zIndex      : 20
+            }
+        }, "← 뒤로"), /*#__PURE__*/React.createElement("span", {
+            className: "absolute text-xl pointer-events-none",
+            style    : {
+                top      : '15%',
+                right    : '18%',
+                color    : '#FFC2D8',
+                animation: 'kwTwinkle 2.2s ease-in-out infinite'
+            }
+        }, "✦"), /*#__PURE__*/React.createElement("span", {
+            className: "absolute text-xl pointer-events-none",
+            style    : {
+                bottom   : '18%',
+                left     : '14%',
+                color    : '#C7B8FF',
+                animation: 'kwTwinkle 2.8s ease-in-out infinite .5s'
+            }
+        }, "✦"), /*#__PURE__*/React.createElement("div", {
+            className: "flex items-center gap-3 mb-3"
+        }, /*#__PURE__*/React.createElement(DiceMascot, {
+            color: diceColors[0],
+            size : 48,
+            tilt : -10
+        }), /*#__PURE__*/React.createElement("h2", {
+            style: {
+                fontFamily: "'Hi Melody',cursive",
+                fontSize  : '3.5rem',
+                color     : '#FF7FA0',
+                textShadow: '3px 3px 0 white'
+            }
+        }, "주사위 개수 선택"), /*#__PURE__*/React.createElement(DiceMascot, {
+            color: diceColors[2],
+            size : 48,
+            tilt : 10,
+            blink: true
+        })), /*#__PURE__*/React.createElement("p", {
+            style: {
+                fontFamily  : "'Gaegu',sans-serif",
+                fontWeight  : 700,
+                color       : '#9B7AA8',
+                fontSize    : '1.3rem',
+                marginBottom: '2.5rem'
+            }
+        }, "몇 개를 굴릴까요? 🎲"), /*#__PURE__*/React.createElement("div", {
+            className: "flex gap-8"
+        }, [{
+            n     : 1,
+            color : '#FFB3C6',
+            grad  : 'linear-gradient(160deg,#FFE1EC,#FFC9DD)',
+            shadow: 'rgba(255,150,185,.45)'
+        }, {
+            n     : 2,
+            color : '#FFD966',
+            grad  : 'linear-gradient(160deg,#FFF8D0,#FFE87A)',
+            shadow: 'rgba(255,210,70,.45)'
+        }, {
+            n     : 3,
+            color : '#90EAB5',
+            grad  : 'linear-gradient(160deg,#DFFFF0,#B8F5D4)',
+            shadow: 'rgba(100,220,160,.45)'
+        }, {
+            n     : 4,
+            color : '#99CCFF',
+            grad  : 'linear-gradient(160deg,#DCEBFF,#C7E6FF)',
+            shadow: 'rgba(130,185,255,.45)'
+        }].map(({
+                    n,
+                    color,
+                    grad,
+                    shadow
+                }) => /*#__PURE__*/React.createElement("button", {
+            key      : n,
+            onClick  : () => {
+                setDiceCount(n);
+                setGameState('diceMethod');
+            },
+            className: "flex flex-col items-center gap-3 px-8 py-6 transition-all hover:-translate-y-2 active:scale-95",
+            style    : {
+                borderRadius: '2rem',
+                background  : diceCount === n ? 'linear-gradient(160deg,#FFD3E8,#FFB0CB)' : grad,
+                border      : diceCount === n ? '3px solid #FF7FA0' : '3px solid white',
+                boxShadow   : diceCount === n ? `0 8px 0 -2px rgba(255,120,160,.5), 0 14px 22px rgba(255,120,160,.35)` : `0 8px 0 -2px ${shadow}, 0 14px 22px ${shadow}`
+            }
+        }, /*#__PURE__*/React.createElement(DiceMascot, {
+            color: color,
+            size : 52,
+            tilt : n % 2 === 0 ? 8 : -8,
+            blink: n === 2 || n === 4
+        }), /*#__PURE__*/React.createElement("span", {
+            style: {
+                fontFamily: "'Hi Melody',cursive",
+                fontSize  : '3rem',
+                color     : diceCount === n ? '#FF5C85' : '#6B5B8A'
+            }
+        }, n))))), gameState === 'diceMethod' && /*#__PURE__*/React.createElement("div", {
+            className: "relative w-full h-full flex flex-col items-center justify-center",
+            style    : {
+                animation: 'kwPop .5s ease-out'
+            }
+        }, /*#__PURE__*/React.createElement(TopRightButtons, null), /*#__PURE__*/React.createElement("button", {
+            onClick  : goBack,
+            className: "absolute top-4 left-4 px-5 py-2 transition-all hover:-translate-y-0.5 active:scale-95",
+            style    : {
+                fontFamily  : "'Gaegu',sans-serif",
+                fontWeight  : 700,
+                fontSize    : '1.1rem',
+                color       : '#FF7FA0',
+                background  : 'linear-gradient(135deg,#FFF0F4,#FFE0EB)',
+                border      : '2.5px solid white',
+                borderRadius: '2rem',
+                boxShadow   : '0 5px 0 rgba(255,160,190,.35)',
+                zIndex      : 20
+            }
+        }, "← 뒤로"), /*#__PURE__*/React.createElement("span", {
+            className: "absolute text-xl pointer-events-none",
+            style    : {
+                top      : '14%',
+                left     : '18%',
+                color    : '#FFC2D8',
+                animation: 'kwTwinkle 2.5s ease-in-out infinite'
+            }
+        }, "✦"), /*#__PURE__*/React.createElement("span", {
+            className: "absolute text-xl pointer-events-none",
+            style    : {
+                bottom   : '16%',
+                right    : '15%',
+                color    : '#AEE6CB',
+                animation: 'kwTwinkle 3s ease-in-out infinite .6s'
+            }
+        }, "✦"), /*#__PURE__*/React.createElement("div", {
+            className: "flex items-center gap-3 mb-2"
+        }, /*#__PURE__*/React.createElement(DiceMascot, {
+            color: "#FFB3C6",
+            size : 44,
+            tilt : -10
+        }), /*#__PURE__*/React.createElement("h2", {
+            style: {
+                fontFamily: "'Hi Melody',cursive",
+                fontSize  : '3.2rem',
+                color     : '#FF7FA0',
+                textShadow: '3px 3px 0 white'
+            }
+        }, "던지는 방법 선택"), /*#__PURE__*/React.createElement(DiceMascot, {
+            color: "#99CCFF",
+            size : 44,
+            tilt : 10,
+            blink: true
+        })), /*#__PURE__*/React.createElement("p", {
+            style: {
+                fontFamily  : "'Gaegu',sans-serif",
+                fontWeight  : 700,
+                color       : '#9B7AA8',
+                fontSize    : '1.25rem',
+                marginBottom: '2.5rem'
+            }
+        }, "어떻게 굴릴까요? 🌟"), /*#__PURE__*/React.createElement("div", {
+            className: "flex gap-8 flex-wrap justify-center px-6"
+        }, [{
+            label    : '한번에 던지기',
+            emoji    : '💫',
+            grad     : 'linear-gradient(160deg,#FFE1EC,#FFC9DD)',
+            shadow   : 'rgba(255,160,190,.45)',
+            textColor: '#D44070',
+            onClick  : () => {
+                setDiceMethod('all');
+                setGameState('gamePlay');
+            }
+        }, {
+            label    : '하나씩 던지기',
+            emoji    : '☝️',
+            grad     : 'linear-gradient(160deg,#FFF8D0,#FFE87A)',
+            shadow   : 'rgba(255,210,70,.45)',
+            textColor: '#A07800',
+            onClick  : () => {
+                setDiceMethod('one');
+                setGameState('gamePlay');
+            }
+        }, {
+            label    : '선택하여 던지기',
+            emoji    : '✨',
+            grad     : 'linear-gradient(160deg,#E8EEFF,#D0DCFF)',
+            shadow   : 'rgba(140,160,255,.45)',
+            textColor: '#4A5CC8',
+            onClick  : () => {
+                setDiceMethod('select');
+                setGameState('gamePlay');
+            }
+        }].map(({
+                    label,
+                    emoji,
+                    grad,
+                    shadow,
+                    textColor,
+                    onClick
+                }, i) => /*#__PURE__*/React.createElement("button", {
+            key      : i,
+            onClick  : onClick,
+            className: "flex flex-col items-center gap-3 px-10 py-7 transition-all hover:-translate-y-2 active:scale-95",
+            style    : {
+                borderRadius: '2.5rem',
+                background  : grad,
+                border      : '3px solid white',
+                boxShadow   : `0 10px 0 -2px ${shadow}, 0 16px 26px ${shadow}`
+            }
+        }, /*#__PURE__*/React.createElement("span", {
+            style: {
+                fontSize: '2.8rem'
+            }
+        }, emoji), /*#__PURE__*/React.createElement("span", {
+            style: {
+                fontFamily: "'Gaegu',sans-serif",
+                fontWeight: 700,
+                fontSize  : '1.6rem',
+                color     : textColor
+            }
+        }, label))))), gameState === 'cantStop' && cantStopMode === null && /*#__PURE__*/React.createElement("div", {
+            className: "relative w-full h-full flex flex-col items-center justify-center",
+            style    : {
+                animation: 'kwPop .5s ease-out'
+            }
+        }, /*#__PURE__*/React.createElement(TopRightButtons, null), /*#__PURE__*/React.createElement("button", {
+            onClick  : goBack,
+            className: "absolute top-4 left-4 px-5 py-2 transition-all hover:-translate-y-0.5 active:scale-95",
+            style    : {
+                fontFamily  : "'Gaegu',sans-serif",
+                fontWeight  : 700,
+                fontSize    : '1.1rem',
+                color       : '#FF7FA0',
+                background  : 'linear-gradient(135deg,#FFF0F4,#FFE0EB)',
+                border      : '2.5px solid white',
+                borderRadius: '2rem',
+                boxShadow   : '0 5px 0 rgba(255,160,190,.35)',
+                zIndex      : 20
+            }
+        }, "← 뒤로"), /*#__PURE__*/React.createElement("span", {
+            className: "absolute text-2xl pointer-events-none",
+            style    : {
+                top      : '13%',
+                right    : '16%',
+                color    : '#C7B8FF',
+                animation: 'kwTwinkle 2.6s ease-in-out infinite'
+            }
+        }, "✦"), /*#__PURE__*/React.createElement("span", {
+            className: "absolute text-xl pointer-events-none",
+            style    : {
+                bottom   : '17%',
+                left     : '12%',
+                color    : '#FFD3B8',
+                animation: 'kwTwinkle 3.1s ease-in-out infinite .7s'
+            }
+        }, "✦"), /*#__PURE__*/React.createElement("div", {
+            className: "flex items-center gap-3 mb-2"
+        }, /*#__PURE__*/React.createElement(DiceMascot, {
+            color: diceColors[2],
+            size : 46,
+            tilt : -10
+        }), /*#__PURE__*/React.createElement("h2", {
+            style: {
+                fontFamily: "'Hi Melody',cursive",
+                fontSize  : '3.5rem',
+                color     : '#5BA8D4',
+                textShadow: '3px 3px 0 white'
+            }
+        }, "캔트스탑 🚫"), /*#__PURE__*/React.createElement(DiceMascot, {
+            color: diceColors[3],
+            size : 46,
+            tilt : 10,
+            blink: true
+        })), /*#__PURE__*/React.createElement("p", {
+            style: {
+                fontFamily  : "'Gaegu',sans-serif",
+                fontWeight  : 700,
+                color       : '#9B7AA8',
+                fontSize    : '1.3rem',
+                marginBottom: '2.5rem'
+            }
+        }, "모드를 골라주세요! 🌈"), /*#__PURE__*/React.createElement("div", {
+            className: "flex gap-10 flex-wrap justify-center px-6"
+        }, /*#__PURE__*/React.createElement("button", {
+            onClick  : () => {
+                setCantStopMode('roll');
+                setDiceValues({});
+            },
+            className: "flex flex-col items-center gap-4 px-14 py-10 transition-all hover:-translate-y-2 active:scale-95",
+            style    : {
+                borderRadius: '2.5rem',
+                background  : 'linear-gradient(160deg,#FFE1EC,#FFC9DD)',
+                border      : '3px solid white',
+                boxShadow   : '0 12px 0 -2px rgba(255,160,190,.45), 0 20px 30px rgba(255,160,190,.3)'
+            }
+        }, /*#__PURE__*/React.createElement(DiceMascot, {
+            color: "#FF8FAB",
+            size : 60,
+            tilt : -6
+        }), /*#__PURE__*/React.createElement("span", {
+            style: {
+                fontFamily: "'Gaegu',sans-serif",
+                fontWeight: 700,
+                fontSize  : '1.8rem',
+                color     : '#D44070'
+            }
+        }, "주사위 던지기"), /*#__PURE__*/React.createElement("span", {
+            style: {
+                fontFamily: "'Gaegu',sans-serif",
+                fontSize  : '1rem',
+                color     : '#E88FAA'
+            }
+        }, "앱으로 주사위를 굴려요")), /*#__PURE__*/React.createElement("button", {
+            onClick  : () => {
+                setCantStopMode('select');
+                setDiceValues({});
+            },
+            className: "flex flex-col items-center gap-4 px-14 py-10 transition-all hover:-translate-y-2 active:scale-95",
+            style    : {
+                borderRadius: '2.5rem',
+                background  : 'linear-gradient(160deg,#DCEBFF,#C7E6FF)',
+                border      : '3px solid white',
+                boxShadow   : '0 12px 0 -2px rgba(150,190,255,.45), 0 20px 30px rgba(150,190,255,.3)'
+            }
+        }, /*#__PURE__*/React.createElement(DiceMascot, {
+            color: "#7FB8FF",
+            size : 60,
+            tilt : 6,
+            blink: true
+        }), /*#__PURE__*/React.createElement("span", {
+            style: {
+                fontFamily: "'Gaegu',sans-serif",
+                fontWeight: 700,
+                fontSize  : '1.8rem',
+                color     : '#4A7FCE'
+            }
+        }, "주사위 선택하기"), /*#__PURE__*/React.createElement("span", {
+            style: {
+                fontFamily: "'Gaegu',sans-serif",
+                fontSize  : '1rem',
+                color     : '#7AAAE0'
+            }
+        }, "실제 주사위 결과를 입력해요")))), gameState === 'cantStop' && cantStopMode === 'roll' && /*#__PURE__*/React.createElement("div", {
+            className: "w-full h-full",
+            ref      : mountRef,
+            onClick  : rollDiceAll
+        }), gameState === 'cantStop' && cantStopMode === 'select' && /*#__PURE__*/React.createElement("div", {
+            className: "w-full h-full flex flex-col items-center justify-center px-6 py-4 overflow-y-auto relative z-10"
+        }, /*#__PURE__*/React.createElement("p", {
+            style: {
+                fontFamily  : "'Hi Melody',cursive",
+                fontSize    : '2rem',
+                color       : '#9B7AA8',
+                marginBottom: '1.5rem',
+                textShadow  : '2px 2px 0 white'
+            }
+        }, "실제 주사위와 같은 모양을 선택하세요 🎲"), /*#__PURE__*/React.createElement("div", {
+            className: "grid grid-cols-2 gap-5 mb-8 w-full max-w-2xl"
+        }, [0, 1, 2, 3].map(i => /*#__PURE__*/React.createElement("div", {
+            key      : i,
+            className: "rounded-3xl p-5 shadow-xl",
+            style    : {
+                background    : 'rgba(255,255,255,0.65)',
+                backdropFilter: 'blur(10px)',
+                border        : `3px solid ${diceColors[i]}66`
+            }
+        }, /*#__PURE__*/React.createElement("div", {
+            className: "flex items-center gap-3 mb-4"
+        }, /*#__PURE__*/React.createElement(DiceMascot, {
+            color: diceColors[i],
+            size : 36,
+            tilt : i % 2 === 0 ? -6 : 6,
+            blink: i === 1 || i === 3
+        }), /*#__PURE__*/React.createElement("span", {
+            style: {
+                fontFamily: "'Gaegu',sans-serif",
+                fontWeight: 700,
+                fontSize  : '1.2rem',
+                color     : '#7B6B8A'
+            }
+        }, "주사위 ", i + 1), /*#__PURE__*/React.createElement("div", {
+            className: "ml-auto"
+        }, /*#__PURE__*/React.createElement(DiceFace, {
+            value   : diceValues[i],
+            size    : 68,
+            colorIdx: i
+        }))), /*#__PURE__*/React.createElement("div", {
+            className: "grid grid-cols-3 gap-2"
+        }, [1, 2, 3, 4, 5, 6].map(val => /*#__PURE__*/React.createElement("button", {
+            key      : val,
+            onClick  : () => setDiceValues(prev => ({
+                ...prev,
+                [i]: val
+            })),
+            className: "flex items-center justify-center transition-all active:scale-90",
+            style    : {
+                width       : 60,
+                height      : 60,
+                borderRadius: '0.75rem',
+                background  : diceValues[i] === val ? 'white' : 'rgba(255,255,255,0.7)',
+                border      : diceValues[i] === val ? `3px solid ${diceColors[i]}` : '2px solid rgba(200,200,200,0.5)',
+                boxShadow   : diceValues[i] === val ? `0 4px 12px ${diceColors[i]}88` : '0 2px 6px rgba(0,0,0,0.08)',
+                transform   : diceValues[i] === val ? 'scale(1.12)' : 'scale(1)'
+            }
+        }, /*#__PURE__*/React.createElement(DiceFace, {
+            value: val,
+            size : 50
+        }))))))), /*#__PURE__*/React.createElement("button", {
+            onClick  : () => {
+                if (allDiceReady) setShowCombinations(true);
+            },
+            className: "px-14 py-5 transition-all active:scale-95",
+            style    : {
+                fontFamily  : "'Gaegu',sans-serif",
+                fontWeight  : 700,
+                fontSize    : '1.6rem',
+                color       : allDiceReady ? 'white' : '#C0A8CC',
+                background  : allDiceReady ? 'linear-gradient(160deg,#C8A8FF,#A880FF)' : 'linear-gradient(160deg,#EEE8F5,#E4DCF0)',
+                border      : '3px solid white',
+                borderRadius: '2.5rem',
+                boxShadow   : allDiceReady ? '0 10px 0 -2px rgba(168,128,255,.45), 0 18px 28px rgba(168,128,255,.3)' : '0 4px 0 rgba(200,180,220,.3)',
+                cursor      : allDiceReady ? 'pointer' : 'not-allowed',
+                transform   : allDiceReady ? undefined : undefined
+            }
+        }, "🧩 묶음확인 ", !allDiceReady && `(${Object.keys(diceValues).length}/4)`)), gameState === 'gamePlay' && /*#__PURE__*/React.createElement("div", {
+            className: "w-full h-full relative flex flex-col"
+        }, diceMethod === 'all' && /*#__PURE__*/React.createElement("div", {
+            className: "w-full h-full cursor-pointer",
+            onClick  : rollDiceAll,
+            ref      : mountRef
+        }), diceMethod === 'one' && /*#__PURE__*/React.createElement("div", {
+            className: "w-full h-full",
+            ref      : mountRef
+        }), diceMethod === 'select' && /*#__PURE__*/React.createElement("div", {
+            className: "w-full h-full relative",
+            ref      : mountRef
+        }, /*#__PURE__*/React.createElement("div", {
+            className: "absolute top-8 left-1/2 transform -translate-x-1/2 z-10 px-7 py-3",
+            style    : {
+                fontFamily    : "'Gaegu',sans-serif",
+                fontWeight    : 700,
+                fontSize      : '1.1rem',
+                color         : '#5C8DFF',
+                background    : 'rgba(255,255,255,0.8)',
+                backdropFilter: 'blur(8px)',
+                borderRadius  : '2rem',
+                border        : '2px solid white',
+                boxShadow     : '0 4px 16px rgba(150,190,255,.3)'
+            }
+        }, "선택됨 ✨ ", selectedDice.size, "개"), selectedDice.size > 0 && /*#__PURE__*/React.createElement("button", {
+            onClick  : rollDiceSelect,
+            className: "absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10 transition-all hover:-translate-y-1 active:scale-95",
+            style    : {
+                fontFamily  : "'Gaegu',sans-serif",
+                fontWeight  : 700,
+                fontSize    : '1.7rem',
+                color       : 'white',
+                padding     : '1rem 3.5rem',
+                background  : 'linear-gradient(160deg,#90EAB5,#5CC8A0)',
+                border      : '3px solid white',
+                borderRadius: '2.5rem',
+                boxShadow   : '0 10px 0 -2px rgba(80,200,150,.45), 0 18px 28px rgba(80,200,150,.35)'
+            }
+        }, "🎲 굴리기!")))), showResults && (gameState === 'gamePlay' || cantStopMode === 'roll') && /*#__PURE__*/React.createElement("div", {
+            className: "fixed inset-0 flex items-center justify-center z-50",
+            style    : {
+                background    : 'rgba(180,150,255,0.18)',
+                backdropFilter: 'blur(4px)'
+            },
+            onClick  : () => setShowResults(false)
+        }, /*#__PURE__*/React.createElement("div", {
+            className: "rounded-3xl p-10 shadow-2xl max-w-2xl w-full mx-4 relative",
+            style    : {
+                background: 'linear-gradient(160deg,#FFFAFF,#FFF0F8)',
+                border    : '3px solid white',
+                boxShadow : '0 20px 60px rgba(255,150,200,.25)',
+                animation : 'kwPop .3s ease-out'
+            },
+            onClick  : e => e.stopPropagation()
+        }, /*#__PURE__*/React.createElement("button", {
+            onClick  : () => setShowResults(false),
+            className: "absolute top-4 right-4 flex items-center justify-center transition-all hover:scale-110 active:scale-90",
+            style    : {
+                width       : 38,
+                height      : 38,
+                borderRadius: '50%',
+                background  : 'linear-gradient(135deg,#FFE0EB,#FFC9DD)',
+                border      : '2.5px solid white',
+                boxShadow   : '0 4px 0 rgba(255,150,185,.4)',
+                fontFamily  : "'Gaegu',sans-serif",
+                fontWeight  : 700,
+                fontSize    : '1.1rem',
+                color       : '#FF7FA0'
+            }
+        }, "✕"), /*#__PURE__*/React.createElement("div", {
+            className: "flex items-center justify-center gap-3 mb-7"
+        }, /*#__PURE__*/React.createElement(DiceMascot, {
+            color: diceColors[0],
+            size : 38,
+            tilt : -8
+        }), /*#__PURE__*/React.createElement("h3", {
+            style: {
+                fontFamily: "'Hi Melody',cursive",
+                fontSize  : '2.4rem',
+                color     : '#FF7FA0',
+                textShadow: '2px 2px 0 white'
+            }
+        }, "숫자 확인 📊"), /*#__PURE__*/React.createElement(DiceMascot, {
+            color: diceColors[3],
+            size : 38,
+            tilt : 8,
+            blink: true
+        })), /*#__PURE__*/React.createElement("div", {
+            className: "space-y-4"
+        }, [...Array(cantStopMode === 'roll' ? 4 : diceCount)].map((_, i) => {
+            const value = diceValues[i];
+            return /*#__PURE__*/React.createElement("div", {
+                key      : i,
+                className: "flex items-center gap-6 p-5 rounded-2xl",
+                style    : {
+                    background: 'rgba(255,255,255,0.8)',
+                    border    : '2px solid rgba(255,220,235,0.8)',
+                    boxShadow : '0 4px 16px rgba(255,180,210,.2)'
+                }
+            }, /*#__PURE__*/React.createElement(DiceFace, {
+                value   : value,
+                size    : 80,
+                colorIdx: i
+            }), /*#__PURE__*/React.createElement("div", {
+                style: {
+                    fontFamily: "'Hi Melody',cursive",
+                    fontSize  : '3.5rem',
+                    color     : '#FF7FA0'
+                }
+            }, value || '?'));
+        })), /*#__PURE__*/React.createElement("p", {
+            style: {
+                fontFamily: "'Gaegu',sans-serif",
+                fontWeight: 700,
+                color     : '#C0A0B8',
+                textAlign : 'center',
+                marginTop : '1.5rem',
+                fontSize  : '1rem'
+            }
+        }, "화면을 눌러 닫기 💕"))), showCombinations && (cantStopMode === 'roll' || cantStopMode === 'select') && /*#__PURE__*/React.createElement("div", {
+            className: "fixed inset-0 flex items-center justify-center z-50",
+            style    : {
+                background    : 'rgba(150,120,255,0.15)',
+                backdropFilter: 'blur(4px)'
+            },
+            onClick  : () => setShowCombinations(false)
+        }, /*#__PURE__*/React.createElement("div", {
+            className: "rounded-3xl p-10 shadow-2xl max-w-2xl w-full mx-4 relative",
+            style    : {
+                background: 'linear-gradient(160deg,#F8F0FF,#EEE8FF)',
+                border    : '3px solid white',
+                boxShadow : '0 20px 60px rgba(160,120,255,.25)',
+                animation : 'kwPop .3s ease-out'
+            },
+            onClick  : e => e.stopPropagation()
+        }, /*#__PURE__*/React.createElement("button", {
+            onClick  : () => setShowCombinations(false),
+            className: "absolute top-4 right-4 flex items-center justify-center transition-all hover:scale-110 active:scale-90",
+            style    : {
+                width       : 38,
+                height      : 38,
+                borderRadius: '50%',
+                background  : 'linear-gradient(135deg,#E5D8FF,#D0BAFF)',
+                border      : '2.5px solid white',
+                boxShadow   : '0 4px 0 rgba(160,120,255,.4)',
+                fontFamily  : "'Gaegu',sans-serif",
+                fontWeight  : 700,
+                fontSize    : '1.1rem',
+                color       : '#9B62CC'
+            }
+        }, "✕"), /*#__PURE__*/React.createElement("div", {
+            className: "flex items-center justify-center gap-3 mb-7"
+        }, /*#__PURE__*/React.createElement(DiceMascot, {
+            color: diceColors[2],
+            size : 38,
+            tilt : -8
+        }), /*#__PURE__*/React.createElement("h3", {
+            style: {
+                fontFamily: "'Hi Melody',cursive",
+                fontSize  : '2.4rem',
+                color     : '#9B62CC',
+                textShadow: '2px 2px 0 white'
+            }
+        }, "묶음 확인 🧩"), /*#__PURE__*/React.createElement(DiceMascot, {
+            color: diceColors[1],
+            size : 38,
+            tilt : 8,
+            blink: true
+        })), !allDiceReady ? /*#__PURE__*/React.createElement("p", {
+            style: {
+                fontFamily: "'Gaegu',sans-serif",
+                fontWeight: 700,
+                color     : '#B09AC0',
+                textAlign : 'center',
+                fontSize  : '1.4rem',
+                padding   : '2rem 0'
+            }
+        }, "주사위를 먼저 설정해주세요! 🎲") : /*#__PURE__*/React.createElement("div", {
+            className: "space-y-4"
+        }, dicePairCombinations.map(({
+                                         pairs,
+                                         label
+                                     }, pi) => {
+            const [[a, b], [c, d]] = pairs;
+            const sum1 = diceValues[a] + diceValues[b];
+            const sum2 = diceValues[c] + diceValues[d];
+            const bgs = ['linear-gradient(135deg,#FFF0F6,#FFE0EC)', 'linear-gradient(135deg,#FDFCE0,#FFF8C0)', 'linear-gradient(135deg,#EBF2FF,#D8E8FF)'];
+            const borders = ['rgba(255,160,190,.5)', 'rgba(255,220,70,.5)', 'rgba(140,180,255,.5)'];
+            return /*#__PURE__*/React.createElement("div", {
+                key      : pi,
+                className: "p-5 rounded-2xl",
+                style    : {
+                    background: bgs[pi],
+                    border    : `2px solid ${borders[pi]}`,
+                    boxShadow : '0 4px 16px rgba(160,120,255,.12)'
+                }
+            }, /*#__PURE__*/React.createElement("p", {
+                style: {
+                    fontFamily  : "'Gaegu',sans-serif",
+                    fontWeight  : 700,
+                    color       : '#A890C0',
+                    fontSize    : '0.9rem',
+                    marginBottom: '0.75rem'
+                }
+            }, label), /*#__PURE__*/React.createElement("div", {
+                className: "flex items-center justify-around"
+            }, /*#__PURE__*/React.createElement("div", {
+                className: "flex items-center gap-2"
+            }, /*#__PURE__*/React.createElement(MiniDice, {
+                value   : diceValues[a],
+                colorIdx: a
+            }), /*#__PURE__*/React.createElement("span", {
+                style: {
+                    fontSize  : '1.8rem',
+                    color     : '#C0A8D8',
+                    fontWeight: 700
+                }
+            }, "+"), /*#__PURE__*/React.createElement(MiniDice, {
+                value   : diceValues[b],
+                colorIdx: b
+            }), /*#__PURE__*/React.createElement("span", {
+                style: {
+                    fontSize  : '1.8rem',
+                    color     : '#C0A8D8',
+                    fontWeight: 700
+                }
+            }, "="), /*#__PURE__*/React.createElement("span", {
+                style: {
+                    fontFamily: "'Hi Melody',cursive",
+                    fontSize  : '3rem',
+                    color     : '#FF7FA0',
+                    width     : 60,
+                    textAlign : 'center'
+                }
+            }, sum1)), /*#__PURE__*/React.createElement("div", {
+                style: {
+                    color     : '#DDD',
+                    fontSize  : '1.8rem',
+                    fontWeight: 700,
+                    margin    : '0 0.5rem'
+                }
+            }, "|"), /*#__PURE__*/React.createElement("div", {
+                className: "flex items-center gap-2"
+            }, /*#__PURE__*/React.createElement(MiniDice, {
+                value   : diceValues[c],
+                colorIdx: c
+            }), /*#__PURE__*/React.createElement("span", {
+                style: {
+                    fontSize  : '1.8rem',
+                    color     : '#C0A8D8',
+                    fontWeight: 700
+                }
+            }, "+"), /*#__PURE__*/React.createElement(MiniDice, {
+                value   : diceValues[d],
+                colorIdx: d
+            }), /*#__PURE__*/React.createElement("span", {
+                style: {
+                    fontSize  : '1.8rem',
+                    color     : '#C0A8D8',
+                    fontWeight: 700
+                }
+            }, "="), /*#__PURE__*/React.createElement("span", {
+                style: {
+                    fontFamily: "'Hi Melody',cursive",
+                    fontSize  : '3rem',
+                    color     : '#FF7FA0',
+                    width     : 60,
+                    textAlign : 'center'
+                }
+            }, sum2))));
+        })), /*#__PURE__*/React.createElement("p", {
+            style: {
+                fontFamily: "'Gaegu',sans-serif",
+                fontWeight: 700,
+                color     : '#C0A8D8',
+                textAlign : 'center',
+                marginTop : '1.5rem',
+                fontSize  : '1rem'
+            }
+        }, "화면을 눌러 닫기 💜"))), /*#__PURE__*/React.createElement("div", {
+            className: "flex-shrink-0 flex items-center justify-between px-5",
+            style    : {
+                height        : 28,
+                background    : 'rgba(255,255,255,0.55)',
+                backdropFilter: 'blur(8px)',
+                borderTop     : '1.5px solid rgba(255,255,255,0.8)',
+                fontFamily    : "'Gaegu',sans-serif",
+                fontWeight    : 400,
+                fontSize      : 12,
+                color         : '#B090C0'
+            }
+        }, /*#__PURE__*/React.createElement("span", null, "© 2026 램프의 요정 — 주사위 굴리기 | 무단 복제·수정·재배포를 금합니다."), /*#__PURE__*/React.createElement("a", {
+            href     : "https://blog.naver.com/sue3565",
+            target   : "_blank",
+            rel      : "noopener noreferrer",
+            style    : {
+                color: '#A07FCE'
+            },
+            className: "hover:opacity-70 transition-opacity"
+        }, "📝 blog.naver.com/sue3565")));
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(DiceGame));
+</script>
+</body>
+</html>
