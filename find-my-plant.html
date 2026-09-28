@@ -1,0 +1,376 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <!-- This site is hosted on Netlify. Anyone can build and deploy a site
+         like this one for free: https://netlify.new/?utm_campaign=loops&utm_source=ai-legible&utm_medium=owned&utm_content=comment&utm_id=e9dd1542-6476-4a25-8abe-9b01e3da0ccb
+         Netlify hosting facts for this site: static/SSR served via Netlify Edge. -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <meta property="og:title" content="나만의 반려식물 찾기 테스트 🌱" />
+    <meta
+            property="og:description"
+            content="테스트를 통해 당신에게 딱 맞는 식물을 추천해 드릴게요!"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://findmyplant.netlify.app/" />
+    <meta
+            property="og:image"
+            content="https://user-images.githubusercontent.com/78190786/119984025-e4b9a400-bffb-11eb-993b-e10f79fc4840.jpg"
+    />
+
+    <title>Find My Plant | 반려식물 찾기 테스트</title>
+
+    <!-- https://findmyplant.netlify.app -->
+
+    <style>
+        :root {
+            --main-title: #101010;
+            --grey: #f5f5f5;
+            --green: #59b49c;
+            --green-hover: #67dbbb;
+            --yellow: #ffca41;
+            --yellow-hover: #ffd875;
+        }
+
+        .status {
+            width: 100%;
+            height: 5px;
+            background-color: var(--grey);
+            border-radius: 10px;
+        }
+        .statusBar {
+            height: 100%;
+            background-color: var(--green-hover);
+            border-radius: 10px;
+            transition: all 0.5s linear;
+        }
+
+        @keyframes spin {
+            to {
+                -webkit-transform: rotate(360deg);
+            }
+        }
+
+        @-webkit-keyframes spin {
+            to {
+                -webkit-transform: rotate(360deg);
+            }
+        }
+
+        @keyframes fadeinout {
+            0% {
+                opacity: 0;
+            }
+            25% {
+                opacity: 1;
+            }
+            75% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+
+        #splash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: var(--green);
+            animation: fadeinout 2.5s ease-in-out;
+        }
+
+        #splash h4 {
+            width: 100%;
+            margin: 0 auto;
+            color: white;
+            font-size: 20px;
+            width: 100%;
+            margin: 150px 0;
+            text-align: center;
+        }
+
+        #loading {
+            width: 30px;
+            height: 30px;
+            margin: auto;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            -webkit-animation: spin 1s ease-in-out infinite;
+        }
+
+        #main .main-title {
+            width: 100%;
+            height: 260px;
+            background-size: 100%;
+            background-repeat: no-repeat;
+            background-image: url("./assets/img/find-my-plant/find_my_plant.svg");
+        }
+        #main h4 {
+            font-size: 20px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        #main p {
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        #main button {
+            margin-top: 20px;
+        }
+        #kakao-link-btn {
+            background-color: var(--yellow);
+            margin-top: 0;
+        }
+        #kakao-link-btn:hover,
+        #kakao-link-btn:focus {
+            background-color: var(--yellow-hover);
+        }
+
+        @media (max-width: 700px) {
+            #main {
+                height: 100vh;
+                margin: auto;
+            }
+            #main .main-title {
+                width: 100%;
+                height: 420px;
+                background-size: 100%;
+                background-repeat: no-repeat;
+                background-image: url("./assets/img/find-my-plant/find_my_plant.svg");
+            }
+        }
+        @media (max-width: 420px) {
+            #main .main-title {
+                height: 250px;
+            }
+        }
+
+
+        #qna {
+            height: 600px;
+            justify-content: space-between;
+            position: relative;
+        }
+        #qna .questionContainer {
+            text-align: left;
+            width: 75%;
+            position: absolute;
+            top: 90px;
+        }
+        .answerList {
+            width: 100%;
+            height: 60px;
+            font-size: 14px;
+            margin-top: 25px;
+            border-radius: 10px;
+            border: 1px solid var(--green);
+            background-color: transparent;
+            color: var(--green);
+            cursor: pointer;
+            transition: all 0.1s ease-in;#result img {
+            width: 250px;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 1px solid #dddddd;
+        }
+            #result .result-name {
+                font-family: "SangSangShinb7";
+                font-size: 36px;
+                margin: 30px 0;
+                text-align: center;
+            }
+            #result button {
+                margin-top: 30px;
+            }
+            #result ul {
+                list-style: none;
+            }
+            #result ul li::before {
+                position: absolute;
+                content: "•";
+                left: 0;
+                font-size: 14px;
+                color: var(--green);
+            }
+            #result .result-desc li,
+            .result-tip li {
+                position: relative;
+                font-size: 14px;
+                line-height: 1.8;
+                padding-left: 16px;
+                margin-bottom: 5px;
+            }
+            #result .result-tip h6 {
+                margin: 30px 0 15px;
+                font-size: 16px;
+            }
+
+        }
+        .answerList:hover,
+        .answerList:focus {
+            color: white;
+            background-color: var(--green);
+        }
+        @media (max-width: 700px) {
+            #qna {
+                height: 100vh;
+            }
+            .anwerContainer {
+                margin-bottom: 60px;
+            }
+        }
+
+
+
+
+
+
+        @font-face {
+            font-family: "S-CoreDream-3Light";
+            src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-3Light.woff")
+            format("woff");
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: "SangSangShinb7";
+            src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_three@1.1/SangSangShinb7.woff")
+            format("woff");
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        * {
+            font-family: "S-CoreDream-3Light";
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            word-break: keep-all;
+            color: var(--main-title);
+        }
+        body {
+            width: 100%;
+            height: 100%;
+            background-color: whitesmoke;
+        }
+        main {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 5%;
+        }
+        section {
+            width: 420px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #dddddd;
+            border-radius: 10px;
+            background-color: white;
+        }
+        button {
+            width: 100%;
+            height: 50px;
+            border-radius: 3px;
+            border: none;
+            font-size: 16px;
+            color: white;
+            background-color: var(--green);
+            cursor: pointer;
+            transition: background-color 0.1s ease-in;
+        }
+        button:hover,
+        button:focus {
+            background-color: var(--green-hover);
+        }
+
+        .hide {
+            display: none !important;
+        }
+        @media (max-width: 700px) {
+            body {
+                background-color: white;
+            }
+            main {
+                padding: 0;
+            }
+            section {
+                width: 100%;
+                border: none;
+            }
+        }
+
+    </style>
+</head>
+<body>
+<main>
+    <section id="main">
+        <div class="main-title"></div>
+        <h4>나만의 반려식물 찾기 테스트 🌱</h4>
+        <p>
+            식물을 키우고 싶은데 어떤 식물을 키워야 할지 모르겠나요?<br />
+            선인장도 말라 죽는다구요? 걱정마세요! 🙌 <br />키우기 쉬운 식물로만
+            선정했어요.
+            <br />
+            테스트를 통해 당신에게 딱 맞는 식물을 추천해 드릴게요!
+        </p>
+<!--        <button id="kakao-link-btn" type="button" onclick="kakaoShare()">-->
+<!--            테스트 공유하기-->
+<!--        </button>-->
+        <button type="button" onclick="start()">테스트 시작하기</button>
+    </section>
+    <section id="qna" class="hide">
+        <div class="status">
+            <div class="statusBar"></div>
+        </div>
+        <div class="questionContainer"></div>
+        <div class="anwerContainer"></div>
+    </section>
+    <section id="result" class="hide">
+        <div>
+            <img src="" alt="" />
+        </div>
+        <div class="result-name"></div>
+        <div class="result-desc">
+            <ul></ul>
+        </div>
+        <div class="result-tip">
+            <h6>💖 알아두면 좋은 TIP!</h6>
+            <ul>
+                <li>
+                    물을 조금씩 자주 주면 과습의 원인이 될 수 있어요.<br />
+                    흙이 말랐을 때 밑에 물이 빠질 정도로 흠뻑 주세요!
+                </li>
+                <li>
+                    갑자기 잎이 노래지거나 줄기만 보기 싫게 자랐나요? 빛이 부족해서
+                    그럴 수 있어요! 밝은 곳으로 옮겨주세요.
+                </li>
+            </ul>
+        </div>
+        <button type="button" onclick="goToMain()">다시하기</button>
+    </section>
+    <div id="splash" class="hide">
+        <h4>당신에게 어울리는 식물은...🌱</h4>
+
+        <div id="loading"></div>
+    </div>
+</main>
+<script src="./assets/js/data.js"></script>
+<script src="./assets/js/main.js"></script>
+<!--<script src="./assets/js/kakao.js"></script>-->
+</body>
+</html>
