@@ -1,0 +1,1730 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>낱말 학습지 생성기</title>
+
+    <!-- https://smartree.tistory.com/158 -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        /* 학교안심받아쓰기체 */
+        @font-face {
+            font-family: 'HakgyoansimBareunbatangR';
+            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/2408-5@1.0/HakgyoansimBadasseugiTTF-L.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 5px;
+            }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 420px 600px;
+            gap: 20px;
+            height: calc(100vh - 20px);
+        }
+
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 360px 500px;
+                gap: 15px;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 320px 450px;
+                gap: 12px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                height: auto;
+                gap: 20px;
+            }
+        }
+
+        .input-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media (max-width: 768px) {
+            .input-panel {
+                padding: 15px;
+                border-radius: 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .input-panel {
+                padding: 12px;
+                margin: 0 5px;
+            }
+        }
+
+        .preview-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media (max-width: 768px) {
+            .preview-panel {
+                padding: 12px;
+                border-radius: 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .preview-panel {
+                padding: 10px;
+                margin: 0 5px;
+            }
+        }
+
+        h1 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        .input-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        textarea {
+            height: 480px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 20px;
+            line-height: 1.8;
+            resize: none;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        @media (max-width: 768px) {
+            textarea {
+                height: 300px;
+                font-size: 18px;
+                padding: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            textarea {
+                height: 250px;
+                font-size: 16px;
+                padding: 10px;
+            }
+        }
+
+        textarea:focus {
+            border-color: #667eea;
+        }
+
+        .title-input-section {
+            margin-bottom: 20px;
+        }
+
+        .title-input-section label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .title-input-section input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 20px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .title-input-section input:focus {
+            border-color: #667eea;
+        }
+
+        .school-info-section {
+            margin-bottom: 20px;
+        }
+
+        .school-info-section label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .school-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+
+        @media (max-width: 480px) {
+            .school-info-grid {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-item label {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .info-item input {
+            padding: 8px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .info-item input:focus {
+            border-color: #667eea;
+        }
+
+        .color-selection {
+            margin-bottom: 20px;
+        }
+
+        .color-selection label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .color-options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 480px) {
+            .color-options {
+                gap: 8px;
+            }
+        }
+
+        .color-option {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 8px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .color-option:hover {
+            background: #f7fafc;
+        }
+
+        .color-option.active {
+            border-color: #667eea;
+            background: #edf2f7;
+        }
+
+        .color-option input[type="radio"] {
+            margin: 0;
+        }
+
+        .color-option span {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .follow-mode-section {
+            margin-bottom: 20px;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        .checkbox-container input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .instructions {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #4a5568;
+        }
+
+        .preview-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .preview-content {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            max-width: 210mm;
+            margin: 0 auto;
+        }
+
+        .worksheet {
+            width: 210mm;
+            height: 297mm;
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            padding: 15px 5px;
+            position: relative;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1), 0 6px 20px rgba(0,0,0,0.1);
+            border-radius: 2px;
+            transform: scale(0.95);
+            transform-origin: top center;
+        }
+
+        @media (max-width: 1024px) {
+            .worksheet {
+                transform: scale(0.85);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .worksheet {
+                transform: scale(0.75);
+                width: 100%;
+                max-width: 210mm;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .worksheet {
+                transform: scale(0.55);
+                margin: -40px auto;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .worksheet {
+                transform: scale(0.5);
+                margin: -50px auto;
+            }
+        }
+
+
+
+        .worksheet-header {
+            margin-bottom: 30px;
+            margin-top: 21px;
+            padding: 0 25px;
+        }
+
+        .title-row {
+            width: 100%;
+            padding: 15px 0;
+            border-top: 3px solid #2d3748;
+            border-bottom: 4px double #2d3748;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: flex-end;
+            align-items: flex-start;
+            padding: 0 10px;
+        }
+
+        .info-section {
+            text-align: right;
+        }
+
+        .worksheet-title {
+            font-size: 36px;
+            font-weight: bold;
+            color: #2d3748;
+            text-align: center;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .worksheet-title.long {
+            font-size: 32px;
+        }
+
+        .worksheet-title.very-long {
+            font-size: 28px;
+        }
+
+        .school-info {
+            font-size: 16px;
+            color: #4a5568;
+            line-height: 1.4;
+            text-align: right;
+            margin-bottom: 8px;
+        }
+
+        .name-line {
+            font-size: 16px;
+            color: #4a5568;
+            text-align: right;
+        }
+
+        .name-underline {
+            display: inline-block;
+            border-bottom: 2px solid #2d3748;
+            width: 120px;
+            height: 20px;
+            margin-left: 10px;
+        }
+
+        .words-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+            padding: 0 20px;
+        }
+
+        @media (max-width: 768px) {
+            .words-container {
+                padding: 0 15px;
+                gap: 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .words-container {
+                grid-template-columns: repeat(2, 1fr);
+                padding: 0 10px;
+                gap: 6px;
+            }
+        }
+
+        .word-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: #f9f9f9;
+            text-align: center;
+        }
+
+        .word-image {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            font-size: 60px;
+        }
+
+        .word-text {
+            width: 100%;
+        }
+
+
+
+        .word-grid {
+            display: flex;
+            justify-content: center;
+            gap: 0;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .letter-box {
+            width: 28px;
+            height: 32px;
+            border: 2px solid #2d3748;
+            border-right: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            background: white;
+            color: #2d3748;
+            font-family: 'HakgyoansimBareunbatangR', 'Nanum Pen Script', cursive;
+            text-align: center;
+            position: relative;
+        }
+
+        .letter-box:last-child {
+            border-right: 2px solid #2d3748;
+        }
+
+        .letter-box.blue-line::before,
+        .letter-box.blue-line::after {
+            content: '';
+            position: absolute;
+            border: 1px dotted #3182ce;
+        }
+
+        .letter-box.blue-line::before {
+            top: 2px;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 1px dotted #3182ce;
+            border-right: none;
+            border-top: none;
+            border-bottom: none;
+        }
+
+        .letter-box.blue-line::after {
+            left: 2px;
+            right: 2px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-top: 1px dotted #3182ce;
+            border-bottom: none;
+            border-left: none;
+            border-right: none;
+        }
+
+        .letter-box.red-line::before,
+        .letter-box.red-line::after {
+            content: '';
+            position: absolute;
+            border: 1px dotted #e53e3e;
+        }
+
+        .letter-box.red-line::before {
+            top: 2px;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 1px dotted #e53e3e;
+            border-right: none;
+            border-top: none;
+            border-bottom: none;
+        }
+
+        .letter-box.red-line::after {
+            left: 2px;
+            right: 2px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-top: 1px dotted #e53e3e;
+            border-bottom: none;
+            border-left: none;
+            border-right: none;
+        }
+
+        .letter-box.gray-line::before,
+        .letter-box.gray-line::after {
+            content: '';
+            position: absolute;
+            border: 1px dotted #718096;
+        }
+
+        .letter-box.gray-line::before {
+            top: 2px;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 1px dotted #718096;
+            border-right: none;
+            border-top: none;
+            border-bottom: none;
+        }
+
+        .letter-box.gray-line::after {
+            left: 2px;
+            right: 2px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-top: 1px dotted #718096;
+            border-bottom: none;
+            border-left: none;
+            border-right: none;
+        }
+
+        .practice-box {
+            width: 50px;
+            height: 55px;
+            border: 2px solid #2d3748;
+            border-right: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            background: white;
+            color: #a0aec0;
+            font-family: 'HakgyoansimBareunbatangR', 'Nanum Pen Script', cursive;
+            text-align: center;
+            position: relative;
+        }
+
+        .practice-box:last-child {
+            border-right: 2px solid #2d3748;
+        }
+
+        .practice-box.blue-line::before,
+        .practice-box.blue-line::after {
+            content: '';
+            position: absolute;
+            border: 1px dotted #3182ce;
+        }
+
+        .practice-box.blue-line::before {
+            top: 2px;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 1px dotted #3182ce;
+            border-right: none;
+            border-top: none;
+            border-bottom: none;
+        }
+
+        .practice-box.blue-line::after {
+            left: 2px;
+            right: 2px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-top: 1px dotted #3182ce;
+            border-bottom: none;
+            border-left: none;
+            border-right: none;
+        }
+
+        .practice-box.red-line::before,
+        .practice-box.red-line::after {
+            content: '';
+            position: absolute;
+            border: 1px dotted #e53e3e;
+        }
+
+        .practice-box.red-line::before {
+            top: 2px;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 1px dotted #e53e3e;
+            border-right: none;
+            border-top: none;
+            border-bottom: none;
+        }
+
+        .practice-box.red-line::after {
+            left: 2px;
+            right: 2px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-top: 1px dotted #e53e3e;
+            border-bottom: none;
+            border-left: none;
+            border-right: none;
+        }
+
+        .practice-box.gray-line::before,
+        .practice-box.gray-line::after {
+            content: '';
+            position: absolute;
+            border: 1px dotted #718096;
+        }
+
+        .practice-box.gray-line::before {
+            top: 2px;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 1px dotted #718096;
+            border-right: none;
+            border-top: none;
+            border-bottom: none;
+        }
+
+        .practice-box.gray-line::after {
+            left: 2px;
+            right: 2px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-top: 1px dotted #718096;
+            border-bottom: none;
+            border-left: none;
+            border-right: none;
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            flex: 1;
+            min-width: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                gap: 8px;
+                margin-top: 15px;
+            }
+
+            .btn {
+                padding: 10px 20px;
+                font-size: 18px;
+                min-width: 100px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .btn {
+                padding: 12px 16px;
+                font-size: 16px;
+                min-width: auto;
+                width: 100%;
+            }
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #a0aec0;
+            font-style: italic;
+            padding: 40px;
+        }
+
+
+    </style>
+
+    <style type="text/css">.another_category {
+        border: 1px solid #E5E5E5;
+        padding: 10px 10px 5px;
+        margin: 10px 0;
+        clear: both;
+    }
+
+    .another_category h4 {
+        font-size: 12px !important;
+        margin: 0 !important;
+        border-bottom: 1px solid #E5E5E5 !important;
+        padding: 2px 0 6px !important;
+    }
+
+    .another_category h4 a {
+        font-weight: bold !important;
+    }
+
+    .another_category table {
+        table-layout: fixed;
+        border-collapse: collapse;
+        width: 100% !important;
+        margin-top: 10px !important;
+    }
+
+    * html .another_category table {
+        width: auto !important;
+    }
+
+    *:first-child + html .another_category table {
+        width: auto !important;
+    }
+
+    .another_category th, .another_category td {
+        padding: 0 0 4px !important;
+    }
+
+    .another_category th {
+        text-align: left;
+        font-size: 12px !important;
+        font-weight: normal;
+        word-break: break-all;
+        overflow: hidden;
+        line-height: 1.5;
+    }
+
+    .another_category td {
+        text-align: right;
+        width: 80px;
+        font-size: 11px;
+    }
+
+    .another_category th a {
+        font-weight: normal;
+        text-decoration: none;
+        border: none !important;
+    }
+
+    .another_category th a.current {
+        font-weight: bold;
+        text-decoration: none !important;
+        border-bottom: 1px solid !important;
+    }
+
+    .another_category th span {
+        font-weight: normal;
+        text-decoration: none;
+        font: 10px Tahoma, Sans-serif;
+        border: none !important;
+    }
+
+    .another_category_color_gray, .another_category_color_gray h4 {
+        border-color: #E5E5E5 !important;
+    }
+
+    .another_category_color_gray * {
+        color: #909090 !important;
+    }
+
+    .another_category_color_gray th a.current {
+        border-color: #909090 !important;
+    }
+
+    .another_category_color_gray h4, .another_category_color_gray h4 a {
+        color: #737373 !important;
+    }
+
+    .another_category_color_red, .another_category_color_red h4 {
+        border-color: #F6D4D3 !important;
+    }
+
+    .another_category_color_red * {
+        color: #E86869 !important;
+    }
+
+    .another_category_color_red th a.current {
+        border-color: #E86869 !important;
+    }
+
+    .another_category_color_red h4, .another_category_color_red h4 a {
+        color: #ED0908 !important;
+    }
+
+    .another_category_color_green, .another_category_color_green h4 {
+        border-color: #CCE7C8 !important;
+    }
+
+    .another_category_color_green * {
+        color: #64C05B !important;
+    }
+
+    .another_category_color_green th a.current {
+        border-color: #64C05B !important;
+    }
+
+    .another_category_color_green h4, .another_category_color_green h4 a {
+        color: #3EA731 !important;
+    }
+
+    .another_category_color_blue, .another_category_color_blue h4 {
+        border-color: #C8DAF2 !important;
+    }
+
+    .another_category_color_blue * {
+        color: #477FD6 !important;
+    }
+
+    .another_category_color_blue th a.current {
+        border-color: #477FD6 !important;
+    }
+
+    .another_category_color_blue h4, .another_category_color_blue h4 a {
+        color: #1960CA !important;
+    }
+
+    .another_category_color_violet, .another_category_color_violet h4 {
+        border-color: #E1CEEC !important;
+    }
+
+    .another_category_color_violet * {
+        color: #9D64C5 !important;
+    }
+
+    .another_category_color_violet th a.current {
+        border-color: #9D64C5 !important;
+    }
+
+    .another_category_color_violet h4, .another_category_color_violet h4 a {
+        color: #7E2CB5 !important;
+    }
+    </style>
+
+
+
+
+
+</head>
+<body>
+<div class="container">
+    <div class="input-panel">
+        <h1>📝 낱말 글씨 쓰기 학습지</h1>
+        <p style="text-align: center; font-size: 12px; color: #718096; margin-top: -10px; margin-bottom: 20px;">- Made by SmartRee with Canva -</p>
+        <div class="title-input-section">
+            <label for="worksheetTitle">학습지 제목:</label>
+            <input
+                    type="text"
+                    id="worksheetTitle"
+                    placeholder="학습지 이름을 입력하세요 (비워두면 '낱말 글씨 쓰기 학습지'로 표시)"
+                    maxlength="50"
+            />
+        </div>
+        <div class="school-info-section">
+            <label>학교 정보:</label>
+            <div class="school-info-grid">
+                <div class="info-item">
+                    <label for="schoolName">학교: (예) 한국초</label>
+                    <input type="text" id="schoolName" placeholder="○○초" maxlength="20">
+                </div>
+                <div class="info-item">
+                    <label for="grade">학년:</label>
+                    <input type="number" id="grade" placeholder="1" min="1" max="6">
+                </div>
+                <div class="info-item">
+                    <label for="classNum">반:</label>
+                    <input type="number" id="classNum" placeholder="1" min="1" max="20">
+                </div>
+            </div>
+        </div>
+        <div class="color-selection">
+            <label>점선 색상:</label>
+            <div class="color-options">
+                <label class="color-option active">
+                    <input type="radio" name="lineColor" value="blue" checked>
+                    <span style="color: #3182ce;">● 파란색</span>
+                </label>
+                <label class="color-option">
+                    <input type="radio" name="lineColor" value="red">
+                    <span style="color: #e53e3e;">● 빨간색</span>
+                </label>
+                <label class="color-option">
+                    <input type="radio" name="lineColor" value="gray">
+                    <span style="color: #718096;">● 회색</span>
+                </label>
+            </div>
+        </div>
+        <div class="follow-mode-section">
+            <label class="checkbox-container">
+                <input type="checkbox" id="followMode">
+                <span class="checkmark"></span>
+                따라쓰기 모드 (연습칸에 회색 글자 표시)
+            </label>
+        </div>
+        <div class="follow-mode-section">
+            <label class="checkbox-container">
+                <input type="checkbox" id="drawingMode">
+                <span class="checkmark"></span>
+                그리기 모드 (그림 없이 빈 칸으로 표시)
+            </label>
+        </div>
+        <div class="instructions">
+            💡 각 줄에 하나씩 낱말을 입력하세요 (최대 12개). 엔터키로 다음 줄로 이동합니다.
+        </div>
+        <div class="input-area">
+                <textarea
+                        id="wordInput"
+                        placeholder="예시:&#10;사과&#10;바나나&#10;고양이&#10;강아지&#10;자동차&#10;비행기"
+                        maxlength="500"
+                ></textarea>
+            <div class="controls" style="margin-top: 15px;">
+                <button class="btn btn-primary" onclick="generatePreview()">🔄 미리보기 생성</button>
+                <button class="btn btn-secondary" onclick="clearInput()">🗑️ 초기화</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="preview-panel">
+        <div class="preview-area">
+            <div class="preview-content" id="previewContent">
+                <div class="worksheet">
+                    <div class="worksheet-title">낱말 학습지</div>
+                    <div class="empty-state">
+                        왼쪽에 낱말을 입력하고 '미리보기 생성' 버튼을 클릭하세요
+                    </div>
+                </div>
+            </div>
+            <div class="controls" style="margin-top: 5px; text-align: center;">
+                <button class="btn btn-secondary" onclick="downloadPDF()">📄 PDF 다운로드</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 초등학생 필수 어휘 체계적 이모지 매핑 (중복 제거)
+    const clipartMap = {
+        // 1. 감정과 기분 (Emotions & Feelings)
+        '기쁨': '😄', '기쁘다': '😄',
+        '슬픔': '😢', '슬프다': '😢',
+        '화남': '😠', '화나다': '😠', '화': '😠',
+        '놀람': '😲', '놀라다': '😲',
+        '무서움': '😱', '무섭다': '😱', '두려움': '😱',
+        '사랑': '❤️', '좋아하다': '❤️',
+        '웃음': '😊', '웃다': '😊',
+        '울음': '😭', '울다': '😭',
+        '피곤': '🥱', '피곤하다': '🥱',
+        '졸림': '😴', '졸리다': '😴', '잠': '😴',
+        '행복': '😁', '행복하다': '😁',
+        '당황': '😳', '당황하다': '😳',
+        '자랑': '😌', '자랑하다': '😌',
+        '부끄러움': '😅', '부끄럽다': '😅',
+        '걱정': '😟', '걱정하다': '😟',
+        '실망': '😞', '실망하다': '😞',
+        '짜증': '😒', '짜증나다': '😒',
+        '감사': '🙏', '고맙다': '🙏',
+        '용기': '💪', '용감하다': '💪',
+        '친절': '🤝', '친절하다': '🤝',
+        '미안': '🙇', '미안하다': '🙇',
+        '신나다': '🤩',
+        '심심하다': '😑',
+        '부럽다': '😍',
+
+        // 2. 가족과 사람 (Family & People)
+        '아빠': '👨', '아버지': '👨',
+        '엄마': '👩', '어머니': '👩',
+        '할아버지': '👴',
+        '할머니': '👵',
+        '형': '👦',
+        '누나': '👧',
+        '오빠': '🧑',
+        '언니': '👱‍♀️',
+        '동생': '👶',
+        '친구': '👫',
+        '선생님': '🧑‍🏫',
+        '아기': '👼',
+        '사람': '🧑‍🤝‍🧑',
+        '남자': '👨‍🦱',
+        '여자': '👩‍🦱',
+        '어른': '🧑‍💼',
+        '아이': '🧒',
+
+        // 3. 학교와 교육 (School & Education)
+        '학교': '🏫',
+        '교실': '🏢',
+        '책상': '🪑',
+        '의자': '💺',
+        '칠판': '⬛',
+        '분필': '🖍️',
+        '책': '📖',
+        '공책': '📒',
+        '연필': '✏️',
+        '지우개': '🧽',
+        '자': '📏',
+        '필통': '📦',
+        '가방': '🎒',
+        '시험': '📝',
+        '숙제': '📋',
+        '공부': '📚',
+        '수업': '👨‍🏫',
+        '도서관': '📚',
+        '운동장': '🏟️',
+        '급식': '🍽️',
+        '방학': '🏖️',
+        '졸업': '🎓',
+
+        // 4. 신체와 건강 (Body & Health)
+        '머리': '🧠',
+        '얼굴': '🙂',
+        '눈': '👀',
+        '코': '👃',
+        '입': '👄',
+        '귀': '👂',
+        '손': '🖐️',
+        '발': '🦶',
+        '다리': '🦵',
+        '팔': '💪',
+        '이': '🦷',
+        '목': '🗣️',
+        '배': '🤰',
+        '등': '🫸',
+        '양치': '🪥',
+        '목욕': '🛁',
+        '약': '💊',
+        '병원': '🏥',
+        '마스크': '😷',
+        '운동': '🏃',
+        '상처': '🤕',
+        '건강': '💚',
+        '아프다': '🤒',
+
+        // 5. 집과 일상생활 (Home & Daily Life)
+        '집': '🏠',
+        '방': '🛏️',
+        '거실': '🛋️',
+        '부엌': '🍳',
+        '욕실': '🚿',
+        '화장실': '🚽',
+        '문': '🚪',
+        '창문': '🪟',
+        '침대': '🛌',
+        '식탁': '🍽️',
+        '옷장': '👗',
+        '전화기': '☎️',
+        '냉장고': '🧊',
+        '세탁기': '🧺',
+        '청소': '🧹',
+        '커튼': '🪟',
+        '텔레비전': '📺',
+        '컴퓨터': '💻',
+        '우산': '☂️',
+        '컵': '🥤',
+        '그릇': '🥣',
+        '접시': '🍽️',
+        '수건': '🏊',
+
+        // 6. 음식과 식사 (Food & Meals)
+        '밥': '🍚',
+        '국': '🍲',
+        '빵': '🍞',
+        '라면': '🍜',
+        '김밥': '🍙',
+        '떡': '🥟',
+        '사과': '🍎',
+        '바나나': '🍌',
+        '포도': '🍇',
+        '귤': '🍊',
+        '딸기': '🍓',
+        '수박': '🍉',
+        '감자': '🥔',
+        '당근': '🥕',
+        '계란': '🥚',
+        '치킨': '🍗',
+        '우유': '🥛',
+        '주스': '🧃',
+        '물': '💧',
+        '과자': '🍪',
+        '아이스크림': '🍦',
+        '케이크': '🍰',
+        '피자': '🍕',
+        '햄버거': '🍔',
+        '포크': '🍴',
+        '젓가락': '🥢',
+        '숟가락': '🥄',
+        '김치': '🥬',
+        '생선': '🐟',
+        '고기': '🥩',
+        '야채': '🥗',
+        '과일': '🍒',
+
+        // 7. 동물 (Animals)
+        '강아지': '🐶',
+        '고양이': '🐱',
+        '토끼': '🐰',
+        '말': '🐴',
+        '소': '🐮',
+        '돼지': '🐷',
+        '양': '🐑',
+        '닭': '🐔',
+        '오리': '🦆',
+        '사자': '🦁',
+        '호랑이': '🐯',
+        '코끼리': '🐘',
+        '원숭이': '🐵',
+        '거북이': '🐢',
+        '물고기': '🐟',
+        '펭귄': '🐧',
+        '개구리': '🐸',
+        '쥐': '🐭',
+        '여우': '🦊',
+        '곰': '🐻',
+        '나비': '🦋',
+        '사슴': '🦌',
+        '고래': '🐋',
+        '벌': '🐝',
+        '새': '🐦',
+        '뱀': '🐍',
+        '거미': '🕷️',
+        '개미': '🐜',
+        '물개': '🦭',
+        '악어': '🐊',
+
+        // 8. 식물과 자연 (Plants & Nature)
+        '꽃': '🌸',
+        '나무': '🌳',
+        '풀': '🌱',
+        '잎': '🍃',
+        '씨앗': '🌰',
+        '해바라기': '🌻',
+        '선인장': '🌵',
+        '버섯': '🍄',
+        '덩굴': '🌿',
+        '장미': '🌹',
+        '튤립': '🌷',
+        '민들레': '🌼',
+        '소나무': '🌲',
+        '대나무': '🎋',
+
+        // 9. 계절과 날씨 (Seasons & Weather)
+        '봄': '🌸',
+        '여름': '☀️',
+        '가을': '🍂',
+        '겨울': '❄️',
+        '해': '🌞',
+        '달': '🌙',
+        '별': '⭐',
+        '비': '🌧️',
+        '눈': '🌨️',
+        '구름': '☁️',
+        '안개': '🌫️',
+        '번개': '⚡',
+        '바람': '💨',
+        '무지개': '🌈',
+        '태풍': '🌀',
+        '천둥': '⛈️',
+
+        // 10. 장소 (Places)
+        '공원': '🏞️',
+        '마트': '🏬',
+        '시장': '🏪',
+        '놀이터': '🎠',
+        '은행': '🏦',
+        '영화관': '🎦',
+        '동물원': '🦓',
+        '박물관': '🏛️',
+        '서점': '📚',
+        '카페': '☕',
+        '우체국': '🏤',
+        '소방서': '🚒',
+        '경찰서': '🚓',
+        '주차장': '🅿️',
+        '바다': '🌊',
+        '산': '⛰️',
+        '강': '🏞️',
+        '호수': '🏔️',
+        '해변': '🏖️',
+        '섬': '🏝️',
+
+        // 11. 교통수단 (Transportation)
+        '자동차': '🚗',
+        '버스': '🚌',
+        '기차': '🚆',
+        '자전거': '🚲',
+        '오토바이': '🏍️',
+        '트럭': '🚚',
+        '지하철': '🚇',
+        '비행기': '✈️',
+        '배': '⛴️',
+        '스쿨버스': '🚍',
+        '택시': '🚕',
+        '구급차': '🚑',
+        '헬리콥터': '🚁',
+        '로켓': '🚀',
+
+        // 12. 숫자와 시간 (Numbers & Time)
+        '하나': '1️⃣', '일': '1️⃣',
+        '둘': '2️⃣', '이': '2️⃣',
+        '셋': '3️⃣', '삼': '3️⃣',
+        '넷': '4️⃣', '사': '4️⃣',
+        '다섯': '5️⃣', '오': '5️⃣',
+        '여섯': '6️⃣', '육': '6️⃣',
+        '일곱': '7️⃣', '칠': '7️⃣',
+        '여덟': '8️⃣', '팔': '8️⃣',
+        '아홉': '9️⃣', '구': '9️⃣',
+        '열': '🔟', '십': '🔟',
+        '백': '💯',
+        '천': '🔢',
+        '수학': '➗',
+        '계산': '➕',
+        '더하기': '➕',
+        '빼기': '➖',
+        '곱하기': '✖️',
+        '나누기': '➗',
+        '요일': '📅',
+        '월요일': '📅',
+        '화요일': '📅',
+        '수요일': '📅',
+        '목요일': '📅',
+        '금요일': '📅',
+        '토요일': '📅',
+        '일요일': '📅',
+        '아침': '🌅',
+        '점심': '🌞',
+        '저녁': '🌇',
+        '밤': '🌃',
+        '어제': '⏪',
+        '오늘': '📍',
+        '내일': '⏩',
+        '시계': '⏰',
+        '달력': '📆',
+        '시간': '⏱️',
+        '분': '⏲️',
+        '초': '⏳',
+
+        // 13. 색깔과 모양 (Colors & Shapes)
+        '빨강': '🔴', '빨간색': '🔴',
+        '파랑': '🔵', '파란색': '🔵',
+        '노랑': '🟡', '노란색': '🟡',
+        '초록': '🟢', '초록색': '🟢',
+        '주황': '🟠', '주황색': '🟠',
+        '보라': '🟣', '보라색': '🟣',
+        '분홍': '🩷', '분홍색': '🩷',
+        '검정': '⚫', '검은색': '⚫',
+        '하양': '⚪', '하얀색': '⚪',
+        '회색': '🔘',
+        '갈색': '🟤',
+        '동그라미': '⭕',
+        '네모': '⬜',
+        '세모': '🔺',
+        '별': '⭐',
+        '하트': '💖',
+        '다이아몬드': '💎',
+
+        // 14. 동작과 행동 (Actions & Behaviors)
+        '걷다': '🚶',
+        '달리다': '🏃',
+        '뛰다': '🏃‍♂️',
+        '자다': '🛌',
+        '앉다': '🪑',
+        '서다': '🧍',
+        '먹다': '🍽️',
+        '마시다': '🥤',
+        '읽다': '📖',
+        '쓰다': '✍️',
+        '말하다': '🗣️',
+        '듣다': '👂',
+        '보다': '👀',
+        '그리다': '🎨',
+        '춤추다': '💃',
+        '노래하다': '🎤',
+        '공부하다': '📚',
+        '청소하다': '🧹',
+        '게임하다': '🎮',
+        '전화하다': '☎️',
+        '만들다': '🛠️',
+        '배우다': '🧑‍🏫',
+        '도와주다': '🤲',
+        '놀다': '🤹',
+        '기다리다': '⏳',
+        '포기하다': '🙅',
+        '기억하다': '🧠',
+        '생각하다': '💭',
+        '일어나다': '⏰',
+        '씻다': '🧼',
+        '입다': '👕',
+        '벗다': '👔',
+
+        // 15. 직업 (Jobs & Occupations)
+        '경찰관': '👮',
+        '소방관': '👨‍🚒',
+        '의사': '👩‍⚕️',
+        '간호사': '👩‍⚕️',
+        '운전사': '👨‍✈️',
+        '요리사': '👨‍🍳',
+        '농부': '👨‍🌾',
+        '가수': '🎤',
+        '화가': '🧑‍🎨',
+        '배우': '🎭',
+        '과학자': '🧑‍🔬',
+        '기술자': '🧑‍🔧',
+        '운동선수': '🤾',
+        '회사원': '💼',
+        '우체국직원': '📮',
+        '판매원': '🛒',
+        '기자': '📰',
+        '변호사': '⚖️',
+
+        // 16. 명절과 행사 (Holidays & Events)
+        '설날': '🧧',
+        '추석': '🌕',
+        '생일': '🎂',
+        '크리스마스': '🎄',
+        '어린이날': '🎈',
+        '할로윈': '🎃',
+        '발렌타인데이': '💝',
+        '소풍': '🌳',
+        '체육대회': '🏅',
+        '졸업식': '🎓',
+        '입학식': '🎒',
+        '운동회': '🏃‍♀️',
+
+        // 17. 문화와 예술 (Culture & Arts)
+        '노래': '🎶',
+        '그림': '🖼️',
+        '춤': '🩰',
+        '영화': '🎬',
+        '만화': '📚',
+        '연필화': '✏️',
+        '서예': '🖋️',
+        '피아노': '🎹',
+        '기타': '🎸',
+        '바이올린': '🎻',
+        '드럼': '🥁',
+        '연극': '🎭',
+        '사진': '📷',
+        '전시회': '🏺',
+        '콘서트': '🎵',
+
+        // 18. 스포츠와 놀이 (Sports & Games)
+        '축구': '⚽',
+        '야구': '⚾',
+        '농구': '🏀',
+        '배구': '🏐',
+        '테니스': '🎾',
+        '탁구': '🏓',
+        '수영': '🏊',
+        '태권도': '🥋',
+        '줄넘기': '🪢',
+        '그네': '🎠',
+        '미끄럼틀': '🛝',
+        '시소': '⚖️',
+        '블록': '🧱',
+        '퍼즐': '🧩',
+        '인형': '🪆',
+
+        // 19. 도구와 물건 (Tools & Objects)
+        '가위': '✂️',
+        '풀': '🧴',
+        '테이프': '📼',
+        '못': '🔨',
+        '망치': '🔨',
+        '드라이버': '🪛',
+        '열쇠': '🔑',
+        '자물쇠': '🔒',
+        '거울': '🪞',
+        '빗': '🪮',
+        '칫솔': '🪥',
+        '비누': '🧼',
+        '휴지': '🧻',
+        '쓰레기통': '🗑️',
+
+        // 20. 의복 (Clothing)
+        '옷': '👕',
+        '바지': '👖',
+        '치마': '👗',
+        '신발': '👟',
+        '양말': '🧦',
+        '모자': '👒',
+        '장갑': '🧤',
+        '목도리': '🧣',
+        '코트': '🧥',
+        '잠옷': '👘',
+        '속옷': '👙',
+        '안경': '👓',
+
+        // 기본값
+        'default': '📝'
+    };
+
+    function getClipart(word) {
+        // 정확한 매칭 먼저 시도
+        if (clipartMap[word]) {
+            return clipartMap[word];
+        }
+
+        // 부분 매칭 시도
+        for (let key in clipartMap) {
+            if (word.includes(key) || key.includes(word)) {
+                return clipartMap[key];
+            }
+        }
+
+        return clipartMap['default'];
+    }
+
+    function createLetterBoxes(word, lineColor = 'blue') {
+        return word.split('').map(letter =>
+            `<div class="letter-box ${lineColor}-line">${letter}</div>`
+        ).join('');
+    }
+
+    function createPracticeBoxes(word, lineColor = 'blue', showLetters = false) {
+        return word.split('').map(letter =>
+            `<div class="practice-box ${lineColor}-line">${showLetters ? letter : ''}</div>`
+        ).join('');
+    }
+
+    function generatePreview() {
+        const input = document.getElementById('wordInput').value.trim();
+        const words = input.split('\n')
+        .map(word => word.trim())
+        .filter(word => word.length > 0)
+        .slice(0, 12); // 최대 12개로 제한
+
+        const previewContent = document.getElementById('previewContent');
+
+        if (words.length === 0) {
+            previewContent.innerHTML = `
+                    <div class="worksheet">
+                        <div class="worksheet-header">
+                            <div class="title-row">
+                                <div class="worksheet-title">낱말 글씨 쓰기 학습지</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-section">
+                                    <div class="school-info">00초 0학년 0반 (　　)번</div>
+                                    <div class="name-line">이름: <span class="name-underline"></span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="empty-state">
+                            왼쪽에 낱말을 입력하고 '미리보기 생성' 버튼을 클릭하세요
+                        </div>
+                    </div>
+                `;
+            return;
+        }
+
+        const selectedColor = document.querySelector('input[name="lineColor"]:checked').value;
+        const followMode = document.getElementById('followMode').checked;
+        const drawingMode = document.getElementById('drawingMode').checked;
+
+        const wordItems = words.map(word => `
+                <div class="word-item">
+                    <div class="word-image">${drawingMode ? '' : getClipart(word)}</div>
+                    <div class="word-text">
+                        <div class="word-grid">
+                            ${createPracticeBoxes(word, selectedColor, followMode || drawingMode)}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+        const worksheetTitle = document.getElementById('worksheetTitle').value.trim() || '낱말 글씨 쓰기 학습지';
+
+        const schoolName = document.getElementById('schoolName').value.trim();
+        const grade = document.getElementById('grade').value.trim();
+        const classNum = document.getElementById('classNum').value.trim();
+
+        let schoolInfoText = '';
+        const displaySchool = schoolName || '00초';
+        const displayGrade = grade || '0';
+        const displayClass = classNum || '0';
+        schoolInfoText = `${displaySchool} ${displayGrade}학년 ${displayClass}반 (　　)번`;
+
+        // 제목 길이에 따른 클래스 결정
+        let titleClass = 'worksheet-title';
+        if (worksheetTitle.length > 15) {
+            titleClass += ' very-long';
+        } else if (worksheetTitle.length > 10) {
+            titleClass += ' long';
+        }
+
+        previewContent.innerHTML = `
+                <div class="worksheet" id="worksheet">
+                    <div class="worksheet-header">
+                        <div class="title-row">
+                            <div class="${titleClass}">${worksheetTitle}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-section">
+                                <div class="school-info">${schoolInfoText}</div>
+                                <div class="name-line">이름: <span class="name-underline"></span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="words-container">
+                        ${wordItems}
+                    </div>
+                </div>
+            `;
+    }
+
+    function clearInput() {
+        document.getElementById('wordInput').value = '';
+        generatePreview();
+    }
+
+    function downloadPDF() {
+        const worksheet = document.getElementById('worksheet');
+        if (!worksheet) {
+            alert('먼저 미리보기를 생성해주세요!');
+            return;
+        }
+
+        // PDF 생성을 위해 임시로 스케일 제거
+        worksheet.style.transform = 'scale(1)';
+        worksheet.style.transformOrigin = 'top left';
+
+        const opt = {
+            margin: [10, 10, 10, 10],
+            filename: '낱말학습지.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: {
+                scale: 1.5,
+                useCORS: true,
+                letterRendering: true,
+                width: 794,
+                height: 1123,
+                scrollX: 0,
+                scrollY: 0
+            },
+            jsPDF: {
+                unit: 'pt',
+                format: 'a4',
+                orientation: 'portrait'
+            },
+            pagebreak: { mode: 'avoid-all' }
+        };
+
+        html2pdf().set(opt).from(worksheet).save().then(() => {
+            // PDF 생성 후 원래 스케일로 복원
+            worksheet.style.transform = 'scale(0.95)';
+            worksheet.style.transformOrigin = 'top center';
+        });
+
+
+    }
+
+    // 입력창에서 엔터키 처리
+    document.getElementById('wordInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            const lines = this.value.split('\n');
+            if (lines.length >= 12) {
+                e.preventDefault();
+                alert('최대 12개의 낱말까지 입력할 수 있습니다.');
+            }
+        }
+    });
+
+    // 실시간 미리보기 업데이트
+    document.getElementById('wordInput').addEventListener('input', function() {
+        generatePreview();
+    });
+
+    // 제목 입력 실시간 업데이트
+    document.getElementById('worksheetTitle').addEventListener('input', function() {
+        generatePreview();
+    });
+
+    // 학교 정보 실시간 업데이트
+    ['schoolName', 'grade', 'classNum'].forEach(id => {
+        document.getElementById(id).addEventListener('input', function() {
+            generatePreview();
+        });
+    });
+
+    // 색상 선택 이벤트 리스너
+    document.querySelectorAll('input[name="lineColor"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            // 활성 상태 업데이트
+            document.querySelectorAll('.color-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            this.closest('.color-option').classList.add('active');
+
+            // 미리보기 업데이트
+            generatePreview();
+        });
+    });
+
+    // 따라쓰기 모드 이벤트 리스너
+    document.getElementById('followMode').addEventListener('change', function() {
+        generatePreview();
+    });
+
+    // 그리기 모드 이벤트 리스너
+    document.getElementById('drawingMode').addEventListener('change', function() {
+        generatePreview();
+    });
+
+    // 초기 미리보기 생성
+    generatePreview();
+</script>
+
+
+</body>
+</html>

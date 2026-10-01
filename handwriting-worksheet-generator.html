@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>일일 학습지 생성기</title>
+
+    <!-- https://smartree.tistory.com/156 -->
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        /* 기본 폰트 */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap');
+
+        /* 강원교육모두체L */
+        @font-face {
+            font-family: 'GangwonEduAll';
+            src: url('https://cdn.jsdelivr.net/gh/fonts-archive/GangwonEduModu/GangwonEduModu-Light.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        /* 강원교육모두체B */
+        @font-face {
+            font-family: 'GangwonEduAllBold';
+            src: url('https://cdn.jsdelivr.net/gh/fonts-archive/GangwonEduModu/GangwonEduModu-Bold.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        /* 강원교육모둠체 */
+        @font-face {
+            font-family: 'GangwonEduGroup';
+            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2201-2@1.0/GangwonEduGroup.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        /* 학교안심받아쓰기체 */
+        @font-face {
+            font-family: 'HakgyoansimBareunbatangR';
+            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/2408-5@1.0/HakgyoansimBadasseugiTTF-L.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'HakgyoansimWoojuR';
+            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2307-2@1.0/HakgyoansimWoojuR.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        /* A4 크기 정확한 환산: 1mm = 3.7795275591px (96 DPI 기준) */
+        :root {
+            --mm-to-px: 3.7795275591;
+            --a4-width-px: 793.7007874px; /* 210mm */
+            --a4-height-px: 1122.5196850px; /* 297mm */
+            --padding-top-px: 37.795275591px; /* 10mm */
+            --padding-right-px: 56.6929133858px; /* 15mm */
+            --padding-bottom-px: 15.1181102362px; /* 4mm */
+            --padding-left-px: 56.6929133858px; /* 15mm */
+        }
+
+        @media print {
+            body {
+                width: 210mm;
+                height: 297mm;
+                margin: 0;
+                padding: 0;
+                background: white !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .print-only {
+                display: block !important;
+            }
+
+            .worksheet {
+                border: 1px solid #000;
+                width: 210mm !important;
+                height: 297mm !important;
+                max-width: none !important;
+                aspect-ratio: auto !important;
+                padding: 10mm 15mm 4mm 15mm;
+                box-sizing: border-box;
+                margin: 0 !important;
+                transform: none !important;
+                position: relative !important;
+            }
+
+            .character {
+                font-size: 2.8rem !important;
+            }
+
+            @page {
+                size: A4;
+                margin: 0;
+            }
+        }
+
+        .worksheet {
+            width: var(--a4-width-px);
+            height: var(--a4-height-px);
+            max-width: none;
+            max-height: none;
+            border: 1px solid #000;
+            outline: none;
+            margin: 0 auto;
+            padding: var(--padding-top-px) var(--padding-right-px) var(--padding-bottom-px) var(--padding-left-px);
+            box-sizing: border-box;
+            background-color: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: none;
+            border-radius: 0;
+            opacity: 1;
+            page-break-after: avoid;
+            page-break-inside: avoid;
+            page-break-before: avoid;
+        }
+
+        @media (max-width: 1023px) {
+            .worksheet {
+                width: 100%;
+                max-width: 210mm;
+                height: auto;
+                min-height: 297mm;
+                padding: 8mm 12mm 4mm 12mm;
+            }
+
+            /* 모바일에서는 기본 스크롤 유지 */
+            .no-print {
+                height: auto !important;
+                overflow: visible !important;
+            }
+        }
+
+        .print-only {
+            display: none;
+        }
+
+        .student-number {
+            display: inline-block;
+            width: 40px;
+            border-bottom: 2px solid black;
+            text-align: center;
+            margin: 0 2px;
+        }
+
+        .writing-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 0;
+            margin-top: 4px;
+            height: auto;
+            max-height: none;
+            overflow: visible;
+            page-break-inside: avoid !important;
+            page-break-after: avoid !important;
+            break-inside: avoid !important;
+            border: 3px solid #000;
+        }
+
+        @media (min-width: 1024px) {
+            .writing-grid {
+                height: auto;
+                max-height: none;
+                overflow: visible;
+            }
+        }
+
+        .writing-cell {
+            aspect-ratio: 1/1;
+            border: 1px solid #000;
+            border-top: none;
+            border-left: none;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+        }
+
+        .writing-cell:nth-child(10n) {
+            border-right: none;
+        }
+
+        .writing-cell:nth-child(n+131) {
+            border-bottom: none;
+        }
+
+        .writing-cell::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 50%;
+            height: 100%;
+            width: 2px;
+            border-left: 2px dotted #0000ff;
+            z-index: 0;
+        }
+
+        .writing-cell::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            border-top: 2px dotted #0000ff;
+            z-index: 0;
+        }
+
+        .character {
+            position: relative;
+            font-size: clamp(1.5rem, 4vw, 2.8rem);
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            line-height: 1;
+            text-align: center;
+            transform: translateY(0px);
+        }
+
+        @media (min-width: 1024px) {
+            .character {
+                font-size: 2.8rem;
+            }
+        }
+
+        @media print {
+            .character {
+                transform: translateY(0px) !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+        }
+
+        .header-section {
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+        }
+
+        /* 폰트 클래스 */
+        .font-gangwon-all {
+            font-family: 'GangwonEduAll', 'Noto Sans KR', sans-serif;
+        }
+
+        .font-gangwon-all-bold {
+            font-family: 'GangwonEduAllBold', 'Noto Sans KR', sans-serif;
+        }
+
+        .font-gangwon-group {
+            font-family: 'GangwonEduGroup', 'Noto Sans KR', sans-serif;
+        }
+
+        .font-hakgyo-ansim {
+            font-family: 'HakgyoansimBareunbatangR', 'Noto Sans KR', serif;
+        }
+
+        .font-hakgyo-wooju {
+            font-family: 'HakgyoansimWoojuR', 'Noto Sans KR', serif;
+        }
+
+        .font-nanum-gothic {
+            font-family: 'Nanum Gothic', 'Noto Sans KR', sans-serif;
+        }
+
+        .font-nanum-myeongjo {
+            font-family: 'Nanum Myeongjo', 'Noto Sans KR', serif;
+        }
+
+        .font-nanum-pen {
+            font-family: 'Nanum Pen Script', 'Noto Sans KR', cursive;
+        }
+    </style>
+
+    <style type="text/css">.another_category {
+        border: 1px solid #E5E5E5;
+        padding: 10px 10px 5px;
+        margin: 10px 0;
+        clear: both;
+    }
+
+    .another_category h4 {
+        font-size: 12px !important;
+        margin: 0 !important;
+        border-bottom: 1px solid #E5E5E5 !important;
+        padding: 2px 0 6px !important;
+    }
+
+    .another_category h4 a {
+        font-weight: bold !important;
+    }
+
+    .another_category table {
+        table-layout: fixed;
+        border-collapse: collapse;
+        width: 100% !important;
+        margin-top: 10px !important;
+    }
+
+    * html .another_category table {
+        width: auto !important;
+    }
+
+    *:first-child + html .another_category table {
+        width: auto !important;
+    }
+
+    .another_category th, .another_category td {
+        padding: 0 0 4px !important;
+    }
+
+    .another_category th {
+        text-align: left;
+        font-size: 12px !important;
+        font-weight: normal;
+        word-break: break-all;
+        overflow: hidden;
+        line-height: 1.5;
+    }
+
+    .another_category td {
+        text-align: right;
+        width: 80px;
+        font-size: 11px;
+    }
+
+    .another_category th a {
+        font-weight: normal;
+        text-decoration: none;
+        border: none !important;
+    }
+
+    .another_category th a.current {
+        font-weight: bold;
+        text-decoration: none !important;
+        border-bottom: 1px solid !important;
+    }
+
+    .another_category th span {
+        font-weight: normal;
+        text-decoration: none;
+        font: 10px Tahoma, Sans-serif;
+        border: none !important;
+    }
+
+    .another_category_color_gray, .another_category_color_gray h4 {
+        border-color: #E5E5E5 !important;
+    }
+
+    .another_category_color_gray * {
+        color: #909090 !important;
+    }
+
+    .another_category_color_gray th a.current {
+        border-color: #909090 !important;
+    }
+
+    .another_category_color_gray h4, .another_category_color_gray h4 a {
+        color: #737373 !important;
+    }
+
+    .another_category_color_red, .another_category_color_red h4 {
+        border-color: #F6D4D3 !important;
+    }
+
+    .another_category_color_red * {
+        color: #E86869 !important;
+    }
+
+    .another_category_color_red th a.current {
+        border-color: #E86869 !important;
+    }
+
+    .another_category_color_red h4, .another_category_color_red h4 a {
+        color: #ED0908 !important;
+    }
+
+    .another_category_color_green, .another_category_color_green h4 {
+        border-color: #CCE7C8 !important;
+    }
+
+    .another_category_color_green * {
+        color: #64C05B !important;
+    }
+
+    .another_category_color_green th a.current {
+        border-color: #64C05B !important;
+    }
+
+    .another_category_color_green h4, .another_category_color_green h4 a {
+        color: #3EA731 !important;
+    }
+
+    .another_category_color_blue, .another_category_color_blue h4 {
+        border-color: #C8DAF2 !important;
+    }
+
+    .another_category_color_blue * {
+        color: #477FD6 !important;
+    }
+
+    .another_category_color_blue th a.current {
+        border-color: #477FD6 !important;
+    }
+
+    .another_category_color_blue h4, .another_category_color_blue h4 a {
+        color: #1960CA !important;
+    }
+
+    .another_category_color_violet, .another_category_color_violet h4 {
+        border-color: #E1CEEC !important;
+    }
+
+    .another_category_color_violet * {
+        color: #9D64C5 !important;
+    }
+
+    .another_category_color_violet th a.current {
+        border-color: #9D64C5 !important;
+    }
+
+    .another_category_color_violet h4, .another_category_color_violet h4 a {
+        color: #7E2CB5 !important;
+    }
+    </style>
+
+
+
+
+
+
+</head>
+<body class="bg-gray-100">
+<!-- 메인 컨테이너 -->
+<div class="no-print flex flex-col lg:flex-row lg:h-screen lg:overflow-hidden">
+    <!-- 입력 폼 -->
+    <div class="lg:w-1/3 lg:flex-shrink-0 lg:h-full lg:overflow-y-auto lg:p-4">
+        <div class="max-w-md mx-auto lg:mx-0 my-8 lg:my-0 p-6 bg-white rounded-lg shadow-md">
+            <h1 class="text-2xl font-bold text-center mb-2 text-blue-600">바른 글씨 쓰기 학습지</h1>
+            <p class="text-xs text-center mb-6 text-gray-500">- Made by SmartRee with Canva -</p>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="title">
+                    학습지명(예-하루에 한장씩, 예쁜 글씨쓰기 등)
+                </label>
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="title" type="text">
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="school">
+                    초등학교명(예-한국초 등)
+                </label>
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="school" type="text">
+            </div>
+
+            <div class="flex mb-4">
+                <div class="w-1/2 pr-2">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="grade">
+                        학년
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="grade" type="number" min="1" max="6">
+                </div>
+                <div class="w-1/2 pl-2">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="class">
+                        반
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="class" type="number" min="1">
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="practice-text">
+                    낱말 또는 문장 (최대 70자)
+                </label>
+                <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="practice-text" rows="3" maxlength="70"></textarea>
+                <div class="text-right text-xs text-gray-500 mt-1">
+                    <span id="char-count">0</span>/70자
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="font-select">
+                    글씨체 선택
+                </label>
+                <select id="font-select" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <option value="font-gangwon-all">강원교육모두체L</option>
+                    <option value="font-gangwon-all-bold" selected>강원교육모두체B</option>
+                    <option value="font-gangwon-group">강원교육모둠체</option>
+                    <option value="font-hakgyo-ansim">학교안심받아쓰기체</option>
+                    <option value="font-hakgyo-wooju">학교안심우주체</option>
+                    <option value="font-nanum-gothic">나눔고딕</option>
+                    <option value="font-nanum-myeongjo">나눔명조</option>
+                    <option value="font-nanum-pen">나눔펜</option>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="text-color">
+                    글씨 색상 선택
+                </label>
+                <select id="text-color" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <option value="#000000" selected>검정색</option>
+                    <option value="#999999">회색</option>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="dotline-color">
+                    점선 색상 선택
+                </label>
+                <select id="dotline-color" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <option value="#0000ff" selected>파란색</option>
+                    <option value="#aaaaaa">회색</option>
+                    <option value="#ff0000">빨간색</option>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">
+                    따라쓰기 모드
+                </label>
+                <div class="flex items-center mb-3">
+                    <input type="checkbox" id="copy-mode" class="mr-2">
+                    <label for="copy-mode" class="text-sm text-gray-700">
+                        따라쓰기 글자 표시
+                    </label>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">
+                    한글 색상 구분
+                </label>
+                <div class="flex items-center mb-3">
+                    <input type="checkbox" id="korean-color" class="mr-2">
+                    <label for="korean-color" class="text-sm text-gray-700">
+                        자음, 모음, 받침을 색상으로 구분
+                    </label>
+                </div>
+                <div class="flex items-center mb-3">
+                    <input type="checkbox" id="korean-color-copy" class="mr-2">
+                    <label for="korean-color-copy" class="text-sm text-gray-700">
+                        따라쓰기 모드
+                    </label>
+                </div>
+
+                <div id="color-options" class="text-sm" style="display: none;">
+                    <!-- 색상 선택 -->
+                    <div class="grid grid-cols-3 gap-3 mb-4">
+                        <div>
+                            <label class="block text-gray-600 mb-1">자음 색상</label>
+                            <select id="chosung-color" class="w-full border rounded px-2 py-1 text-xs">
+                                <option value="#ff0000" selected>빨간색</option>
+                                <option value="#ff8800">주황색</option>
+                                <option value="#0000ff">파란색</option>
+                                <option value="#00ff00">초록색</option>
+                                <option value="#000000">검정색</option>
+                                <option value="transparent">투명</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-gray-600 mb-1">모음 색상</label>
+                            <select id="jungsung-color" class="w-full border rounded px-2 py-1 text-xs">
+                                <option value="#ff0000">빨간색</option>
+                                <option value="#ff8800" selected>주황색</option>
+                                <option value="#0000ff">파란색</option>
+                                <option value="#00ff00">초록색</option>
+                                <option value="#000000">검정색</option>
+                                <option value="transparent">투명</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-gray-600 mb-1">받침 색상</label>
+                            <select id="jongsung-color" class="w-full border rounded px-2 py-1 text-xs">
+                                <option value="#ff0000">빨간색</option>
+                                <option value="#ff8800">주황색</option>
+                                <option value="#0000ff" selected>파란색</option>
+                                <option value="#00ff00">초록색</option>
+                                <option value="#000000">검정색</option>
+                                <option value="transparent">투명</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 위치 조절 컨트롤 -->
+                    <div class="border-t pt-3">
+                        <div class="flex items-center mb-3">
+                            <input type="checkbox" id="position-control" class="mr-2">
+                            <label for="position-control" class="text-sm text-gray-700 font-semibold">
+                                위치 조절
+                            </label>
+                        </div>
+
+                        <div id="position-controls" style="display: none;">
+
+                            <!-- 초성 위치 조절 -->
+                            <div class="mb-4 p-3 bg-red-50 rounded">
+                                <h5 class="text-red-700 font-medium mb-2">초성 (자음) 위치</h5>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label class="block text-xs text-gray-600 mb-1">가로 위치</label>
+                                        <input type="range" id="chosung-x" min="-20" max="20" value="0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                        <div class="text-xs text-center text-gray-500 mt-1">
+                                            <span id="chosung-x-value">0</span>px
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-600 mb-1">세로 위치</label>
+                                        <input type="range" id="chosung-y" min="-20" max="20" value="0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                        <div class="text-xs text-center text-gray-500 mt-1">
+                                            <span id="chosung-y-value">0</span>px
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 중성 위치 조절 -->
+                            <div class="mb-4 p-3 bg-orange-50 rounded">
+                                <h5 class="text-orange-700 font-medium mb-2">중성 (모음) 위치</h5>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label class="block text-xs text-gray-600 mb-1">가로 위치</label>
+                                        <input type="range" id="jungsung-x" min="-20" max="20" value="0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                        <div class="text-xs text-center text-gray-500 mt-1">
+                                            <span id="jungsung-x-value">0</span>px
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-600 mb-1">세로 위치</label>
+                                        <input type="range" id="jungsung-y" min="-20" max="20" value="0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                        <div class="text-xs text-center text-gray-500 mt-1">
+                                            <span id="jungsung-y-value">0</span>px
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 종성 위치 조절 -->
+                            <div class="mb-4 p-3 bg-blue-50 rounded">
+                                <h5 class="text-blue-700 font-medium mb-2">종성 (받침) 위치</h5>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label class="block text-xs text-gray-600 mb-1">가로 위치</label>
+                                        <input type="range" id="jongsung-x" min="-20" max="20" value="0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                        <div class="text-xs text-center text-gray-500 mt-1">
+                                            <span id="jongsung-x-value">0</span>px
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-600 mb-1">세로 위치</label>
+                                        <input type="range" id="jongsung-y" min="-20" max="20" value="5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                        <div class="text-xs text-center text-gray-500 mt-1">
+                                            <span id="jongsung-y-value">5</span>px
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 리셋 버튼 -->
+                            <div class="text-center">
+                                <button id="reset-positions" class="bg-gray-500 hover:bg-gray-600 text-white text-xs px-3 py-1 rounded">
+                                    위치 초기화
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 flex justify-center">
+                <button onclick="savePDF()" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button">
+                    PDF 저장
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 학습지 미리보기 -->
+    <div id="worksheetContainer" class="lg:w-2/3 lg:flex-grow lg:h-full lg:overflow-y-auto lg:p-4 mb-8 max-w-4xl mx-auto lg:mx-0">
+        <div id="worksheet" class="worksheet lg:mx-auto">
+            <!-- 상단 부분 -->
+            <div class="flex border-b-2 border-black header-section">
+                <!-- 제목 부분 (유연한 크기) -->
+                <div class="flex-1 border-r-2 border-black pr-4 flex items-center justify-center min-w-0">
+                    <h1 id="worksheetTitle" class="text-2xl sm:text-3xl lg:text-5xl font-bold text-center break-words"></h1>
+                </div>
+
+                <!-- 학생 정보 부분 (고정 크기) -->
+                <div class="flex-shrink-0 pl-4" style="min-width: 200px;">
+                    <div class="mb-2 whitespace-nowrap">
+                        <span id="studentClass" class="text-sm sm:text-base lg:text-lg"></span>
+                        <span class="student-number">&nbsp;</span><span class="text-sm sm:text-base lg:text-lg">번</span>
+                    </div>
+                    <div class="whitespace-nowrap">
+                        <span class="text-sm sm:text-base lg:text-lg">이름: </span>
+                        <span class="inline-block w-20 sm:w-24 lg:w-32"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 학습지 내용 부분 -->
+            <div class="mt-2">
+                <div id="practice-content" class="writing-grid">
+                    <!-- 여기에 글씨 쓰기 칸이 동적으로 생성됩니다 -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 페이지 로드 시 즉시 실행되는 초기화 함수
+    function initializeWorksheet() {
+        console.log('학습지 초기화 시작...');
+
+        // 기본값 설정
+        const titleInput = document.getElementById('title');
+        const schoolInput = document.getElementById('school');
+        const gradeInput = document.getElementById('grade');
+        const classInput = document.getElementById('class');
+        const practiceTextInput = document.getElementById('practice-text');
+        const charCountSpan = document.getElementById('char-count');
+
+        // 글자 수 업데이트
+        if (charCountSpan) {
+            charCountSpan.textContent = practiceTextInput.value.length;
+        }
+
+        // 학습지 생성
+        generateWorksheet();
+
+        console.log('학습지 초기화 완료!');
+    }
+
+    // 한글 분해 함수
+    function decomposeKorean(char) {
+        const code = char.charCodeAt(0);
+
+        // 한글이 아닌 경우
+        if (code < 0xAC00 || code > 0xD7A3) {
+            return null;
+        }
+
+        const base = code - 0xAC00;
+        const chosung = Math.floor(base / 588); // 초성
+        const jungsung = Math.floor((base % 588) / 28); // 중성
+        const jongsung = base % 28; // 종성
+
+        const chosungList = ['ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
+        const jungsungList = ['ㅏ', 'ㅐ', 'ㅑ', 'ㅒ', 'ㅓ', 'ㅔ', 'ㅕ', 'ㅖ', 'ㅗ', 'ㅘ', 'ㅙ', 'ㅚ', 'ㅛ', 'ㅜ', 'ㅝ', 'ㅞ', 'ㅟ', 'ㅠ', 'ㅡ', 'ㅢ', 'ㅣ'];
+        const jongsungList = ['', 'ㄱ', 'ㄲ', 'ㄳ', 'ㄴ', 'ㄵ', 'ㄶ', 'ㄷ', 'ㄹ', 'ㄺ', 'ㄻ', 'ㄼ', 'ㄽ', 'ㄾ', 'ㄿ', 'ㅀ', 'ㅁ', 'ㅂ', 'ㅄ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
+
+        return {
+            chosung : chosungList[chosung],
+            jungsung: jungsungList[jungsung],
+            jongsung: jongsungList[jongsung]
+        };
+    }
+
+    // 한글 색상 적용 함수
+    function applyKoreanColors(char, fontClass, isGrayMode = false) {
+        const decomposed = decomposeKorean(char);
+
+        if (!decomposed) {
+            // 한글이 아닌 경우 기본 색상
+            const charElement = document.createElement('div');
+            charElement.className = `character ${fontClass}`;
+            charElement.textContent = char;
+
+            // 따라쓰기 모드일 때는 회색으로 표시
+            if (isGrayMode) {
+                charElement.style.color = '#999999';
+            }
+
+            // 마침표와 쉼표만 특별 위치 조정
+            if (char === '.' || char === ',') {
+                charElement.style.position = 'relative';
+                charElement.style.left = '-27px';
+                charElement.style.top = '12px';
+            }
+
+            return charElement;
+        }
+
+        // 선택된 색상 가져오기
+        let chosungColor = document.getElementById('chosung-color').value;
+        let jungsungColor = document.getElementById('jungsung-color').value;
+        let jongsungColor = document.getElementById('jongsung-color').value;
+
+        // 따라쓰기 모드일 때 색상 처리
+        if (isGrayMode) {
+            // 투명이 아닌 경우에만 회색으로 변경
+            if (chosungColor !== 'transparent') chosungColor = '#999999';
+            if (jungsungColor !== 'transparent') jungsungColor = '#999999';
+            if (jongsungColor !== 'transparent') jongsungColor = '#999999';
+        }
+
+        // 위치 조절 값 가져오기
+        const chosungXOffset = parseInt(document.getElementById('chosung-x').value) || 0;
+        const chosungYOffset = parseInt(document.getElementById('chosung-y').value) || 0;
+        const jungsungXOffset = parseInt(document.getElementById('jungsung-x').value) || 0;
+        const jungsungYOffset = parseInt(document.getElementById('jungsung-y').value) || 0;
+        const jongsungXOffset = parseInt(document.getElementById('jongsung-x').value) || 0;
+        const jongsungYOffset = parseInt(document.getElementById('jongsung-y').value) || 5;
+
+        const charElement = document.createElement('div');
+        charElement.className = `character ${fontClass}`;
+        charElement.style.position = 'relative';
+        charElement.style.display = 'flex';
+        charElement.style.alignItems = 'center';
+        charElement.style.justifyContent = 'center';
+
+        // 모음 타입 분류
+        const verticalVowels = ['ㅏ', 'ㅐ', 'ㅑ', 'ㅒ', 'ㅓ', 'ㅔ', 'ㅕ', 'ㅖ', 'ㅣ'];
+        const horizontalVowels = ['ㅗ', 'ㅛ', 'ㅜ', 'ㅠ', 'ㅡ'];
+        const complexVowels = ['ㅘ', 'ㅙ', 'ㅚ', 'ㅝ', 'ㅞ', 'ㅟ', 'ㅢ'];
+
+        const hasJongsung = decomposed.jongsung !== '';
+        const vowelType = verticalVowels.includes(decomposed.jungsung) ? 'vertical' :
+            horizontalVowels.includes(decomposed.jungsung) ? 'horizontal' : 'complex';
+
+        // 초성 (자음) 위치 설정
+        const chosungSpan = document.createElement('span');
+        chosungSpan.textContent = decomposed.chosung;
+        chosungSpan.style.color = chosungColor;
+        chosungSpan.style.position = 'absolute';
+        chosungSpan.style.fontSize = '0.85em';
+        chosungSpan.style.fontWeight = 'bold';
+
+        // 중성 (모음) 위치 설정
+        const jungsungSpan = document.createElement('span');
+        jungsungSpan.textContent = decomposed.jungsung;
+        jungsungSpan.style.color = jungsungColor;
+        jungsungSpan.style.position = 'absolute';
+        jungsungSpan.style.fontSize = '0.85em';
+        jungsungSpan.style.fontWeight = 'bold';
+
+        // ㅗ, ㅛ, ㅡ의 경우 2px 아래로 이동
+        const needsLowerPosition = ['ㅗ', 'ㅛ', 'ㅡ'].includes(decomposed.jungsung);
+
+        // 받침 유무와 모음 타입에 따른 기본 위치 조정
+        if (vowelType === 'vertical') {
+            // 세로 모음 (ㅏㅑㅓㅕㅣ)
+            if (hasJongsung) {
+                chosungSpan.style.left = `calc(30% + ${chosungXOffset}px)`;
+                chosungSpan.style.top = `calc(25% + ${chosungYOffset}px)`;
+                chosungSpan.style.transform = 'translate(-50%, -50%)';
+                jungsungSpan.style.right = `calc(30% - ${jungsungXOffset}px)`;
+                jungsungSpan.style.top = `calc(25% + ${jungsungYOffset}px)`;
+                jungsungSpan.style.transform = 'translate(50%, -50%)';
+            } else {
+                // 받침이 없는 세로 모음: 자음은 오른쪽으로 2px, 위로 2px, 모음은 왼쪽으로 6px, 위로 2px
+                chosungSpan.style.left = `calc(30% + ${chosungXOffset + 2}px)`;
+                chosungSpan.style.top = `calc(50% + ${chosungYOffset - 2}px)`;
+                chosungSpan.style.transform = 'translate(-50%, -50%)';
+                jungsungSpan.style.right = `calc(30% - ${jungsungXOffset - 6}px)`;
+                jungsungSpan.style.top = `calc(50% + ${jungsungYOffset - 2}px)`;
+                jungsungSpan.style.transform = 'translate(50%, -50%)';
+            }
+        } else if (vowelType === 'horizontal') {
+            // 가로 모음
+            if (hasJongsung) {
+                // 받침이 있는 가로 모음별 특별 조정
+                let chosungExtraYOffset = 0;
+                let jungsungExtraYOffset = 0;
+
+                if (['ㅗ', 'ㅛ'].includes(decomposed.jungsung)) {
+                    // 받침이 있는 ㅗㅛ: 자음 위로 3px, 모음 아래로 1px
+                    chosungExtraYOffset = -3;
+                    jungsungExtraYOffset = 1;
+                } else if (['ㅜ', 'ㅠ'].includes(decomposed.jungsung)) {
+                    // 받침이 있는 ㅜㅠ: 자음 위로 3px, 모음 아래로 4px
+                    chosungExtraYOffset = -3;
+                    jungsungExtraYOffset = 4;
+                }
+
+                chosungSpan.style.left = `calc(50% + ${chosungXOffset}px)`;
+                chosungSpan.style.top = `calc(25% + ${chosungYOffset + chosungExtraYOffset}px)`;
+                chosungSpan.style.transform = 'translate(-50%, -50%)';
+
+                // 받침이 있는 ㅡ 모음의 경우 아래로 3px 추가 이동
+                let baseTop = needsLowerPosition ? 42 : 40;
+                let extraYOffset = 0;
+                if (decomposed.jungsung === 'ㅡ') {
+                    extraYOffset = 3;
+                }
+
+                jungsungSpan.style.left = `calc(50% + ${jungsungXOffset}px)`;
+                jungsungSpan.style.top = `calc(${baseTop}% + ${jungsungYOffset + extraYOffset + jungsungExtraYOffset}px)`;
+                jungsungSpan.style.transform = 'translate(-50%, -50%)';
+            } else {
+                chosungSpan.style.left = `calc(50% + ${chosungXOffset}px)`;
+                chosungSpan.style.top = `calc(35% + ${chosungYOffset}px)`;
+                chosungSpan.style.transform = 'translate(-50%, -50%)';
+
+                // 받침이 없는 가로 모음별 특별 조정
+                let baseTop = needsLowerPosition ? 67 : 65;
+                let extraXOffset = 0;
+                let extraYOffset = 0;
+
+                if (['ㅗ', 'ㅛ'].includes(decomposed.jungsung)) {
+                    // ㅗㅛ: 왼쪽 1px, 위로 4px
+                    extraXOffset = -1;
+                    extraYOffset = -4;
+                } else if (['ㅜ', 'ㅠ'].includes(decomposed.jungsung)) {
+                    // ㅜㅠ: 위로 2px
+                    extraYOffset = -2;
+                }
+
+                jungsungSpan.style.left = `calc(50% + ${jungsungXOffset + extraXOffset}px)`;
+                jungsungSpan.style.top = `calc(${baseTop}% + ${jungsungYOffset + extraYOffset}px)`;
+                jungsungSpan.style.transform = 'translate(-50%, -50%)';
+            }
+        } else {
+            // 복합 모음
+            let chosungExtraXOffset = 0;
+            let chosungExtraYOffset = 0;
+
+            // 복합 모음별 특별 조정
+            if (decomposed.jungsung === 'ㅢ') {
+                // ㅢ: 자음 오른쪽으로 14px
+                chosungExtraXOffset = 14;
+            } else if (decomposed.jungsung === 'ㅟ') {
+                // ㅟ: 자음 오른쪽으로 14px, 위로 4px
+                chosungExtraXOffset = 14;
+                chosungExtraYOffset = -4;
+            } else if (decomposed.jungsung === 'ㅚ') {
+                // ㅚ: 자음 오른쪽으로 14px, 위로 4px
+                chosungExtraXOffset = 14;
+                chosungExtraYOffset = -4;
+            } else if (decomposed.jungsung === 'ㅙ') {
+                // ㅙ: 자음 오른쪽으로 11px, 위로 4px
+                chosungExtraXOffset = 11;
+                chosungExtraYOffset = -4;
+            } else if (decomposed.jungsung === 'ㅞ') {
+                // ㅞ: 자음 오른쪽으로 11px, 위로 6px
+                chosungExtraXOffset = 11;
+                chosungExtraYOffset = -6;
+            }
+
+            if (hasJongsung) {
+                chosungSpan.style.left = `calc(25% + ${chosungXOffset + chosungExtraXOffset}px)`;
+                chosungSpan.style.top = `calc(20% + ${chosungYOffset + chosungExtraYOffset}px)`;
+                chosungSpan.style.transform = 'translate(-50%, -50%)';
+                jungsungSpan.style.left = `calc(50% + ${jungsungXOffset}px)`;
+                jungsungSpan.style.top = `calc(25% + ${jungsungYOffset}px)`;
+                jungsungSpan.style.transform = 'translate(-50%, -50%)';
+            } else {
+                chosungSpan.style.left = `calc(25% + ${chosungXOffset + chosungExtraXOffset}px)`;
+                chosungSpan.style.top = `calc(40% + ${chosungYOffset + chosungExtraYOffset}px)`;
+                chosungSpan.style.transform = 'translate(-50%, -50%)';
+                jungsungSpan.style.left = `calc(50% + ${jungsungXOffset}px)`;
+                jungsungSpan.style.top = `calc(45% + ${jungsungYOffset}px)`;
+                jungsungSpan.style.transform = 'translate(-50%, -50%)';
+            }
+        }
+
+        // 종성 (받침) 위치 설정
+        if (hasJongsung) {
+            const jongsungSpan = document.createElement('span');
+            jongsungSpan.textContent = decomposed.jongsung;
+            jongsungSpan.style.color = jongsungColor;
+            jongsungSpan.style.position = 'absolute';
+            jongsungSpan.style.fontSize = '0.85em';
+            jongsungSpan.style.fontWeight = 'bold';
+            jongsungSpan.style.left = `calc(50% + ${jongsungXOffset}px)`;
+            jongsungSpan.style.bottom = `calc(10% - ${jongsungYOffset}px)`;
+            jongsungSpan.style.transform = 'translateX(-50%)';
+            charElement.appendChild(jongsungSpan);
+        }
+
+        charElement.appendChild(chosungSpan);
+        charElement.appendChild(jungsungSpan);
+
+        return charElement;
+    }
+
+    function generateWorksheet() {
+        console.log('generateWorksheet 함수 실행 중...');
+
+        const title = document.getElementById('title').value || '일일 학습지';
+        const school = document.getElementById('school').value || '00초';
+        const grade = document.getElementById('grade').value || '0';
+        const classNum = document.getElementById('class').value || '0';
+        const practiceText = document.getElementById('practice-text').value || '';
+        const selectedFont = document.getElementById('font-select').value;
+        const dotlineColor = document.getElementById('dotline-color').value;
+        const textColor = document.getElementById('text-color').value;
+
+        // 제목과 학생 정보 업데이트
+        const worksheetTitle = document.getElementById('worksheetTitle');
+        const studentClass = document.getElementById('studentClass');
+
+        if (worksheetTitle) {
+            worksheetTitle.textContent = title;
+        }
+
+        if (studentClass) {
+            studentClass.textContent = `${school}         ${grade}학년 ${classNum}반`;
+        }
+
+        // 점선 색상 적용
+        updateDotlineColor(dotlineColor);
+
+        // 글씨 쓰기 칸 생성
+        generateWritingGrid(practiceText, selectedFont, textColor);
+
+        console.log('generateWorksheet 함수 완료!');
+    }
+
+    function updateDotlineColor(color) {
+        // 기존 스타일 제거
+        const existingStyle = document.getElementById('dotline-style');
+        if (existingStyle) {
+            existingStyle.remove();
+        }
+
+        // 새로운 스타일 추가
+        const style = document.createElement('style');
+        style.id = 'dotline-style';
+        style.textContent = `
+                .writing-cell::before {
+                    border-left: 2px dotted ${color} !important;
+                }
+                .writing-cell::after {
+                    border-top: 2px dotted ${color} !important;
+                }
+            `;
+        document.head.appendChild(style);
+    }
+
+    function generateWritingGrid(text, fontClass, textColor = '#000000') {
+        console.log('generateWritingGrid 함수 실행 중...', text, fontClass, textColor);
+
+        const practiceContent = document.getElementById('practice-content');
+        if (!practiceContent) {
+            console.error('practice-content 요소를 찾을 수 없습니다!');
+            return;
+        }
+
+        practiceContent.innerHTML = '';
+
+        const totalRows = 14; // 총 줄 수
+        const charsPerRow = 10; // 한 줄에 들어갈 수 있는 글자 수
+        const copyModeEnabled = document.getElementById('copy-mode').checked;
+        const koreanColorEnabled = document.getElementById('korean-color').checked;
+        const koreanColorCopyEnabled = document.getElementById('korean-color-copy').checked;
+
+        // 텍스트를 줄바꿈으로 먼저 나누고, 각 줄을 10자씩 나누어 배열로 만들기
+        const textChunks = [];
+        if (text.trim() !== '') {
+            const lines = text.split('\n');
+
+            for (let line of lines) {
+                if (line.trim() === '') {
+                    textChunks.push('');
+                } else {
+                    for (let i = 0; i < line.length; i += charsPerRow) {
+                        textChunks.push(line.substr(i, charsPerRow));
+                    }
+                }
+            }
+        }
+
+        // 모든 줄 처리
+        for (let row = 0; row < totalRows; row++) {
+            const isOddRow = row % 2 === 0;
+            const chunkIndex = Math.floor(row / 2);
+
+            let rowText = '';
+            let isGrayText = false;
+
+            if (isOddRow && chunkIndex < textChunks.length) {
+                rowText = textChunks[chunkIndex];
+                isGrayText = false;
+            } else if (!isOddRow && (copyModeEnabled || koreanColorCopyEnabled) && chunkIndex < textChunks.length) {
+                rowText = textChunks[chunkIndex];
+                isGrayText = true;
+            }
+
+            for (let col = 0; col < charsPerRow; col++) {
+                const cell = document.createElement('div');
+                cell.className = 'writing-cell';
+
+                if (col < rowText.length) {
+                    const displayColor = isGrayText ? '#999999' : textColor;
+
+                    if (koreanColorEnabled && !isGrayText) {
+                        const charElement = applyKoreanColors(rowText[col], fontClass);
+                        cell.appendChild(charElement);
+                    } else if (koreanColorCopyEnabled && koreanColorEnabled && isGrayText) {
+                        const charElement = applyKoreanColors(rowText[col], fontClass, true);
+                        cell.appendChild(charElement);
+                    } else {
+                        const char = document.createElement('div');
+                        char.className = `character ${fontClass}`;
+                        char.textContent = rowText[col];
+                        char.style.color = displayColor;
+
+                        // 마침표와 쉼표만 특별 위치 조정
+                        if (rowText[col] === '.' || rowText[col] === ',') {
+                            char.style.position = 'relative';
+                            char.style.left = '-27px';
+                            char.style.top = '12px';
+                        }
+
+                        cell.appendChild(char);
+                    }
+                }
+
+                practiceContent.appendChild(cell);
+            }
+        }
+
+        console.log('generateWritingGrid 함수 완료!');
+    }
+
+
+    // 폰트 로딩 확인 함수
+    async function waitForFontsToLoad() {
+        const fontFamilies = [
+            'GangwonEduAll',
+            'GangwonEduAllBold',
+            'GangwonEduGroup',
+            'HakgyoansimBareunbatangR',
+            'HakgyoansimWoojuR',
+            'Nanum Gothic',
+            'Nanum Myeongjo',
+            'Nanum Pen Script',
+            'Noto Sans KR'
+        ];
+
+        const fontPromises = fontFamilies.map(family => {
+            return document.fonts.load(`16px "${family}"`).catch(() => {
+                console.warn(`폰트 로딩 실패: ${family}`);
+            });
+        });
+
+        await Promise.allSettled(fontPromises);
+
+        // 추가 대기 시간으로 폰트 완전 로딩 보장
+        await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    // PDF 저장 함수 - html2pdf.js 사용으로 더 정확한 출력
+    async function savePDF() {
+        try {
+            // 학습지 제목 가져오기 (파일명으로 사용)
+            const title = document.getElementById('title').value || '일일_학습지';
+            const fileName = `${title.replace(/[^가-힣a-zA-Z0-9]/g, '_')}.pdf`;
+
+            // 학습지 요소 가져오기
+            const element = document.getElementById('worksheet');
+
+            if (!element) {
+                alert('학습지를 찾을 수 없습니다.');
+                return;
+            }
+
+            // PDF 생성 전 스타일 고정
+            const originalStyle = element.style.cssText;
+            const originalClassName = element.className;
+
+            // A4 크기로 고정 (794px x 1123px는 A4의 픽셀 크기)
+            element.style.width = '794px';
+            element.style.height = '1123px';
+            element.style.maxWidth = '794px';
+            element.style.maxHeight = '1123px';
+            element.style.minHeight = '1123px';
+            element.style.minWidth = '794px';
+            element.style.aspectRatio = 'auto';
+            element.style.margin = '0';
+            element.style.padding = '37.8px 56.7px'; // 10mm 15mm을 픽셀로 변환
+            element.style.transform = 'none';
+            element.style.position = 'relative';
+            element.style.overflow = 'hidden';
+            element.style.pageBreakAfter = 'avoid';
+            element.style.pageBreakInside = 'avoid';
+            element.style.pageBreakBefore = 'avoid';
+            element.style.boxSizing = 'border-box';
+            element.style.backgroundColor = '#ffffff';
+            element.style.border = '1px solid #000000';
+            element.className = originalClassName + ' no-break-inside';
+
+            // 모든 character 요소의 폰트 크기 고정
+            const characters = element.querySelectorAll('.character');
+            const originalCharacterStyles = [];
+            characters.forEach((char, index) => {
+                originalCharacterStyles[index] = char.style.cssText;
+                char.style.fontSize = '2.8rem';
+            });
+
+            // 폰트 로딩 대기
+            await waitForFontsToLoad();
+
+            // PDF 출력을 위한 최적화된 옵션 설정
+            const options = {
+                margin     : 0,
+                filename   : fileName,
+                image      : {
+                    type   : 'jpeg',
+                    quality: 0.98
+                },
+                html2canvas: {
+                    scale                 : 3, // 스케일을 3으로 증가하여 더 선명한 출력
+                    useCORS               : true,
+                    allowTaint            : true,
+                    letterRendering       : true,
+                    logging               : false,
+                    width                 : 794, // A4 픽셀 크기 고정 (210mm * 3.78)
+                    height                : 1122, // A4 픽셀 크기 고정 (297mm * 3.78)
+                    windowWidth           : 794,
+                    windowHeight          : 1122,
+                    x                     : 0,
+                    y                     : 0,
+                    scrollX               : 0,
+                    scrollY               : 0,
+                    backgroundColor       : '#ffffff',
+                    removeContainer       : true,
+                    foreignObjectRendering: false,
+                    dpi                   : 300,
+                    pixelRatio            : 3
+                },
+                jsPDF      : {
+                    unit            : 'mm',
+                    format          : [210, 297], // A4 크기 명시적 지정
+                    orientation     : 'portrait',
+                    compress        : false, // 압축 해제로 품질 향상
+                    putOnlyUsedFonts: true,
+                    floatPrecision  : 2
+                },
+                pagebreak  : {
+                    mode : 'avoid-all',
+                    avoid: ['#worksheet', '.worksheet', '.no-break-inside']
+                }
+            };
+
+            // html2pdf를 사용하여 PDF 생성
+            await html2pdf().set(options).from(element).save();
+
+            // 원래 스타일 복원
+            element.style.cssText = originalStyle;
+            element.className = originalClassName;
+
+            // character 요소들의 원래 스타일 복원
+            characters.forEach((char, index) => {
+                char.style.cssText = originalCharacterStyles[index];
+            });
+
+        } catch (error) {
+            console.error('PDF 생성 오류:', error);
+            alert('PDF 생성 중 오류가 발생했습니다.');
+
+            // 오류 발생 시에도 원래 스타일 복원
+            const element = document.getElementById('worksheet');
+            if (element && originalStyle !== undefined) {
+                element.style.cssText = originalStyle;
+                element.className = originalClassName;
+            }
+        }
+    }
+
+    // 이벤트 리스너 등록
+    function setupEventListeners() {
+        // 글자 수 카운터 업데이트 및 실시간 학습지 업데이트
+        document.getElementById('practice-text').addEventListener('input', function () {
+            document.getElementById('char-count').textContent = this.value.length;
+            generateWorksheet();
+        });
+
+        // 폰트 변경 시 미리보기 업데이트
+        document.getElementById('font-select').addEventListener('change', generateWorksheet);
+
+        // 점선 색상 변경 시 미리보기 업데이트
+        document.getElementById('dotline-color').addEventListener('change', generateWorksheet);
+
+        // 글씨 색상 변경 시 미리보기 업데이트
+        document.getElementById('text-color').addEventListener('change', generateWorksheet);
+
+        // 따라쓰기 모드 체크박스 변경 시 미리보기 업데이트
+        document.getElementById('copy-mode').addEventListener('change', generateWorksheet);
+
+        // 한글 색상 구분 체크박스 변경 시 미리보기 업데이트
+        document.getElementById('korean-color').addEventListener('change', function () {
+            const colorOptions = document.getElementById('color-options');
+            const koreanColorCopy = document.getElementById('korean-color-copy');
+
+            if (this.checked) {
+                colorOptions.style.display = 'grid';
+            } else {
+                colorOptions.style.display = 'none';
+                // 메인 색상 구분이 해제되면 따라쓰기 색상 구분도 자동으로 해제
+                koreanColorCopy.checked = false;
+            }
+            generateWorksheet();
+        });
+
+        // 위치 조절 체크박스 변경 시 컨트롤 표시/숨김
+        document.getElementById('position-control').addEventListener('change', function () {
+            const positionControls = document.getElementById('position-controls');
+
+            if (this.checked) {
+                positionControls.style.display = 'block';
+            } else {
+                positionControls.style.display = 'none';
+            }
+        });
+
+        // 따라쓰기 한글 색상 구분 체크박스 변경 시 미리보기 업데이트
+        document.getElementById('korean-color-copy').addEventListener('change', function () {
+            // 메인 한글 색상 구분이 체크되어 있지 않으면 따라쓰기 색상 구분도 해제
+            if (this.checked && !document.getElementById('korean-color').checked) {
+                this.checked = false;
+                alert('먼저 "자음, 모음, 받침을 색상으로 구분" 옵션을 체크해주세요.');
+                return;
+            }
+            generateWorksheet();
+        });
+
+        // 색상 선택 변경 시 미리보기 업데이트
+        document.getElementById('chosung-color').addEventListener('change', generateWorksheet);
+        document.getElementById('jungsung-color').addEventListener('change', generateWorksheet);
+        document.getElementById('jongsung-color').addEventListener('change', generateWorksheet);
+
+        // 위치 조절 슬라이더 이벤트 리스너
+        const positionSliders = [
+            'chosung-x', 'chosung-y', 'jungsung-x', 'jungsung-y', 'jongsung-x', 'jongsung-y'
+        ];
+
+        positionSliders.forEach(sliderId => {
+            const slider = document.getElementById(sliderId);
+            const valueSpan = document.getElementById(sliderId + '-value');
+
+            slider.addEventListener('input', function () {
+                valueSpan.textContent = this.value;
+                generateWorksheet();
+            });
+        });
+
+        // 위치 초기화 버튼
+        document.getElementById('reset-positions').addEventListener('click', function () {
+            document.getElementById('chosung-x').value = 0;
+            document.getElementById('chosung-y').value = 0;
+            document.getElementById('jungsung-x').value = 0;
+            document.getElementById('jungsung-y').value = 0;
+            document.getElementById('jongsung-x').value = 0;
+            document.getElementById('jongsung-y').value = 5;
+
+            // 값 표시 업데이트
+            document.getElementById('chosung-x-value').textContent = '0';
+            document.getElementById('chosung-y-value').textContent = '0';
+            document.getElementById('jungsung-x-value').textContent = '0';
+            document.getElementById('jungsung-y-value').textContent = '0';
+            document.getElementById('jongsung-x-value').textContent = '0';
+            document.getElementById('jongsung-y-value').textContent = '5';
+
+            generateWorksheet();
+        });
+
+        // 모든 입력 필드에 실시간 업데이트 추가
+        document.getElementById('title').addEventListener('input', generateWorksheet);
+        document.getElementById('school').addEventListener('input', generateWorksheet);
+        document.getElementById('grade').addEventListener('input', generateWorksheet);
+        document.getElementById('class').addEventListener('input', generateWorksheet);
+    }
+
+    // DOM이 완전히 로드된 후 실행
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('DOM 로드 완료, 초기화 시작...');
+
+        // 이벤트 리스너 설정
+        setupEventListeners();
+
+        // 학습지 초기화
+        setTimeout(initializeWorksheet, 100); // 약간의 지연을 두어 확실히 초기화
+    });
+
+    // 추가 안전장치: window.onload도 함께 사용
+    window.addEventListener('load', function () {
+        console.log('Window 로드 완료, 추가 초기화...');
+
+        // DOM이 준비되지 않았다면 다시 초기화
+        const worksheet = document.getElementById('worksheet');
+        const practiceContent = document.getElementById('practice-content');
+
+        if (worksheet && practiceContent && practiceContent.children.length === 0) {
+            console.log('학습지가 비어있음, 재초기화 실행...');
+            initializeWorksheet();
+        }
+    });
+</script>
+
+
+</body>
+</html>
