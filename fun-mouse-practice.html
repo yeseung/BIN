@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>즐거운 마우스 연습</title>
+    <style>
+        * { box-sizing: border-box; }
+
+        :root {
+            font-family: "Malgun Gothic", Arial, sans-serif;
+            color: #26344a;
+            background: #edf2f7;
+        }
+
+        body { margin: 0; overflow: hidden; }
+        button { font: inherit; cursor: pointer; }
+        button:focus-visible {
+            outline: 4px solid #eea530;
+            outline-offset: 2px;
+        }
+
+        .app {
+            width: min(1500px, 100%);
+            height: 100dvh;
+            margin: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        header, .tools, .status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        h1 { margin: 0; font-size: clamp(22px, 2.3vw, 32px); }
+        .subtitle { margin: 5px 0 0; color: #64748b; }
+        .actions { display: flex; gap: 8px; }
+
+        .actions button {
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 10px 15px;
+        }
+
+        nav {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+
+        nav button {
+            border: 2px solid transparent;
+            background: white;
+            color: #475569;
+            padding: 14px 5px;
+            border-radius: 13px;
+            font-size: clamp(14px, 1.4vw, 20px);
+            font-weight: bold;
+        }
+
+        nav button.active { background: #3268b2; color: white; }
+        nav button:hover:not(.active) { border-color: #8eafd7; }
+
+        .tools select {
+            font: inherit;
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 9px;
+            padding: 8px 12px;
+        }
+
+        .stats { font-size: 18px; font-weight: bold; }
+
+        .instruction {
+            background: #dce8f5;
+            padding: 12px 18px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: clamp(17px, 1.7vw, 23px);
+        }
+
+        #board {
+            flex: 1;
+            min-height: 0;
+            background: #fff;
+            border-radius: 18px;
+            padding: 18px;
+            position: relative;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .grid {
+            height: 100%;
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(10, 1fr);
+            gap: 5px;
+        }
+
+        .tile {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+            min-height: 0;
+            border: 1px solid #dbe3ee;
+            border-radius: 9px;
+            background: #f5f8fc;
+            padding: 0;
+            font-family: "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
+            font-size: clamp(18px, min(3.2vw, 4.3vh), 44px);
+        }
+
+        .tile:hover { background: #e3edf9; border-color: #7b9fcd; }
+        .tile.gone { visibility: hidden; pointer-events: none; }
+
+        .status { min-height: 27px; color: #52637a; }
+        #feedback { font-size: 17px; font-weight: bold; }
+        #feedback.good { color: #187844; }
+        #feedback.bad { color: #b34d24; }
+
+        .stage {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .task {
+            font-size: clamp(20px, 2.3vw, 30px);
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .big-icon {
+            font-family: "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
+            font-size: clamp(65px, 9vw, 125px);
+        }
+
+        .subject {
+            width: clamp(140px, 21vw, 230px);
+            height: clamp(140px, 21vw, 230px);
+            border: 3px solid #9ab4d6;
+            border-radius: 22px;
+            background: #f0f5fb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hint { color: #64748b; text-align: center; }
+
+        .context {
+            position: absolute;
+            z-index: 20;
+            width: 190px;
+            background: white;
+            border: 2px solid #789ac8;
+            border-radius: 13px;
+            box-shadow: 0 8px 24px #26344a26;
+            padding: 7px;
+        }
+
+        .context button {
+            width: 100%;
+            display: block;
+            text-align: left;
+            border: none;
+            background: white;
+            padding: 12px 15px;
+            border-radius: 7px;
+            font-size: 19px;
+        }
+
+        .context button:hover { background: #dce8f5; }
+
+        .drag-layout {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1.1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+
+        .dropzone {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 3px dashed #afc0d7;
+            border-radius: 16px;
+            background: #f5f8fc;
+            font-size: clamp(16px, 1.8vw, 24px);
+            font-weight: bold;
+        }
+
+        .dropzone.target { border-color: #3268b2; background: #e6eef9; }
+        .dropzone.over { border-style: solid; background: #d4e8d8; }
+
+        .drag-center {
+            grid-column: 2;
+            grid-row: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .draggable {
+            width: min(130px, 100%);
+            aspect-ratio: 1;
+            background: #fff;
+            border: 2px solid #a9bdd9;
+            border-radius: 20px;
+            font-family: "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
+            font-size: clamp(48px, 6vw, 85px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            touch-action: none;
+        }
+
+        .draggable.dragging {
+            position: fixed;
+            z-index: 30;
+            pointer-events: none;
+            cursor: grabbing;
+        }
+
+        .wheel-layout {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .wheel-frame {
+            position: relative;
+            flex: 1;
+            min-height: 0;
+            width: min(750px, 95%);
+        }
+
+        .wheel-window {
+            width: 100%;
+            height: 100%;
+            overflow-y: scroll;
+            overflow-x: hidden;
+            scrollbar-gutter: stable;
+            overscroll-behavior: contain;
+            border: 3px solid #9ab4d6;
+            border-radius: 16px;
+            background: #f5f8fc;
+            scrollbar-width: auto;
+            scrollbar-color: #7296c5 #e0e8f2;
+        }
+
+        .wheel-window::-webkit-scrollbar { width: 18px; }
+        .wheel-window::-webkit-scrollbar-track { background: #e0e8f2; }
+        .wheel-window::-webkit-scrollbar-thumb {
+            background: #7296c5;
+            border: 3px solid #e0e8f2;
+            border-radius: 12px;
+        }
+
+        .reel { position: relative; width: 100%; }
+
+        .wheel-row {
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 25px;
+            border-bottom: 1px solid #dbe3ee;
+        }
+
+        .wheel-row .emoji {
+            font-family: "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
+            font-size: 48px;
+        }
+
+        .wheel-row .name { font-size: 22px; font-weight: bold; }
+
+        .center-line {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            left: 7px;
+            right: 25px;
+            height: 80px;
+            border: 4px solid #3268b2;
+            background: #3268b20b;
+            border-radius: 12px;
+            pointer-events: none;
+        }
+
+        .confirm {
+            border: 0;
+            background: #3268b2;
+            color: white;
+            border-radius: 11px;
+            padding: 10px 32px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .done {
+            position: absolute;
+            inset: 0;
+            background: #fffffff0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            text-align: center;
+            font-size: 25px;
+        }
+
+        .done strong { font-size: 40px; color: #3268b2; }
+
+        @media (max-height: 650px) {
+            .app { padding: 10px; gap: 8px; }
+            .subtitle { display: none; }
+            nav button { padding: 9px 3px; }
+            .instruction { padding: 8px 12px; }
+            #board { padding: 10px; }
+            .stage { gap: 9px; }
+            .subject { width: 130px; height: 130px; }
+            .big-icon { font-size: 80px; }
+        }
+
+        @media (max-width: 650px) {
+            .app { padding: 8px; gap: 8px; }
+            header { flex-wrap: wrap; }
+            h1 { font-size: 21px; }
+            .subtitle { display: none; }
+            .actions button { padding: 6px 9px; }
+            nav { gap: 4px; }
+            nav button { font-size: 12px; padding: 11px 2px; }
+            .stats { font-size: 14px; }
+            .grid { gap: 3px; }
+            #board { padding: 8px; }
+            .tile { border-radius: 5px; font-size: 21px; }
+            .status { font-size: 12px; }
+            #feedback { font-size: 14px; }
+            .wheel-row { gap: 15px; }
+            .wheel-row .name { font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+<main class="app">
+    <header>
+        <div>
+            <h1>즐거운 마우스 연습</h1>
+            <p class="subtitle">원하는 메뉴를 골라 천천히 연습해 보세요.</p>
+        </div>
+        <div class="actions">
+            <button id="restart" type="button">다시 시작</button>
+            <button id="fullscreen" type="button">전체 화면</button>
+        </div>
+    </header>
+
+    <nav aria-label="연습 메뉴">
+        <button data-mode="click" class="active" aria-pressed="true">
+            마우스 클릭
+        </button>
+        <button data-mode="right" aria-pressed="false">
+            마우스 우클릭
+        </button>
+        <button data-mode="double" aria-pressed="false">
+            더블클릭
+        </button>
+        <button data-mode="drag" aria-pressed="false">
+            드래그 앤 드롭
+        </button>
+        <button data-mode="wheel" aria-pressed="false">
+            마우스 휠
+        </button>
+    </nav>
+
+    <div class="tools">
+        <label>
+            그림 주제
+            <select id="theme">
+                <option value="all">모두 섞기</option>
+                <option value="fruit">과일</option>
+                <option value="animal">동물</option>
+                <option value="object">사물</option>
+                <option value="face">얼굴</option>
+            </select>
+        </label>
+        <div class="stats">
+            점수 <span id="score">0</span>점 ·
+            완료 <span id="progress">0 / 100</span>
+        </div>
+    </div>
+
+    <div class="instruction" id="instruction"></div>
+    <section id="board" aria-label="연습 공간"></section>
+
+    <footer class="status">
+    <span id="feedback" role="status" aria-live="polite">
+      천천히 시작해 보세요.
+    </span>
+        <span>시간 제한 없이 연습해요</span>
+    </footer>
+</main>
+
+<script>
+    "use strict";
+
+    const groups = {
+        fruit: [
+            ["🍎", "사과"], ["🍐", "배"], ["🍊", "귤"], ["🍋", "레몬"],
+            ["🍌", "바나나"], ["🍉", "수박"], ["🍇", "포도"], ["🍓", "딸기"],
+            ["🍒", "체리"], ["🍑", "복숭아"], ["🍍", "파인애플"], ["🥝", "키위"]
+        ],
+        animal: [
+            ["🐶", "강아지"], ["🐱", "고양이"], ["🐭", "생쥐"], ["🐹", "햄스터"],
+            ["🐰", "토끼"], ["🦊", "여우"], ["🐻", "곰"], ["🐼", "판다"],
+            ["🐨", "코알라"], ["🐯", "호랑이"], ["🐸", "개구리"], ["🐷", "돼지"]
+        ],
+        object: [
+            ["⚽", "축구공"], ["🏀", "농구공"], ["🎁", "선물"], ["📚", "책"],
+            ["⏰", "시계"], ["🔑", "열쇠"], ["🎈", "풍선"], ["☂️", "우산"],
+            ["🚗", "자동차"], ["✈️", "비행기"], ["💡", "전구"], ["🎸", "기타"]
+        ],
+        face: [
+            ["😀", "웃는 얼굴"], ["😊", "미소 짓는 얼굴"],
+            ["😎", "선글라스 얼굴"], ["😍", "하트 눈 얼굴"],
+            ["😴", "잠자는 얼굴"], ["😮", "놀란 얼굴"],
+            ["😋", "맛있는 얼굴"], ["😂", "즐거운 얼굴"],
+            ["😉", "윙크 얼굴"], ["🤔", "생각하는 얼굴"],
+            ["🥳", "축하하는 얼굴"], ["😇", "천사 얼굴"]
+        ]
+    };
+
+    const board = document.getElementById("board");
+    const instruction = document.getElementById("instruction");
+    const feedback = document.getElementById("feedback");
+    const scoreLabel = document.getElementById("score");
+    const progressLabel = document.getElementById("progress");
+    const theme = document.getElementById("theme");
+
+    let mode = "click";
+    let score = 0;
+    let completed = 0;
+    let total = 100;
+    let session = 0;
+    let context = null;
+    let dragState = null;
+    let wheelObserver = null;
+    const timers = new Set();
+
+    function pool() {
+        return theme.value === "all"
+            ? Object.values(groups).flat()
+            : groups[theme.value];
+    }
+
+    function random(list) {
+        return list[Math.floor(Math.random() * list.length)];
+    }
+
+    function shuffle(list) {
+        const result = [...list];
+        for (let i = result.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [result[i], result[j]] = [result[j], result[i]];
+        }
+        return result;
+    }
+
+    function element(tag, className, text) {
+        const el = document.createElement(tag);
+        if (className) el.className = className;
+        if (text !== undefined) el.textContent = text;
+        return el;
+    }
+
+    function message(text, kind = "") {
+        feedback.textContent = text;
+        feedback.className = kind;
+    }
+
+    function updateStats() {
+        scoreLabel.textContent = score;
+        progressLabel.textContent = completed + " / " + total;
+    }
+
+    function delay(fn, ms) {
+        const version = session;
+        const timer = setTimeout(() => {
+            timers.delete(timer);
+            if (version === session) fn();
+        }, ms);
+        timers.add(timer);
+    }
+
+    function closeMenu() {
+        if (context) context.remove();
+        context = null;
+    }
+
+    function disconnectWheelObserver() {
+        if (wheelObserver) wheelObserver.disconnect();
+        wheelObserver = null;
+    }
+
+    function finish() {
+        closeMenu();
+        disconnectWheelObserver();
+
+        const cover = element("div", "done");
+        cover.append(element("strong", "", "연습 완료!"));
+        cover.append(element("div", "", total + "개의 과제를 해결했어요."));
+        cover.append(element("div", "", "총 " + score + "점"));
+
+        const again = element("button", "confirm", "한 번 더 연습하기");
+        again.type = "button";
+        again.onclick = start;
+        cover.append(again);
+        board.append(cover);
+    }
+
+    function success(next) {
+        completed++;
+        score += 10;
+        updateStats();
+        message("잘했어요! +10점", "good");
+
+        if (completed === total) finish();
+        else if (next) delay(next, 650);
+    }
+
+    function start() {
+        session++;
+
+        for (const timer of timers) clearTimeout(timer);
+        timers.clear();
+
+        closeMenu();
+        disconnectWheelObserver();
+
+        if (dragState) {
+            dragState.item.remove();
+            dragState = null;
+        }
+
+        board.replaceChildren();
+        score = 0;
+        completed = 0;
+        total = mode === "click" || mode === "double" ? 100 : 10;
+
+        updateStats();
+        message("천천히 시작해 보세요.");
+
+        if (mode === "click" || mode === "double") buildGrid();
+        if (mode === "right") rightTask();
+        if (mode === "drag") dragTask();
+        if (mode === "wheel") wheelTask();
+    }
+
+    function buildGrid() {
+        instruction.textContent = mode === "click"
+            ? "그림을 왼쪽 버튼으로 한 번 클릭해서 지워 주세요."
+            : "그림을 왼쪽 버튼으로 빠르게 두 번 클릭해서 지워 주세요.";
+
+        const grid = element("div", "grid");
+        const list = pool();
+        const icons = shuffle(
+            Array.from({length: 100}, (_, i) => list[i % list.length])
+        );
+
+        icons.forEach(([icon, name]) => {
+            const tile = element("button", "tile", icon);
+            tile.type = "button";
+            tile.setAttribute("aria-label", name);
+
+            let removed = false;
+
+            const remove = () => {
+                if (removed) return;
+                removed = true;
+                tile.classList.add("gone");
+                tile.disabled = true;
+                success();
+            };
+
+            if (mode === "click") tile.addEventListener("click", remove);
+            else tile.addEventListener("dblclick", remove);
+
+            grid.append(tile);
+        });
+
+        board.append(grid);
+    }
+
+    function rightTask() {
+        board.replaceChildren();
+        closeMenu();
+
+        instruction.textContent =
+            "그림 위에서 마우스 오른쪽 버튼을 누르고, 과제에 맞는 메뉴를 골라 주세요.";
+
+        const [icon, name] = random(pool());
+        let choices;
+
+        if (groups.fruit.some(v => v[0] === icon)) {
+            choices = ["바구니에 넣기", "씻기", "사진 찍기", "이름 보기"];
+        } else if (groups.animal.some(v => v[0] === icon)) {
+            choices = ["먹이 주기", "사진 찍기", "바구니에 넣기", "이름 보기"];
+        } else if (groups.face.some(v => v[0] === icon)) {
+            choices = ["인사하기", "사진 찍기", "응원하기", "이름 보기"];
+        } else {
+            choices = ["상자에 넣기", "사진 찍기", "닦기", "이름 보기"];
+        }
+
+        const answer = random(choices);
+        const stage = element("div", "stage");
+        stage.append(
+            element("div", "task", name + " → 「" + answer + "」를 선택하세요.")
+        );
+
+        const subject = element("div", "subject big-icon", icon);
+        subject.setAttribute("aria-label", name + ": 여기에서 우클릭");
+        stage.append(subject);
+        stage.append(
+            element("div", "hint", "그림에서 우클릭하면 선택 메뉴가 나타나요.")
+        );
+        board.append(stage);
+
+        let solved = false;
+
+        subject.addEventListener("contextmenu", event => {
+            event.preventDefault();
+            if (solved) return;
+
+            closeMenu();
+            context = element("div", "context");
+            context.setAttribute("role", "menu");
+
+            shuffle(choices).forEach(choice => {
+                const button = element("button", "", choice);
+                button.type = "button";
+                button.setAttribute("role", "menuitem");
+
+                button.onclick = () => {
+                    if (choice !== answer) {
+                        message("「" + answer + "」 메뉴를 골라 보세요.", "bad");
+                        closeMenu();
+                        return;
+                    }
+
+                    solved = true;
+                    subject.textContent = "✅";
+                    closeMenu();
+                    success(rightTask);
+                };
+
+                context.append(button);
+            });
+
+            board.append(context);
+
+            const rect = board.getBoundingClientRect();
+            const menuWidth = context.offsetWidth;
+            const menuHeight = context.offsetHeight;
+
+            context.style.left = Math.max(
+                4,
+                Math.min(event.clientX - rect.left, rect.width - menuWidth - 4)
+            ) + "px";
+
+            context.style.top = Math.max(
+                4,
+                Math.min(event.clientY - rect.top, rect.height - menuHeight - 4)
+            ) + "px";
+
+            context.querySelector("button").focus();
+        });
+    }
+
+    function dragTask() {
+        board.replaceChildren();
+
+        const positions = [
+            ["위쪽", 2, 1, "↑"],
+            ["오른쪽", 3, 2, "→"],
+            ["아래쪽", 2, 3, "↓"],
+            ["왼쪽", 1, 2, "←"]
+        ];
+
+        const target = random(positions);
+        const [icon, name] = random(pool());
+
+        instruction.textContent =
+            name + " 그림을 누른 채로 「" +
+            target[0] + "」 칸으로 옮겨 놓으세요.";
+
+        const layout = element("div", "drag-layout");
+
+        positions.forEach(([place, col, row, arrow]) => {
+            const zone = element(
+                "div",
+                "dropzone" + (place === target[0] ? " target" : "")
+            );
+
+            zone.style.gridColumn = col;
+            zone.style.gridRow = row;
+            zone.dataset.place = place;
+            zone.append(element("div", "", arrow + " " + place));
+
+            if (place === target[0]) {
+                zone.append(element("div", "hint", "여기에 놓으세요"));
+            }
+
+            layout.append(zone);
+        });
+
+        const center = element("div", "drag-center");
+        const item = element("div", "draggable", icon);
+        item.setAttribute("aria-label", name + " 드래그하기");
+
+        center.append(item);
+        layout.append(center);
+        board.append(layout);
+
+        let solved = false;
+
+        item.addEventListener("pointerdown", event => {
+            if (event.button !== 0 || solved || dragState) return;
+            event.preventDefault();
+
+            const rect = item.getBoundingClientRect();
+
+            dragState = {
+                item,
+                center,
+                target: target[0],
+                pointer: event.pointerId,
+                offsetX: event.clientX - rect.left,
+                offsetY: event.clientY - rect.top,
+                version: session,
+                complete: () => {
+                    solved = true;
+                    success(dragTask);
+                }
+            };
+
+            item.style.width = rect.width + "px";
+            item.style.height = rect.height + "px";
+            item.classList.add("dragging");
+            item.style.left = rect.left + "px";
+            item.style.top = rect.top + "px";
+
+            document.body.append(item);
+            item.setPointerCapture(event.pointerId);
+        });
+    }
+
+    document.addEventListener("pointermove", event => {
+        if (!dragState || event.pointerId !== dragState.pointer) return;
+
+        const state = dragState;
+        state.item.style.left = event.clientX - state.offsetX + "px";
+        state.item.style.top = event.clientY - state.offsetY + "px";
+
+        const hit = document.elementFromPoint(event.clientX, event.clientY);
+        const zone = hit && hit.closest(".dropzone");
+
+        board.querySelectorAll(".dropzone").forEach(el => {
+            el.classList.toggle("over", el === zone);
+        });
+    });
+
+    function releaseDrag(event, cancelled = false) {
+        if (!dragState || event.pointerId !== dragState.pointer) return;
+
+        const state = dragState;
+        dragState = null;
+
+        const hit = document.elementFromPoint(event.clientX, event.clientY);
+        const zone = hit && hit.closest(".dropzone");
+
+        state.item.classList.remove("dragging");
+        state.item.style.cssText = "";
+
+        board.querySelectorAll(".dropzone").forEach(el => {
+            el.classList.remove("over");
+        });
+
+        if (state.version !== session) {
+            state.item.remove();
+            return;
+        }
+
+        if (!cancelled && zone && zone.dataset.place === state.target) {
+            zone.replaceChildren(state.item);
+            state.item.style.cursor = "default";
+            state.complete();
+        } else {
+            state.center.append(state.item);
+            message("그림을 「" + state.target + "」 칸에 놓아 보세요.", "bad");
+        }
+    }
+
+    document.addEventListener("pointerup", event => releaseDrag(event));
+    document.addEventListener("pointercancel", event => releaseDrag(event, true));
+
+    function wheelTask() {
+        disconnectWheelObserver();
+        board.replaceChildren();
+
+        const icons = shuffle(pool());
+        const initialIndex = Math.floor(icons.length / 2);
+        const candidates = icons
+        .map((_, i) => i)
+        .filter(i => Math.abs(i - initialIndex) >= 2);
+
+        const targetIndex = random(candidates);
+        const [icon, name] = icons[targetIndex];
+        const rowHeight = 80;
+
+        instruction.textContent =
+            "휠을 굴려 「" + icon + " " + name +
+            "」을 중앙의 파란 테두리에 맞춰 주세요.";
+
+        const layout = element("div", "wheel-layout");
+        layout.append(
+            element(
+                "div",
+                "hint",
+                "목록 위에서 휠을 굴려 보세요. 오른쪽 스크롤바로도 이동할 수 있어요."
+            )
+        );
+
+        const frame = element("div", "wheel-frame");
+        const windowEl = element("div", "wheel-window");
+        windowEl.setAttribute("aria-label", "휠로 움직이는 그림 목록");
+
+        const reel = element("div", "reel");
+
+        icons.forEach(([emoji, label]) => {
+            const row = element("div", "wheel-row");
+            row.append(
+                element("span", "emoji", emoji),
+                element("span", "name", label)
+            );
+            reel.append(row);
+        });
+
+        windowEl.append(reel);
+        frame.append(windowEl, element("div", "center-line"));
+
+        const confirm = element("button", "confirm", "위치 확인");
+        confirm.type = "button";
+
+        layout.append(frame, confirm);
+        board.append(layout);
+
+        let solved = false;
+        let initialized = false;
+        const version = session;
+
+        function resizeList() {
+            const height = windowEl.clientHeight;
+            const padding = Math.max(0, (height - rowHeight) / 2);
+
+            reel.style.paddingTop = padding + "px";
+            reel.style.paddingBottom = padding + "px";
+
+            if (!initialized && height > 0) {
+                windowEl.scrollTop = initialIndex * rowHeight;
+                initialized = true;
+            }
+        }
+
+        resizeList();
+
+        wheelObserver = new ResizeObserver(() => {
+            if (version !== session || !windowEl.isConnected) return;
+            resizeList();
+        });
+
+        wheelObserver.observe(windowEl);
+
+        confirm.onclick = () => {
+            if (solved || version !== session) return;
+
+            const targetCenter =
+                      parseFloat(reel.style.paddingTop) +
+                      targetIndex * rowHeight +
+                      rowHeight / 2;
+
+            const visibleCenter =
+                      windowEl.scrollTop + windowEl.clientHeight / 2;
+
+            const difference = targetCenter - visibleCenter;
+
+            if (Math.abs(difference) <= 22) {
+                solved = true;
+                confirm.disabled = true;
+                disconnectWheelObserver();
+                success(wheelTask);
+            } else {
+                message(
+                    difference > 0
+                        ? "목표가 더 아래에 있어요. 휠을 아래로 굴려 보세요."
+                        : "목표가 더 위에 있어요. 휠을 위로 굴려 보세요.",
+                    "bad"
+                );
+            }
+        };
+    }
+
+    document.querySelectorAll("nav button").forEach(button => {
+        button.addEventListener("click", () => {
+            mode = button.dataset.mode;
+
+            document.querySelectorAll("nav button").forEach(el => {
+                const active = el === button;
+                el.classList.toggle("active", active);
+                el.setAttribute("aria-pressed", String(active));
+            });
+
+            start();
+        });
+    });
+
+    theme.addEventListener("change", start);
+    document.getElementById("restart").addEventListener("click", start);
+
+    document.getElementById("fullscreen").addEventListener("click", async () => {
+        try {
+            if (document.fullscreenElement) {
+                await document.exitFullscreen();
+            } else {
+                await document.documentElement.requestFullscreen();
+            }
+        } catch {
+            message("브라우저에서 F11을 누르면 전체 화면으로 볼 수 있어요.");
+        }
+    });
+
+    document.addEventListener("fullscreenchange", () => {
+        document.getElementById("fullscreen").textContent =
+            document.fullscreenElement ? "전체 화면 종료" : "전체 화면";
+    });
+
+    board.addEventListener("contextmenu", event => event.preventDefault());
+
+    document.addEventListener("pointerdown", event => {
+        if (context && !context.contains(event.target)) closeMenu();
+    });
+
+    document.addEventListener("keydown", event => {
+        if (event.key === "Escape") closeMenu();
+    });
+
+    start();
+</script>
+</body>
+</html>
